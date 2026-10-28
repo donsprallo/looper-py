@@ -1,0 +1,76 @@
+[project]
+name = "looper-py"
+version = "0.1.0"
+description = "Python client of a looper simulation: start or attach, drive, and expect"
+requires-python = ">=3.13"
+dependencies = [
+    # The inspector contract is spoken over gRPC; nothing of looper-core is
+    # imported. The bindings generated from the contract ship in the wheel.
+    "grpcio>=1.84.0",
+    "protobuf>=7.36.2",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3",
+    "mypy>=1.13",
+    "ruff>=0.8",
+    # Only the code generation script needs these.
+    "grpcio-tools>=1.84.0",
+]
+# The handbook in docs/: uv run --group docs sphinx-build -W docs docs/_build
+docs = [
+    "sphinx>=8.1",
+    "furo>=2024.8.6",
+    "myst-parser>=4.0",
+    "sphinxcontrib-mermaid>=1.0",
+    "sphinx-design>=0.6",
+    "sphinx-copybutton>=0.5",
+    "sphinx-autodoc-typehints>=2.5",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+# The distribution is looper-py; what a test imports is `looper`.
+packages = ["src/looper"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+# "tests" so that the stand-in inspector can be shared between directories.
+pythonpath = ["src", "tests"]
+
+[tool.mypy]
+python_version = "3.13"
+strict = true
+mypy_path = "src"
+packages = ["looper"]
+exclude = ["src/looper/infrastructure/contract"]
+
+[[tool.mypy.overrides]]
+# The message stubs protoc writes are read for their types; the service
+# module it writes beside them has none, and neither has grpc.
+module = ["looper.infrastructure.contract.looper_inspector_pb2_grpc", "grpc", "grpc.*"]
+ignore_missing_imports = true
+follow_imports = "skip"
+
+[tool.ruff]
+line-length = 100
+src = ["src", "tests"]
+target-version = "py313"
+# protoc output is not ours to style, and the handbook's scripts are not the library.
+extend-exclude = ["src/looper/infrastructure/contract", "docs"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "UP", "B", "A", "C4", "SIM", "ARG", "PTH", "RET", "D"]
+ignore = ["D105", "D107", "D203", "D213"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.lint.per-file-ignores]
+# Test doubles implement abstract signatures they do not use, and a fake
+# servicer keeps the method names gRPC generated.
+"tests/*" = ["ARG001", "ARG002", "D100", "D101", "D102", "D103", "N802"]

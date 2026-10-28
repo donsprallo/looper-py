@@ -1,0 +1,12 @@
+/* The figures are drawn on a light card of their own, so they read in
+   Furo's dark scheme as well; keep them within the column. The Mermaid
+   diagrams follow the scheme by themselves. */
+figure img {
+  max-width: 100%;
+  height: auto;
+}
+
+figcaption {
+  font-size: 0.9em;
+  color: var(--color-foreground-secondary);
+}

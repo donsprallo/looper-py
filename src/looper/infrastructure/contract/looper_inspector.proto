@@ -1,0 +1,634 @@
+// The inspector contract: what a graphical client may ask of a running
+// simulation, and what it is answered with.
+//
+// One RPC per use case of looper-core, and the data transfer objects of
+// those use cases as messages. A client built against this file knows
+// nothing of how the answers are produced -- today by the Python use
+// cases behind `looper-cli run`, tomorrow perhaps by something else
+// serving the same file.
+//
+// Two rules keep it that way:
+//
+// 1. A message carries what a client shows, not what it would have to
+//    work out. Wherever the application layer offers a derived value --
+//    a display text, a range, whether a bus takes messages -- the
+//    message carries it as a field, so that no client re-implements a
+//    rule of the domain.
+// 2. Nothing here names an implementation. No Python type, no adapter,
+//    no table of the simulation's own protocol.
+//
+// Errors are gRPC status codes, and only two kinds matter to a client:
+//
+//   FAILED_PRECONDITION  The request was refused and the reason is in
+//                        the message: a value a variable cannot hold, a
+//                        bus that takes no messages, a build that cannot
+//                        be read. The client says so and carries on.
+//   anything else        The simulation can no longer be read. The
+//                        client stops asking.
+//
+// The server keeps nothing about a client, so any number of them may be
+// connected at once. What a client chooses to see -- how much of the
+// timeline, which bus as a ladder, where it has read the recordings up
+// to -- travels with its request. What the simulation recorded is kept
+// once, for every client. What changes the simulation itself -- a
+// driven pin, a signal, a watch, following the call paths -- is shared,
+// because there is one simulation.
+
+syntax = "proto3";
+
+package looper.inspector.v1;
+
+// Bumped whenever a change would mislead a client built against the
+// previous version. A client compares it with its own and refuses to
+// attach to a server it does not understand.
+enum ContractVersion {
+  CONTRACT_VERSION_UNSPECIFIED = 0;
+  // 2: the timeline and the ladder are chosen per request, and the
+  //    calls that told the server what one client was looking at are gone.
+  CONTRACT_VERSION_CURRENT = 2;
+}
+
+service Inspector {
+  // What the server is attached to.
+  rpc Describe(Empty) returns (Description);
+
+  // ---- Reading -----------------------------------------------------------
+
+  // ObserveSimulation: time and pins.
+  rpc ObserveSimulation(Empty) returns (SimulationView);
+  // ObserveChannels: the analog channels the firmware registered.
+  rpc ObserveChannels(Empty) returns (ChannelList);
+  // ObserveWatches: the firmware variables being sampled.
+  rpc ObserveWatches(Empty) returns (WatchList);
+  // ObserveBuses: the buses the simulation models.
+  rpc ObserveBuses(Empty) returns (BusList);
+  // ObserveComponents: what is attached to them.
+  rpc ObserveComponents(Empty) returns (ComponentList);
+  // ReadTrace and ReadBusTrace together: everything recorded since the
+  // positions the client sends, and the positions to send next time.
+  rpc ReadRecordings(RecordingPositions) returns (Recordings);
+  // ListFirmwareVariables: the catalogue of globals, read out of the build.
+  rpc ListVariables(Empty) returns (VariableCatalogue);
+  // The waveforms a signal generator offers.
+  rpc ListWaveforms(Empty) returns (WaveformList);
+
+  // ObserveTimeline: every recording on one stretch of time, as wide as
+  // the client asks for.
+  rpc ArrangeTimeline(TimelineRequest) returns (TimelineView);
+  // Forget what the timeline has kept, for every client.
+  rpc ClearTimeline(Empty) returns (Empty);
+
+  // ObserveLadder: the bus the client names, read as a conversation.
+  rpc ObserveLadder(LadderChoice) returns (LadderView);
+
+  // ObserveCallTimings, ranked together with the profile when the build
+  // can be read.
+  rpc ObserveTimings(Empty) returns (TimingReportView);
+  // ObserveProfile: where the whole simulation spent its time.
+  rpc ObserveProfile(Empty) returns (ProfileView);
+  // ObserveFlame: which way that time went. Following the paths costs the
+  // simulation something, so it is armed and disarmed explicitly -- for
+  // the one simulation, and so for every client.
+  rpc FollowCallPaths(Following) returns (Empty);
+  rpc ObserveFlame(Empty) returns (FlameView);
+  // ObserveMemory: static, stack and heap.
+  rpc ObserveMemory(Empty) returns (MemoryView);
+  // Forget every measurement and begin one new window, for the timings,
+  // the profile and the memory together.
+  rpc ClearMeasurements(Empty) returns (Empty);
+  // Discard the recorded exchanges and start their numbering again, for
+  // every client and for the ladder.
+  rpc ClearBusTrace(Empty) returns (Empty);
+  // Discard the recorded samples and start their numbering again, for
+  // every client and for the timeline.
+  rpc ClearTrace(Empty) returns (Empty);
+
+  // ---- Changing ----------------------------------------------------------
+
+  // DrivePin.toggle: apply the opposite of the level the client saw.
+  rpc TogglePin(PinToggle) returns (PinLevel);
+  // ApplySignal: install a generated signal on an analog input.
+  rpc ApplySignal(SignalRequest) returns (Empty);
+  // WatchVariable: begin sampling a variable from the catalogue.
+  rpc WatchVariable(VariableChoice) returns (WatchView);
+  // RemoveWatch: stop sampling one.
+  rpc RemoveWatch(WatchChoice) returns (Empty);
+  // WriteVariable: store a value in a watched variable.
+  rpc WriteVariable(VariableWrite) returns (Empty);
+  // SendBusMessage: put one message on a bus.
+  rpc SendBusMessage(BusMessageRequest) returns (Empty);
+  // AdvanceTime: let simulated time pass on a virtual clock. Refused on
+  // the host clock, which is not a client's to steer.
+  rpc AdvanceTime(TimeStep) returns (Empty);
+}
+
+message Empty {}
+
+message Description {
+  ContractVersion contract_version = 1;
+  // What the firmware calls itself, empty when it says nothing.
+  string firmware_name = 2;
+  // "real_time" or "virtual".
+  string time_mode = 3;
+  // Whether the debug information of the build could be found. Without
+  // it there is no catalogue, no profile, no flame graph and no memory.
+  bool reads_the_build = 4;
+  // The build definition the server was started with, as an absolute
+  // path, so that a client attached to it need not be told again. Empty
+  // when the server was started without one.
+  string definition_path = 5;
+}
+
+// ---- Pins ------------------------------------------------------------------
+
+message PinView {
+  uint32 pin_id = 1;
+  string name = 2;
+  // "input" or "output".
+  string direction = 3;
+  // "low" or "high".
+  string level = 4;
+  bool is_active = 5;
+  bool is_drivable = 6;
+}
+
+message SimulationView {
+  uint64 microseconds = 1;
+  string time_mode = 2;
+  repeated PinView pins = 3;
+}
+
+message PinToggle {
+  uint32 pin_id = 1;
+  // The level the client saw, which is what is inverted.
+  string current_level = 2;
+}
+
+message PinLevel {
+  string level = 1;
+}
+
+// ---- Analog ----------------------------------------------------------------
+
+message SignalView {
+  string waveform = 1;
+  double amplitude = 2;
+  double offset = 3;
+  double frequency_hz = 4;
+  double phase_degrees = 5;
+}
+
+message ChannelView {
+  uint32 channel_id = 1;
+  string name = 2;
+  string unit = 3;
+  string direction = 4;
+  double value = 5;
+  bool is_drivable = 6;
+  SignalView signal = 7;
+  bool is_silent = 8;
+  // Value and unit as one string, or "no data" for a silent channel.
+  string display_value = 9;
+}
+
+message ChannelList {
+  repeated ChannelView channels = 1;
+}
+
+message SignalRequest {
+  uint32 channel_id = 1;
+  SignalView signal = 2;
+}
+
+message WaveformView {
+  // What a SignalView carries, for example "sine".
+  string name = 1;
+  // What a person is shown, for example "Sine".
+  string display_name = 2;
+  // Whether amplitude, frequency and phase mean anything for it.
+  bool is_alternating = 3;
+}
+
+message WaveformList {
+  repeated WaveformView waveforms = 1;
+}
+
+// ---- Recordings ------------------------------------------------------------
+
+message SampleView {
+  uint32 channel_id = 1;
+  double seconds = 2;
+  double value = 3;
+  uint64 sequence = 4;
+}
+
+message TraceView {
+  repeated SampleView samples = 1;
+  uint64 next_sequence = 2;
+}
+
+message ExchangeView {
+  uint32 bus_id = 1;
+  string kind = 2;
+  double seconds = 3;
+  // "outbound" when the firmware started it, "inbound" otherwise.
+  string direction = 4;
+  string address = 5;
+  uint32 length = 6;
+  string payload = 7;
+  string response = 8;
+  bool accepted = 9;
+  uint64 sequence = 10;
+}
+
+message BusTraceView {
+  repeated ExchangeView exchanges = 1;
+  uint64 next_sequence = 2;
+}
+
+message RecordingPositions {
+  uint64 after_sample = 1;
+  uint64 after_exchange = 2;
+}
+
+message Recordings {
+  TraceView trace = 1;
+  BusTraceView bus_trace = 2;
+}
+
+// ---- Variables -------------------------------------------------------------
+
+message VariableView {
+  // Identifies the variable in this server's catalogue. Paths are not
+  // unique: two translation units may each declare a static of one name.
+  uint32 variable_id = 1;
+  string path = 2;
+  string name = 3;
+  string root = 4;
+  // The steps of the path, the way a tree opens them: the root, then
+  // every member and every subscript.
+  repeated string segments = 5;
+  string encoding = 6;
+  uint32 byte_width = 7;
+  uint64 link_time_address = 8;
+  uint64 runtime_address = 9;
+  bool is_writable = 10;
+  uint32 bit_offset = 11;
+  uint32 bit_width = 12;
+  // "firmware", "simulation" or "toolchain".
+  string origin = 13;
+  bool is_firmware = 14;
+  // Source file the variable was declared in, empty when not known.
+  string declared_in = 15;
+  // Encoding and width, for example "uint 4 B" or "uint 3 bits".
+  string display_type = 16;
+  // Link time address in hexadecimal.
+  string display_address = 17;
+}
+
+message VariableCatalogue {
+  repeated VariableView variables = 1;
+  // Why there is no catalogue, empty when there is one.
+  string unavailable_reason = 2;
+}
+
+message VariableChoice {
+  uint32 variable_id = 1;
+}
+
+message WatchView {
+  uint32 channel_id = 1;
+  string path = 2;
+  string name = 3;
+  string encoding = 4;
+  uint32 byte_width = 5;
+  uint64 runtime_address = 6;
+  bool is_writable = 7;
+  double value = 8;
+  uint32 bit_offset = 9;
+  uint32 bit_width = 10;
+  // The value written the way its own type reads.
+  string display_value = 11;
+  // What the variable can hold, for example "uint8, 0 to 255".
+  string range_text = 12;
+  // What the value is measured in, as looper.toml declares it under
+  // [simulation.units]; empty when it declares nothing.
+  string unit = 13;
+}
+
+message WatchList {
+  repeated WatchView watches = 1;
+}
+
+message WatchChoice {
+  uint32 channel_id = 1;
+}
+
+message VariableWrite {
+  uint32 channel_id = 1;
+  double value = 2;
+}
+
+// ---- Buses -----------------------------------------------------------------
+
+message BusView {
+  uint32 bus_id = 1;
+  string kind = 2;
+  string name = 3;
+  uint32 bitrate_bps = 4;
+  // The rate as it is shown, or a note that none was configured.
+  string display_bitrate = 5;
+  // Whether a client may put a message on it. On SPI and I2C the
+  // firmware is the master, and a client changes the component instead.
+  bool accepts_messages = 6;
+}
+
+message BusList {
+  repeated BusView buses = 1;
+}
+
+message ComponentView {
+  uint32 bus_id = 1;
+  string address = 2;
+  string name = 3;
+  string model = 4;
+  repeated uint32 properties = 5;
+}
+
+message ComponentList {
+  repeated ComponentView components = 1;
+}
+
+message BusMessageRequest {
+  uint32 bus_id = 1;
+  uint32 address = 2;
+  bytes payload = 3;
+  // Whether the address is an extended, 29 bit CAN identifier.
+  bool extended = 4;
+}
+
+message PartyView {
+  string address = 1;
+  string name = 2;
+  bool is_silent = 3;
+}
+
+message StepView {
+  double seconds = 1;
+  string gap = 2;
+  uint32 column = 3;
+  bool is_outbound = 4;
+  string payload = 5;
+  string response = 6;
+  bool was_taken = 7;
+}
+
+message LadderView {
+  string bus_name = 1;
+  repeated PartyView parties = 2;
+  repeated StepView steps = 3;
+  string note = 4;
+}
+
+message LadderChoice {
+  // The bus to read; absent for an empty ladder.
+  optional uint32 bus_id = 1;
+}
+
+// ---- Timeline --------------------------------------------------------------
+
+message WindowView {
+  double start_seconds = 1;
+  double end_seconds = 2;
+}
+
+message MarkView {
+  double seconds = 1;
+  string label = 2;
+  string detail = 3;
+  double duration_seconds = 4;
+  bool is_doubtful = 5;
+  bool is_high = 6;
+}
+
+message Point {
+  double seconds = 1;
+  double value = 2;
+}
+
+message LaneView {
+  string key = 1;
+  string label = 2;
+  // "digital", "bus" or "call", which decides how the row is drawn.
+  string kind = 3;
+  repeated MarkView marks = 4;
+  uint32 count = 5;
+  // The gap before each occurrence, against when it ended.
+  repeated Point gaps = 6;
+  double usual_gap_seconds = 7;
+  double worst_gap_seconds = 8;
+  string summary = 9;
+}
+
+message CurveView {
+  string key = 1;
+  string label = 2;
+  uint32 channel_id = 3;
+  repeated Point points = 4;
+  double lowest = 5;
+  double highest = 6;
+}
+
+message TimelineView {
+  WindowView window = 1;
+  // Everything there is to show; absent when nothing was recorded.
+  WindowView recorded = 2;
+  repeated CurveView curves = 3;
+  repeated LaneView lanes = 4;
+  bool is_empty = 5;
+}
+
+message Following {
+  bool wanted = 1;
+}
+
+message TimeStep {
+  uint64 microseconds = 1;
+}
+
+message TimelineRequest {
+  // How much of the past to show, ending at the newest thing recorded.
+  // Zero for the server's default; held to what the server keeps.
+  double window_seconds = 1;
+}
+
+// ---- Timings ---------------------------------------------------------------
+
+message CallTimingView {
+  string function = 1;
+  uint64 calls = 2;
+  uint64 answered_calls = 3;
+  double total_seconds = 4;
+  string mean = 5;
+  string longest = 6;
+  bool is_never_answered = 7;
+  // Calls per band of duration, band n holding 2^n to 2^(n+1) ns.
+  repeated uint64 bands = 8;
+  string shape = 9;
+  // "adapter", "firmware", "device model", ...
+  string origin = 10;
+}
+
+message TimingReportView {
+  // One per function, heaviest first.
+  repeated CallTimingView entries = 1;
+  // Host time of the heaviest entry, which scales a chart.
+  double heaviest_seconds = 2;
+}
+
+// ---- Profile ---------------------------------------------------------------
+
+message ProfileEntryView {
+  string name = 1;
+  string origin = 2;
+  string directory = 3;
+  string file_name = 4;
+  uint64 calls = 5;
+  uint64 self_nanoseconds = 6;
+  uint64 total_nanoseconds = 7;
+  string self_text = 8;
+  string total_text = 9;
+  string mean_text = 10;
+  string longest_text = 11;
+}
+
+message ProfileGroupView {
+  string label = 1;
+  uint64 calls = 2;
+  uint64 self_nanoseconds = 3;
+  string self_text = 4;
+  double share = 5;
+  // The share as a percentage, as a column shows it.
+  string share_text = 6;
+  repeated ProfileGroupView children = 7;
+  // The measurement, when the group is one function.
+  ProfileEntryView entry = 8;
+}
+
+message ProfileView {
+  // Origin, then directory, then function; heaviest first.
+  repeated ProfileGroupView groups = 1;
+  repeated ProfileEntryView heaviest = 2;
+  uint64 measured_nanoseconds = 3;
+  string measured_text = 4;
+  uint32 lost_functions = 5;
+  bool is_profiling = 6;
+  // What to say above the chart, including when there is nothing.
+  string note = 7;
+}
+
+message FrameView {
+  string name = 1;
+  string origin = 2;
+  uint32 depth = 3;
+  double start = 4;
+  double width = 5;
+  uint64 calls = 6;
+  string total = 7;
+  string own = 8;
+  double share = 9;
+  // What a reader is told when they point at it.
+  string caption = 10;
+}
+
+message FlameView {
+  repeated FrameView frames = 1;
+  uint32 depth = 2;
+  string total = 3;
+  string note = 4;
+  bool is_watched = 5;
+}
+
+// ---- Memory ----------------------------------------------------------------
+
+message StaticObjectView {
+  string name = 1;
+  string origin = 2;
+  string directory = 3;
+  string file_name = 4;
+  uint64 bytes_used = 5;
+  string size_text = 6;
+  bool is_constant = 7;
+}
+
+message DirectoryShare {
+  string directory = 1;
+  string size_text = 2;
+}
+
+message StaticMemoryView {
+  repeated StaticObjectView biggest = 1;
+  repeated DirectoryShare by_directory = 2;
+  uint32 object_count = 3;
+  uint64 total_bytes = 4;
+  uint64 writable_bytes = 5;
+  uint64 firmware_bytes = 6;
+  uint64 budget_bytes = 7;
+  bool is_within_budget = 8;
+  string total_text = 9;
+  string writable_text = 10;
+  string firmware_text = 11;
+  // One line saying what is held and whether it fits.
+  string summary = 12;
+}
+
+message StackFrameView {
+  string function = 1;
+  string origin = 2;
+  string file_name = 3;
+  uint64 bytes_used = 4;
+  string size_text = 5;
+}
+
+message StackUsageView {
+  repeated StackFrameView path = 1;
+  repeated StackFrameView largest = 2;
+  uint64 deepest_bytes = 3;
+  uint32 deepest_depth = 4;
+  string deepest_text = 5;
+  bool path_is_complete = 6;
+  bool is_measured = 7;
+  string summary = 8;
+}
+
+message AllocationSiteView {
+  string function = 1;
+  string origin = 2;
+  string file_name = 3;
+  uint64 blocks = 4;
+  uint64 bytes_used = 5;
+  string size_text = 6;
+}
+
+message HeapUsageView {
+  repeated AllocationSiteView outstanding = 1;
+  uint64 allocations = 2;
+  uint64 frees = 3;
+  uint64 failures = 4;
+  string live_text = 5;
+  string peak_text = 6;
+  string firmware_text = 7;
+  uint64 untracked_blocks = 8;
+  bool never_allocated = 9;
+  bool is_watched = 10;
+  string summary = 11;
+  // The same as live_text and peak_text, as numbers to compare against.
+  uint64 live_bytes = 12;
+  uint64 peak_bytes = 13;
+}
+
+message MemoryView {
+  StaticMemoryView static_memory = 1;
+  StackUsageView stack = 2;
+  HeapUsageView heap = 3;
+}

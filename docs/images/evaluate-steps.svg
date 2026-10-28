@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="940" height="270" viewBox="0 0 940 270" role="img">
+<title>What evaluate does, step by step</title>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="context-stroke"/></marker></defs>
+<rect x="0.5" y="0.5" width="939" height="269" rx="12" fill="#ffffff" stroke="#d7dbe4"/>
+<rect x="30" y="70" width="160" height="130" rx="12" fill="#dbe7ff" stroke="#2563eb" stroke-width="1.5"/>
+<circle cx="110.0" cy="70" r="12" fill="#2563eb"/>
+<text x="110.0" y="74.5" font-family="Segoe UI, Helvetica Neue, Helvetica, Arial, sans-serif" font-size="12" fill="#ffffff" font-weight="bold" text-anchor="middle">1</text>
+<text x="110.0" y="112" font-family="Segoe UI, Helvetica Neue, Helvetica, Arial, sans-serif" font-size="15" fill="#1b1f2a" font-weight="bold" text-anchor="middle">declare</text>
+<text x="110.0" y="142" font-family="Segoe UI, Helvetica Neue, Helvetica, Arial, sans-serif" font-size="11.5" fill="#5f6879" font-weight="normal" text-anchor="middle">check.channel(...)</text>
+<text x="110.0" y="162" font-family="Segoe UI, Helvetica Neue, Helvetica, Arial, sans-serif" font-size="11.5" fill="#5f6879" font-weight="normal" text-anchor="middle">check.call(...)</text>
+<line x1="193" y1="135" x2="209" y2="135" stroke="#1b1f2a" stroke-width="1.5" marker-end="url(#arrow)"/>
+<rect x="212" y="70" width="160" height="130" rx="12" fill="#fdecc8" stroke="#b57d09" stroke-width="1.5"/>
+<circle cx="292.0" cy="70" r="12" fill="#b57d09"/>
+<text x="292.0" y="74.5" font-family="Segoe UI, Helvetica Neue, Helvetica, Arial, sans-serif" font-size="12" fill="#ffffff" font-weight="bold" text-anchor="middle">2</text>
+<text x="292.0" y="112" font-family="Segoe UI, Helvetica Neue, Helvetica, Arial, sans-serif" font-size="15" fill="#1b1f2a" font-weight="bold" text-anchor="middle">clear</text>
+<text x="292.0" y="142" font-family="Segoe UI, Helvetica Neue, Helvetica, Arial, sans-serif" font-size="11.5" fill="#5f6879" font-weight="normal" text-anchor="middle">recordings and counts</text>
+<text x="292.0" y="162" font-family="Segoe UI, Helvetica Neue, Helvetica, Arial, sans-serif" font-size="11.5" fill="#5f6879" font-weight="normal" text-anchor="middle">for every client</text>
+<line x1="375" y1="135" x2="391" y2="135" stroke="#1b1f2a" stroke-width="1.5" marker-end="url(#arrow)"/>
+<rect x="394" y="70" width="160" height="130" rx="12" fill="#d6f2e6" stroke="#108b63" stroke-width="1.5"/>
+<circle cx="474.0" cy="70" r="12" fill="#108b63"/>
+<text x="474.0" y="74.5" font-family="Segoe UI, Helvetica Neue, Helvetica, Arial, sans-serif" font-size="12" fill="#ffffff" font-weight="bold" text-anchor="middle">3</text>
+<text x="474.0" y="112" font-family="Segoe UI, Helvetica Neue, Helvetica, Arial, sans-serif" font-size="15" fill="#1b1f2a" font-weight="bold" text-anchor="middle">let time pass</text>
+<text x="474.0" y="142" font-family="Segoe UI, Helvetica Neue, Helvetica, Arial, sans-serif" font-size="11.5" fill="#5f6879" font-weight="normal" text-anchor="middle">advance (virtual)</text>
+<text x="474.0" y="162" font-family="Segoe UI, Helvetica Neue, Helvetica, Arial, sans-serif" font-size="11.5" fill="#5f6879" font-weight="normal" text-anchor="middle">or wait (real time)</text>
+<line x1="557" y1="135" x2="573" y2="135" stroke="#1b1f2a" stroke-width="1.5" marker-end="url(#arrow)"/>
+<rect x="576" y="70" width="160" height="130" rx="12" fill="#ebe4fb" stroke="#7c5cd6" stroke-width="1.5"/>
+<circle cx="656.0" cy="70" r="12" fill="#7c5cd6"/>
+<text x="656.0" y="74.5" font-family="Segoe UI, Helvetica Neue, Helvetica, Arial, sans-serif" font-size="12" fill="#ffffff" font-weight="bold" text-anchor="middle">4</text>
+<text x="656.0" y="112" font-family="Segoe UI, Helvetica Neue, Helvetica, Arial, sans-serif" font-size="15" fill="#1b1f2a" font-weight="bold" text-anchor="middle">observe</text>
+<text x="656.0" y="142" font-family="Segoe UI, Helvetica Neue, Helvetica, Arial, sans-serif" font-size="11.5" fill="#5f6879" font-weight="normal" text-anchor="middle">clock + counts, then</text>
+<text x="656.0" y="162" font-family="Segoe UI, Helvetica Neue, Helvetica, Arial, sans-serif" font-size="11.5" fill="#5f6879" font-weight="normal" text-anchor="middle">samples, exchanges, memory</text>
+<line x1="739" y1="135" x2="755" y2="135" stroke="#1b1f2a" stroke-width="1.5" marker-end="url(#arrow)"/>
+<rect x="758" y="70" width="160" height="130" rx="12" fill="#dbe7ff" stroke="#2563eb" stroke-width="1.5"/>
+<circle cx="838.0" cy="70" r="12" fill="#2563eb"/>
+<text x="838.0" y="74.5" font-family="Segoe UI, Helvetica Neue, Helvetica, Arial, sans-serif" font-size="12" fill="#ffffff" font-weight="bold" text-anchor="middle">5</text>
+<text x="838.0" y="112" font-family="Segoe UI, Helvetica Neue, Helvetica, Arial, sans-serif" font-size="15" fill="#1b1f2a" font-weight="bold" text-anchor="middle">check</text>
+<text x="838.0" y="142" font-family="Segoe UI, Helvetica Neue, Helvetica, Arial, sans-serif" font-size="11.5" fill="#5f6879" font-weight="normal" text-anchor="middle">every expectation</text>
+<text x="838.0" y="162" font-family="Segoe UI, Helvetica Neue, Helvetica, Arial, sans-serif" font-size="11.5" fill="#5f6879" font-weight="normal" text-anchor="middle">-&gt; ExpectationReport</text>
+<text x="30" y="238" font-family="Segoe UI, Helvetica Neue, Helvetica, Arial, sans-serif" font-size="12" fill="#5f6879" font-weight="normal" text-anchor="start">Steps 2 to 5 are one call: report = check.evaluate(for_seconds=1.0). Twenty expectations cost one reading of each recording.</text>
+</svg>
