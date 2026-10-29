@@ -27,6 +27,8 @@ from looper.domain.model import (
     Pin,
     Recordings,
     Signal,
+    Variable,
+    Watch,
 )
 from looper.infrastructure import translation
 from looper.infrastructure.contract import looper_inspector_pb2 as contract
@@ -37,6 +39,10 @@ CONNECT_TIMEOUT_SECONDS = 5.0
 
 #: The version of the contract this library was built against.
 CONTRACT_VERSION = contract.CONTRACT_VERSION_CURRENT
+
+#: The largest answer the channel takes. The catalogue of a firmware of
+#: ordinary size is some 12 MB, three times gRPC's default.
+MAX_MESSAGE_BYTES = 64 * 1024 * 1024
 
 EMPTY = contract.Empty()
 
@@ -50,7 +56,9 @@ class GrpcInspector(Inspector):
         Raises:
             SimulationUnreachableError: If nothing answers there in time.
         """
-        self._channel = grpc.insecure_channel(address)
+        self._channel = grpc.insecure_channel(
+            address, options=[("grpc.max_receive_message_length", MAX_MESSAGE_BYTES)]
+        )
         try:
             grpc.channel_ready_future(self._channel).result(timeout=timeout_seconds)
         except grpc.FutureTimeoutError as error:
@@ -120,6 +128,31 @@ class GrpcInspector(Inspector):
         """Put one message on a bus."""
         request = translation.bus_message_request_of(message)
         self._call(self._stub.SendBusMessage, request)
+
+    def list_variables(self) -> tuple[Variable, ...]:
+        """The catalogue of the firmware's variables, read out of the build."""
+        catalogue = self._call(self._stub.ListVariables, EMPTY)
+        if catalogue.unavailable_reason:
+            raise SimulationRefusedError(catalogue.unavailable_reason)
+        return translation.variables_of(catalogue)
+
+    def watch_variable(self, variable_id: int) -> Watch:
+        """Begin sampling a variable from the catalogue."""
+        choice = contract.VariableChoice(variable_id=variable_id)
+        return translation.watch_of(self._call(self._stub.WatchVariable, choice))
+
+    def write_variable(self, channel_id: int, value: float) -> None:
+        """Store a value in a watched variable."""
+        write = contract.VariableWrite(channel_id=channel_id, value=value)
+        self._call(self._stub.WriteVariable, write)
+
+    def remove_watch(self, channel_id: int) -> None:
+        """Stop sampling a watched variable."""
+        self._call(self._stub.RemoveWatch, contract.WatchChoice(channel_id=channel_id))
+
+    def read_watches(self) -> tuple[Watch, ...]:
+        """Every variable being sampled, with its value now."""
+        return translation.watches_of(self._call(self._stub.ObserveWatches, EMPTY))
 
     def close(self) -> None:
         """Let go of the connection. Closing twice is allowed."""

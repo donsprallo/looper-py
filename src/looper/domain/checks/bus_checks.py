@@ -19,7 +19,7 @@ class BusNothingRefused(Check):
         """Count what crossed the bus and what nothing took."""
         on_bus = observed.exchanges_on(self.bus_id)
         refused = [one for one in on_bus if one.was_refused]
-        addresses = ", ".join(sorted({one.address for one in refused}))
+        addresses = ", ".join(sorted({one.display_address for one in refused}))
         seen = f"{len(refused)} of {len(on_bus)} refused" + (f" at {addresses}" if refused else "")
         return Outcome(self.name, "nothing refused", seen, met=not refused)
 

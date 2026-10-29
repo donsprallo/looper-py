@@ -26,6 +26,8 @@ from looper.domain.model import (
     Pin,
     Recordings,
     Signal,
+    Variable,
+    Watch,
 )
 
 
@@ -115,6 +117,38 @@ class Inspector(ABC):
         Raises:
             SimulationRefusedError: If the bus takes no messages.
         """
+
+    @abstractmethod
+    def list_variables(self) -> tuple[Variable, ...]:
+        """The catalogue of the firmware's variables, read out of the build.
+
+        Raises:
+            SimulationRefusedError: If there is no catalogue; the message says why.
+        """
+
+    @abstractmethod
+    def watch_variable(self, variable_id: int) -> Watch:
+        """Begin sampling a variable from the catalogue.
+
+        Raises:
+            SimulationRefusedError: If the catalogue has no such variable.
+        """
+
+    @abstractmethod
+    def write_variable(self, channel_id: int, value: float) -> None:
+        """Store a value in a watched variable.
+
+        Raises:
+            SimulationRefusedError: If the watch is unknown or not writable.
+        """
+
+    @abstractmethod
+    def remove_watch(self, channel_id: int) -> None:
+        """Stop sampling a watched variable."""
+
+    @abstractmethod
+    def read_watches(self) -> tuple[Watch, ...]:
+        """Every variable being sampled, with its value now."""
 
     @abstractmethod
     def close(self) -> None:

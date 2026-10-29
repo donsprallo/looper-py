@@ -5,7 +5,16 @@ from __future__ import annotations
 import pytest
 
 from doubles import ScriptedInspector
-from looper import Bus, BusMessage, Channel, Pin, Signal, Simulation, SimulationRefusedError
+from looper import (
+    Bus,
+    BusMessage,
+    Channel,
+    Pin,
+    Signal,
+    Simulation,
+    SimulationRefusedError,
+    Variable,
+)
 
 
 def test_the_description_is_read_once_when_reached() -> None:
@@ -47,6 +56,27 @@ def test_a_signal_and_a_message_reach_the_simulation() -> None:
 
     assert inspector.signals == [(10, Signal(offset=0.001))]
     assert inspector.messages[0].address == 0x6FF
+
+
+def test_a_variable_is_watched_written_and_let_go() -> None:
+    inspector = ScriptedInspector()
+    inspector.variables = (Variable(7, "config.gain", "gain", "uint", 1, 0x2000, is_writable=True),)
+    simulation = Simulation(inspector)
+
+    watch = simulation.watch_variable(simulation.variables()[0].variable_id)
+    simulation.write_variable(watch.channel_id, 3.0)
+
+    assert simulation.watches() == (watch,)
+    assert inspector.written == [(watch.channel_id, 3.0)]
+
+    simulation.remove_watch(watch.channel_id)
+
+    assert simulation.watches() == ()
+
+
+def test_a_variable_the_catalogue_lacks_is_refused() -> None:
+    with pytest.raises(SimulationRefusedError, match="no variable 9"):
+        Simulation(ScriptedInspector()).watch_variable(9)
 
 
 def test_closing_lets_go_once_and_stops_what_was_started() -> None:

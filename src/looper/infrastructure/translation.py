@@ -21,6 +21,8 @@ from looper.domain.model import (
     Sample,
     Signal,
     TimeMode,
+    Variable,
+    Watch,
 )
 from looper.infrastructure.contract import looper_inspector_pb2 as contract
 
@@ -114,6 +116,50 @@ def buses_of(message: contract.BusList) -> tuple[Bus, ...]:
     )
 
 
+def variables_of(message: contract.VariableCatalogue) -> tuple[Variable, ...]:
+    """The firmware's variables, as the catalogue lists them."""
+    return tuple(
+        Variable(
+            variable_id=one.variable_id,
+            path=one.path,
+            name=one.name,
+            encoding=one.encoding,
+            byte_width=one.byte_width,
+            runtime_address=one.runtime_address,
+            is_writable=one.is_writable,
+            bit_offset=one.bit_offset,
+            bit_width=one.bit_width,
+            display_type=one.display_type,
+            display_address=one.display_address,
+        )
+        for one in message.variables
+    )
+
+
+def watch_of(message: contract.WatchView) -> Watch:
+    """One variable that is being sampled."""
+    return Watch(
+        channel_id=message.channel_id,
+        path=message.path,
+        name=message.name,
+        encoding=message.encoding,
+        byte_width=message.byte_width,
+        runtime_address=message.runtime_address,
+        is_writable=message.is_writable,
+        value=message.value,
+        bit_offset=message.bit_offset,
+        bit_width=message.bit_width,
+        display_value=message.display_value,
+        range_text=message.range_text,
+        unit=message.unit,
+    )
+
+
+def watches_of(message: contract.WatchList) -> tuple[Watch, ...]:
+    """Every variable being sampled."""
+    return tuple(watch_of(one) for one in message.watches)
+
+
 def signal_request_of(channel_id: int, signal: Signal) -> contract.SignalRequest:
     """A signal for an analog input, as the contract carries it."""
     return contract.SignalRequest(
@@ -151,7 +197,19 @@ def _exchange_of(message: contract.ExchangeView) -> Exchange:
     return Exchange(
         bus_id=message.bus_id,
         seconds=message.seconds,
-        address=message.address,
+        address=_address_of(message.address),
+        display_address=message.address,
+        direction=message.direction,
+        payload=bytes.fromhex(message.payload),
+        response=bytes.fromhex(message.response),
+        length=message.length,
         accepted=message.accepted,
         sequence=message.sequence,
     )
+
+
+def _address_of(display: str) -> int:
+    """The number behind an address as the server shows it: ``0x123`` or ``0``."""
+    if display.lower().startswith("0x"):
+        return int(display, 16)
+    return int(display, 10)

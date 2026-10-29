@@ -148,6 +148,7 @@ concepts
 
 guides/reaching
 guides/scene
+guides/variables
 guides/expectations
 guides/pytest
 ```

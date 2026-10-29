@@ -18,6 +18,7 @@ from looper.domain.model.readings import (
     TimeMode,
 )
 from looper.domain.model.requests import BusMessage, Signal
+from looper.domain.model.variables import Variable, Watch
 
 __all__ = [
     "Bus",
@@ -36,4 +37,6 @@ __all__ = [
     "Sample",
     "Signal",
     "TimeMode",
+    "Variable",
+    "Watch",
 ]

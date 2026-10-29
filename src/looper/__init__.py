@@ -33,6 +33,8 @@ from looper.domain.model import (
     Pin,
     Signal,
     TimeMode,
+    Variable,
+    Watch,
 )
 from looper.infrastructure.looper_cli import LooperCliError
 from looper.starting import ContractMismatchError, connect, run
@@ -54,6 +56,8 @@ __all__ = [
     "SimulationRefusedError",
     "SimulationUnreachableError",
     "TimeMode",
+    "Variable",
+    "Watch",
     "__version__",
     "connect",
     "run",

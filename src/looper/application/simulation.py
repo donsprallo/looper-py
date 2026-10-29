@@ -13,7 +13,17 @@ from types import TracebackType
 
 from looper.application.expectations import MICROSECONDS_PER_SECOND, Expectations
 from looper.application.ports import Inspector, SimulationRefusedError
-from looper.domain.model import Bus, BusMessage, Channel, Description, Pin, Signal, TimeMode
+from looper.domain.model import (
+    Bus,
+    BusMessage,
+    Channel,
+    Description,
+    Pin,
+    Signal,
+    TimeMode,
+    Variable,
+    Watch,
+)
 
 
 class Simulation:
@@ -129,6 +139,38 @@ class Simulation:
             SimulationRefusedError: If the bus takes no messages.
         """
         self._inspector.send_bus_message(message)
+
+    def variables(self) -> tuple[Variable, ...]:
+        """The catalogue of the firmware's variables.
+
+        Raises:
+            SimulationRefusedError: If the build could not be read; the message says why.
+        """
+        return self._inspector.list_variables()
+
+    def watch_variable(self, variable_id: int) -> Watch:
+        """Begin sampling a variable from the catalogue.
+
+        Raises:
+            SimulationRefusedError: If the catalogue has no such variable.
+        """
+        return self._inspector.watch_variable(variable_id)
+
+    def write_variable(self, channel_id: int, value: float) -> None:
+        """Store a value in a watched variable.
+
+        Raises:
+            SimulationRefusedError: If the watch is unknown or not writable.
+        """
+        self._inspector.write_variable(channel_id, value)
+
+    def remove_watch(self, channel_id: int) -> None:
+        """Stop sampling a watched variable."""
+        self._inspector.remove_watch(channel_id)
+
+    def watches(self) -> tuple[Watch, ...]:
+        """Every variable being sampled, with its value now."""
+        return self._inspector.read_watches()
 
     def close(self) -> None:
         """Let go of the simulation. Closing twice is allowed."""

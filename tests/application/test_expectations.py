@@ -35,7 +35,18 @@ def samples_of(channel: int, values: tuple[float, ...]) -> tuple[Sample, ...]:
 
 def an_exchange(sequence: int, accepted: bool = True) -> Exchange:
     """One recorded CAN frame on bus two."""
-    return Exchange(bus_id=2, seconds=0.0, address="0x701", accepted=accepted, sequence=sequence)
+    return Exchange(
+        bus_id=2,
+        seconds=0.0,
+        address=0x701,
+        display_address="0x701",
+        direction="inbound",
+        payload=b"\x01\x02",
+        response=b"",
+        length=2,
+        accepted=accepted,
+        sequence=sequence,
+    )
 
 
 @pytest.fixture

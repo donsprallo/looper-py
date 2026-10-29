@@ -52,11 +52,31 @@ class Sample:
 
 @dataclass(frozen=True)
 class Exchange:
-    """One recorded exchange on a bus."""
+    """One recorded exchange on a bus.
+
+    Attributes:
+        bus_id: The bus it crossed.
+        seconds: When, in simulated time.
+        address: Where on the bus it was addressed, as the number a caller
+            matches on.
+        display_address: The same address as the server shows it.
+        direction: ``outbound`` when the firmware started it, ``inbound``
+            otherwise.
+        payload: The bytes it carried.
+        response: The bytes that answered it, empty when nothing did.
+        length: How many bytes the server counted in it.
+        accepted: Whether something on the bus took it.
+        sequence: Its place in the recording.
+    """
 
     bus_id: int
     seconds: float
-    address: str
+    address: int
+    display_address: str
+    direction: str
+    payload: bytes
+    response: bytes
+    length: int
     accepted: bool
     sequence: int
 

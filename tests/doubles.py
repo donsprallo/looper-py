@@ -20,6 +20,8 @@ from looper.domain.model import (
     Sample,
     Signal,
     TimeMode,
+    Variable,
+    Watch,
 )
 
 #: How many records one page of a recording holds, so that paging is exercised.
@@ -45,6 +47,9 @@ class ScriptedInspector(Inspector):
         self.toggled: list[tuple[int, str]] = []
         self.signals: list[tuple[int, Signal]] = []
         self.messages: list[BusMessage] = []
+        self.variables: tuple[Variable, ...] = ()
+        self.watches: list[Watch] = []
+        self.written: list[tuple[int, float]] = []
         self.closed = 0
 
     def describe(self) -> Description:
@@ -104,6 +109,35 @@ class ScriptedInspector(Inspector):
 
     def send_bus_message(self, message: BusMessage) -> None:
         self.messages.append(message)
+
+    def list_variables(self) -> tuple[Variable, ...]:
+        return self.variables
+
+    def watch_variable(self, variable_id: int) -> Watch:
+        variable = next((one for one in self.variables if one.variable_id == variable_id), None)
+        if variable is None:
+            raise SimulationRefusedError(f"the catalogue has no variable {variable_id}")
+        watch = Watch(
+            channel_id=100 + len(self.watches),
+            path=variable.path,
+            name=variable.name,
+            encoding=variable.encoding,
+            byte_width=variable.byte_width,
+            runtime_address=variable.runtime_address,
+            is_writable=variable.is_writable,
+            value=0.0,
+        )
+        self.watches.append(watch)
+        return watch
+
+    def write_variable(self, channel_id: int, value: float) -> None:
+        self.written.append((channel_id, value))
+
+    def remove_watch(self, channel_id: int) -> None:
+        self.watches = [one for one in self.watches if one.channel_id != channel_id]
+
+    def read_watches(self) -> tuple[Watch, ...]:
+        return tuple(self.watches)
 
     def close(self) -> None:
         self.closed += 1

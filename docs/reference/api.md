@@ -9,6 +9,7 @@ looper.run, looper.connect                        # reaching a simulation
 looper.Simulation, looper.Expectations            # what you work with
 looper.Signal, looper.BusMessage                  # what you send
 looper.Pin, looper.Channel, looper.Bus            # what you read
+looper.Variable, looper.Watch                     # the firmware's variables
 looper.ExpectationReport, looper.Outcome          # what comes back
 looper.TimeMode
 looper.SimulationRefusedError, looper.SimulationUnreachableError
@@ -75,6 +76,10 @@ looper.LooperCliError, looper.ContractMismatchError
 .. autoclass:: looper.Channel
 
 .. autoclass:: looper.Bus
+
+.. autoclass:: looper.Variable
+
+.. autoclass:: looper.Watch
 
 .. autoclass:: looper.TimeMode
    :members:
