@@ -87,7 +87,7 @@ class SignalView(_message.Message):
     def __init__(self, waveform: _Optional[str] = ..., amplitude: _Optional[float] = ..., offset: _Optional[float] = ..., frequency_hz: _Optional[float] = ..., phase_degrees: _Optional[float] = ...) -> None: ...
 
 class ChannelView(_message.Message):
-    __slots__ = ("channel_id", "name", "unit", "direction", "value", "is_drivable", "signal", "is_silent", "display_value")
+    __slots__ = ("channel_id", "name", "unit", "direction", "value", "is_drivable", "signal", "is_silent", "display_value", "is_driven_by_graph")
     CHANNEL_ID_FIELD_NUMBER: _ClassVar[int]
     NAME_FIELD_NUMBER: _ClassVar[int]
     UNIT_FIELD_NUMBER: _ClassVar[int]
@@ -97,6 +97,7 @@ class ChannelView(_message.Message):
     SIGNAL_FIELD_NUMBER: _ClassVar[int]
     IS_SILENT_FIELD_NUMBER: _ClassVar[int]
     DISPLAY_VALUE_FIELD_NUMBER: _ClassVar[int]
+    IS_DRIVEN_BY_GRAPH_FIELD_NUMBER: _ClassVar[int]
     channel_id: int
     name: str
     unit: str
@@ -106,7 +107,8 @@ class ChannelView(_message.Message):
     signal: SignalView
     is_silent: bool
     display_value: str
-    def __init__(self, channel_id: _Optional[int] = ..., name: _Optional[str] = ..., unit: _Optional[str] = ..., direction: _Optional[str] = ..., value: _Optional[float] = ..., is_drivable: _Optional[bool] = ..., signal: _Optional[_Union[SignalView, _Mapping]] = ..., is_silent: _Optional[bool] = ..., display_value: _Optional[str] = ...) -> None: ...
+    is_driven_by_graph: bool
+    def __init__(self, channel_id: _Optional[int] = ..., name: _Optional[str] = ..., unit: _Optional[str] = ..., direction: _Optional[str] = ..., value: _Optional[float] = ..., is_drivable: _Optional[bool] = ..., signal: _Optional[_Union[SignalView, _Mapping]] = ..., is_silent: _Optional[bool] = ..., display_value: _Optional[str] = ..., is_driven_by_graph: _Optional[bool] = ...) -> None: ...
 
 class ChannelList(_message.Message):
     __slots__ = ("channels",)
@@ -123,14 +125,105 @@ class SignalRequest(_message.Message):
     def __init__(self, channel_id: _Optional[int] = ..., signal: _Optional[_Union[SignalView, _Mapping]] = ...) -> None: ...
 
 class WaveformView(_message.Message):
-    __slots__ = ("name", "display_name", "is_alternating")
+    __slots__ = ("name", "display_name", "is_alternating", "is_periodic")
     NAME_FIELD_NUMBER: _ClassVar[int]
     DISPLAY_NAME_FIELD_NUMBER: _ClassVar[int]
     IS_ALTERNATING_FIELD_NUMBER: _ClassVar[int]
+    IS_PERIODIC_FIELD_NUMBER: _ClassVar[int]
     name: str
     display_name: str
     is_alternating: bool
-    def __init__(self, name: _Optional[str] = ..., display_name: _Optional[str] = ..., is_alternating: _Optional[bool] = ...) -> None: ...
+    is_periodic: bool
+    def __init__(self, name: _Optional[str] = ..., display_name: _Optional[str] = ..., is_alternating: _Optional[bool] = ..., is_periodic: _Optional[bool] = ...) -> None: ...
+
+class SignalInputRequest(_message.Message):
+    __slots__ = ("node", "output")
+    NODE_FIELD_NUMBER: _ClassVar[int]
+    OUTPUT_FIELD_NUMBER: _ClassVar[int]
+    node: str
+    output: int
+    def __init__(self, node: _Optional[str] = ..., output: _Optional[int] = ...) -> None: ...
+
+class SignalNodeRequest(_message.Message):
+    __slots__ = ("key", "kind", "signal", "source", "inputs", "model", "parameters")
+    class ParametersEntry(_message.Message):
+        __slots__ = ("key", "value")
+        KEY_FIELD_NUMBER: _ClassVar[int]
+        VALUE_FIELD_NUMBER: _ClassVar[int]
+        key: str
+        value: float
+        def __init__(self, key: _Optional[str] = ..., value: _Optional[float] = ...) -> None: ...
+    KEY_FIELD_NUMBER: _ClassVar[int]
+    KIND_FIELD_NUMBER: _ClassVar[int]
+    SIGNAL_FIELD_NUMBER: _ClassVar[int]
+    SOURCE_FIELD_NUMBER: _ClassVar[int]
+    INPUTS_FIELD_NUMBER: _ClassVar[int]
+    MODEL_FIELD_NUMBER: _ClassVar[int]
+    PARAMETERS_FIELD_NUMBER: _ClassVar[int]
+    key: str
+    kind: str
+    signal: SignalView
+    source: int
+    inputs: _containers.RepeatedCompositeFieldContainer[SignalInputRequest]
+    model: str
+    parameters: _containers.ScalarMap[str, float]
+    def __init__(self, key: _Optional[str] = ..., kind: _Optional[str] = ..., signal: _Optional[_Union[SignalView, _Mapping]] = ..., source: _Optional[int] = ..., inputs: _Optional[_Iterable[_Union[SignalInputRequest, _Mapping]]] = ..., model: _Optional[str] = ..., parameters: _Optional[_Mapping[str, float]] = ...) -> None: ...
+
+class ModelParameterView(_message.Message):
+    __slots__ = ("name", "default_value", "unit")
+    NAME_FIELD_NUMBER: _ClassVar[int]
+    DEFAULT_VALUE_FIELD_NUMBER: _ClassVar[int]
+    UNIT_FIELD_NUMBER: _ClassVar[int]
+    name: str
+    default_value: float
+    unit: str
+    def __init__(self, name: _Optional[str] = ..., default_value: _Optional[float] = ..., unit: _Optional[str] = ...) -> None: ...
+
+class ModelView(_message.Message):
+    __slots__ = ("name", "description", "inputs", "outputs", "parameters", "step_seconds", "source", "problem")
+    NAME_FIELD_NUMBER: _ClassVar[int]
+    DESCRIPTION_FIELD_NUMBER: _ClassVar[int]
+    INPUTS_FIELD_NUMBER: _ClassVar[int]
+    OUTPUTS_FIELD_NUMBER: _ClassVar[int]
+    PARAMETERS_FIELD_NUMBER: _ClassVar[int]
+    STEP_SECONDS_FIELD_NUMBER: _ClassVar[int]
+    SOURCE_FIELD_NUMBER: _ClassVar[int]
+    PROBLEM_FIELD_NUMBER: _ClassVar[int]
+    name: str
+    description: str
+    inputs: _containers.RepeatedScalarFieldContainer[str]
+    outputs: _containers.RepeatedScalarFieldContainer[str]
+    parameters: _containers.RepeatedCompositeFieldContainer[ModelParameterView]
+    step_seconds: float
+    source: str
+    problem: str
+    def __init__(self, name: _Optional[str] = ..., description: _Optional[str] = ..., inputs: _Optional[_Iterable[str]] = ..., outputs: _Optional[_Iterable[str]] = ..., parameters: _Optional[_Iterable[_Union[ModelParameterView, _Mapping]]] = ..., step_seconds: _Optional[float] = ..., source: _Optional[str] = ..., problem: _Optional[str] = ...) -> None: ...
+
+class ModelList(_message.Message):
+    __slots__ = ("models", "unavailable_reason")
+    MODELS_FIELD_NUMBER: _ClassVar[int]
+    UNAVAILABLE_REASON_FIELD_NUMBER: _ClassVar[int]
+    models: _containers.RepeatedCompositeFieldContainer[ModelView]
+    unavailable_reason: str
+    def __init__(self, models: _Optional[_Iterable[_Union[ModelView, _Mapping]]] = ..., unavailable_reason: _Optional[str] = ...) -> None: ...
+
+class SignalTargetRequest(_message.Message):
+    __slots__ = ("channel_id", "node", "output")
+    CHANNEL_ID_FIELD_NUMBER: _ClassVar[int]
+    NODE_FIELD_NUMBER: _ClassVar[int]
+    OUTPUT_FIELD_NUMBER: _ClassVar[int]
+    channel_id: int
+    node: str
+    output: int
+    def __init__(self, channel_id: _Optional[int] = ..., node: _Optional[str] = ..., output: _Optional[int] = ...) -> None: ...
+
+class SignalGraphRequest(_message.Message):
+    __slots__ = ("nodes", "targets")
+    NODES_FIELD_NUMBER: _ClassVar[int]
+    TARGETS_FIELD_NUMBER: _ClassVar[int]
+    nodes: _containers.RepeatedCompositeFieldContainer[SignalNodeRequest]
+    targets: _containers.RepeatedCompositeFieldContainer[SignalTargetRequest]
+    def __init__(self, nodes: _Optional[_Iterable[_Union[SignalNodeRequest, _Mapping]]] = ..., targets: _Optional[_Iterable[_Union[SignalTargetRequest, _Mapping]]] = ...) -> None: ...
 
 class WaveformList(_message.Message):
     __slots__ = ("waveforms",)
@@ -259,7 +352,7 @@ class VariableChoice(_message.Message):
     def __init__(self, variable_id: _Optional[int] = ...) -> None: ...
 
 class WatchView(_message.Message):
-    __slots__ = ("channel_id", "path", "name", "encoding", "byte_width", "runtime_address", "is_writable", "value", "bit_offset", "bit_width", "display_value", "range_text", "unit")
+    __slots__ = ("channel_id", "path", "name", "encoding", "byte_width", "runtime_address", "is_writable", "value", "bit_offset", "bit_width", "display_value", "range_text")
     CHANNEL_ID_FIELD_NUMBER: _ClassVar[int]
     PATH_FIELD_NUMBER: _ClassVar[int]
     NAME_FIELD_NUMBER: _ClassVar[int]
@@ -272,7 +365,6 @@ class WatchView(_message.Message):
     BIT_WIDTH_FIELD_NUMBER: _ClassVar[int]
     DISPLAY_VALUE_FIELD_NUMBER: _ClassVar[int]
     RANGE_TEXT_FIELD_NUMBER: _ClassVar[int]
-    UNIT_FIELD_NUMBER: _ClassVar[int]
     channel_id: int
     path: str
     name: str
@@ -285,8 +377,7 @@ class WatchView(_message.Message):
     bit_width: int
     display_value: str
     range_text: str
-    unit: str
-    def __init__(self, channel_id: _Optional[int] = ..., path: _Optional[str] = ..., name: _Optional[str] = ..., encoding: _Optional[str] = ..., byte_width: _Optional[int] = ..., runtime_address: _Optional[int] = ..., is_writable: _Optional[bool] = ..., value: _Optional[float] = ..., bit_offset: _Optional[int] = ..., bit_width: _Optional[int] = ..., display_value: _Optional[str] = ..., range_text: _Optional[str] = ..., unit: _Optional[str] = ...) -> None: ...
+    def __init__(self, channel_id: _Optional[int] = ..., path: _Optional[str] = ..., name: _Optional[str] = ..., encoding: _Optional[str] = ..., byte_width: _Optional[int] = ..., runtime_address: _Optional[int] = ..., is_writable: _Optional[bool] = ..., value: _Optional[float] = ..., bit_offset: _Optional[int] = ..., bit_width: _Optional[int] = ..., display_value: _Optional[str] = ..., range_text: _Optional[str] = ...) -> None: ...
 
 class WatchList(_message.Message):
     __slots__ = ("watches",)

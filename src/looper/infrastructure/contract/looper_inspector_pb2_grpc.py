@@ -144,6 +144,16 @@ class InspectorStub:
                 request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.SignalRequest.SerializeToString,
                 response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.FromString,
                 _registered_method=True)
+        self.ApplySignalGraph = channel.unary_unary(
+                '/looper.inspector.v1.Inspector/ApplySignalGraph',
+                request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.SignalGraphRequest.SerializeToString,
+                response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.FromString,
+                _registered_method=True)
+        self.ListModels = channel.unary_unary(
+                '/looper.inspector.v1.Inspector/ListModels',
+                request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
+                response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ModelList.FromString,
+                _registered_method=True)
         self.WatchVariable = channel.unary_unary(
                 '/looper.inspector.v1.Inspector/WatchVariable',
                 request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.VariableChoice.SerializeToString,
@@ -339,6 +349,22 @@ class InspectorServicer:
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def ApplySignalGraph(self, request, context):
+        """ApplySignalGraph: replace the signal graph and the inputs it drives.
+        An input the graph no longer names goes back to its own signal.
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def ListModels(self, request, context):
+        """ListModels: the models the project offers the signal graph, read
+        afresh, with why any of them cannot be used.
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
     def WatchVariable(self, request, context):
         """WatchVariable: begin sampling a variable from the catalogue.
         """
@@ -487,6 +513,16 @@ def add_InspectorServicer_to_server(servicer, server):
                     servicer.ApplySignal,
                     request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.SignalRequest.FromString,
                     response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
+            ),
+            'ApplySignalGraph': grpc.unary_unary_rpc_method_handler(
+                    servicer.ApplySignalGraph,
+                    request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.SignalGraphRequest.FromString,
+                    response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
+            ),
+            'ListModels': grpc.unary_unary_rpc_method_handler(
+                    servicer.ListModels,
+                    request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.FromString,
+                    response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ModelList.SerializeToString,
             ),
             'WatchVariable': grpc.unary_unary_rpc_method_handler(
                     servicer.WatchVariable,
@@ -1108,6 +1144,60 @@ class Inspector:
             '/looper.inspector.v1.Inspector/ApplySignal',
             looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.SignalRequest.SerializeToString,
             looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def ApplySignalGraph(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/looper.inspector.v1.Inspector/ApplySignalGraph',
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.SignalGraphRequest.SerializeToString,
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def ListModels(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/looper.inspector.v1.Inspector/ListModels',
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ModelList.FromString,
             options,
             channel_credentials,
             insecure,

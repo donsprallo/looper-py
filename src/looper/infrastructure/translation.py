@@ -151,7 +151,6 @@ def watch_of(message: contract.WatchView) -> Watch:
         bit_width=message.bit_width,
         display_value=message.display_value,
         range_text=message.range_text,
-        unit=message.unit,
     )
 
 

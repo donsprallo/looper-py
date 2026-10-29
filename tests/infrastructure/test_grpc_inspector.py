@@ -92,9 +92,11 @@ class ScriptedServicer(service.InspectorServicer):  # type: ignore[misc]
 
     def ObserveMemory(self, request: Any, context: Any) -> contract.MemoryView:
         context.abort(grpc.StatusCode.FAILED_PRECONDITION, "the build cannot be read")
+        raise AssertionError("abort raises")
 
     def AdvanceTime(self, request: Any, context: Any) -> contract.Empty:
         context.abort(grpc.StatusCode.UNAVAILABLE, "the simulation closed the channel")
+        raise AssertionError("abort raises")
 
     def ApplySignal(self, request: Any, context: Any) -> contract.Empty:
         self.signal = request

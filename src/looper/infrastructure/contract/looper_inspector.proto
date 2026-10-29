@@ -109,6 +109,12 @@ service Inspector {
   rpc TogglePin(PinToggle) returns (PinLevel);
   // ApplySignal: install a generated signal on an analog input.
   rpc ApplySignal(SignalRequest) returns (Empty);
+  // ApplySignalGraph: replace the signal graph and the inputs it drives.
+  // An input the graph no longer names goes back to its own signal.
+  rpc ApplySignalGraph(SignalGraphRequest) returns (Empty);
+  // ListModels: the models the project offers the signal graph, read
+  // afresh, with why any of them cannot be used.
+  rpc ListModels(Empty) returns (ModelList);
   // WatchVariable: begin sampling a variable from the catalogue.
   rpc WatchVariable(VariableChoice) returns (WatchView);
   // RemoveWatch: stop sampling one.
@@ -189,6 +195,9 @@ message ChannelView {
   bool is_silent = 8;
   // Value and unit as one string, or "no data" for a silent channel.
   string display_value = 9;
+  // Whether the signal graph drives this input, so that its own signal
+  // does not apply.
+  bool is_driven_by_graph = 10;
 }
 
 message ChannelList {
@@ -207,6 +216,82 @@ message WaveformView {
   string display_name = 2;
   // Whether amplitude, frequency and phase mean anything for it.
   bool is_alternating = 3;
+  // Whether frequency and phase mean anything for it; noise swings
+  // without a period.
+  bool is_periodic = 4;
+}
+
+// One output of a node, read by another.
+message SignalInputRequest {
+  // The key of the node read.
+  string node = 1;
+  // Which of its outputs, counted from zero; only a model has more than one.
+  uint32 output = 2;
+}
+
+// One node of a signal graph, as a client drew it.
+message SignalNodeRequest {
+  // What the client calls the node; unique within the graph.
+  string key = 1;
+  // "generator", "channel", "pin", "watch", "add", "subtract",
+  // "multiply", "divide" or "model".
+  string kind = 2;
+  // What a generator produces.
+  SignalView signal = 3;
+  // The channel, pin or watch channel a source reads.
+  uint32 source = 4;
+  // What the node reads, in order: the two inputs of an operation, the
+  // inputs of a model.
+  repeated SignalInputRequest inputs = 5;
+  // The model a model node stands for, as ListModels names it.
+  string model = 6;
+  // The values its parameters are given, by name; a parameter left out
+  // keeps its default.
+  map<string, double> parameters = 7;
+}
+
+message ModelParameterView {
+  string name = 1;
+  double default_value = 2;
+  // What it is measured in; empty for nothing.
+  string unit = 3;
+}
+
+// One model a project offers, or one file that offers nothing usable.
+message ModelView {
+  string name = 1;
+  // What it is, in the model's own words.
+  string description = 2;
+  repeated string inputs = 3;
+  repeated string outputs = 4;
+  repeated ModelParameterView parameters = 5;
+  // Simulated time between two of its steps.
+  double step_seconds = 6;
+  // The file it is written in.
+  string source = 7;
+  // Why it cannot be used; empty when it can.
+  string problem = 8;
+}
+
+message ModelList {
+  repeated ModelView models = 1;
+  // Why there are no models at all, when the simulation knows of no
+  // directory to find them in.
+  string unavailable_reason = 2;
+}
+
+// Which node drives which analog input.
+message SignalTargetRequest {
+  uint32 channel_id = 1;
+  string node = 2;
+  // Which of the node's outputs drives the input; only a model has more
+  // than one.
+  uint32 output = 3;
+}
+
+message SignalGraphRequest {
+  repeated SignalNodeRequest nodes = 1;
+  repeated SignalTargetRequest targets = 2;
 }
 
 message WaveformList {
@@ -311,9 +396,11 @@ message WatchView {
   string display_value = 11;
   // What the variable can hold, for example "uint8, 0 to 255".
   string range_text = 12;
-  // What the value is measured in, as looper.toml declares it under
-  // [simulation.units]; empty when it declares nothing.
-  string unit = 13;
+  // Once the unit of the value. A unit is not the simulation's to know:
+  // the debug information only says how a value is stored, and what it
+  // means belongs to the client's own project.
+  reserved 13;
+  reserved "unit";
 }
 
 message WatchList {

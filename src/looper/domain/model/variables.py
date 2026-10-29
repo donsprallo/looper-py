@@ -59,7 +59,6 @@ class Watch:
         bit_width: How wide a bit field is, zero otherwise.
         display_value: The value written the way its own type reads.
         range_text: What the variable can hold, such as ``uint8, 0 to 255``.
-        unit: What the value is measured in, empty when nothing says.
     """
 
     channel_id: int
@@ -74,4 +73,3 @@ class Watch:
     bit_width: int = 0
     display_value: str = ""
     range_text: str = ""
-    unit: str = ""
