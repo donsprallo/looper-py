@@ -64,36 +64,47 @@ simulation, it sees them cleared as well. That is the honest arrangement --
 they are looking at one firmware -- and it is why tests usually get a
 simulation of their own (see [Starting and attaching](guides/reaching.md)).
 
-## 3. A virtual clock runs in step with your test
+## 3. A held clock runs in step with your test
 
-A simulation has one of two clocks, chosen when it starts:
+A simulation's clock goes in one of three ways, and `simulation.clock_mode`
+tells you which one it is right now:
 
-`virtual=True`
+`held` (`ClockMode.HELD`)
 : The firmware runs only when a client lets time pass, exactly as long as it
   was let, and is then held again. While it is held it still answers every
   question -- it just does not move. A test sees the same thing on every run,
-  on every machine, however loaded.
+  on every machine, however loaded. `virtual=True` starts a simulation like
+  this.
 
-`virtual=False` (real time)
-: The clock follows your computer's clock. This is what a person watching in a
-  window needs. A test on it waits for real and sees slightly different things
-  on every run.
+`paced` (`ClockMode.PACED`)
+: The clock follows your computer's clock, at a speed the simulation names
+  (1.0 is real time). This is what a person watching in a window needs. A
+  test on it waits for real and sees slightly different things on every run.
+
+`max` (`ClockMode.MAX`)
+: The clock runs as fast as the computer allows.
+
+The mode is not fixed at the start. Any client attached to the simulation --
+a looper-rs window, another test -- can switch it while it runs, so
+`clock_mode` asks the simulation each time you read it.
 
 ```{figure} images/lockstep.svg
-:alt: On a virtual clock, simulated time stands still while the test sets the scene and reads, and moves only while the test lets time pass.
+:alt: On a held clock, simulated time stands still while the test sets the scene and reads, and moves only while the test lets time pass.
 
-On a virtual clock, simulated time moves only where the test lets it.
+On a held clock, simulated time moves only where the test lets it.
 ```
 
-Use the virtual clock for tests. `simulation.advance(seconds)` lets time pass
-outside of an `evaluate`, for instance to let the firmware start up or a
-filter settle before you start checking. On a real-time clock `advance` is
-refused: the computer's clock is not something a test can steer.
+Use the held clock for tests. `simulation.advance(seconds)` runs a held clock
+for a span of simulated time outside of an `evaluate`, for instance to let the
+firmware start up or a filter settle before you start checking. If the clock
+is not held, `advance` is refused: a clock that runs by itself is not
+something a test can steer. The refusal carries the server's words, such as
+`the clock runs in real time and cannot be advanced`.
 
 ```{note}
 Every pass of the firmware's main loop costs a little simulated time -- 250
 microseconds unless the application says otherwise -- and a firmware that
-calls a delay costs that delay. So one second of virtual time is about four
+calls a delay costs that delay. So one second of simulated time is about four
 thousand passes of a polling loop. On your computer that takes a few
 milliseconds.
 ```
@@ -111,9 +122,11 @@ One `evaluate` call does steps 2 to 5.
 writes down what you expect. Nothing is read until `evaluate`:
 
 1. **Clear** the recordings and the measurements, so the window starts empty.
-2. **Let time pass**: advance the virtual clock, or wait on a real one.
+   The clear starts a new recording for every client of the simulation.
+2. **Let time pass**: run the clock if it is held, or wait if it runs by
+   itself. The mode is read at the start of every window.
 3. **Observe**: read the clock and the call counts together, then every
-   recorded sample and exchange, then the heap and the stack.
+   recorded sample and exchange of the window, then the heap and the stack.
 4. **Check** every expectation against that one observation, and return an
    `ExpectationReport`.
 
@@ -129,12 +142,15 @@ of two things happened:
 `looper.SimulationRefusedError`
 : The request was refused, and the message says why: an output pin driven,
   a signal applied to an output channel, a bus that takes no messages, time
-  advanced on a real-time clock, a name the firmware does not have. Your test
+  advanced on a clock that is not held, a name the firmware does not have. Your test
   asked for something the firmware does not allow -- fix the test.
 
 `looper.SimulationUnreachableError`
 : The simulation, or the server in front of it, stopped answering. The
   firmware may have crashed; what it printed is in your test's output.
+
+A server that is too old or too new for this library is neither: it raises
+`looper.ContractMismatchError` when you attach.
 
 Everything else -- `looper-cli` not found, a build that failed -- is raised
 when the simulation is started, as `looper.LooperCliError`. See

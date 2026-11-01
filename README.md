@@ -58,8 +58,8 @@ The command that runs looper-cli defaults to `looper-cli`, or to the
 
 | On `simulation` | |
 | --- | --- |
-| `firmware_name`, `time_mode`, `definition_path` | what the server said about it |
-| `simulated_seconds`, `advance(seconds)` | the clock, and moving a virtual one on |
+| `firmware_name`, `definition_path` | what the server said about it |
+| `clock_mode`, `simulated_seconds`, `advance(seconds)` | how the clock goes (held, paced or max), where it is, and running a held one for a span |
 | `pins()`, `toggle_pin(pin_id)` | the pins, and driving an input |
 | `apply_signal(channel_id, looper.Signal(...))` | a generated signal on an analog input |
 | `send_bus_message(looper.BusMessage(...))` | one message onto a bus |
@@ -75,14 +75,15 @@ The command that runs looper-cli defaults to `looper-cli`, or to the
 | `check.firmware_is_alive()` | the firmware still reaches the adapter |
 
 `evaluate(for_seconds)` clears the recordings and measurements, lets the
-window pass -- advanced on a virtual clock, waited out on the host's -- reads
-everything back once and checks every expectation against it. The clearing
-reaches every client of the simulation, a window included: there is one
-simulation.
+window pass -- a held clock is run for it, a clock that runs by itself is
+waited out -- reads everything back once and checks every expectation against
+it. The clearing reaches every client of the simulation, a window included:
+there is one simulation, and a clear starts a new recording for all of them.
 
-A refusal -- a pin the firmware drives, a host clock asked to move -- raises
-`looper.SimulationRefusedError`; a simulation that stopped answering raises
-`looper.SimulationUnreachableError`.
+A refusal -- a pin the firmware drives, a clock that is not held asked to
+advance -- raises `looper.SimulationRefusedError` with the server's own words;
+a simulation that stopped answering raises `looper.SimulationUnreachableError`.
+The library speaks version 3 of the inspector contract.
 
 ## Documentation
 

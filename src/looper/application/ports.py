@@ -22,9 +22,10 @@ from looper.domain.model import (
     CallTiming,
     Channel,
     Description,
+    EventPage,
     MemoryUsage,
     Pin,
-    Recordings,
+    RunStatus,
     Signal,
     Variable,
     Watch,
@@ -39,6 +40,10 @@ class SimulationUnreachableError(ConnectionError):
     """The simulation, or the server in front of it, stopped answering."""
 
 
+class ContractNotServedError(SimulationUnreachableError):
+    """The server answers, but does not offer the inspector contract this library speaks."""
+
+
 class Inspector(ABC):
     """Everything this library asks of a running simulation."""
 
@@ -47,8 +52,12 @@ class Inspector(ABC):
         """What the server is attached to."""
 
     @abstractmethod
-    def read_recordings(self, after_sample: int, after_exchange: int) -> Recordings:
-        """Samples and exchanges recorded since the given positions."""
+    def read_events(self, epoch: int, from_event_seq: int) -> EventPage:
+        """One page of samples and exchanges, from an event number on.
+
+        The page may be empty while more events follow; where reading goes
+        on is `next_event_seq`, not the length of the page.
+        """
 
     @abstractmethod
     def read_timings(self) -> tuple[CallTiming, ...]:
@@ -75,31 +84,36 @@ class Inspector(ABC):
         """Every bus the simulation models."""
 
     @abstractmethod
-    def simulated_microseconds(self) -> int:
-        """How much simulated time has passed."""
+    def run_state(self) -> RunStatus:
+        """Where the clock is and how it goes now."""
 
     @abstractmethod
-    def advance(self, microseconds: int) -> None:
-        """Let time pass on a virtual clock.
+    def run_for(self, microseconds: int) -> RunStatus:
+        """Let time pass on a held clock, and return once it has.
 
         Raises:
-            SimulationRefusedError: If the clock is the host's.
+            SimulationRefusedError: If the clock is not held, or a debugger
+                holds the firmware.
         """
 
     @abstractmethod
-    def clear_recordings(self) -> None:
-        """Discard the recorded samples and exchanges, for every client."""
+    def clear_recordings(self, epoch: int) -> None:
+        """Discard the recorded events, for every client, and begin the next epoch.
+
+        Raises:
+            SimulationRefusedError: If another client cleared since `epoch`.
+        """
 
     @abstractmethod
     def clear_measurements(self) -> None:
         """Begin the call counts, the profile and the heap again."""
 
     @abstractmethod
-    def toggle_pin(self, pin_id: int, current_level: str) -> str:
-        """Drive the opposite of the level a pin was seen at, and say which.
+    def toggle_pin(self, pin_id: int) -> str:
+        """Drive the opposite of the level a pin is at, and say which.
 
         Raises:
-            SimulationRefusedError: If the firmware drives the pin itself.
+            SimulationRefusedError: If the pin is unknown or the firmware drives it.
         """
 
     @abstractmethod

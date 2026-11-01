@@ -9,6 +9,7 @@ from looper import (
     Bus,
     BusMessage,
     Channel,
+    ClockMode,
     Pin,
     Signal,
     Simulation,
@@ -23,18 +24,25 @@ def test_the_description_is_read_once_when_reached() -> None:
     assert simulation.firmware_name == "blinky"
 
 
-def test_toggling_a_pin_drives_the_opposite_of_its_level_now() -> None:
+def test_the_description_has_no_clock_mode_because_any_client_can_switch_it() -> None:
+    simulation = Simulation(ScriptedInspector(ClockMode.PACED))
+
+    assert not hasattr(simulation.description, "time_mode")
+    assert simulation.clock_mode is ClockMode.PACED
+
+
+def test_toggling_a_pin_is_left_to_the_simulation_and_says_the_level_it_set() -> None:
     inspector = ScriptedInspector()
     inspector.pins = (Pin(pin_id=3, name="BUTTON_MODE", level="high", is_drivable=True),)
 
     driven = Simulation(inspector).toggle_pin(3)
 
-    assert inspector.toggled == [(3, "high")]
+    assert inspector.toggled == [3]
     assert driven == "low"
 
 
-def test_a_pin_the_firmware_never_registered_is_refused() -> None:
-    with pytest.raises(SimulationRefusedError, match="no pin 9"):
+def test_a_pin_the_simulation_refuses_is_a_refusal_with_its_reason() -> None:
+    with pytest.raises(SimulationRefusedError, match="unknown pin, or the pin is an output"):
         Simulation(ScriptedInspector()).toggle_pin(9)
 
 
@@ -45,6 +53,22 @@ def test_time_is_advanced_in_seconds() -> None:
     simulation.advance(0.5)
 
     assert simulation.simulated_seconds == 0.5
+
+
+def test_a_span_is_rounded_to_whole_microseconds() -> None:
+    """0.57 seconds times a million is 569999.99... as a float."""
+    inspector = ScriptedInspector()
+
+    Simulation(inspector).advance(0.57)
+
+    assert inspector.asked == ["advance 570000"]
+
+
+def test_a_clock_that_runs_by_itself_cannot_be_advanced() -> None:
+    simulation = Simulation(ScriptedInspector(ClockMode.PACED))
+
+    with pytest.raises(SimulationRefusedError, match="cannot be advanced"):
+        simulation.advance(0.5)
 
 
 def test_a_signal_and_a_message_reach_the_simulation() -> None:

@@ -5,7 +5,7 @@ display refresh at 50 Hz. Does it?
 
 **Why it is worth a test.** A rate breaks quietly: a blocking call added to
 the main loop, a timer prescaler changed, a task that now runs every other
-pass. On a virtual clock a rate can be checked exactly, independent of how
+pass. On a held clock a rate can be checked exactly, independent of how
 fast the computer is.
 
 ## How

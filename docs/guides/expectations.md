@@ -34,11 +34,25 @@ lists them in one table, with the exact wording of their outcomes.
 `evaluate(for_seconds=...)` is one window of simulated time:
 
 - Before it starts, the recordings and the measurements are cleared -- for
-  every client of the simulation. A check sees only its own window.
-- On a virtual clock the window is let pass exactly; on a real clock it is
-  waited out.
+  every client of the simulation, which starts a new recording for all of
+  them. A check sees only its own window.
+- On a held clock the window is run for exactly `for_seconds`. On a clock
+  that runs by itself (paced or max) it is waited out on the host, and the
+  window ends where the simulated clock stands afterwards. The mode is read
+  at the start of every window, because any client may have switched it. The
+  library never switches it for you.
 - Afterwards everything recorded in it is read, once, and every expectation
-  is checked against that.
+  is checked against that. Samples and exchanges are stamped with simulated
+  time in whole microseconds (`sim_us`); the ones stamped after the end of the
+  window are not part of it, however long the server took to hand them over.
+- If the recording overflowed, the server says how many events it could not
+  keep, and the outcome of a channel or bus check says so in its note, for
+  example `and 12 events the recording could not keep`. It does not say
+  whether they were samples or exchanges, so a bus check does not count
+  them in the bus's favour. On a held clock nothing is lost.
+- If a debugger holds the firmware, or another client clears the recording
+  during the window, `evaluate` raises `SimulationRefusedError`. See
+  [Troubleshooting](../troubleshooting.md).
 
 A second `evaluate` on the same `Expectations` watches a new window. To
 check different things in different windows, ask `simulation.expect()` again.
@@ -76,7 +90,9 @@ ok    FILTERED: expected every sample within 1 .. 3, saw 1.6953 .. 2.30469 over 
 ### `reaches(value, tolerance=0.0, within_seconds=inf)`
 
 Some sample comes within `tolerance` of `value`, and the first one that does
-comes no later than `within_seconds` after the first sample of the window:
+comes no later than `within_seconds` after the first sample of the window.
+The time is taken from the samples' simulated time in whole microseconds, so
+it does not depend on how fast the computer is:
 
 ```python
 check.channel(filtered.channel_id, "FILTERED").reaches(4.95, tolerance=0.05, within_seconds=0.5)

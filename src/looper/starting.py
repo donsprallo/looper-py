@@ -12,6 +12,7 @@ import os
 from collections.abc import Callable, Sequence
 from pathlib import Path
 
+from looper.application.ports import ContractNotServedError
 from looper.application.simulation import Simulation
 from looper.infrastructure.grpc_inspector import CONTRACT_VERSION, GrpcInspector
 from looper.infrastructure.looper_cli import LooperCliRun, RunCommand, program_of
@@ -75,7 +76,7 @@ def run(
 
 def _attached(inspector: GrpcInspector, on_close: Callable[[], object] | None) -> Simulation:
     """A simulation over the inspector, once its contract is known to match."""
-    simulation = Simulation(inspector, _discarding(on_close))
+    simulation = _described(inspector, on_close)
     spoken = simulation.description.contract_version
     if spoken != CONTRACT_VERSION:
         simulation.close()
@@ -84,6 +85,22 @@ def _attached(inspector: GrpcInspector, on_close: Callable[[], object] | None) -
             "update whichever is older"
         )
     return simulation
+
+
+def _described(inspector: GrpcInspector, on_close: Callable[[], object] | None) -> Simulation:
+    """A simulation over the inspector, or a mismatch when the server lacks the contract.
+
+    A server that knows no method of this contract's service speaks another
+    version of it: the package name carries the version.
+    """
+    try:
+        return Simulation(inspector, _discarding(on_close))
+    except ContractNotServedError as error:
+        inspector.close()
+        raise ContractMismatchError(
+            f"the server does not speak contract version {CONTRACT_VERSION}; "
+            "update whichever is older"
+        ) from error
 
 
 def _discarding(action: Callable[[], object] | None) -> Callable[[], None] | None:

@@ -69,9 +69,13 @@ diagram who was talking to whom.
 FAIL  CAN2: expected at least 10 exchanges, saw 3
 ```
 
-Less traffic than expected. When the recording overflowed, the report says so
-and counts the lost exchanges as well:
+Less traffic than expected. When the recording overflowed, the report says so.
+The lost events are named but not counted as traffic: the server does not say
+whether they were exchanges, and a lost sample must not make a bus check pass.
 
 ```text
-ok    CAN2: expected at least 10 exchanges, saw 3, and 12 more the recording could not keep
+FAIL  CAN2: expected at least 10 exchanges, saw 3, and 12 events the recording could not keep
 ```
+
+On a held clock nothing is lost, so this only happens on a clock that runs by
+itself.

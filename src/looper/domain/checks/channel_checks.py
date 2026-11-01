@@ -7,6 +7,8 @@ from dataclasses import dataclass
 from looper.domain.checks.check import NOTHING_RECORDED, Check
 from looper.domain.model import Observation, Outcome
 
+MICROSECONDS_PER_SECOND = 1_000_000
+
 
 @dataclass(frozen=True)
 class ChannelStaysBetween(Check):
@@ -48,12 +50,12 @@ class ChannelReaches(Check):
         expected = f"{self.value:g} +/- {self.tolerance:g} within {self.within_seconds:g} s"
         if not samples:
             return Outcome(self.name, expected, NOTHING_RECORDED, met=False)
-        start = samples[0].seconds
+        start = samples[0].sim_us
         arrived = [sample for sample in samples if abs(sample.value - self.value) <= self.tolerance]
         if not arrived:
             closest = min(samples, key=lambda one: abs(one.value - self.value))
             return Outcome(self.name, expected, f"never closer than {closest.value:g}", met=False)
-        took = arrived[0].seconds - start
+        took = (arrived[0].sim_us - start) / MICROSECONDS_PER_SECOND
         return Outcome(
             self.name, expected, f"reached after {took:.4g} s", met=took <= self.within_seconds
         )

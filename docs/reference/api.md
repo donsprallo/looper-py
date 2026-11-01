@@ -11,7 +11,7 @@ looper.Signal, looper.BusMessage                  # what you send
 looper.Pin, looper.Channel, looper.Bus            # what you read
 looper.Variable, looper.Watch                     # the firmware's variables
 looper.ExpectationReport, looper.Outcome          # what comes back
-looper.TimeMode
+looper.ClockMode
 looper.SimulationRefusedError, looper.SimulationUnreachableError
 looper.LooperCliError, looper.ContractMismatchError
 ```
@@ -81,7 +81,7 @@ looper.LooperCliError, looper.ContractMismatchError
 
 .. autoclass:: looper.Watch
 
-.. autoclass:: looper.TimeMode
+.. autoclass:: looper.ClockMode
    :members:
    :undoc-members:
 ```

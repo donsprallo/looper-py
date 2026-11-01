@@ -1,18 +1,22 @@
 """The port answered by a server speaking the inspector contract over gRPC.
 
-The contract has two answers to a failure, and they become the port's two:
-`FAILED_PRECONDITION` is a refusal with its reason, anything else means the
-simulation can no longer be read.
+The contract has two ways to refuse and one to fail, and they become the
+port's two. A change a server declines comes back acknowledged with a
+refusal and its text; a read it declines, or any call while a debugger holds
+the firmware, is `FAILED_PRECONDITION`. Both are `SimulationRefusedError`.
+Anything else means the simulation can no longer be read.
 """
 
 from __future__ import annotations
 
+import time
 from collections.abc import Callable
 from typing import Any
 
 import grpc
 
 from looper.application.ports import (
+    ContractNotServedError,
     Inspector,
     SimulationRefusedError,
     SimulationUnreachableError,
@@ -23,9 +27,10 @@ from looper.domain.model import (
     CallTiming,
     Channel,
     Description,
+    EventPage,
     MemoryUsage,
     Pin,
-    Recordings,
+    RunStatus,
     Signal,
     Variable,
     Watch,
@@ -44,7 +49,14 @@ CONTRACT_VERSION = contract.CONTRACT_VERSION_CURRENT
 #: ordinary size is some 12 MB, three times gRPC's default.
 MAX_MESSAGE_BYTES = 64 * 1024 * 1024
 
+#: How long to wait between two looks at a run that is still under way.
+RUN_POLL_SECONDS = 0.02
+
 EMPTY = contract.Empty()
+
+#: The kinds of event a test looks at; the stream also carries pin changes,
+#: calls, applied commands and more.
+EVENT_KINDS = [contract.EVENT_KIND_SAMPLE, contract.EVENT_KIND_EXCHANGE]
 
 
 class GrpcInspector(Inspector):
@@ -70,12 +82,14 @@ class GrpcInspector(Inspector):
         """What the server is attached to."""
         return translation.description_of(self._call(self._stub.Describe, EMPTY))
 
-    def read_recordings(self, after_sample: int, after_exchange: int) -> Recordings:
-        """Samples and exchanges recorded since the given positions."""
-        positions = contract.RecordingPositions(
-            after_sample=after_sample, after_exchange=after_exchange
+    def read_events(self, epoch: int, from_event_seq: int) -> EventPage:
+        """One page of samples and exchanges, from an event number on."""
+        request = contract.ReadEventsRequest(
+            epoch=epoch,
+            from_event_seq=from_event_seq,
+            filter=contract.EventFilter(kinds=EVENT_KINDS),
         )
-        return translation.recordings_of(self._call(self._stub.ReadRecordings, positions))
+        return translation.event_page_of(self._call(self._stub.ReadEvents, request))
 
     def read_timings(self) -> tuple[CallTiming, ...]:
         """How often each adapter function was called since the last reset."""
@@ -97,37 +111,48 @@ class GrpcInspector(Inspector):
         """Every bus the simulation models."""
         return translation.buses_of(self._call(self._stub.ObserveBuses, EMPTY))
 
-    def simulated_microseconds(self) -> int:
-        """How much simulated time has passed."""
-        return int(self._call(self._stub.ObserveSimulation, EMPTY).microseconds)
+    def run_state(self) -> RunStatus:
+        """Where the clock is and how it goes now."""
+        return translation.run_status_of(self._call(self._stub.ObserveRun, EMPTY))
 
-    def advance(self, microseconds: int) -> None:
-        """Let time pass on a virtual clock."""
-        self._call(self._stub.AdvanceTime, contract.TimeStep(microseconds=microseconds))
+    def run_for(self, microseconds: int) -> RunStatus:
+        """Let time pass on a held clock, and return once it has.
 
-    def clear_recordings(self) -> None:
-        """Discard the recorded samples and exchanges, for every client."""
-        self._call(self._stub.ClearTrace, EMPTY)
-        self._call(self._stub.ClearBusTrace, EMPTY)
+        The server may answer at once with the run still under way; then the
+        run is looked at until it has reached its end.
+        """
+        reply = self._call(self._stub.ControlRun, contract.RunControl(run_for_us=microseconds))
+        _acknowledged(reply.ack)
+        state = translation.run_status_of(reply.state)
+        while state.target_us != 0:
+            time.sleep(RUN_POLL_SECONDS)
+            state = self.run_state()
+        return state
+
+    def clear_recordings(self, epoch: int) -> None:
+        """Discard the recorded events, for every client, and begin the next epoch."""
+        _acknowledged(self._call(self._stub.ClearRecordings, contract.ClearRequest(epoch=epoch)))
 
     def clear_measurements(self) -> None:
         """Begin the call counts, the profile and the heap again."""
         self._call(self._stub.ClearMeasurements, EMPTY)
 
-    def toggle_pin(self, pin_id: int, current_level: str) -> str:
-        """Drive the opposite of the level a pin was seen at, and say which."""
-        toggle = contract.PinToggle(pin_id=pin_id, current_level=current_level)
-        return str(self._call(self._stub.TogglePin, toggle).level)
+    def toggle_pin(self, pin_id: int) -> str:
+        """Drive the opposite of the level a pin is at, and say which."""
+        drive = contract.PinDrive(pin_id=pin_id, toggle=EMPTY)
+        driven = self._call(self._stub.DrivePin, drive)
+        _acknowledged(driven.ack)
+        return "high" if driven.high else "low"
 
     def apply_signal(self, channel_id: int, signal: Signal) -> None:
         """Install a generated signal on an analog input."""
         request = translation.signal_request_of(channel_id, signal)
-        self._call(self._stub.ApplySignal, request)
+        _acknowledged(self._call(self._stub.ApplySignal, request))
 
     def send_bus_message(self, message: BusMessage) -> None:
         """Put one message on a bus."""
         request = translation.bus_message_request_of(message)
-        self._call(self._stub.SendBusMessage, request)
+        _acknowledged(self._call(self._stub.SendBusMessage, request).ack)
 
     def list_variables(self) -> tuple[Variable, ...]:
         """The catalogue of the firmware's variables, read out of the build."""
@@ -139,16 +164,19 @@ class GrpcInspector(Inspector):
     def watch_variable(self, variable_id: int) -> Watch:
         """Begin sampling a variable from the catalogue."""
         choice = contract.VariableChoice(variable_id=variable_id)
-        return translation.watch_of(self._call(self._stub.WatchVariable, choice))
+        started = self._call(self._stub.WatchVariable, choice)
+        _acknowledged(started.ack)
+        return translation.watch_of(started.watch)
 
     def write_variable(self, channel_id: int, value: float) -> None:
         """Store a value in a watched variable."""
         write = contract.VariableWrite(channel_id=channel_id, value=value)
-        self._call(self._stub.WriteVariable, write)
+        _acknowledged(self._call(self._stub.WriteVariable, write))
 
     def remove_watch(self, channel_id: int) -> None:
         """Stop sampling a watched variable."""
-        self._call(self._stub.RemoveWatch, contract.WatchChoice(channel_id=channel_id))
+        removal = contract.WatchChoice(channel_id=channel_id)
+        _acknowledged(self._call(self._stub.RemoveWatch, removal))
 
     def read_watches(self) -> tuple[Watch, ...]:
         """Every variable being sampled, with its value now."""
@@ -166,4 +194,13 @@ class GrpcInspector(Inspector):
         except grpc.RpcError as error:
             if error.code() == grpc.StatusCode.FAILED_PRECONDITION:
                 raise SimulationRefusedError(error.details()) from error
+            if error.code() == grpc.StatusCode.UNIMPLEMENTED:
+                raise ContractNotServedError(error.details() or "method not found") from error
             raise SimulationUnreachableError(error.details() or str(error.code())) from error
+
+
+def _acknowledged(ack: contract.Ack) -> None:
+    """Pass a change the server took; turn one it declined into a refusal."""
+    if ack.refusal == contract.REFUSAL_NONE:
+        return
+    raise SimulationRefusedError(ack.refusal_text or contract.Refusal.Name(ack.refusal))

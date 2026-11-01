@@ -17,10 +17,10 @@ from looper.domain.model import (
     Bus,
     BusMessage,
     Channel,
+    ClockMode,
     Description,
     Pin,
     Signal,
-    TimeMode,
     Variable,
     Watch,
 )
@@ -51,9 +51,12 @@ class Simulation:
         return self._description.firmware_name
 
     @property
-    def time_mode(self) -> TimeMode:
-        """Where the simulation's clock comes from."""
-        return self._description.time_mode
+    def clock_mode(self) -> ClockMode:
+        """How the clock goes now: held, paced or at full speed.
+
+        Read from the simulation each time, because any client may switch it.
+        """
+        return self._inspector.run_state().clock_mode
 
     @property
     def definition_path(self) -> str:
@@ -63,19 +66,20 @@ class Simulation:
     @property
     def simulated_seconds(self) -> float:
         """How much simulated time has passed."""
-        return self._inspector.simulated_microseconds() / MICROSECONDS_PER_SECOND
+        return self._inspector.run_state().now_us / MICROSECONDS_PER_SECOND
 
     def expect(self) -> Expectations:
         """Begin declaring what should be true of the next stretch of the run."""
-        return Expectations(self._inspector, self.time_mode)
+        return Expectations(self._inspector)
 
     def advance(self, seconds: float) -> None:
-        """Let time pass on a virtual clock.
+        """Run a held clock for a span of simulated time.
 
         Raises:
-            SimulationRefusedError: If the clock is the host's.
+            SimulationRefusedError: If the clock is not held; the message
+                says why and what to do.
         """
-        self._inspector.advance(int(seconds * MICROSECONDS_PER_SECOND))
+        self._inspector.run_for(round(seconds * MICROSECONDS_PER_SECOND))
 
     def pins(self) -> tuple[Pin, ...]:
         """Every pin the firmware registered, with its level now."""
@@ -116,13 +120,13 @@ class Simulation:
     def toggle_pin(self, pin_id: int) -> str:
         """Drive the opposite of the level a pin is at now, and say which.
 
+        The simulation does the toggling, so two clients cannot both toggle
+        to high.
+
         Raises:
             SimulationRefusedError: If the pin is unknown or the firmware drives it.
         """
-        current = next((pin for pin in self.pins() if pin.pin_id == pin_id), None)
-        if current is None:
-            raise SimulationRefusedError(f"the firmware registered no pin {pin_id}")
-        return self._inspector.toggle_pin(pin_id, current.level)
+        return self._inspector.toggle_pin(pin_id)
 
     def apply_signal(self, channel_id: int, signal: Signal) -> None:
         """Install a generated signal on an analog input.

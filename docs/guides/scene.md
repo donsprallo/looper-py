@@ -49,8 +49,10 @@ simulation.advance(1.0)        # one second of simulated time
 simulation.simulated_seconds   # 1.0
 ```
 
-On a virtual clock nothing happens between your calls -- the firmware is
-held. Let it run where it matters: after start-up, after changing an input,
+On a held clock nothing happens between your calls -- the firmware is
+held. `advance` is refused when the clock is not held (`paced` or `max`):
+the server says so in its own words, `SimulationRefusedError: the clock runs
+in real time and cannot be advanced`. Let it run where it matters: after start-up, after changing an input,
 before a check that should not see a transient. `evaluate` lets its own
 window pass, so you do not advance for the window itself.
 

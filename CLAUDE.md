@@ -17,7 +17,10 @@ Die Grenze ist ein Prozess: `looper-core` bedient den Inspector-Vertrag
 (`looper-cli run`), dieses Projekt ist einer seiner Clients, so wie
 `looper-rs`. Der Vertrag ist
 `src/looper/infrastructure/contract/looper_inspector.proto`, eine geprüfte
-Kopie des Schemas aus `looper-core` (`tests/test_contract_in_step.py`).
+Kopie des Schemas aus `looper-core` (`tests/test_contract_in_step.py`). Er ist
+Version 3: Zeit ist `sim_us`, ein Ereignisstrom ersetzt die Aufzeichnungen,
+und jede Änderung wird mit einem `Ack` quittiert (eine Ablehnung wird zum
+`SimulationRefusedError`).
 
 **Absolute Regel:** Nichts hier importiert `looper_core`. Die Abhängigkeit
 läuft über den Vertrag, nicht über Python-Pakete.
@@ -66,6 +69,7 @@ src/looper/
 ├── application/
 │   ├── ports.py          # Inspector (ABC) und seine zwei Fehlerarten
 │   ├── expectations.py   # deklarieren, Zeit vergehen lassen, prüfen
+│   ├── event_window.py   # ein Fenster des Ereignisstroms lesen
 │   ├── subjects.py       # check.channel(...).reaches(...)
 │   └── simulation.py     # was ein Test mit einer Simulation tut
 └── infrastructure/

@@ -1,4 +1,4 @@
-// The inspector contract: what a graphical client may ask of a running
+// The inspector contract, version 3: what a graphical client may ask of a running
 // simulation, and what it is answered with.
 //
 // One RPC per use case of looper-core, and the data transfer objects of
@@ -34,118 +34,546 @@
 // driven pin, a signal, a watch, following the call paths -- is shared,
 // because there is one simulation.
 
+// Version 3 in one paragraph: simulated time is the only clock. Every time
+// in a message is `sim_us`, whole microseconds of simulated time, or, for the
+// timing and profile messages, `host_ns`, a duration measured on the computer
+// running the simulation, which is never a position on the time axis. Every
+// change is answered with an `Ack` that says at which simulated time it took
+// effect. What was recorded is one stream in one order, `Subscribe`d to or
+// read a page at a time, and the views the server builds from it say which
+// part of it they cover. A run is controlled with `ControlRun`, not stepped by
+// whoever polls. There is no compatibility with version 2.
+//
+// Refusals are part of the answer rather than a status code: the `Ack` of a
+// change says REFUSAL_* and why. A status code is left for a server that
+// cannot answer at all.
+
 syntax = "proto3";
 
-package looper.inspector.v1;
+package looper.inspector.v3;
 
-// Bumped whenever a change would mislead a client built against the
-// previous version. A client compares it with its own and refuses to
-// attach to a server it does not understand.
+
 enum ContractVersion {
   CONTRACT_VERSION_UNSPECIFIED = 0;
-  // 2: the timeline and the ladder are chosen per request, and the
-  //    calls that told the server what one client was looking at are gone.
-  CONTRACT_VERSION_CURRENT = 2;
-}
-
-service Inspector {
-  // What the server is attached to.
-  rpc Describe(Empty) returns (Description);
-
-  // ---- Reading -----------------------------------------------------------
-
-  // ObserveSimulation: time and pins.
-  rpc ObserveSimulation(Empty) returns (SimulationView);
-  // ObserveChannels: the analog channels the firmware registered.
-  rpc ObserveChannels(Empty) returns (ChannelList);
-  // ObserveWatches: the firmware variables being sampled.
-  rpc ObserveWatches(Empty) returns (WatchList);
-  // ObserveBuses: the buses the simulation models.
-  rpc ObserveBuses(Empty) returns (BusList);
-  // ObserveComponents: what is attached to them.
-  rpc ObserveComponents(Empty) returns (ComponentList);
-  // ReadTrace and ReadBusTrace together: everything recorded since the
-  // positions the client sends, and the positions to send next time.
-  rpc ReadRecordings(RecordingPositions) returns (Recordings);
-  // ListFirmwareVariables: the catalogue of globals, read out of the build.
-  rpc ListVariables(Empty) returns (VariableCatalogue);
-  // The waveforms a signal generator offers.
-  rpc ListWaveforms(Empty) returns (WaveformList);
-
-  // ObserveTimeline: every recording on one stretch of time, as wide as
-  // the client asks for.
-  rpc ArrangeTimeline(TimelineRequest) returns (TimelineView);
-  // Forget what the timeline has kept, for every client.
-  rpc ClearTimeline(Empty) returns (Empty);
-
-  // ObserveLadder: the bus the client names, read as a conversation.
-  rpc ObserveLadder(LadderChoice) returns (LadderView);
-
-  // ObserveCallTimings, ranked together with the profile when the build
-  // can be read.
-  rpc ObserveTimings(Empty) returns (TimingReportView);
-  // ObserveProfile: where the whole simulation spent its time.
-  rpc ObserveProfile(Empty) returns (ProfileView);
-  // ObserveFlame: which way that time went. Following the paths costs the
-  // simulation something, so it is armed and disarmed explicitly -- for
-  // the one simulation, and so for every client.
-  rpc FollowCallPaths(Following) returns (Empty);
-  rpc ObserveFlame(Empty) returns (FlameView);
-  // ObserveMemory: static, stack and heap.
-  rpc ObserveMemory(Empty) returns (MemoryView);
-  // Forget every measurement and begin one new window, for the timings,
-  // the profile and the memory together.
-  rpc ClearMeasurements(Empty) returns (Empty);
-  // Discard the recorded exchanges and start their numbering again, for
-  // every client and for the ladder.
-  rpc ClearBusTrace(Empty) returns (Empty);
-  // Discard the recorded samples and start their numbering again, for
-  // every client and for the timeline.
-  rpc ClearTrace(Empty) returns (Empty);
-
-  // ---- Changing ----------------------------------------------------------
-
-  // DrivePin.toggle: apply the opposite of the level the client saw.
-  rpc TogglePin(PinToggle) returns (PinLevel);
-  // ApplySignal: install a generated signal on an analog input.
-  rpc ApplySignal(SignalRequest) returns (Empty);
-  // ApplySignalGraph: replace the signal graph and the inputs it drives.
-  // An input the graph no longer names goes back to its own signal.
-  rpc ApplySignalGraph(SignalGraphRequest) returns (Empty);
-  // ListModels: the models the project offers the signal graph, read
-  // afresh, with why any of them cannot be used.
-  rpc ListModels(Empty) returns (ModelList);
-  // WatchVariable: begin sampling a variable from the catalogue.
-  rpc WatchVariable(VariableChoice) returns (WatchView);
-  // RemoveWatch: stop sampling one.
-  rpc RemoveWatch(WatchChoice) returns (Empty);
-  // WriteVariable: store a value in a watched variable.
-  rpc WriteVariable(VariableWrite) returns (Empty);
-  // SendBusMessage: put one message on a bus.
-  rpc SendBusMessage(BusMessageRequest) returns (Empty);
-  // AdvanceTime: let simulated time pass on a virtual clock. Refused on
-  // the host clock, which is not a client's to steer.
-  rpc AdvanceTime(TimeStep) returns (Empty);
+  // 3: time is simulated time and nothing else (sim_us); one ordered event
+  //    stream replaces the four recordings; every change is acknowledged
+  //    with the simulated time it took effect at.
+  CONTRACT_VERSION_CURRENT = 3;
 }
 
 message Empty {}
 
-message Description {
-  ContractVersion contract_version = 1;
-  // What the firmware calls itself, empty when it says nothing.
-  string firmware_name = 2;
-  // "real_time" or "virtual".
-  string time_mode = 3;
-  // Whether the debug information of the build could be found. Without
-  // it there is no catalogue, no profile, no flame graph and no memory.
-  bool reads_the_build = 4;
-  // The build definition the server was started with, as an absolute
-  // path, so that a client attached to it need not be told again. Empty
-  // when the server was started without one.
-  string definition_path = 5;
+// The order a server accepted a change in, and what happened to it.
+message Ack {
+  // Global, assigned by the server in arrival order; never reused.
+  uint64 command_seq = 1;
+  // Simulated time of the boundary the change took effect at, or, when
+  // `pending`, will take effect at (exact: events cut idle waits). Zero and
+  // meaningless when `refusal` is not NONE.
+  uint64 applied_at_us = 2;
+  // Accepted but not applied yet: `when` lies ahead, or a HELD run is under
+  // way. The CommandApplied event reports the application.
+  bool pending = 7;
+  // The recording epoch after the call. Bumped by ClearRecordings only.
+  uint64 epoch = 3;
+  Refusal refusal = 4;
+  // Why, in words a person is shown, when refused; empty otherwise.
+  string refusal_text = 5;
+  // Set when `when.at_us` was in the past and `allow_late` applied it at
+  // once: how many microseconds late it was.
+  uint64 late_by_us = 6;
 }
 
-// ---- Pins ------------------------------------------------------------------
+enum Refusal {
+  REFUSAL_NONE = 0;
+  REFUSAL_LATE = 1;            // `at_us` is before the simulation's time
+  REFUSAL_UNKNOWN_TARGET = 2;  // no such bus, channel, pin, job
+  REFUSAL_NOT_ACCEPTED = 3;    // the target takes no such change (a master bus)
+  REFUSAL_QUEUE_FULL = 4;      // the bus controller's queue holds no more
+  REFUSAL_WRONG_EPOCH = 5;     // a call that names an epoch named an old one
+  REFUSAL_INVALID = 6;         // a value out of range; `refusal_text` says which
+  REFUSAL_WRONG_MODE = 7;      // run_for while PACED, and the like
+  REFUSAL_OTHER = 8;
+}
+
+// When a change is to take effect. Absent: at the next boundary.
+message When {
+  oneof at {
+    uint64 at_us = 1;      // an absolute simulated time
+    uint64 after_us = 2;   // from the boundary the server accepts it at; the
+                           // command log holds the absolute time
+  }
+  // Apply at once if `at_us` is already past, and say so in the Ack. Not
+  // valid with `after_us`. In PACED and MAX an absolute `at_us` is almost
+  // always late by the time it arrives; use `after_us` there.
+  bool allow_late = 3;
+}
+
+message Description {
+  ContractVersion contract_version = 1;
+  string firmware_name = 2;
+  bool reads_the_build = 4;
+  string definition_path = 5;
+  // Optional features this server has. An enum, not strings: a typo is a
+  // compile error, and an unknown number from a newer server is kept.
+  repeated Capability capabilities = 6;
+  // How far back the server can resume a stream, and the largest page.
+  uint64 retention_us = 7;
+  uint32 max_events_per_batch = 8;
+  reserved 3;
+  reserved "time_mode";
+}
+
+enum Capability {
+  CAPABILITY_UNSPECIFIED = 0;
+  CAPABILITY_PACED = 1;
+  CAPABILITY_JOBS = 2;
+  CAPABILITY_BUS_TIME = 3;
+  CAPABILITY_REPLY_RULES = 4;
+  CAPABILITY_DEVICE_ACTIONS = 5;
+  CAPABILITY_SOURCES = 6;          // ListSources, ReadSource, ObserveSemantics
+  CAPABILITY_LINE_COUNTS = 7;      // a counting build: ObserveLineCounts, ObserveCoverage
+  CAPABILITY_DEBUGGER = 8;         // ObserveDebugger, ControlDebugger
+}
+
+enum ClockMode {
+  CLOCK_MODE_HELD = 0;   // advances only when told (RunFor / RunUntil / Step)
+  CLOCK_MODE_PACED = 1;  // follows `pace_ratio` times the host's speed, may slip
+  CLOCK_MODE_MAX = 2;    // as fast as the computer allows, no pacing
+}
+
+message RunControl {
+  oneof op {
+    Empty hold = 1;            // HELD: stop at the next boundary
+    uint64 run_for_us = 3;     // HELD: advance exactly this far, then hold
+    uint64 run_until_us = 4;   // HELD: advance to exactly this time
+    Empty step_pass = 5;       // HELD: one pass
+    double pace_ratio = 6;     // PACED at this speed (1.0 = as real time)
+    Empty max_speed = 7;       // MAX
+    // 2 (release) is gone: leaving HELD names the mode it goes to.
+  }
+}
+
+message RunReply { Ack ack = 1; RunState state = 2; }
+
+message RunState {
+  uint64 now_us = 1;
+  ClockMode mode = 2;
+  double pace_ratio = 3;
+  // PACED only. Reported, never fed into the simulation:
+  uint64 behind_us = 4;    // simulated time owed to the pace right now
+  uint64 slipped_us = 5;   // simulated time given up by re-anchoring after stalls, since the pace was last set
+  uint64 epoch = 6;
+  uint64 next_event_seq = 7;
+  // The pass cost: the simulated time one idle pass takes. A project setting;
+  // every command, poll and AdvanceTime is quantised to it.
+  uint32 pass_cost_us = 8;
+  // HELD with a run under way: where it ends. Zero when standing.
+  uint64 target_us = 9;
+  // Commands waiting for the end of that run.
+  uint32 queued_commands = 10;
+  // Why the simulation answers nothing right now: a debugger stopped the
+  // firmware at a line. Simulated time stands still meanwhile; `now_us` is
+  // where it stands. Empty while it runs.
+  string hold_reason = 11;
+}
+
+message Subscription {
+  // Resume after a break: the epoch and the first event_seq wanted. Epoch
+  // zero means "from now". `event_seq` keeps counting across epochs, so a
+  // resume with an old epoch gets `epoch_changed` and the new epoch's start.
+  // A `from_event_seq` older than the server keeps is answered with a Lost
+  // (RETENTION) and then the oldest it has; one beyond the end is INVALID.
+  uint64 epoch = 1;
+  uint64 from_event_seq = 2;
+  EventFilter filter = 3;
+}
+
+message ReadEventsRequest {
+  uint64 epoch = 1;
+  uint64 from_event_seq = 2;
+  uint32 max_events = 3;
+  EventFilter filter = 4;
+}
+
+message EventFilter {
+  // Empty means every kind.
+  repeated EventKind kinds = 1;
+  repeated uint32 channel_ids = 2;   // for samples
+  repeated uint32 bus_ids = 3;       // for exchanges
+  // Keep only every n-th sample per channel (0 or 1: all). A presentation
+  // convenience; the full-rate stream stays in the server's log.
+  uint32 sample_stride = 4;
+}
+
+enum EventKind {
+  EVENT_KIND_UNSPECIFIED = 0;
+  EVENT_KIND_SAMPLE = 1;
+  EVENT_KIND_PIN = 2;
+  EVENT_KIND_EXCHANGE = 3;
+  EVENT_KIND_CALL = 4;       // the journal of firmware calls
+  EVENT_KIND_COMMAND = 5;    // a change that was applied
+  EVENT_KIND_JOB = 6;        // a job started, stopped, sent, was late
+  EVENT_KIND_FAULT = 7;      // a model stopped, a wait failed
+  EVENT_KIND_RUN = 8;        // a run reached its target; held; slipped (PACED)
+}
+
+message EventBatch {
+  uint64 epoch = 1;
+  repeated Event events = 2;
+  // Ranges this client will not get, exact in event_seq and sim_us. Per
+  // client: other clients may have them. The server's own log is lossless up
+  // to its retention (HELD and MAX stop the run before the ring overflows).
+  repeated Lost lost = 3;
+  // First event_seq the client should ask for next.
+  uint64 next_event_seq = 4;
+  // The simulation's time when this batch was cut; a client can draw the
+  // axis up to here even when no event happened.
+  uint64 sim_now_us = 5;
+  // Set when the epoch changed since the client's last batch: it empties its
+  // store and starts from this batch.
+  bool epoch_changed = 6;
+}
+
+message Event {
+  uint64 event_seq = 1;  // total order, never reused
+  uint64 sim_us = 2;
+  oneof body {
+    Sample sample = 3;
+    PinChange pin = 4;
+    Exchange exchange = 5;
+    Call call = 6;
+    CommandApplied command = 7;
+    JobEvent job = 8;
+    Fault fault = 9;
+    RunEvent run = 10;
+  }
+}
+
+message Lost {
+  uint64 from_event_seq = 1;
+  uint64 to_event_seq = 2;
+  uint64 from_us = 3;
+  uint64 to_us = 4;
+  LossReason reason = 5;
+}
+
+enum LossReason {
+  LOSS_REASON_UNSPECIFIED = 0;
+  LOSS_REASON_RING_FULL = 1;       // the simulation's ring was overwritten (PACED only)
+  LOSS_REASON_CLIENT_TOO_SLOW = 2; // this client's buffer overflowed
+  LOSS_REASON_RETENTION = 3;       // older than the server keeps
+}
+
+message Sample { uint32 channel_id = 1; double value = 2; }
+
+message PinChange {
+  uint32 pin_id = 1;
+  bool high = 2;                 // the electrical level
+  Source source = 3;             // FIRMWARE, or CLIENT for a driven input
+  uint64 command_seq = 4;        // for CLIENT
+}
+
+message Call { string function = 1; string peripheral = 2; }
+
+message Exchange {
+  // `Event.sim_us` is the end of the exchange, so that events stay ordered.
+  // Instantaneous buses give start_us == end_us.
+  uint32 bus_id = 1;
+  uint64 start_us = 2;
+  uint64 end_us = 3;
+  Direction direction = 4;
+  uint32 address_value = 5;   // the number; a client formats it
+  bytes payload = 6;          // at most LOOPER_BUS_PAYLOAD_CAPACITY (64) kept
+  bytes response = 7;
+  uint32 payload_length = 8;  // the real length; > payload.size() means cut
+  uint32 response_length = 9;
+  bool accepted = 10;
+  Refusal refusal = 11;       // when not accepted
+  Source source = 12;
+  string source_name = 13;    // job or component name
+  uint32 source_id = 14;
+  // For frames a client put on the bus: the boundary the injection was
+  // applied at, and the command. start_us - requested_at_us is the wait in
+  // the bus queue and controller.
+  uint64 requested_at_us = 15;
+  uint64 command_seq = 16;
+  oneof detail {
+    CanDetail can = 20;
+    UartDetail uart = 21;
+    I2cDetail i2c = 22;
+    SpiDetail spi = 23;
+  }
+}
+
+enum Direction { DIRECTION_UNSPECIFIED = 0; DIRECTION_OUTBOUND = 1; DIRECTION_INBOUND = 2; }
+
+enum Source {
+  SOURCE_FIRMWARE = 0;
+  SOURCE_CLIENT = 1;     // a one-off SendBusMessage
+  SOURCE_JOB = 2;
+  SOURCE_RULE = 3;
+  SOURCE_COMPONENT = 4;
+}
+
+message CanDetail { bool extended = 1; bool remote = 2; uint32 dlc = 3; bool fd = 4; bool brs = 5; bool esi = 6; bool error_frame = 7; }
+
+message UartDetail { string error_kind = 1; /* framing, parity, overrun, break, or empty */ }
+
+message I2cDetail { bool is_read = 1; bool acknowledged = 2; optional uint32 register = 3; bool repeated_start = 4; }
+
+message SpiDetail { uint32 chip_select = 1; }
+
+// Every applied change, so that a recorded session can be played back from
+// the log alone in HELD mode (review 7.3.7).
+message CommandApplied {
+  uint64 command_seq = 1;   // Event.sim_us is the application time
+  string description = 2;   // "SendBusMessage can0 6FF#01 02", for people
+  // The request in the control protocol (looper_control.proto), as the
+  // simulation executed it, with absolute times. Replaying the log through
+  // that protocol in HELD mode reproduces the session (T6).
+  bytes encoded = 3;
+}
+
+message JobEvent {
+  uint32 job_id = 1;
+  // No SENT: every frame is an Exchange with source JOB and source_id.
+  enum Kind { STARTED = 0; STOPPED = 1; FINISHED = 2; REFUSED = 3; LATE = 4; }
+  Kind kind = 2;
+  string text = 3;
+}
+
+message Fault { string source = 1; string text = 2; }
+
+message RunEvent {
+  enum Kind { REACHED = 0; HELD = 1; SLIPPED = 2; MODE_CHANGED = 3; }
+  Kind kind = 1;
+  uint64 amount_us = 2;   // SLIPPED: simulated time given up
+  ClockMode mode = 3;
+}
+
+message ClearRequest {
+  // Everything recorded is forgotten and the epoch is bumped; there is no
+  // partial clear (a view hides kinds with a filter). event_seq continues.
+  // The epoch the client believes is current; REFUSAL_WRONG_EPOCH if not, so
+  // that two clients do not clear each other's fresh recording by accident.
+  uint64 epoch = 1;
+}
+
+message PinDrive {
+  uint32 pin_id = 1;
+  // Toggle is done by the simulation, so two clients cannot both "toggle to high".
+  oneof level { bool high = 2; Empty toggle = 3; }
+  When when = 4;
+}
+
+message PinDriven { Ack ack = 1; bool high = 2; }   // the level that was set
+
+message WatchStarted { WatchView watch = 1; Ack ack = 2; }
+
+// One message, as the simulation puts it on a bus.
+message BusMessage {
+  uint32 bus_id = 1;
+  uint32 address = 2;
+  bytes payload = 3;
+  bool extended = 4;
+  optional uint32 dlc = 6;
+  bool remote = 7;
+  bool fd = 8;
+  bool brs = 9;
+  optional uint32 chunk_bytes = 10;   // UART
+  optional uint32 byte_gap_us = 11;   // UART: simulated time between bytes
+}
+
+message BusMessageRequest { BusMessage message = 1; When when = 2; }
+
+message BusMessageReply {
+  // `ack.applied_at_us` is the injection. Whether and when the firmware took
+  // the frame is the Exchange event with this `command_seq`; there is no
+  // event_seq to give here, because the exchange is recorded when it is taken.
+  Ack ack = 1;
+  // One line for people: "6FF - 4 bytes - 11 bit".
+  string summary = 2;
+}
+
+message SendJob {
+  string name = 1;
+  repeated SendStep steps = 2;
+  Repeat repeat = 3;
+  When start = 4;
+  // Random bytes are a pure function of (random_seed, job_id, round, offset),
+  // so a replay draws the same values.
+  uint64 random_seed = 5;
+}
+
+message SendStep {
+  // From the previous step of this job (from the job's start for the first).
+  uint64 after_us = 1;
+  BusMessage message = 2;
+  repeated CounterField counters = 3;
+  repeated ChecksumField checksums = 4;
+  // Offsets of bytes the server fills with a random value per send.
+  repeated uint32 random_bytes = 5;
+}
+
+message Repeat {
+  oneof count { uint32 times = 1; bool until_stopped = 2; }
+  // From the start of one round to the start of the next. Zero with burst > 1
+  // is "all at one simulated moment". A round longer than the period is
+  // REFUSED at the start (INVALID). A frame the bus queue refuses is an
+  // Exchange (accepted false, QUEUE_FULL, source JOB), counts in `late`, and
+  // the job goes on; a counter advances per round, not per accepted frame.
+  uint64 period_us = 3;
+  uint32 burst = 4;
+}
+
+message CounterField {
+  uint32 byte_offset = 1;
+  uint32 width_bytes = 2;
+  bool big_endian = 3;
+  uint64 start = 4;
+  uint64 step = 5;
+  bool wrap = 6;      // false: the job stops at the maximum
+}
+
+message ChecksumField {
+  uint32 byte_offset = 1;
+  string kind = 2;    // "xor8" "sum8" "crc8" "crc16_ccitt" "crc16_modbus" "crc32"
+  uint32 from_byte = 3;   // inclusive
+  uint32 to_byte = 4;     // inclusive; evaluated after the counters
+  uint64 polynomial = 5;   // for "crc8" only
+}
+
+message JobChoice { uint32 job_id = 1; }
+
+message JobView {
+  uint32 job_id = 1;
+  string name = 2;
+  enum State { WAITING = 0; RUNNING = 1; FINISHED = 2; STOPPED = 3; REFUSED = 4; }
+  State state = 3;
+  uint64 next_due_us = 4;
+  uint64 sent = 5;
+  uint64 late = 6;     // frames the bus queue refused
+  string last_error = 7;
+  Ack ack = 8;
+  // Echo of the schedule with absolute times, so that a replay can use it.
+  uint64 started_at_us = 9;
+}
+
+message JobList { repeated JobView jobs = 1; }
+
+enum ExchangeUnit {
+  EXCHANGE_UNIT_UNSPECIFIED = 0;
+  EXCHANGE_UNIT_BYTE = 1;
+  EXCHANGE_UNIT_WRITE = 2;   // one call of the firmware's write or read (UART today)
+  EXCHANGE_UNIT_LINE = 3;
+  EXCHANGE_UNIT_FRAME = 4;
+  EXCHANGE_UNIT_TRANSACTION = 5;
+}
+
+message CurvePoint { uint64 sim_us = 1; double value = 2; }
+
+message GapPoint { uint64 sim_us = 1; uint64 gap_us = 2; }   // the gap before that occurrence
+
+message ViewPosition {
+  uint64 epoch = 1;
+  uint64 as_of_event_seq = 2;   // the view contains events before this number
+}
+
+service Inspector {
+  rpc Describe(Empty) returns (Description);
+
+  // ---- Running ----
+  // Returns at once; a run in progress is seen in RunState.target_us and
+  // ends with a RunEvent. (A client with a 60 s run_for must not hold a call.)
+  rpc ControlRun(RunControl) returns (RunReply);
+  rpc ObserveRun(Empty) returns (RunState);
+
+  // ---- The ordered event stream ----
+  rpc Subscribe(Subscription) returns (stream EventBatch);
+  // One page of the same events without a stream, for tools and tests.
+  rpc ReadEvents(ReadEventsRequest) returns (EventBatch);
+  // Discard what was recorded, for every client. Starts a new epoch.
+  rpc ClearRecordings(ClearRequest) returns (Ack);
+
+  // ---- Reading ----
+  rpc ObserveSimulation(Empty) returns (SimulationView);
+  rpc ObserveChannels(Empty) returns (ChannelList);
+  rpc ObserveWatches(Empty) returns (WatchList);
+  rpc ObserveBuses(Empty) returns (BusList);
+  rpc ObserveComponents(Empty) returns (ComponentList);
+  // The catalogue of globals, read out of the build.
+  rpc ListVariables(Empty) returns (VariableCatalogue);
+  // The waveforms a signal generator offers.
+  rpc ListWaveforms(Empty) returns (WaveformList);
+  // Every recording on one stretch of time, as wide as the client asks for.
+  rpc ArrangeTimeline(TimelineRequest) returns (TimelineView);
+  // The bus the client names, read as a conversation.
+  rpc ObserveLadder(LadderChoice) returns (LadderView);
+  rpc ObserveTimings(Empty) returns (TimingReportView);
+  rpc ObserveProfile(Empty) returns (ProfileView);
+  // Following the paths costs the simulation something, so it is armed and
+  // disarmed explicitly -- for the one simulation, and so for every client.
+  rpc FollowCallPaths(Following) returns (Empty);
+  rpc ObserveFlame(Empty) returns (FlameView);
+  rpc ObserveMemory(Empty) returns (MemoryView);
+  // The models the project offers the signal graph, read afresh, with why
+  // any of them cannot be used.
+  rpc ListModels(Empty) returns (ModelList);
+  // How each model node of the applied graph is doing.
+  rpc ObserveSignalGraph(Empty) returns (SignalGraphView);
+  // Forget every measurement and begin one new window, for the timings, the
+  // profile and the memory together.
+  rpc ClearMeasurements(Empty) returns (Empty);
+
+  // ---- Changing (every one returns an Ack, directly or inside) ----
+  rpc DrivePin(PinDrive) returns (PinDriven);
+  rpc ApplySignal(SignalRequest) returns (Ack);
+  rpc ApplySignalGraph(SignalGraphRequest) returns (Ack);
+  rpc ResetModelState(ModelNodeChoice) returns (Ack);
+  rpc WatchVariable(VariableChoice) returns (WatchStarted);
+  rpc RemoveWatch(WatchChoice) returns (Ack);        // watches: no `when`, always now
+  rpc WriteVariable(VariableWrite) returns (Ack);
+  rpc SendBusMessage(BusMessageRequest) returns (BusMessageReply);
+
+  // ---- Jobs: things the simulation does later, by its own clock ----
+  rpc StartSendJob(SendJob) returns (JobView);
+  rpc StopSendJob(JobChoice) returns (JobView);
+  rpc ObserveSendJobs(Empty) returns (JobList);
+
+  // ---- Source code: the files the build was made of ----
+  // Every file worth showing, with whether it changed since the build.
+  rpc ListSources(Empty) returns (SourceTreeView);
+  // The text of one file; by default the copy the build kept.
+  rpc ReadSource(SourceRequest) returns (SourceText);
+  // What the names of one file stand for, read with the build's flags.
+  // Slow the first time per text of a file, at once afterwards.
+  rpc ObserveSemantics(SourceRequest) returns (SemanticsView);
+  // How often each line of one file ran; a counting build only (else
+  // `counting` is false and the note says how to start one). Exact, and
+  // fetched from the simulation at most once a second.
+  rpc ObserveLineCounts(SourceRequest) returns (LineCountView);
+  // How much of every counted file ran, and the functions nobody called.
+  rpc ObserveCoverage(Empty) returns (CoverageView);
+  // Count from now on; the Ack carries the simulated time counting restarts at.
+  rpc ResetLineCounts(Empty) returns (Ack);
+  // The lines and functions that ran most, and the functions that cost the
+  // host most; a counting build only.
+  rpc ObserveHotspots(Empty) returns (HotspotsView);
+
+  // ---- Debugger: stop the firmware at lines, simulated time standing still ----
+  // While the firmware stands, every other call that asks the simulation is
+  // refused with FAILED_PRECONDITION and RunState.hold_reason says why.
+  rpc ObserveDebugger(Empty) returns (DebugView);
+  rpc ControlDebugger(DebugControl) returns (DebugView);
+
+  // ---- Restart ----
+  // Start the simulation again from 0 s, building it first when asked. The
+  // answer comes before the connection drops; a build runs while the old
+  // simulation does, and one that fails leaves it running.
+  rpc RestartSimulation(RestartRequest) returns (RestartView);
+  rpc ObserveRestart(Empty) returns (RestartView);
+}
 
 message PinView {
   uint32 pin_id = 1;
@@ -159,22 +587,11 @@ message PinView {
 }
 
 message SimulationView {
-  uint64 microseconds = 1;
-  string time_mode = 2;
+  uint64 sim_us = 1;
+  reserved 2;
+  reserved "time_mode";
   repeated PinView pins = 3;
 }
-
-message PinToggle {
-  uint32 pin_id = 1;
-  // The level the client saw, which is what is inverted.
-  string current_level = 2;
-}
-
-message PinLevel {
-  string level = 1;
-}
-
-// ---- Analog ----------------------------------------------------------------
 
 message SignalView {
   string waveform = 1;
@@ -207,6 +624,7 @@ message ChannelList {
 message SignalRequest {
   uint32 channel_id = 1;
   SignalView signal = 2;
+  When when = 15;
 }
 
 message WaveformView {
@@ -248,6 +666,10 @@ message SignalNodeRequest {
   // The values its parameters are given, by name; a parameter left out
   // keeps its default.
   map<string, double> parameters = 7;
+  // Step this model node in Python even though it could be compiled, so
+  // that a breakpoint in its step is reached. Ignored for a linear model
+  // and for every other kind. The model then runs in the model worker.
+  bool interpreted = 8;
 }
 
 message ModelParameterView {
@@ -266,11 +688,63 @@ message ModelView {
   repeated string outputs = 4;
   repeated ModelParameterView parameters = 5;
   // Simulated time between two of its steps.
-  double step_seconds = 6;
+  uint64 step_us = 6;
   // The file it is written in.
   string source = 7;
   // Why it cannot be used; empty when it can.
   string problem = 8;
+  // "linear" or "state": a system from control, or a StateModel class.
+  string kind = 9;
+  // "linear", "compiled" or "interpreted": how the simulation steps it.
+  string execution = 10;
+  // What a node shows for it: "LTI", "C" or "Py".
+  string execution_label = 11;
+  // Why it runs in Python, as file:line and reason; empty when it does not,
+  // and when it does because the class asked for it.
+  string execution_reason = 12;
+  // What its state is called, in order. Empty for a linear model.
+  repeated string state_names = 13;
+  // "project" or "built_in": whether the project's models directory holds
+  // it, or looper-core ships it. A project model of the same name as a
+  // shipped one stands in for it, so a name is listed once.
+  string origin = 14;
+  // Where it comes from, as a menu heads it: "Project" or "looper-core".
+  string origin_label = 15;
+  // The origin_label of a model of the same name this one hides, empty
+  // when it hides none: "looper-core" for a project's copy of a shipped
+  // model, so that the reader sees the copy is the one in use.
+  string stands_in_for = 16;
+}
+
+message ModelNodeChoice {
+  // The key the client gave the node in SignalGraphRequest.
+  string node = 1;
+  When when = 15;
+}
+
+message ModelStateView {
+  string name = 1;
+  double value = 2;
+  // The value as the panel shows it.
+  string value_text = 3;
+}
+
+message ModelNodeView {
+  string node = 1;
+  // As in ModelView, but for this node.
+  string execution = 2;
+  string execution_label = 3;
+  string execution_reason = 4;
+  // Why it stopped: a step that produced NaN or infinity. Empty while it
+  // runs.
+  string fault = 5;
+  // Empty for a linear model, and for a model that names no state.
+  repeated ModelStateView state = 6;
+}
+
+message SignalGraphView {
+  // Only the model nodes, in the order of the graph.
+  repeated ModelNodeView models = 1;
 }
 
 message ModelList {
@@ -292,56 +766,12 @@ message SignalTargetRequest {
 message SignalGraphRequest {
   repeated SignalNodeRequest nodes = 1;
   repeated SignalTargetRequest targets = 2;
+  When when = 15;
 }
 
 message WaveformList {
   repeated WaveformView waveforms = 1;
 }
-
-// ---- Recordings ------------------------------------------------------------
-
-message SampleView {
-  uint32 channel_id = 1;
-  double seconds = 2;
-  double value = 3;
-  uint64 sequence = 4;
-}
-
-message TraceView {
-  repeated SampleView samples = 1;
-  uint64 next_sequence = 2;
-}
-
-message ExchangeView {
-  uint32 bus_id = 1;
-  string kind = 2;
-  double seconds = 3;
-  // "outbound" when the firmware started it, "inbound" otherwise.
-  string direction = 4;
-  string address = 5;
-  uint32 length = 6;
-  string payload = 7;
-  string response = 8;
-  bool accepted = 9;
-  uint64 sequence = 10;
-}
-
-message BusTraceView {
-  repeated ExchangeView exchanges = 1;
-  uint64 next_sequence = 2;
-}
-
-message RecordingPositions {
-  uint64 after_sample = 1;
-  uint64 after_exchange = 2;
-}
-
-message Recordings {
-  TraceView trace = 1;
-  BusTraceView bus_trace = 2;
-}
-
-// ---- Variables -------------------------------------------------------------
 
 message VariableView {
   // Identifies the variable in this server's catalogue. Paths are not
@@ -377,8 +807,20 @@ message VariableCatalogue {
   string unavailable_reason = 2;
 }
 
+// How a stored number maps onto the quantity it stands for:
+// quantity = stored * scale + offset. A scale of zero, which proto3 sends
+// for a message nobody filled in, means the stored number itself.
+message Scaling {
+  double scale = 1;
+  double offset = 2;
+}
+
 message VariableChoice {
   uint32 variable_id = 1;
+  // What the stored number stands for, as the client's project says: an
+  // int16 of hundredths of an ampere is scale 0.01. Unset for the number
+  // itself. A bool takes none.
+  Scaling scaling = 2;
 }
 
 message WatchView {
@@ -392,7 +834,8 @@ message WatchView {
   double value = 8;
   uint32 bit_offset = 9;
   uint32 bit_width = 10;
-  // The value written the way its own type reads.
+  // The value written the way its own type reads; a scaled integer to as
+  // many decimals as its step needs.
   string display_value = 11;
   // What the variable can hold, for example "uint8, 0 to 255".
   string range_text = 12;
@@ -401,6 +844,16 @@ message WatchView {
   // means belongs to the client's own project.
   reserved 13;
   reserved "unit";
+  // The lowest and highest quantity the variable can stand for: what its
+  // type holds, scaled. For floating point, the finite extremes of its width.
+  double lowest = 14;
+  double highest = 15;
+  // The smallest step between two quantities it can hold: the scale for an
+  // integer, so 1 when unscaled; 0 for floating point.
+  double resolution = 16;
+  // The number as it is stored, before scaling. value is the quantity.
+  double raw_value = 17;
+  Scaling scaling = 18;
 }
 
 message WatchList {
@@ -413,21 +866,12 @@ message WatchChoice {
 
 message VariableWrite {
   uint32 channel_id = 1;
+  // The quantity to store, as WatchView.value shows it. looper-core turns it
+  // into the stored number by the watch's scaling and cuts an integer
+  // towards zero, a quotient within 1e-9 of a whole number taken as that
+  // number.
   double value = 2;
-}
-
-// ---- Buses -----------------------------------------------------------------
-
-message BusView {
-  uint32 bus_id = 1;
-  string kind = 2;
-  string name = 3;
-  uint32 bitrate_bps = 4;
-  // The rate as it is shown, or a note that none was configured.
-  string display_bitrate = 5;
-  // Whether a client may put a message on it. On SPI and I2C the
-  // firmware is the master, and a client changes the component instead.
-  bool accepts_messages = 6;
+  When when = 15;
 }
 
 message BusList {
@@ -446,14 +890,6 @@ message ComponentList {
   repeated ComponentView components = 1;
 }
 
-message BusMessageRequest {
-  uint32 bus_id = 1;
-  uint32 address = 2;
-  bytes payload = 3;
-  // Whether the address is an extended, 29 bit CAN identifier.
-  bool extended = 4;
-}
-
 message PartyView {
   string address = 1;
   string name = 2;
@@ -461,7 +897,7 @@ message PartyView {
 }
 
 message StepView {
-  double seconds = 1;
+  uint64 sim_us = 1;
   string gap = 2;
   uint32 column = 3;
   bool is_outbound = 4;
@@ -475,6 +911,7 @@ message LadderView {
   repeated PartyView parties = 2;
   repeated StepView steps = 3;
   string note = 4;
+  ViewPosition position = 5;
 }
 
 message LadderChoice {
@@ -482,25 +919,18 @@ message LadderChoice {
   optional uint32 bus_id = 1;
 }
 
-// ---- Timeline --------------------------------------------------------------
-
 message WindowView {
-  double start_seconds = 1;
-  double end_seconds = 2;
+  uint64 start_us = 1;
+  uint64 end_us = 2;
 }
 
 message MarkView {
-  double seconds = 1;
+  uint64 sim_us = 1;
   string label = 2;
   string detail = 3;
-  double duration_seconds = 4;
+  uint64 duration_us = 4;
   bool is_doubtful = 5;
   bool is_high = 6;
-}
-
-message Point {
-  double seconds = 1;
-  double value = 2;
 }
 
 message LaneView {
@@ -511,9 +941,9 @@ message LaneView {
   repeated MarkView marks = 4;
   uint32 count = 5;
   // The gap before each occurrence, against when it ended.
-  repeated Point gaps = 6;
-  double usual_gap_seconds = 7;
-  double worst_gap_seconds = 8;
+  repeated GapPoint gaps = 6;
+  uint64 usual_gap_us = 7;
+  uint64 worst_gap_us = 8;
   string summary = 9;
 }
 
@@ -521,7 +951,7 @@ message CurveView {
   string key = 1;
   string label = 2;
   uint32 channel_id = 3;
-  repeated Point points = 4;
+  repeated CurvePoint points = 4;
   double lowest = 5;
   double highest = 6;
 }
@@ -533,29 +963,24 @@ message TimelineView {
   repeated CurveView curves = 3;
   repeated LaneView lanes = 4;
   bool is_empty = 5;
+  ViewPosition position = 6;
 }
 
 message Following {
   bool wanted = 1;
 }
 
-message TimeStep {
-  uint64 microseconds = 1;
-}
-
 message TimelineRequest {
   // How much of the past to show, ending at the newest thing recorded.
   // Zero for the server's default; held to what the server keeps.
-  double window_seconds = 1;
+  uint64 window_us = 1;
 }
-
-// ---- Timings ---------------------------------------------------------------
 
 message CallTimingView {
   string function = 1;
   uint64 calls = 2;
   uint64 answered_calls = 3;
-  double total_seconds = 4;
+  uint64 total_host_ns = 4;
   string mean = 5;
   string longest = 6;
   bool is_never_answered = 7;
@@ -570,10 +995,8 @@ message TimingReportView {
   // One per function, heaviest first.
   repeated CallTimingView entries = 1;
   // Host time of the heaviest entry, which scales a chart.
-  double heaviest_seconds = 2;
+  uint64 heaviest_host_ns = 2;
 }
-
-// ---- Profile ---------------------------------------------------------------
 
 message ProfileEntryView {
   string name = 1;
@@ -587,6 +1010,10 @@ message ProfileEntryView {
   string total_text = 9;
   string mean_text = 10;
   string longest_text = 11;
+  // Where it is written, for "Show in source": the file in full and the
+  // line it is declared on; empty and zero when the build does not say.
+  string source_path = 12;
+  uint32 line = 13;
 }
 
 message ProfileGroupView {
@@ -635,8 +1062,6 @@ message FlameView {
   string note = 4;
   bool is_watched = 5;
 }
-
-// ---- Memory ----------------------------------------------------------------
 
 message StaticObjectView {
   string name = 1;
@@ -718,4 +1143,312 @@ message MemoryView {
   StaticMemoryView static_memory = 1;
   StackUsageView stack = 2;
   HeapUsageView heap = 3;
+}
+
+message BusView {
+  uint32 bus_id = 1;
+  string kind = 2;
+  string name = 3;
+  uint32 bitrate_bps = 4;
+  string display_bitrate = 5;
+  bool accepts_messages = 6;
+  // C5
+  bool takes_address = 7;
+  string address_label = 8;
+  bool takes_extended = 9;
+  uint32 max_payload_bytes = 10;
+  uint32 max_address = 11;
+  uint32 max_extended_address = 12;
+  bool takes_line_ending = 13;
+  bool supports_fd = 14;
+  bool supports_remote = 15;
+  ExchangeUnit exchange_unit = 16;
+  // How much simulated time a frame takes on this bus, and a controller's
+  // latency before it is placed; zero = instantaneous (version 2 behaviour).
+  bool has_time_model = 17;
+  uint32 controller_latency_us = 18;
+  uint32 queue_depth = 19;       // what QUEUE_FULL means in numbers...
+  ExchangeUnit queue_unit = 20;  // ...in frames (CAN, 32) or bytes (UART, 256)
+}
+
+// ---- Source code ----
+
+// Whether a file is still the one the build saw. A count or a breakpoint
+// belongs to a line as compiled; a changed file shows the kept copy.
+enum SourceState {
+  SOURCE_STATE_AS_BUILT = 0;
+  SOURCE_STATE_CHANGED = 1;   // edited since; the kept copy is shown
+  SOURCE_STATE_MISSING = 2;   // gone from disk; the kept copy is shown
+  SOURCE_STATE_UNKEPT = 3;    // the build kept no copy; the disk is shown
+}
+
+message SourceFileView {
+  string path = 1;            // what the file is asked for by
+  string display_path = 2;    // relative to the project, or to its directory
+  string origin = 3;          // firmware, device model, adapter, component, runtime
+  bool is_header = 4;
+  // The firmware or its device model; everything else is shown on request.
+  bool is_project = 5;
+  SourceState state = 6;
+  string state_text = 7;
+}
+
+message SourceTreeView {
+  // Firmware first, then the device model, then the rest; by name within.
+  repeated SourceFileView files = 1;
+  string note = 2;
+}
+
+message SourceRequest {
+  string path = 1;
+  // The file as it is on disk now, rather than the copy the build kept.
+  bool from_disk = 2;
+}
+
+message SourceText {
+  string path = 1;
+  bool as_built = 2;          // this is the copy the build kept
+  string text = 3;
+  string digest = 4;          // changes whenever the text does
+  SourceState state = 5;
+  string state_text = 6;
+  string note = 7;            // e.g. that the file changed after the build
+}
+
+enum SymbolKind {
+  SYMBOL_KIND_UNSPECIFIED = 0;
+  SYMBOL_KIND_FUNCTION = 1;
+  SYMBOL_KIND_ADAPTER_CALL = 2;     // a function the simulated adapter answers
+  SYMBOL_KIND_GLOBAL_VARIABLE = 3;  // can be watched
+  SYMBOL_KIND_STATIC_VARIABLE = 4;
+  SYMBOL_KIND_LOCAL_VARIABLE = 5;
+  SYMBOL_KIND_PARAMETER = 6;
+  SYMBOL_KIND_FIELD = 7;
+  SYMBOL_KIND_MACRO = 8;
+  SYMBOL_KIND_ENUM_CONSTANT = 9;
+  SYMBOL_KIND_TYPE = 10;
+}
+
+message SemanticSpan {
+  uint32 line = 1;            // from one
+  uint32 column = 2;          // bytes of UTF-8 into the line, from zero
+  uint32 length = 3;          // bytes
+  SymbolKind kind = 4;
+  string kind_text = 5;
+  string name = 6;            // the variable, function or adapter function
+  string caption = 7;         // type and name, as a hint shows them
+  string declared_path = 8;   // empty when unknown
+  uint32 declared_line = 9;   // zero when unknown
+}
+
+message FunctionExtentView {
+  string name = 1;
+  string signature = 2;
+  uint32 first_line = 3;
+  uint32 last_line = 4;
+}
+
+message LineRange {
+  uint32 first_line = 1;
+  uint32 last_line = 2;
+}
+
+message SemanticsView {
+  string path = 1;
+  string digest = 2;          // the text the spans belong to
+  repeated SemanticSpan spans = 3;
+  repeated FunctionExtentView functions = 4;
+  repeated LineRange inactive = 5;   // left out by the preprocessor
+  string note = 6;
+}
+
+// ---- Line counts (a counting build) ----
+
+message LineCountEntry {
+  uint32 line = 1;
+  uint64 count = 2;           // exact
+  string count_text = 3;      // short: 1.2k
+  uint32 heat = 4;            // 0 never .. 8 as often as the most run line of the file
+  uint32 branches = 5;        // ways out of the line
+  uint32 branches_taken = 6;  // ways taken at least once
+  bool partly_run = 7;        // ran, but part of it never did
+  // Lately: over the window of LineCountView.window_us, simulated time.
+  uint64 recent = 8;          // runs in the window, exact
+  string rate_text = 9;       // per second of simulated time: 480/s, <0.1/s
+  uint32 rate_heat = 10;      // 0 not lately .. 8 as fast as the fastest line of the file
+  // The run of lines this one belongs to: lines of one function that ran
+  // equally often, in all and lately, with nothing before the last that
+  // decides anything. A client may draw their counts once for all of them.
+  uint32 group_first = 11;
+  uint32 group_last = 12;
+}
+
+message FunctionCountView {
+  string name = 1;
+  string path = 2;
+  uint32 first_line = 3;
+  uint32 last_line = 4;
+  uint64 calls = 5;
+  string calls_text = 6;
+  uint32 lines = 7;           // lines of it that can run
+  uint32 lines_run = 8;
+  // Host cost from the profiler, when it measured the function: this PC's
+  // clock, so it says which code costs more, never how long on the target.
+  bool has_host_cost = 9;
+  string host_self_text = 10;
+  string host_share_text = 11;
+  uint64 recent_calls = 12;   // calls in the window of the rate
+  string calls_rate_text = 13;
+}
+
+message LineCountView {
+  string path = 1;
+  bool counting = 2;          // the build counts lines at all
+  bool is_counted = 3;        // and this file is one it counts
+  repeated LineCountEntry lines = 4;   // only lines that can run
+  repeated FunctionCountView functions = 5;
+  uint64 since_us = 6;
+  uint64 at_us = 7;
+  string since_text = 8;
+  string summary_text = 9;
+  string note = 10;
+  uint64 window_us = 11;           // the simulated time the rates are measured over
+  string rate_window_text = 12;    // "over the last 1 s of simulated time"
+}
+
+message FileCoverage {
+  string path = 1;
+  uint32 lines = 2;
+  uint32 lines_run = 3;
+  uint32 never_run = 4;
+  string share_text = 5;
+}
+
+message CoverageView {
+  bool counting = 1;
+  repeated FileCoverage files = 2;     // most lines never run first
+  repeated FunctionCountView never_called = 3;
+  uint32 lines = 4;
+  uint32 lines_run = 5;
+  string share_text = 6;
+  uint64 since_us = 7;
+  uint64 at_us = 8;
+  string since_text = 9;
+  string summary_text = 10;
+  string note = 11;
+}
+
+message HotLine {
+  string path = 1;
+  uint32 line = 2;
+  uint64 count = 3;
+  string count_text = 4;
+  string function = 5;
+  uint64 recent = 6;
+  string rate_text = 7;
+}
+
+message HotspotsView {
+  bool counting = 1;
+  repeated HotLine lines = 2;                 // ran most often first; exact
+  repeated FunctionCountView functions = 3;   // called most often first
+  repeated FunctionCountView costly = 4;      // most host time first
+  string since_text = 5;
+  string note = 6;
+  repeated HotLine lines_by_rate = 7;                  // running most now first
+  repeated FunctionCountView functions_by_rate = 8;    // called most now first
+  string rate_window_text = 9;
+}
+
+// ---- Debugger ----
+
+message BreakpointPlace {
+  string path = 1;
+  uint32 line = 2;
+}
+
+message DebugControl {
+  oneof op {
+    Empty attach = 1;
+    Empty detach = 2;
+    Empty resume = 3;              // run to the next breakpoint
+    Empty step_over = 4;
+    Empty step_into = 5;
+    Empty step_out = 6;
+    BreakpointPlace add_breakpoint = 7;   // attaches first when need be
+    uint32 remove_breakpoint = 8;         // by its number
+  }
+}
+
+message DebugFrame {
+  uint32 level = 1;           // 0 where the firmware stands
+  string function = 2;
+  string path = 3;
+  uint32 line = 4;
+  string place_text = 5;      // app.c:73
+}
+
+message BreakpointView {
+  uint32 number = 1;
+  string path = 2;
+  uint32 line = 3;            // where the debugger put it
+  bool resolved = 4;          // false: no code at that line
+  uint32 hits = 5;
+}
+
+message DebugVariable {
+  string name = 1;
+  string value = 2;
+  string type = 3;
+}
+
+message DebugView {
+  bool available = 1;         // a debugger can be attached at all
+  bool attached = 2;
+  bool stopped = 3;
+  string status_text = 4;
+  DebugFrame stopped_at = 5;
+  repeated BreakpointView breakpoints = 6;
+  repeated DebugFrame frames = 7;          // innermost first
+  repeated DebugVariable variables = 8;    // of the frame it stands in
+  string note = 9;            // why not available, or what was refused
+}
+
+// ---- Restart ----
+
+message RestartRequest {
+  bool rebuild = 1;
+}
+
+message BuildDiagnostic {
+  string path = 1;
+  uint32 line = 2;
+  uint32 column = 3;        // zero when the compiler did not say
+  string severity = 4;      // "error" or "warning"
+  string message = 5;
+}
+
+message BuildResult {
+  bool failed = 1;
+  string title_text = 2;
+  string summary_text = 3;                 // "2 errors · 1 warning"
+  repeated BuildDiagnostic diagnostics = 4;  // errors first
+  string output = 5;                       // everything the compiler said
+}
+
+enum RestartPhase {
+  RESTART_PHASE_RUNNING = 0;
+  RESTART_PHASE_BUILDING = 1;     // the old simulation runs on meanwhile
+  RESTART_PHASE_RESTARTING = 2;   // the connection drops and comes back
+}
+
+message RestartView {
+  RestartPhase phase = 1;
+  bool can_restart = 2;
+  string restart_unavailable = 3;
+  bool can_rebuild = 4;
+  string rebuild_unavailable = 5;
+  BuildResult last_build = 6;     // unset when no build was asked for here
+  uint64 generation = 7;          // restarts so far; tells one from the next
+  string done_text = 8;           // what the last restart did, for a notice
 }

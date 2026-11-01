@@ -28,23 +28,24 @@ from looper.domain.model import (
     Bus,
     BusMessage,
     Channel,
+    ClockMode,
     ExpectationReport,
     Outcome,
     Pin,
     Signal,
-    TimeMode,
     Variable,
     Watch,
 )
 from looper.infrastructure.looper_cli import LooperCliError
 from looper.starting import ContractMismatchError, connect, run
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 
 __all__ = [
     "Bus",
     "BusMessage",
     "Channel",
+    "ClockMode",
     "ContractMismatchError",
     "ExpectationReport",
     "Expectations",
@@ -55,7 +56,6 @@ __all__ = [
     "Simulation",
     "SimulationRefusedError",
     "SimulationUnreachableError",
-    "TimeMode",
     "Variable",
     "Watch",
     "__version__",

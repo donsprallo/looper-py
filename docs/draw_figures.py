@@ -159,13 +159,13 @@ def system_overview():
 
 
 def lockstep():
-    svg = Svg(940, 380, "A virtual clock held between the steps a test lets pass")
+    svg = Svg(940, 380, "A held clock moves only for the span a test lets pass")
     left, right, top, bottom = 90, 900, 50, 280
     svg.line(left, bottom, right, bottom, stroke=MUTED)
     svg.line(left, bottom, left, top, stroke=MUTED)
     svg.text((left + right) / 2, bottom + 66, "wall clock: what the test is doing  ->", size=12,
              fill=MUTED, anchor="middle")
-    svg.text(left - 14, top - 14, "simulated time", size=12, fill=MUTED)
+    svg.text(left - 14, top - 14, "simulated time (sim_us)", size=12, fill=MUTED)
     phases = [
         (90, 230, "held", "test sets the scene", 0.0),
         (230, 300, "runs", "advance(1.0)", 1.0),
@@ -210,7 +210,7 @@ def evaluate_steps():
     steps = [
         ("declare", "check.channel(...)", "check.call(...)", BLUE_SOFT, ACCENT),
         ("clear", "recordings and counts", "for every client", AMBER_SOFT, WARN),
-        ("let time pass", "advance (virtual)", "or wait (real time)", GREEN_SOFT, GOOD),
+        ("let time pass", "run a held clock", "or wait if it runs alone", GREEN_SOFT, GOOD),
         ("observe", "clock + counts, then", "samples, exchanges, memory", VIOLET_SOFT, VIOLET),
         ("check", "every expectation", "-> ExpectationReport", BLUE_SOFT, ACCENT),
     ]
@@ -324,9 +324,9 @@ def window_edges():
         x = left + half * 0.5 * per_second
         svg.circle(x, axis, 6, fill=ACCENT)
     svg.text(left, 52, "the LED toggles every 500 ms (2 Hz)", size=12.5, weight="bold")
-    windows = [(0.0, 2.0, 160, "window 0 .. 2 s (end excluded) catches 3 toggles: 1.5 Hz", WARN,
+    windows = [(0.0, 2.0, 160, "window 0 .. 2 000 000 us (end excluded) catches 3 toggles: 1.5 Hz", WARN,
                 AMBER_SOFT),
-               (0.25, 2.25, 200, "window 0.25 .. 2.25 s catches 4 toggles: 2 Hz", GOOD,
+               (0.25, 2.25, 200, "window 250 000 .. 2 250 000 us catches 4 toggles: 2 Hz", GOOD,
                 GREEN_SOFT)]
     for start, end, y, label, stroke, fill in windows:
         x1, x2 = left + start * per_second, left + end * per_second

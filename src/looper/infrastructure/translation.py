@@ -12,15 +12,16 @@ from looper.domain.model import (
     BusMessage,
     CallTiming,
     Channel,
+    ClockMode,
     Description,
+    EventPage,
     Exchange,
     HeapUsage,
     MemoryUsage,
     Pin,
-    Recordings,
+    RunStatus,
     Sample,
     Signal,
-    TimeMode,
     Variable,
     Watch,
 )
@@ -31,25 +32,49 @@ from looper.infrastructure.contract import looper_inspector_pb2 as contract
 #: which say nothing about whether anything stood behind an adapter call.
 ADAPTER_ORIGIN = "adapter"
 
+CLOCK_MODES = {
+    contract.CLOCK_MODE_HELD: ClockMode.HELD,
+    contract.CLOCK_MODE_PACED: ClockMode.PACED,
+    contract.CLOCK_MODE_MAX: ClockMode.MAX,
+}
+
+DIRECTIONS = {
+    contract.DIRECTION_OUTBOUND: "outbound",
+    contract.DIRECTION_INBOUND: "inbound",
+}
+
 
 def description_of(message: contract.Description) -> Description:
     """What the server is attached to."""
     return Description(
         contract_version=message.contract_version,
         firmware_name=message.firmware_name,
-        time_mode=TimeMode(message.time_mode),
         definition_path=message.definition_path,
         reads_the_build=message.reads_the_build,
     )
 
 
-def recordings_of(message: contract.Recordings) -> Recordings:
-    """One page of both recordings."""
-    return Recordings(
-        samples=tuple(_sample_of(one) for one in message.trace.samples),
-        next_sample=message.trace.next_sequence,
-        exchanges=tuple(_exchange_of(one) for one in message.bus_trace.exchanges),
-        next_exchange=message.bus_trace.next_sequence,
+def run_status_of(message: contract.RunState) -> RunStatus:
+    """Where the clock is and how it goes."""
+    return RunStatus(
+        now_us=message.now_us,
+        clock_mode=CLOCK_MODES[message.mode],
+        epoch=message.epoch,
+        next_event_seq=message.next_event_seq,
+        target_us=message.target_us,
+        hold_reason=message.hold_reason,
+    )
+
+
+def event_page_of(message: contract.EventBatch) -> EventPage:
+    """One page of the event stream: its samples and exchanges, and where it stands."""
+    return EventPage(
+        samples=tuple(_sample_of(one) for one in message.events if one.HasField("sample")),
+        exchanges=tuple(_exchange_of(one) for one in message.events if one.HasField("exchange")),
+        next_event_seq=message.next_event_seq,
+        sim_now_us=message.sim_now_us,
+        lost_events=sum(one.to_event_seq - one.from_event_seq + 1 for one in message.lost),
+        epoch_changed=message.epoch_changed,
     )
 
 
@@ -176,39 +201,35 @@ def signal_request_of(channel_id: int, signal: Signal) -> contract.SignalRequest
 def bus_message_request_of(message: BusMessage) -> contract.BusMessageRequest:
     """A message for a bus, as the contract carries it."""
     return contract.BusMessageRequest(
-        bus_id=message.bus_id,
-        address=message.address,
-        payload=message.payload,
-        extended=message.extended,
+        message=contract.BusMessage(
+            bus_id=message.bus_id,
+            address=message.address,
+            payload=message.payload,
+            extended=message.extended,
+        )
     )
 
 
-def _sample_of(message: contract.SampleView) -> Sample:
+def _sample_of(event: contract.Event) -> Sample:
     return Sample(
-        channel_id=message.channel_id,
-        seconds=message.seconds,
-        value=message.value,
-        sequence=message.sequence,
+        channel_id=event.sample.channel_id,
+        sim_us=event.sim_us,
+        value=event.sample.value,
+        event_seq=event.event_seq,
     )
 
 
-def _exchange_of(message: contract.ExchangeView) -> Exchange:
+def _exchange_of(event: contract.Event) -> Exchange:
+    exchange = event.exchange
     return Exchange(
-        bus_id=message.bus_id,
-        seconds=message.seconds,
-        address=_address_of(message.address),
-        display_address=message.address,
-        direction=message.direction,
-        payload=bytes.fromhex(message.payload),
-        response=bytes.fromhex(message.response),
-        length=message.length,
-        accepted=message.accepted,
-        sequence=message.sequence,
+        bus_id=exchange.bus_id,
+        sim_us=event.sim_us,
+        address=exchange.address_value,
+        display_address=f"0x{exchange.address_value:X}",
+        direction=DIRECTIONS.get(exchange.direction, ""),
+        payload=bytes(exchange.payload),
+        response=bytes(exchange.response),
+        length=exchange.payload_length,
+        accepted=exchange.accepted,
+        event_seq=event.event_seq,
     )
-
-
-def _address_of(display: str) -> int:
-    """The number behind an address as the server shows it: ``0x123`` or ``0``."""
-    if display.lower().startswith("0x"):
-        return int(display, 16)
-    return int(display, 10)

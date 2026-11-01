@@ -9,15 +9,17 @@ of time. That ordering is what lets twenty of them cost one reading of
 each recording, and it is also what lets a check look at the whole window
 rather than at the instant it happened to run.
 
-In virtual time the window is advanced rather than waited out, so a test
+On a held clock the window is advanced rather than waited out, so a test
 takes as long as the firmware needs and not a second more, and two runs
-see the same thing.
+see the same thing. On a clock that runs by itself the window is waited
+out on the host and cut by simulated time.
 """
 
 from __future__ import annotations
 
 import time
 
+from looper.application.event_window import WindowReader
 from looper.application.ports import Inspector, SimulationRefusedError
 from looper.application.subjects import (
     BusExpectation,
@@ -28,20 +30,14 @@ from looper.application.subjects import (
 )
 from looper.domain.checks import Check, FirmwareIsAlive
 from looper.domain.model import (
-    Exchange,
+    ClockMode,
     ExpectationReport,
     MemoryUsage,
     Observation,
-    Recordings,
-    Sample,
-    TimeMode,
+    RunStatus,
 )
 
 MICROSECONDS_PER_SECOND = 1_000_000
-
-#: Pages one reading will take before giving up. A window long enough to
-#: need more than this is long enough that a check should say so.
-MAXIMUM_PAGES = 512
 
 
 class Expectations:
@@ -57,9 +53,8 @@ class Expectations:
         assert check.evaluate(for_seconds=1.0)
     """
 
-    def __init__(self, inspector: Inspector, time_mode: TimeMode) -> None:
+    def __init__(self, inspector: Inspector) -> None:
         self._inspector = inspector
-        self._time_mode = time_mode
         self._checks: list[Check] = []
 
     def add(self, check: Check) -> Expectations:
@@ -96,65 +91,58 @@ class Expectations:
 
         The recordings and measurements are cleared first, so a check sees
         the window and not whatever happened before it. They are cleared for
-        every client of the simulation: there is one simulation.
+        every client of the simulation: there is one simulation, and the
+        clear begins a new recording epoch for all of them.
+
+        The clock mode is read at the start of every window, because any
+        client may have switched it. A held clock is run for the window; a
+        clock that runs by itself is waited out.
+
+        Raises:
+            SimulationRefusedError: If a debugger holds the firmware, another
+                client cleared the recording meanwhile, or the clock refuses.
         """
-        self._inspector.clear_recordings()
-        self._inspector.clear_measurements()
-        before = self._inspector.simulated_microseconds()
-        self._let_time_pass(for_seconds)
-        observed = self._observe(before)
+        start = self._begin_window()
+        self._let_time_pass(start.clock_mode, for_seconds)
+        end = self._inspector.run_state()
+        observed = self._observe(start, end)
         return ExpectationReport(outcomes=tuple(check.evaluate(observed) for check in self._checks))
 
-    def _let_time_pass(self, seconds: float) -> None:
-        """Advance the clock, or wait."""
-        if self._time_mode is TimeMode.VIRTUAL:
-            self._inspector.advance(int(seconds * MICROSECONDS_PER_SECOND))
+    def _begin_window(self) -> RunStatus:
+        """Clear what was recorded and say where the window starts."""
+        before = self._inspector.run_state()
+        if before.hold_reason:
+            raise SimulationRefusedError(before.hold_reason)
+        self._inspector.clear_recordings(before.epoch)
+        self._inspector.clear_measurements()
+        return self._inspector.run_state()
+
+    def _let_time_pass(self, clock_mode: ClockMode, seconds: float) -> None:
+        """Run a held clock for the span, or wait for one that runs by itself."""
+        if clock_mode is ClockMode.HELD:
+            self._inspector.run_for(round(seconds * MICROSECONDS_PER_SECOND))
         else:
             time.sleep(seconds)
 
-    def _observe(self, before_microseconds: int) -> Observation:
-        """Read the clock and count the calls together, then read every recording.
+    def _observe(self, start: RunStatus, end: RunStatus) -> Observation:
+        """Count the calls straight after the clock, then read the window's events.
 
-        The firmware keeps running while it is read -- a virtual clock moves
-        on every idle pass as well. A rate is calls over time, so the clock
-        and the calls are read one straight after the other, the clock first:
+        The firmware may keep running while it is read. A rate is calls over
+        time, so the clock is read first and the calls straight after it:
         the server counts the calls at the start of its answer and then
         ranks the profile beside them, which takes a while, and that while
         must not land in the window.
         """
-        after = self._inspector.simulated_microseconds()
         timings = self._inspector.read_timings()
-        recorded = self._read_all()
+        events = WindowReader(self._inspector, start, end.now_us).read()
         return Observation(
-            samples=recorded.samples,
-            exchanges=recorded.exchanges,
+            samples=events.samples,
+            exchanges=events.exchanges,
             timings=timings,
-            elapsed_seconds=(after - before_microseconds) / MICROSECONDS_PER_SECOND,
-            lost_samples=max(0, _after(recorded.samples) - len(recorded.samples)),
-            lost_exchanges=max(0, _after(recorded.exchanges) - len(recorded.exchanges)),
+            elapsed_seconds=(end.now_us - start.now_us) / MICROSECONDS_PER_SECOND,
+            lost_events=events.lost_events,
             memory=self._memory(),
         )
-
-    def _read_all(self) -> Recordings:
-        """Read pages up to where the recordings stood when reading began.
-
-        A check that counted one page would quietly measure the page size
-        instead of the run, so the pages are read to the end. The end is
-        the one the first reply names, not wherever the recordings have got
-        to since: a firmware that keeps running keeps recording, and a
-        reader chasing it would never finish.
-        """
-        collected = self._inspector.read_recordings(0, 0)
-        end = (collected.next_sample, collected.next_exchange)
-        for _ in range(MAXIMUM_PAGES):
-            position = (_after(collected.samples), _after(collected.exchanges))
-            if position[0] >= end[0] and position[1] >= end[1]:
-                return collected
-            page = self._inspector.read_recordings(*position)
-            if not (page.samples or page.exchanges):
-                return collected
-            collected = _joined(collected, page)
-        return collected
 
     def _memory(self) -> MemoryUsage:
         """The heap and the stack, or nothing known when the build cannot be read."""
@@ -162,22 +150,3 @@ class Expectations:
             return self._inspector.read_memory()
         except SimulationRefusedError:
             return MemoryUsage()
-
-
-def _after(records: tuple[Sample, ...] | tuple[Exchange, ...]) -> int:
-    """Where reading goes on after the records already read.
-
-    From the last record seen rather than from the sequence a reply names
-    as next: that one is where the recording has got to, not this reader.
-    """
-    return records[-1].sequence + 1 if records else 0
-
-
-def _joined(collected: Recordings, page: Recordings) -> Recordings:
-    """What has been read so far, with one more page behind it."""
-    return Recordings(
-        samples=(*collected.samples, *page.samples),
-        next_sample=max(collected.next_sample, page.next_sample),
-        exchanges=(*collected.exchanges, *page.exchanges),
-        next_exchange=max(collected.next_exchange, page.next_exchange),
-    )

@@ -13,11 +13,16 @@ from dataclasses import dataclass
 from enum import StrEnum
 
 
-class TimeMode(StrEnum):
-    """Where a simulation's clock comes from."""
+class ClockMode(StrEnum):
+    """How a simulation's clock goes.
 
-    REAL_TIME = "real_time"
-    VIRTUAL = "virtual"
+    Any client may switch it while the simulation runs, so it is read when
+    it matters and not once at the start.
+    """
+
+    HELD = "held"
+    PACED = "paced"
+    MAX = "max"
 
 
 @dataclass(frozen=True)
@@ -27,7 +32,6 @@ class Description:
     Attributes:
         contract_version: The version of the inspector contract it speaks.
         firmware_name: What the firmware calls itself.
-        time_mode: Where its clock comes from.
         definition_path: The build definition it was started with, empty
             when it was started without one.
         reads_the_build: Whether the debug information could be read.
@@ -35,19 +39,18 @@ class Description:
 
     contract_version: int
     firmware_name: str
-    time_mode: TimeMode
     definition_path: str = ""
     reads_the_build: bool = False
 
 
 @dataclass(frozen=True)
 class Sample:
-    """One recorded value of an analog channel."""
+    """One recorded value of an analog channel, at a simulated time in microseconds."""
 
     channel_id: int
-    seconds: float
+    sim_us: int
     value: float
-    sequence: int
+    event_seq: int
 
 
 @dataclass(frozen=True)
@@ -56,21 +59,21 @@ class Exchange:
 
     Attributes:
         bus_id: The bus it crossed.
-        seconds: When, in simulated time.
+        sim_us: When it ended, in simulated microseconds.
         address: Where on the bus it was addressed, as the number a caller
             matches on.
-        display_address: The same address as the server shows it.
+        display_address: The same address as this library shows it, in hexadecimal.
         direction: ``outbound`` when the firmware started it, ``inbound``
             otherwise.
         payload: The bytes it carried.
         response: The bytes that answered it, empty when nothing did.
         length: How many bytes the server counted in it.
         accepted: Whether something on the bus took it.
-        sequence: Its place in the recording.
+        event_seq: Its place in the event stream.
     """
 
     bus_id: int
-    seconds: float
+    sim_us: int
     address: int
     display_address: str
     direction: str
@@ -78,7 +81,7 @@ class Exchange:
     response: bytes
     length: int
     accepted: bool
-    sequence: int
+    event_seq: int
 
     @property
     def was_refused(self) -> bool:
@@ -87,13 +90,49 @@ class Exchange:
 
 
 @dataclass(frozen=True)
-class Recordings:
-    """One page of both recordings, and where the next one begins."""
+class EventPage:
+    """One page of the event stream, samples and exchanges only.
+
+    Attributes:
+        samples: The analog samples on the page.
+        exchanges: The bus exchanges on the page.
+        next_event_seq: Where the next page begins. Progress is judged by
+            this and never by whether the page was empty: a filtered page
+            can be empty while more events follow.
+        sim_now_us: The simulated time when the server cut the page.
+        lost_events: How many events this reader will not get.
+        epoch_changed: Whether another client cleared the recording since
+            the reader's last page.
+    """
 
     samples: tuple[Sample, ...] = ()
-    next_sample: int = 0
     exchanges: tuple[Exchange, ...] = ()
-    next_exchange: int = 0
+    next_event_seq: int = 0
+    sim_now_us: int = 0
+    lost_events: int = 0
+    epoch_changed: bool = False
+
+
+@dataclass(frozen=True)
+class RunStatus:
+    """Where the clock is and how it goes.
+
+    Attributes:
+        now_us: Simulated microseconds since the start.
+        clock_mode: How the clock goes now.
+        epoch: The recording epoch; a clear starts the next one.
+        next_event_seq: Where the event stream stands.
+        target_us: Where a run under way ends, zero when none is.
+        hold_reason: Why the firmware answers nothing right now, such as a
+            debugger stopped at a line; empty while it runs.
+    """
+
+    now_us: int
+    clock_mode: ClockMode
+    epoch: int
+    next_event_seq: int
+    target_us: int = 0
+    hold_reason: str = ""
 
 
 @dataclass(frozen=True)

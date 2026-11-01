@@ -21,7 +21,7 @@ with looper.run("path/to/looper.toml", virtual=True) as simulation:
 | Argument | Default | Meaning |
 | --- | --- | --- |
 | `definition` | `looper.toml` in the working directory | the build definition of the simulation |
-| `virtual` | `False` | run on a virtual clock, in step with the test -- what tests want |
+| `virtual` | `False` | start with a held clock, in step with the test -- what tests want |
 | `build` | `True` | build first; `False` starts what was built last |
 | `looper_cli` | `$LOOPER_CLI`, then `looper-cli` | the command that runs looper-cli, as text or as a list |
 
@@ -87,10 +87,10 @@ the window too.
 ```python
 with looper.run("looper.toml", virtual=True) as simulation:
     simulation.firmware_name      # 'blinky'
-    simulation.time_mode          # TimeMode.VIRTUAL
+    simulation.clock_mode         # ClockMode.HELD -- read from the simulation each time
     simulation.definition_path    # absolute path of the looper.toml it runs
     simulation.simulated_seconds  # 0.0 -- nothing has run yet
-    simulation.description        # all of the above, and the contract version
+    simulation.description        # the name, the definition and the contract version
 ```
 
 ## Closing
@@ -107,5 +107,9 @@ they speak when they connect. If they differ, `looper.ContractMismatchError`
 says which is which:
 
 ```text
-looper.ContractMismatchError: the server speaks contract version 3, this library 2; update whichever is older
+looper.ContractMismatchError: the server speaks contract version 2, this library 3; update whichever is older
 ```
+
+A server that predates the contract altogether does not even know its
+methods; it is reported the same way, as `the server does not speak contract
+version 3`.

@@ -23,7 +23,7 @@ DEFINITION = "../looper-core/examples/blinky/looper.toml"
 
 def test_the_simulation_starts():
     with looper.run(DEFINITION, virtual=True) as simulation:
-        print(simulation.firmware_name, simulation.time_mode.value)
+        print(simulation.firmware_name, simulation.clock_mode.value)
         for pin in simulation.pins():
             print(pin)
         for channel in simulation.channels():
@@ -32,7 +32,7 @@ def test_the_simulation_starts():
 
 ```console
 $ uv run pytest -s tests/test_blinky.py
-blinky virtual
+blinky held
 Pin(pin_id=17, name='LED_STATUS', level='low', is_drivable=False)
 Pin(pin_id=4, name='BUTTON_MODE', level='high', is_drivable=True)
 Channel(channel_id=0, name='SHUNT_CURRENT', unit='A', direction='input', value=0.0, is_drivable=True, display_value='no data')
@@ -45,9 +45,10 @@ simulation and started it, connected to the server `looper-cli` started
 beside it, and checked that the two speak the same contract. When the
 `with` block ends, all of it stops again.
 
-`virtual=True` puts the simulation on a virtual clock. It stands still until
-the test lets time pass, which makes every run of the test see exactly the
-same thing. The clock is at zero: nothing has run yet.
+`virtual=True` starts the simulation with a held clock (`held` is what
+`simulation.clock_mode` prints). It stands still until the test lets time
+pass, which makes every run of the test see exactly the same thing. The clock
+is at zero: nothing has run yet.
 
 ## 2. Expect something
 

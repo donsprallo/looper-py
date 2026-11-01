@@ -86,7 +86,7 @@ fails the build instead of the board.
 :link-type: doc
 
 Check that a sampling loop, a heartbeat or a blink runs at the frequency it
-should -- exactly, on a virtual clock.
+should -- exactly, on a held clock.
 :::
 
 :::{grid-item-card} Does a bus carry what it should?

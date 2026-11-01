@@ -41,6 +41,11 @@ print(simulation.watches()[0].display_value)
 simulation.remove_watch(watch.channel_id)
 ```
 
+Every change -- watching, writing, removing -- is acknowledged by the
+simulation. When it declines, the call raises `looper.SimulationRefusedError`
+with its reason, for example for a variable that is not in the catalogue or a
+watch that is not writable.
+
 `Watch.value` is the number, `display_value` is the value written the way its
 own type reads, and `range_text` says what the variable can hold, for example
 `uint8, 0 to 255`. `is_writable` says whether the server takes a write at all.

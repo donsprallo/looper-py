@@ -21,7 +21,7 @@ DEFINITION = Path(__file__).parents[1] / "looper.toml"
 
 @pytest.fixture(scope="module")
 def simulation():
-    """The firmware, built once per test module and started on a virtual clock."""
+    """The firmware, built once per test module and started with a held clock."""
     with looper.run(DEFINITION, virtual=True) as started:
         yield started
 ```
@@ -195,5 +195,5 @@ jobs:
           uv run pytest --junitxml=report.xml
 ```
 
-On a virtual clock the results do not depend on how busy the CI machine is:
+On a held clock the results do not depend on how busy the CI machine is:
 the same commit gives the same report on every run.

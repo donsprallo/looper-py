@@ -32,7 +32,7 @@ CLI_MODULE = "looper_core.presentation.cli.main"
 
 @pytest.fixture(scope="module")
 def simulation() -> Iterator[looper.Simulation]:
-    """The blinky example, built, started on a virtual clock and attached to."""
+    """The blinky example, built, started on a held clock and attached to."""
     if not DEFINITION.is_file():
         pytest.skip(f"no looper-core checkout at {CORE}")
     if shutil.which("gcc") is None and shutil.which("clang") is None:
@@ -43,7 +43,7 @@ def simulation() -> Iterator[looper.Simulation]:
 
 def test_the_server_says_what_it_runs(simulation: looper.Simulation) -> None:
     assert simulation.firmware_name == "blinky"
-    assert simulation.time_mode is looper.TimeMode.VIRTUAL
+    assert simulation.clock_mode is looper.ClockMode.HELD
     assert Path(simulation.definition_path) == DEFINITION.resolve()
 
 

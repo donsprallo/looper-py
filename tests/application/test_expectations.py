@@ -13,31 +13,33 @@ from dataclasses import replace
 import pytest
 
 from doubles import ScriptedInspector
+from looper import SimulationRefusedError, SimulationUnreachableError
+from looper.application import event_window
 from looper.application.expectations import Expectations
 from looper.domain.model import (
     CallTiming,
+    ClockMode,
+    EventPage,
     Exchange,
     HeapUsage,
     MemoryUsage,
-    Recordings,
     Sample,
-    TimeMode,
 )
 
 
 def samples_of(channel: int, values: tuple[float, ...]) -> tuple[Sample, ...]:
     """One channel's samples, a millisecond apart."""
     return tuple(
-        Sample(channel_id=channel, seconds=index / 1000, value=value, sequence=index)
+        Sample(channel_id=channel, sim_us=index * 1000, value=value, event_seq=index)
         for index, value in enumerate(values)
     )
 
 
-def an_exchange(sequence: int, accepted: bool = True) -> Exchange:
+def an_exchange(event_seq: int, accepted: bool = True) -> Exchange:
     """One recorded CAN frame on bus two."""
     return Exchange(
         bus_id=2,
-        seconds=0.0,
+        sim_us=500,
         address=0x701,
         display_address="0x701",
         direction="inbound",
@@ -45,7 +47,7 @@ def an_exchange(sequence: int, accepted: bool = True) -> Exchange:
         response=b"",
         length=2,
         accepted=accepted,
-        sequence=sequence,
+        event_seq=event_seq,
     )
 
 
@@ -54,13 +56,13 @@ def inspector() -> ScriptedInspector:
     """A simulation that has already recorded a second of a run."""
     built = ScriptedInspector()
     built.samples = samples_of(0, (0.0, 0.5, 1.0, 1.0))
-    built.exchanges = (an_exchange(0), an_exchange(1))
+    built.exchanges = (an_exchange(4), an_exchange(5))
     built.timings = (CallTiming("adapter_spi_transfer_blocking", 8000, 8000),)
     return built
 
 
 def expect(inspector: ScriptedInspector) -> Expectations:
-    return Expectations(inspector, inspector.description.time_mode)
+    return Expectations(inspector)
 
 
 def test_a_channel_inside_its_range_passes(inspector: ScriptedInspector) -> None:
@@ -70,7 +72,7 @@ def test_a_channel_inside_its_range_passes(inspector: ScriptedInspector) -> None
     assert check.evaluate(for_seconds=1.0)
 
 
-def test_every_page_of_a_recording_is_read(inspector: ScriptedInspector) -> None:
+def test_every_page_of_the_stream_is_read(inspector: ScriptedInspector) -> None:
     """A check that counted one page would measure the page size, not the run."""
     check = expect(inspector)
     check.channel(0, "P1A").stays_between(0.0, 0.7)
@@ -110,7 +112,7 @@ def test_a_channel_that_never_arrives_says_how_close_it_came(
 
 
 def test_a_refused_exchange_names_the_address(inspector: ScriptedInspector) -> None:
-    inspector.exchanges = (an_exchange(0), an_exchange(1, accepted=False))
+    inspector.exchanges = (an_exchange(4), an_exchange(5, accepted=False))
     check = expect(inspector)
     check.bus(2, "CAN2").nothing_refused()
 
@@ -144,18 +146,114 @@ def test_a_firmware_making_no_calls_at_all_is_caught(inspector: ScriptedInspecto
 def test_the_recordings_are_cleared_before_the_window_and_the_clock_moved(
     inspector: ScriptedInspector,
 ) -> None:
-    """A check must see its own window, not whatever happened before it."""
+    """A check must see its own window, not whatever happened before it.
+
+    The clear names the epoch that was just observed, and the window is read
+    in the epoch the clear began.
+    """
     expect(inspector).firmware_is_alive().evaluate(for_seconds=0.25)
 
-    assert inspector.asked == ["clear recordings", "clear measurements", "advance 250000"]
+    assert inspector.asked[:3] == [
+        "clear recordings epoch 1",
+        "clear measurements",
+        "advance 250000",
+    ]
+    assert inspector.asked[3] == "read events epoch 2 from 0"
 
 
-def test_on_the_host_clock_the_window_is_waited_out(inspector: ScriptedInspector) -> None:
-    inspector.description = replace(inspector.description, time_mode=TimeMode.REAL_TIME)
+@pytest.mark.parametrize("mode", [ClockMode.PACED, ClockMode.MAX])
+def test_a_clock_that_runs_by_itself_is_waited_out_and_never_switched(
+    inspector: ScriptedInspector, mode: ClockMode
+) -> None:
+    inspector.run = replace(inspector.run, clock_mode=mode)
 
     expect(inspector).firmware_is_alive().evaluate(for_seconds=0.01)
 
     assert not any(one.startswith("advance") for one in inspector.asked)
+    assert inspector.run.clock_mode is mode
+
+
+def test_the_mode_is_read_for_every_window(inspector: ScriptedInspector) -> None:
+    check = expect(inspector).firmware_is_alive()
+    check.evaluate(for_seconds=0.01)
+    inspector.run = replace(inspector.run, clock_mode=ClockMode.PACED)
+    check.evaluate(for_seconds=0.01)
+
+    assert sum(one.startswith("advance") for one in inspector.asked) == 1
+
+
+def test_a_firmware_held_by_a_debugger_is_refused_before_anything_is_cleared(
+    inspector: ScriptedInspector,
+) -> None:
+    inspector.run = replace(inspector.run, hold_reason="stopped at main.c:12")
+
+    with pytest.raises(SimulationRefusedError, match="stopped at main.c:12"):
+        expect(inspector).firmware_is_alive().evaluate(for_seconds=1.0)
+
+    assert inspector.asked == []
+
+
+def test_a_clear_another_client_got_in_first_is_a_refusal(inspector: ScriptedInspector) -> None:
+    inspector.refusal = "the recording was cleared by another client"
+
+    with pytest.raises(SimulationRefusedError, match="another client"):
+        expect(inspector).firmware_is_alive().evaluate(for_seconds=1.0)
+
+
+def test_a_recording_cleared_during_the_window_is_a_refusal(
+    inspector: ScriptedInspector,
+) -> None:
+    inspector.epoch_changes_while_reading = True
+
+    with pytest.raises(SimulationRefusedError, match="cleared during the window"):
+        expect(inspector).firmware_is_alive().evaluate(for_seconds=1.0)
+
+
+def test_an_empty_page_whose_position_moves_does_not_end_the_read(
+    inspector: ScriptedInspector,
+) -> None:
+    """A filtered page can be empty while more events follow."""
+    inspector.empty_pages = 3
+    later = (replace(one, event_seq=one.event_seq + 3) for one in inspector.samples)
+    inspector.samples = tuple(later)
+    inspector.exchanges = ()
+    check = expect(inspector)
+    check.channel(0, "P1A").stays_between(0.0, 2.0)
+
+    assert "over 4 samples" in check.evaluate(for_seconds=1.0).outcomes[0].line
+
+
+def test_a_log_behind_the_window_is_waited_for(
+    inspector: ScriptedInspector, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(event_window, "POLL_SECONDS", 0.001)
+    inspector.polls_before_the_log_catches_up = 5
+    check = expect(inspector)
+    check.channel(0, "P1A").stays_between(0.0, 2.0)
+
+    assert check.evaluate(for_seconds=1.0)
+    assert inspector.reads > 5
+
+
+def test_a_log_that_never_catches_up_is_a_simulation_that_cannot_be_read(
+    inspector: ScriptedInspector, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(event_window, "POLL_SECONDS", 0.001)
+    monkeypatch.setattr(event_window, "DEADLINE_SECONDS", 0.05)
+    inspector.log_is_stuck = True
+
+    with pytest.raises(SimulationUnreachableError, match="did not reach the end"):
+        expect(inspector).firmware_is_alive().evaluate(for_seconds=1.0)
+
+
+def test_lost_events_are_named_in_the_note(inspector: ScriptedInspector) -> None:
+    inspector.lost_events = 7
+    check = expect(inspector)
+    check.channel(0, "P1A").stays_between(0.0, 0.7)
+
+    line = check.evaluate(for_seconds=1.0).failures[0].line
+
+    assert "and 7 events the recording could not keep" in line
 
 
 def test_a_heap_that_was_used_is_reported_in_bytes(inspector: ScriptedInspector) -> None:
@@ -197,15 +295,16 @@ def test_nothing_expected_is_said_rather_than_silently_passing(
 class GrowingInspector(ScriptedInspector):
     """A firmware that keeps recording while it is read, as one on a free clock does."""
 
-    def read_recordings(self, after_sample: int, after_exchange: int) -> Recordings:
-        page = super().read_recordings(after_sample, after_exchange)
-        sequence = len(self.samples)
-        self.samples = (*self.samples, Sample(0, sequence / 1000, 1.0, sequence))
+    def read_events(self, epoch: int, from_event_seq: int) -> EventPage:
+        page = super().read_events(epoch, from_event_seq)
+        event_seq = 100 + len(self.samples)
+        later = Sample(0, self.run.now_us + 1_000_000, 1.0, event_seq)
+        self.samples = (*self.samples, later)
         return page
 
 
-def test_a_recording_that_keeps_growing_is_read_to_where_it_stood() -> None:
-    """A reader chasing a running firmware would never finish."""
+def test_a_stream_that_keeps_growing_is_read_only_to_the_end_of_the_window() -> None:
+    """A reader chasing a running firmware would never finish; the cut is by `sim_us`."""
     inspector = GrowingInspector()
     inspector.samples = samples_of(0, (0.0, 0.5, 1.0, 1.0))
     check = expect(inspector)

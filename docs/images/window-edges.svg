@@ -23,7 +23,7 @@
 <circle cx="860.0" cy="120" r="6" fill="#2563eb"/>
 <text x="60" y="52" font-family="Segoe UI, Helvetica Neue, Helvetica, Arial, sans-serif" font-size="12.5" fill="#1b1f2a" font-weight="bold" text-anchor="start">the LED toggles every 500 ms (2 Hz)</text>
 <rect x="60.0" y="146" width="400.0" height="22" rx="6" fill="#fdecc8" stroke="#b57d09" stroke-width="1"/>
-<text x="470.0" y="162" font-family="Segoe UI, Helvetica Neue, Helvetica, Arial, sans-serif" font-size="12" fill="#b57d09" font-weight="normal" text-anchor="start">window 0 .. 2 s (end excluded) catches 3 toggles: 1.5 Hz</text>
+<text x="470.0" y="162" font-family="Segoe UI, Helvetica Neue, Helvetica, Arial, sans-serif" font-size="12" fill="#b57d09" font-weight="normal" text-anchor="start">window 0 .. 2 000 000 us (end excluded) catches 3 toggles: 1.5 Hz</text>
 <rect x="110.0" y="186" width="400.0" height="22" rx="6" fill="#d6f2e6" stroke="#108b63" stroke-width="1"/>
-<text x="520.0" y="202" font-family="Segoe UI, Helvetica Neue, Helvetica, Arial, sans-serif" font-size="12" fill="#108b63" font-weight="normal" text-anchor="start">window 0.25 .. 2.25 s catches 4 toggles: 2 Hz</text>
+<text x="520.0" y="202" font-family="Segoe UI, Helvetica Neue, Helvetica, Arial, sans-serif" font-size="12" fill="#108b63" font-weight="normal" text-anchor="start">window 250 000 .. 2 250 000 us catches 4 toggles: 2 Hz</text>
 </svg>

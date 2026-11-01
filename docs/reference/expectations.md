@@ -40,13 +40,14 @@ Without the instrument they fail, saying so.
 | Expectation | Met when | Outcome when not met |
 | --- | --- | --- |
 | `nothing_refused()` | everything that crossed the bus was taken | `saw 1 of 2 refused at 0x701` |
-| `carried_at_least(count)` | at least `count` exchanges crossed it, counting those the recording lost | `saw 3` |
+| `carried_at_least(count)` | at least `count` exchanges crossed it; events the recording lost are named, not counted | `saw 3` |
 
 ## The window -- `check.evaluate(for_seconds=1.0)`
 
 1. Clears the recordings and measurements, for every client.
-2. Lets `for_seconds` pass: exactly on a virtual clock, waited out on a real one.
-3. Reads the clock and the call counts together, then every recording, then
-   the heap and the stack.
+2. Lets `for_seconds` pass: a held clock is run for exactly that long, a clock
+   that runs by itself is waited out. The mode is read for every window.
+3. Reads the clock and the call counts together, then the window's samples
+   and exchanges, then the heap and the stack.
 4. Returns an `ExpectationReport` with one `Outcome` per expectation, in the
    order they were declared.

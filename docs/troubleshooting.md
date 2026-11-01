@@ -13,9 +13,24 @@
   printed is in the test's error output, just above -- run the test with
   `pytest -s` to see it as it happens.
 
-`looper.ContractMismatchError: the server speaks contract version 3, this library 2; ...`
+`looper.ContractMismatchError: the server speaks contract version 2, this library 3; ...`
 : `looper-cli` and this library were made for different versions of the
   inspector contract. Update whichever is older.
+
+`looper.ContractMismatchError: the server does not speak contract version 3; ...`
+: The server answered, but it does not know the contract at all: it is older
+  than the version the library speaks. Update `looper-core`.
+
+`looper.LooperCliError: looper-cli stopped before it served (exit 1)`, and above it `Permission denied` at the link step
+: A `blinky.exe` -- or whatever firmware you build -- is still running and
+  Windows will not let the build overwrite it. Often it is a window or a
+  server from an earlier run. Wait for that run to end or stop its server,
+  then build again.
+
+A test behaves as if an old firmware were running, with `build=False`
+: `build=False` starts whatever was built last. After a change in the
+  runtime (`looper-rt`) build once more, without `build=False`. Nothing
+  detects a stale firmware.
 
 `looper.SimulationUnreachableError: no inspector server at 127.0.0.1:50051`
 : `looper.connect` found nothing at that address. Check the line
@@ -27,7 +42,9 @@
 : A name that does not exist. The message lists the ones that do.
 
 `looper.SimulationRefusedError: unknown pin, or the pin is an output`
-: The firmware drives that pin itself. Only inputs can be toggled.
+: The firmware drives that pin itself. Only inputs can be toggled. A pin number
+  the simulation does not have is refused with `that pin is not one the
+  simulation has`.
 
 `looper.SimulationRefusedError: unknown channel, or the channel is an output`
 : A signal can only be applied to an input channel; outputs are what the
@@ -37,7 +54,27 @@
 : The bus number is wrong, or the bus takes no messages (SPI, I2C).
 
 `looper.SimulationRefusedError: the clock runs in real time and cannot be advanced`
-: `advance` on a real-time simulation. Start it with `virtual=True`.
+: `advance` on a clock that runs by itself (paced or max). Start the
+  simulation with `virtual=True`, or ask whoever switched it to hold it.
+
+`looper.SimulationRefusedError: hold the simulation first: only a held simulation runs for a time, ...`
+: The same refusal, worded by the server in another case. The clock has to be
+  held before it can be run for a span.
+
+`looper.SimulationRefusedError: the recording was cleared during the window`
+: Another client -- a window, another test -- cleared the recordings while
+  `evaluate` was reading them. Run the test again, and keep other clients
+  from clearing a simulation a test is using.
+
+`looper.SimulationRefusedError` with the reason a debugger gives
+: A debugger has stopped the firmware at a line. `evaluate` and every other
+  call refuse until it runs again.
+
+`evaluate` takes longer than `for_seconds`, or seems to wait
+: On a paced clock the window is waited out for real, and the library then
+  waits a moment for the server to hand over the last events. If the server
+  is stuck, `looper.SimulationUnreachableError: the server's event log did not
+  reach the end of the window in time` follows after 10 seconds.
 
 `looper.SimulationUnreachableError: The simulation closed the channel`
 : The firmware stopped -- it crashed, called `exit`, or was killed. What it
@@ -69,8 +106,10 @@ A range check that fails only on its first or last values
   earlier input. `simulation.advance(...)` before `evaluate`.
 
 Results differ between runs
-: The simulation runs on the computer's clock. Start it with `virtual=True`;
-  on a virtual clock every run sees the same thing.
+: The simulation runs on the computer's clock (`clock_mode` is `paced`).
+  Start it with `virtual=True`; on a held clock every run sees the same
+  thing. If it was started held and still differs, another client may have
+  switched the mode: read `simulation.clock_mode`.
 
 A test passes alone and fails in the suite
 : Tests share a simulation and one of them left the scene changed -- a pin

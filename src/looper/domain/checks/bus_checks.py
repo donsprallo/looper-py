@@ -33,12 +33,16 @@ class BusCarriedAtLeast(Check):
     count: int
 
     def evaluate(self, observed: Observation) -> Outcome:
-        """Count what crossed the bus, including what the recording lost."""
+        """Count what crossed the bus.
+
+        What the recording lost is mentioned and not added: it may have been
+        samples, and a lost sample must not make a bus check pass.
+        """
         on_bus = observed.exchanges_on(self.bus_id)
         seen = f"{len(on_bus)}" + observed.exchange_loss_note
         return Outcome(
             self.name,
             f"at least {self.count} exchanges",
             seen,
-            met=len(on_bus) + observed.lost_exchanges >= self.count,
+            met=len(on_bus) >= self.count,
         )

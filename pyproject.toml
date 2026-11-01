@@ -1,6 +1,6 @@
 [project]
 name = "looper-py"
-version = "0.1.0"
+version = "0.2.0"
 description = "Python client of a looper simulation: start or attach, drive, and expect"
 requires-python = ">=3.13"
 dependencies = [

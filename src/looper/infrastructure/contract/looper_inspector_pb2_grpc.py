@@ -35,149 +35,229 @@ class InspectorStub:
             channel: A grpc.Channel.
         """
         self.Describe = channel.unary_unary(
-                '/looper.inspector.v1.Inspector/Describe',
+                '/looper.inspector.v3.Inspector/Describe',
                 request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
                 response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Description.FromString,
                 _registered_method=True)
+        self.ControlRun = channel.unary_unary(
+                '/looper.inspector.v3.Inspector/ControlRun',
+                request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.RunControl.SerializeToString,
+                response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.RunReply.FromString,
+                _registered_method=True)
+        self.ObserveRun = channel.unary_unary(
+                '/looper.inspector.v3.Inspector/ObserveRun',
+                request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
+                response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.RunState.FromString,
+                _registered_method=True)
+        self.Subscribe = channel.unary_stream(
+                '/looper.inspector.v3.Inspector/Subscribe',
+                request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Subscription.SerializeToString,
+                response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.EventBatch.FromString,
+                _registered_method=True)
+        self.ReadEvents = channel.unary_unary(
+                '/looper.inspector.v3.Inspector/ReadEvents',
+                request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ReadEventsRequest.SerializeToString,
+                response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.EventBatch.FromString,
+                _registered_method=True)
+        self.ClearRecordings = channel.unary_unary(
+                '/looper.inspector.v3.Inspector/ClearRecordings',
+                request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ClearRequest.SerializeToString,
+                response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Ack.FromString,
+                _registered_method=True)
         self.ObserveSimulation = channel.unary_unary(
-                '/looper.inspector.v1.Inspector/ObserveSimulation',
+                '/looper.inspector.v3.Inspector/ObserveSimulation',
                 request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
                 response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.SimulationView.FromString,
                 _registered_method=True)
         self.ObserveChannels = channel.unary_unary(
-                '/looper.inspector.v1.Inspector/ObserveChannels',
+                '/looper.inspector.v3.Inspector/ObserveChannels',
                 request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
                 response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ChannelList.FromString,
                 _registered_method=True)
         self.ObserveWatches = channel.unary_unary(
-                '/looper.inspector.v1.Inspector/ObserveWatches',
+                '/looper.inspector.v3.Inspector/ObserveWatches',
                 request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
                 response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.WatchList.FromString,
                 _registered_method=True)
         self.ObserveBuses = channel.unary_unary(
-                '/looper.inspector.v1.Inspector/ObserveBuses',
+                '/looper.inspector.v3.Inspector/ObserveBuses',
                 request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
                 response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.BusList.FromString,
                 _registered_method=True)
         self.ObserveComponents = channel.unary_unary(
-                '/looper.inspector.v1.Inspector/ObserveComponents',
+                '/looper.inspector.v3.Inspector/ObserveComponents',
                 request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
                 response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ComponentList.FromString,
                 _registered_method=True)
-        self.ReadRecordings = channel.unary_unary(
-                '/looper.inspector.v1.Inspector/ReadRecordings',
-                request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.RecordingPositions.SerializeToString,
-                response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Recordings.FromString,
-                _registered_method=True)
         self.ListVariables = channel.unary_unary(
-                '/looper.inspector.v1.Inspector/ListVariables',
+                '/looper.inspector.v3.Inspector/ListVariables',
                 request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
                 response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.VariableCatalogue.FromString,
                 _registered_method=True)
         self.ListWaveforms = channel.unary_unary(
-                '/looper.inspector.v1.Inspector/ListWaveforms',
+                '/looper.inspector.v3.Inspector/ListWaveforms',
                 request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
                 response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.WaveformList.FromString,
                 _registered_method=True)
         self.ArrangeTimeline = channel.unary_unary(
-                '/looper.inspector.v1.Inspector/ArrangeTimeline',
+                '/looper.inspector.v3.Inspector/ArrangeTimeline',
                 request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.TimelineRequest.SerializeToString,
                 response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.TimelineView.FromString,
                 _registered_method=True)
-        self.ClearTimeline = channel.unary_unary(
-                '/looper.inspector.v1.Inspector/ClearTimeline',
-                request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
-                response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.FromString,
-                _registered_method=True)
         self.ObserveLadder = channel.unary_unary(
-                '/looper.inspector.v1.Inspector/ObserveLadder',
+                '/looper.inspector.v3.Inspector/ObserveLadder',
                 request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.LadderChoice.SerializeToString,
                 response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.LadderView.FromString,
                 _registered_method=True)
         self.ObserveTimings = channel.unary_unary(
-                '/looper.inspector.v1.Inspector/ObserveTimings',
+                '/looper.inspector.v3.Inspector/ObserveTimings',
                 request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
                 response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.TimingReportView.FromString,
                 _registered_method=True)
         self.ObserveProfile = channel.unary_unary(
-                '/looper.inspector.v1.Inspector/ObserveProfile',
+                '/looper.inspector.v3.Inspector/ObserveProfile',
                 request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
                 response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ProfileView.FromString,
                 _registered_method=True)
         self.FollowCallPaths = channel.unary_unary(
-                '/looper.inspector.v1.Inspector/FollowCallPaths',
+                '/looper.inspector.v3.Inspector/FollowCallPaths',
                 request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Following.SerializeToString,
                 response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.FromString,
                 _registered_method=True)
         self.ObserveFlame = channel.unary_unary(
-                '/looper.inspector.v1.Inspector/ObserveFlame',
+                '/looper.inspector.v3.Inspector/ObserveFlame',
                 request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
                 response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.FlameView.FromString,
                 _registered_method=True)
         self.ObserveMemory = channel.unary_unary(
-                '/looper.inspector.v1.Inspector/ObserveMemory',
+                '/looper.inspector.v3.Inspector/ObserveMemory',
                 request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
                 response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.MemoryView.FromString,
                 _registered_method=True)
-        self.ClearMeasurements = channel.unary_unary(
-                '/looper.inspector.v1.Inspector/ClearMeasurements',
-                request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
-                response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.FromString,
-                _registered_method=True)
-        self.ClearBusTrace = channel.unary_unary(
-                '/looper.inspector.v1.Inspector/ClearBusTrace',
-                request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
-                response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.FromString,
-                _registered_method=True)
-        self.ClearTrace = channel.unary_unary(
-                '/looper.inspector.v1.Inspector/ClearTrace',
-                request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
-                response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.FromString,
-                _registered_method=True)
-        self.TogglePin = channel.unary_unary(
-                '/looper.inspector.v1.Inspector/TogglePin',
-                request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.PinToggle.SerializeToString,
-                response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.PinLevel.FromString,
-                _registered_method=True)
-        self.ApplySignal = channel.unary_unary(
-                '/looper.inspector.v1.Inspector/ApplySignal',
-                request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.SignalRequest.SerializeToString,
-                response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.FromString,
-                _registered_method=True)
-        self.ApplySignalGraph = channel.unary_unary(
-                '/looper.inspector.v1.Inspector/ApplySignalGraph',
-                request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.SignalGraphRequest.SerializeToString,
-                response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.FromString,
-                _registered_method=True)
         self.ListModels = channel.unary_unary(
-                '/looper.inspector.v1.Inspector/ListModels',
+                '/looper.inspector.v3.Inspector/ListModels',
                 request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
                 response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ModelList.FromString,
                 _registered_method=True)
+        self.ObserveSignalGraph = channel.unary_unary(
+                '/looper.inspector.v3.Inspector/ObserveSignalGraph',
+                request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
+                response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.SignalGraphView.FromString,
+                _registered_method=True)
+        self.ClearMeasurements = channel.unary_unary(
+                '/looper.inspector.v3.Inspector/ClearMeasurements',
+                request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
+                response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.FromString,
+                _registered_method=True)
+        self.DrivePin = channel.unary_unary(
+                '/looper.inspector.v3.Inspector/DrivePin',
+                request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.PinDrive.SerializeToString,
+                response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.PinDriven.FromString,
+                _registered_method=True)
+        self.ApplySignal = channel.unary_unary(
+                '/looper.inspector.v3.Inspector/ApplySignal',
+                request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.SignalRequest.SerializeToString,
+                response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Ack.FromString,
+                _registered_method=True)
+        self.ApplySignalGraph = channel.unary_unary(
+                '/looper.inspector.v3.Inspector/ApplySignalGraph',
+                request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.SignalGraphRequest.SerializeToString,
+                response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Ack.FromString,
+                _registered_method=True)
+        self.ResetModelState = channel.unary_unary(
+                '/looper.inspector.v3.Inspector/ResetModelState',
+                request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ModelNodeChoice.SerializeToString,
+                response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Ack.FromString,
+                _registered_method=True)
         self.WatchVariable = channel.unary_unary(
-                '/looper.inspector.v1.Inspector/WatchVariable',
+                '/looper.inspector.v3.Inspector/WatchVariable',
                 request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.VariableChoice.SerializeToString,
-                response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.WatchView.FromString,
+                response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.WatchStarted.FromString,
                 _registered_method=True)
         self.RemoveWatch = channel.unary_unary(
-                '/looper.inspector.v1.Inspector/RemoveWatch',
+                '/looper.inspector.v3.Inspector/RemoveWatch',
                 request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.WatchChoice.SerializeToString,
-                response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.FromString,
+                response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Ack.FromString,
                 _registered_method=True)
         self.WriteVariable = channel.unary_unary(
-                '/looper.inspector.v1.Inspector/WriteVariable',
+                '/looper.inspector.v3.Inspector/WriteVariable',
                 request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.VariableWrite.SerializeToString,
-                response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.FromString,
+                response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Ack.FromString,
                 _registered_method=True)
         self.SendBusMessage = channel.unary_unary(
-                '/looper.inspector.v1.Inspector/SendBusMessage',
+                '/looper.inspector.v3.Inspector/SendBusMessage',
                 request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.BusMessageRequest.SerializeToString,
-                response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.FromString,
+                response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.BusMessageReply.FromString,
                 _registered_method=True)
-        self.AdvanceTime = channel.unary_unary(
-                '/looper.inspector.v1.Inspector/AdvanceTime',
-                request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.TimeStep.SerializeToString,
-                response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.FromString,
+        self.StartSendJob = channel.unary_unary(
+                '/looper.inspector.v3.Inspector/StartSendJob',
+                request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.SendJob.SerializeToString,
+                response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.JobView.FromString,
+                _registered_method=True)
+        self.StopSendJob = channel.unary_unary(
+                '/looper.inspector.v3.Inspector/StopSendJob',
+                request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.JobChoice.SerializeToString,
+                response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.JobView.FromString,
+                _registered_method=True)
+        self.ObserveSendJobs = channel.unary_unary(
+                '/looper.inspector.v3.Inspector/ObserveSendJobs',
+                request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
+                response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.JobList.FromString,
+                _registered_method=True)
+        self.ListSources = channel.unary_unary(
+                '/looper.inspector.v3.Inspector/ListSources',
+                request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
+                response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.SourceTreeView.FromString,
+                _registered_method=True)
+        self.ReadSource = channel.unary_unary(
+                '/looper.inspector.v3.Inspector/ReadSource',
+                request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.SourceRequest.SerializeToString,
+                response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.SourceText.FromString,
+                _registered_method=True)
+        self.ObserveSemantics = channel.unary_unary(
+                '/looper.inspector.v3.Inspector/ObserveSemantics',
+                request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.SourceRequest.SerializeToString,
+                response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.SemanticsView.FromString,
+                _registered_method=True)
+        self.ObserveLineCounts = channel.unary_unary(
+                '/looper.inspector.v3.Inspector/ObserveLineCounts',
+                request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.SourceRequest.SerializeToString,
+                response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.LineCountView.FromString,
+                _registered_method=True)
+        self.ObserveCoverage = channel.unary_unary(
+                '/looper.inspector.v3.Inspector/ObserveCoverage',
+                request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
+                response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.CoverageView.FromString,
+                _registered_method=True)
+        self.ResetLineCounts = channel.unary_unary(
+                '/looper.inspector.v3.Inspector/ResetLineCounts',
+                request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
+                response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Ack.FromString,
+                _registered_method=True)
+        self.ObserveHotspots = channel.unary_unary(
+                '/looper.inspector.v3.Inspector/ObserveHotspots',
+                request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
+                response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.HotspotsView.FromString,
+                _registered_method=True)
+        self.ObserveDebugger = channel.unary_unary(
+                '/looper.inspector.v3.Inspector/ObserveDebugger',
+                request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
+                response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.DebugView.FromString,
+                _registered_method=True)
+        self.ControlDebugger = channel.unary_unary(
+                '/looper.inspector.v3.Inspector/ControlDebugger',
+                request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.DebugControl.SerializeToString,
+                response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.DebugView.FromString,
+                _registered_method=True)
+        self.RestartSimulation = channel.unary_unary(
+                '/looper.inspector.v3.Inspector/RestartSimulation',
+                request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.RestartRequest.SerializeToString,
+                response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.RestartView.FromString,
+                _registered_method=True)
+        self.ObserveRestart = channel.unary_unary(
+                '/looper.inspector.v3.Inspector/ObserveRestart',
+                request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
+                response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.RestartView.FromString,
                 _registered_method=True)
 
 
@@ -185,59 +265,80 @@ class InspectorServicer:
     """Missing associated documentation comment in .proto file."""
 
     def Describe(self, request, context):
-        """What the server is attached to.
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def ControlRun(self, request, context):
+        """---- Running ----
+        Returns at once; a run in progress is seen in RunState.target_us and
+        ends with a RunEvent. (A client with a 60 s run_for must not hold a call.)
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def ObserveRun(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def Subscribe(self, request, context):
+        """---- The ordered event stream ----
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def ReadEvents(self, request, context):
+        """One page of the same events without a stream, for tools and tests.
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def ClearRecordings(self, request, context):
+        """Discard what was recorded, for every client. Starts a new epoch.
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
     def ObserveSimulation(self, request, context):
-        """---- Reading -----------------------------------------------------------
-
-        ObserveSimulation: time and pins.
+        """---- Reading ----
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
     def ObserveChannels(self, request, context):
-        """ObserveChannels: the analog channels the firmware registered.
-        """
+        """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
     def ObserveWatches(self, request, context):
-        """ObserveWatches: the firmware variables being sampled.
-        """
+        """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
     def ObserveBuses(self, request, context):
-        """ObserveBuses: the buses the simulation models.
-        """
+        """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
     def ObserveComponents(self, request, context):
-        """ObserveComponents: what is attached to them.
-        """
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
-
-    def ReadRecordings(self, request, context):
-        """ReadTrace and ReadBusTrace together: everything recorded since the
-        positions the client sends, and the positions to send next time.
-        """
+        """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
     def ListVariables(self, request, context):
-        """ListFirmwareVariables: the catalogue of globals, read out of the build.
+        """The catalogue of globals, read out of the build.
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -251,46 +352,34 @@ class InspectorServicer:
         raise NotImplementedError('Method not implemented!')
 
     def ArrangeTimeline(self, request, context):
-        """ObserveTimeline: every recording on one stretch of time, as wide as
-        the client asks for.
-        """
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
-
-    def ClearTimeline(self, request, context):
-        """Forget what the timeline has kept, for every client.
+        """Every recording on one stretch of time, as wide as the client asks for.
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
     def ObserveLadder(self, request, context):
-        """ObserveLadder: the bus the client names, read as a conversation.
+        """The bus the client names, read as a conversation.
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
     def ObserveTimings(self, request, context):
-        """ObserveCallTimings, ranked together with the profile when the build
-        can be read.
-        """
+        """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
     def ObserveProfile(self, request, context):
-        """ObserveProfile: where the whole simulation spent its time.
-        """
+        """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
     def FollowCallPaths(self, request, context):
-        """ObserveFlame: which way that time went. Following the paths costs the
-        simulation something, so it is armed and disarmed explicitly -- for
-        the one simulation, and so for every client.
+        """Following the paths costs the simulation something, so it is armed and
+        disarmed explicitly -- for the one simulation, and so for every client.
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -303,100 +392,184 @@ class InspectorServicer:
         raise NotImplementedError('Method not implemented!')
 
     def ObserveMemory(self, request, context):
-        """ObserveMemory: static, stack and heap.
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def ListModels(self, request, context):
+        """The models the project offers the signal graph, read afresh, with why
+        any of them cannot be used.
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def ObserveSignalGraph(self, request, context):
+        """How each model node of the applied graph is doing.
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
     def ClearMeasurements(self, request, context):
-        """Forget every measurement and begin one new window, for the timings,
-        the profile and the memory together.
+        """Forget every measurement and begin one new window, for the timings, the
+        profile and the memory together.
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
-    def ClearBusTrace(self, request, context):
-        """Discard the recorded exchanges and start their numbering again, for
-        every client and for the ladder.
-        """
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
-
-    def ClearTrace(self, request, context):
-        """Discard the recorded samples and start their numbering again, for
-        every client and for the timeline.
-        """
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
-
-    def TogglePin(self, request, context):
-        """---- Changing ----------------------------------------------------------
-
-        DrivePin.toggle: apply the opposite of the level the client saw.
+    def DrivePin(self, request, context):
+        """---- Changing (every one returns an Ack, directly or inside) ----
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
     def ApplySignal(self, request, context):
-        """ApplySignal: install a generated signal on an analog input.
-        """
+        """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
     def ApplySignalGraph(self, request, context):
-        """ApplySignalGraph: replace the signal graph and the inputs it drives.
-        An input the graph no longer names goes back to its own signal.
-        """
+        """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
-    def ListModels(self, request, context):
-        """ListModels: the models the project offers the signal graph, read
-        afresh, with why any of them cannot be used.
-        """
+    def ResetModelState(self, request, context):
+        """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
     def WatchVariable(self, request, context):
-        """WatchVariable: begin sampling a variable from the catalogue.
-        """
+        """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
     def RemoveWatch(self, request, context):
-        """RemoveWatch: stop sampling one.
+        """watches: no `when`, always now
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
     def WriteVariable(self, request, context):
-        """WriteVariable: store a value in a watched variable.
-        """
+        """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
     def SendBusMessage(self, request, context):
-        """SendBusMessage: put one message on a bus.
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def StartSendJob(self, request, context):
+        """---- Jobs: things the simulation does later, by its own clock ----
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
-    def AdvanceTime(self, request, context):
-        """AdvanceTime: let simulated time pass on a virtual clock. Refused on
-        the host clock, which is not a client's to steer.
+    def StopSendJob(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def ObserveSendJobs(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def ListSources(self, request, context):
+        """---- Source code: the files the build was made of ----
+        Every file worth showing, with whether it changed since the build.
         """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def ReadSource(self, request, context):
+        """The text of one file; by default the copy the build kept.
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def ObserveSemantics(self, request, context):
+        """What the names of one file stand for, read with the build's flags.
+        Slow the first time per text of a file, at once afterwards.
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def ObserveLineCounts(self, request, context):
+        """How often each line of one file ran; a counting build only (else
+        `counting` is false and the note says how to start one). Exact, and
+        fetched from the simulation at most once a second.
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def ObserveCoverage(self, request, context):
+        """How much of every counted file ran, and the functions nobody called.
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def ResetLineCounts(self, request, context):
+        """Count from now on; the Ack carries the simulated time counting restarts at.
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def ObserveHotspots(self, request, context):
+        """The lines and functions that ran most, and the functions that cost the
+        host most; a counting build only.
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def ObserveDebugger(self, request, context):
+        """---- Debugger: stop the firmware at lines, simulated time standing still ----
+        While the firmware stands, every other call that asks the simulation is
+        refused with FAILED_PRECONDITION and RunState.hold_reason says why.
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def ControlDebugger(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def RestartSimulation(self, request, context):
+        """---- Restart ----
+        Start the simulation again from 0 s, building it first when asked. The
+        answer comes before the connection drops; a build runs while the old
+        simulation does, and one that fails leaves it running.
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def ObserveRestart(self, request, context):
+        """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
@@ -408,6 +581,31 @@ def add_InspectorServicer_to_server(servicer, server):
                     servicer.Describe,
                     request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.FromString,
                     response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Description.SerializeToString,
+            ),
+            'ControlRun': grpc.unary_unary_rpc_method_handler(
+                    servicer.ControlRun,
+                    request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.RunControl.FromString,
+                    response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.RunReply.SerializeToString,
+            ),
+            'ObserveRun': grpc.unary_unary_rpc_method_handler(
+                    servicer.ObserveRun,
+                    request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.FromString,
+                    response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.RunState.SerializeToString,
+            ),
+            'Subscribe': grpc.unary_stream_rpc_method_handler(
+                    servicer.Subscribe,
+                    request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Subscription.FromString,
+                    response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.EventBatch.SerializeToString,
+            ),
+            'ReadEvents': grpc.unary_unary_rpc_method_handler(
+                    servicer.ReadEvents,
+                    request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ReadEventsRequest.FromString,
+                    response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.EventBatch.SerializeToString,
+            ),
+            'ClearRecordings': grpc.unary_unary_rpc_method_handler(
+                    servicer.ClearRecordings,
+                    request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ClearRequest.FromString,
+                    response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Ack.SerializeToString,
             ),
             'ObserveSimulation': grpc.unary_unary_rpc_method_handler(
                     servicer.ObserveSimulation,
@@ -434,11 +632,6 @@ def add_InspectorServicer_to_server(servicer, server):
                     request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.FromString,
                     response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ComponentList.SerializeToString,
             ),
-            'ReadRecordings': grpc.unary_unary_rpc_method_handler(
-                    servicer.ReadRecordings,
-                    request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.RecordingPositions.FromString,
-                    response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Recordings.SerializeToString,
-            ),
             'ListVariables': grpc.unary_unary_rpc_method_handler(
                     servicer.ListVariables,
                     request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.FromString,
@@ -453,11 +646,6 @@ def add_InspectorServicer_to_server(servicer, server):
                     servicer.ArrangeTimeline,
                     request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.TimelineRequest.FromString,
                     response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.TimelineView.SerializeToString,
-            ),
-            'ClearTimeline': grpc.unary_unary_rpc_method_handler(
-                    servicer.ClearTimeline,
-                    request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.FromString,
-                    response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
             ),
             'ObserveLadder': grpc.unary_unary_rpc_method_handler(
                     servicer.ObserveLadder,
@@ -489,71 +677,136 @@ def add_InspectorServicer_to_server(servicer, server):
                     request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.FromString,
                     response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.MemoryView.SerializeToString,
             ),
-            'ClearMeasurements': grpc.unary_unary_rpc_method_handler(
-                    servicer.ClearMeasurements,
-                    request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.FromString,
-                    response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
-            ),
-            'ClearBusTrace': grpc.unary_unary_rpc_method_handler(
-                    servicer.ClearBusTrace,
-                    request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.FromString,
-                    response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
-            ),
-            'ClearTrace': grpc.unary_unary_rpc_method_handler(
-                    servicer.ClearTrace,
-                    request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.FromString,
-                    response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
-            ),
-            'TogglePin': grpc.unary_unary_rpc_method_handler(
-                    servicer.TogglePin,
-                    request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.PinToggle.FromString,
-                    response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.PinLevel.SerializeToString,
-            ),
-            'ApplySignal': grpc.unary_unary_rpc_method_handler(
-                    servicer.ApplySignal,
-                    request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.SignalRequest.FromString,
-                    response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
-            ),
-            'ApplySignalGraph': grpc.unary_unary_rpc_method_handler(
-                    servicer.ApplySignalGraph,
-                    request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.SignalGraphRequest.FromString,
-                    response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
-            ),
             'ListModels': grpc.unary_unary_rpc_method_handler(
                     servicer.ListModels,
                     request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.FromString,
                     response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ModelList.SerializeToString,
             ),
+            'ObserveSignalGraph': grpc.unary_unary_rpc_method_handler(
+                    servicer.ObserveSignalGraph,
+                    request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.FromString,
+                    response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.SignalGraphView.SerializeToString,
+            ),
+            'ClearMeasurements': grpc.unary_unary_rpc_method_handler(
+                    servicer.ClearMeasurements,
+                    request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.FromString,
+                    response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
+            ),
+            'DrivePin': grpc.unary_unary_rpc_method_handler(
+                    servicer.DrivePin,
+                    request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.PinDrive.FromString,
+                    response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.PinDriven.SerializeToString,
+            ),
+            'ApplySignal': grpc.unary_unary_rpc_method_handler(
+                    servicer.ApplySignal,
+                    request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.SignalRequest.FromString,
+                    response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Ack.SerializeToString,
+            ),
+            'ApplySignalGraph': grpc.unary_unary_rpc_method_handler(
+                    servicer.ApplySignalGraph,
+                    request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.SignalGraphRequest.FromString,
+                    response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Ack.SerializeToString,
+            ),
+            'ResetModelState': grpc.unary_unary_rpc_method_handler(
+                    servicer.ResetModelState,
+                    request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ModelNodeChoice.FromString,
+                    response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Ack.SerializeToString,
+            ),
             'WatchVariable': grpc.unary_unary_rpc_method_handler(
                     servicer.WatchVariable,
                     request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.VariableChoice.FromString,
-                    response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.WatchView.SerializeToString,
+                    response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.WatchStarted.SerializeToString,
             ),
             'RemoveWatch': grpc.unary_unary_rpc_method_handler(
                     servicer.RemoveWatch,
                     request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.WatchChoice.FromString,
-                    response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
+                    response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Ack.SerializeToString,
             ),
             'WriteVariable': grpc.unary_unary_rpc_method_handler(
                     servicer.WriteVariable,
                     request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.VariableWrite.FromString,
-                    response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
+                    response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Ack.SerializeToString,
             ),
             'SendBusMessage': grpc.unary_unary_rpc_method_handler(
                     servicer.SendBusMessage,
                     request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.BusMessageRequest.FromString,
-                    response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
+                    response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.BusMessageReply.SerializeToString,
             ),
-            'AdvanceTime': grpc.unary_unary_rpc_method_handler(
-                    servicer.AdvanceTime,
-                    request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.TimeStep.FromString,
-                    response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
+            'StartSendJob': grpc.unary_unary_rpc_method_handler(
+                    servicer.StartSendJob,
+                    request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.SendJob.FromString,
+                    response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.JobView.SerializeToString,
+            ),
+            'StopSendJob': grpc.unary_unary_rpc_method_handler(
+                    servicer.StopSendJob,
+                    request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.JobChoice.FromString,
+                    response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.JobView.SerializeToString,
+            ),
+            'ObserveSendJobs': grpc.unary_unary_rpc_method_handler(
+                    servicer.ObserveSendJobs,
+                    request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.FromString,
+                    response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.JobList.SerializeToString,
+            ),
+            'ListSources': grpc.unary_unary_rpc_method_handler(
+                    servicer.ListSources,
+                    request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.FromString,
+                    response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.SourceTreeView.SerializeToString,
+            ),
+            'ReadSource': grpc.unary_unary_rpc_method_handler(
+                    servicer.ReadSource,
+                    request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.SourceRequest.FromString,
+                    response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.SourceText.SerializeToString,
+            ),
+            'ObserveSemantics': grpc.unary_unary_rpc_method_handler(
+                    servicer.ObserveSemantics,
+                    request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.SourceRequest.FromString,
+                    response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.SemanticsView.SerializeToString,
+            ),
+            'ObserveLineCounts': grpc.unary_unary_rpc_method_handler(
+                    servicer.ObserveLineCounts,
+                    request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.SourceRequest.FromString,
+                    response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.LineCountView.SerializeToString,
+            ),
+            'ObserveCoverage': grpc.unary_unary_rpc_method_handler(
+                    servicer.ObserveCoverage,
+                    request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.FromString,
+                    response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.CoverageView.SerializeToString,
+            ),
+            'ResetLineCounts': grpc.unary_unary_rpc_method_handler(
+                    servicer.ResetLineCounts,
+                    request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.FromString,
+                    response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Ack.SerializeToString,
+            ),
+            'ObserveHotspots': grpc.unary_unary_rpc_method_handler(
+                    servicer.ObserveHotspots,
+                    request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.FromString,
+                    response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.HotspotsView.SerializeToString,
+            ),
+            'ObserveDebugger': grpc.unary_unary_rpc_method_handler(
+                    servicer.ObserveDebugger,
+                    request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.FromString,
+                    response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.DebugView.SerializeToString,
+            ),
+            'ControlDebugger': grpc.unary_unary_rpc_method_handler(
+                    servicer.ControlDebugger,
+                    request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.DebugControl.FromString,
+                    response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.DebugView.SerializeToString,
+            ),
+            'RestartSimulation': grpc.unary_unary_rpc_method_handler(
+                    servicer.RestartSimulation,
+                    request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.RestartRequest.FromString,
+                    response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.RestartView.SerializeToString,
+            ),
+            'ObserveRestart': grpc.unary_unary_rpc_method_handler(
+                    servicer.ObserveRestart,
+                    request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.FromString,
+                    response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.RestartView.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
-            'looper.inspector.v1.Inspector', rpc_method_handlers)
+            'looper.inspector.v3.Inspector', rpc_method_handlers)
     server.add_generic_rpc_handlers((generic_handler,))
-    server.add_registered_method_handlers('looper.inspector.v1.Inspector', rpc_method_handlers)
+    server.add_registered_method_handlers('looper.inspector.v3.Inspector', rpc_method_handlers)
 
 
  # This class is part of an EXPERIMENTAL API.
@@ -574,9 +827,144 @@ class Inspector:
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/looper.inspector.v1.Inspector/Describe',
+            '/looper.inspector.v3.Inspector/Describe',
             looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
             looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Description.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def ControlRun(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/looper.inspector.v3.Inspector/ControlRun',
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.RunControl.SerializeToString,
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.RunReply.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def ObserveRun(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/looper.inspector.v3.Inspector/ObserveRun',
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.RunState.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def Subscribe(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_stream(
+            request,
+            target,
+            '/looper.inspector.v3.Inspector/Subscribe',
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Subscription.SerializeToString,
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.EventBatch.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def ReadEvents(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/looper.inspector.v3.Inspector/ReadEvents',
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ReadEventsRequest.SerializeToString,
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.EventBatch.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def ClearRecordings(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/looper.inspector.v3.Inspector/ClearRecordings',
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ClearRequest.SerializeToString,
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Ack.FromString,
             options,
             channel_credentials,
             insecure,
@@ -601,7 +989,7 @@ class Inspector:
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/looper.inspector.v1.Inspector/ObserveSimulation',
+            '/looper.inspector.v3.Inspector/ObserveSimulation',
             looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
             looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.SimulationView.FromString,
             options,
@@ -628,7 +1016,7 @@ class Inspector:
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/looper.inspector.v1.Inspector/ObserveChannels',
+            '/looper.inspector.v3.Inspector/ObserveChannels',
             looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
             looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ChannelList.FromString,
             options,
@@ -655,7 +1043,7 @@ class Inspector:
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/looper.inspector.v1.Inspector/ObserveWatches',
+            '/looper.inspector.v3.Inspector/ObserveWatches',
             looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
             looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.WatchList.FromString,
             options,
@@ -682,7 +1070,7 @@ class Inspector:
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/looper.inspector.v1.Inspector/ObserveBuses',
+            '/looper.inspector.v3.Inspector/ObserveBuses',
             looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
             looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.BusList.FromString,
             options,
@@ -709,36 +1097,9 @@ class Inspector:
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/looper.inspector.v1.Inspector/ObserveComponents',
+            '/looper.inspector.v3.Inspector/ObserveComponents',
             looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
             looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ComponentList.FromString,
-            options,
-            channel_credentials,
-            insecure,
-            call_credentials,
-            compression,
-            wait_for_ready,
-            timeout,
-            metadata,
-            _registered_method=True)
-
-    @staticmethod
-    def ReadRecordings(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_unary(
-            request,
-            target,
-            '/looper.inspector.v1.Inspector/ReadRecordings',
-            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.RecordingPositions.SerializeToString,
-            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Recordings.FromString,
             options,
             channel_credentials,
             insecure,
@@ -763,7 +1124,7 @@ class Inspector:
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/looper.inspector.v1.Inspector/ListVariables',
+            '/looper.inspector.v3.Inspector/ListVariables',
             looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
             looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.VariableCatalogue.FromString,
             options,
@@ -790,7 +1151,7 @@ class Inspector:
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/looper.inspector.v1.Inspector/ListWaveforms',
+            '/looper.inspector.v3.Inspector/ListWaveforms',
             looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
             looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.WaveformList.FromString,
             options,
@@ -817,36 +1178,9 @@ class Inspector:
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/looper.inspector.v1.Inspector/ArrangeTimeline',
+            '/looper.inspector.v3.Inspector/ArrangeTimeline',
             looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.TimelineRequest.SerializeToString,
             looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.TimelineView.FromString,
-            options,
-            channel_credentials,
-            insecure,
-            call_credentials,
-            compression,
-            wait_for_ready,
-            timeout,
-            metadata,
-            _registered_method=True)
-
-    @staticmethod
-    def ClearTimeline(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_unary(
-            request,
-            target,
-            '/looper.inspector.v1.Inspector/ClearTimeline',
-            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
-            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.FromString,
             options,
             channel_credentials,
             insecure,
@@ -871,7 +1205,7 @@ class Inspector:
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/looper.inspector.v1.Inspector/ObserveLadder',
+            '/looper.inspector.v3.Inspector/ObserveLadder',
             looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.LadderChoice.SerializeToString,
             looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.LadderView.FromString,
             options,
@@ -898,7 +1232,7 @@ class Inspector:
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/looper.inspector.v1.Inspector/ObserveTimings',
+            '/looper.inspector.v3.Inspector/ObserveTimings',
             looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
             looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.TimingReportView.FromString,
             options,
@@ -925,7 +1259,7 @@ class Inspector:
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/looper.inspector.v1.Inspector/ObserveProfile',
+            '/looper.inspector.v3.Inspector/ObserveProfile',
             looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
             looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ProfileView.FromString,
             options,
@@ -952,7 +1286,7 @@ class Inspector:
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/looper.inspector.v1.Inspector/FollowCallPaths',
+            '/looper.inspector.v3.Inspector/FollowCallPaths',
             looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Following.SerializeToString,
             looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.FromString,
             options,
@@ -979,7 +1313,7 @@ class Inspector:
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/looper.inspector.v1.Inspector/ObserveFlame',
+            '/looper.inspector.v3.Inspector/ObserveFlame',
             looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
             looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.FlameView.FromString,
             options,
@@ -1006,171 +1340,9 @@ class Inspector:
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/looper.inspector.v1.Inspector/ObserveMemory',
+            '/looper.inspector.v3.Inspector/ObserveMemory',
             looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
             looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.MemoryView.FromString,
-            options,
-            channel_credentials,
-            insecure,
-            call_credentials,
-            compression,
-            wait_for_ready,
-            timeout,
-            metadata,
-            _registered_method=True)
-
-    @staticmethod
-    def ClearMeasurements(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_unary(
-            request,
-            target,
-            '/looper.inspector.v1.Inspector/ClearMeasurements',
-            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
-            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.FromString,
-            options,
-            channel_credentials,
-            insecure,
-            call_credentials,
-            compression,
-            wait_for_ready,
-            timeout,
-            metadata,
-            _registered_method=True)
-
-    @staticmethod
-    def ClearBusTrace(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_unary(
-            request,
-            target,
-            '/looper.inspector.v1.Inspector/ClearBusTrace',
-            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
-            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.FromString,
-            options,
-            channel_credentials,
-            insecure,
-            call_credentials,
-            compression,
-            wait_for_ready,
-            timeout,
-            metadata,
-            _registered_method=True)
-
-    @staticmethod
-    def ClearTrace(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_unary(
-            request,
-            target,
-            '/looper.inspector.v1.Inspector/ClearTrace',
-            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
-            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.FromString,
-            options,
-            channel_credentials,
-            insecure,
-            call_credentials,
-            compression,
-            wait_for_ready,
-            timeout,
-            metadata,
-            _registered_method=True)
-
-    @staticmethod
-    def TogglePin(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_unary(
-            request,
-            target,
-            '/looper.inspector.v1.Inspector/TogglePin',
-            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.PinToggle.SerializeToString,
-            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.PinLevel.FromString,
-            options,
-            channel_credentials,
-            insecure,
-            call_credentials,
-            compression,
-            wait_for_ready,
-            timeout,
-            metadata,
-            _registered_method=True)
-
-    @staticmethod
-    def ApplySignal(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_unary(
-            request,
-            target,
-            '/looper.inspector.v1.Inspector/ApplySignal',
-            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.SignalRequest.SerializeToString,
-            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.FromString,
-            options,
-            channel_credentials,
-            insecure,
-            call_credentials,
-            compression,
-            wait_for_ready,
-            timeout,
-            metadata,
-            _registered_method=True)
-
-    @staticmethod
-    def ApplySignalGraph(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_unary(
-            request,
-            target,
-            '/looper.inspector.v1.Inspector/ApplySignalGraph',
-            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.SignalGraphRequest.SerializeToString,
-            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.FromString,
             options,
             channel_credentials,
             insecure,
@@ -1195,9 +1367,171 @@ class Inspector:
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/looper.inspector.v1.Inspector/ListModels',
+            '/looper.inspector.v3.Inspector/ListModels',
             looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
             looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ModelList.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def ObserveSignalGraph(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/looper.inspector.v3.Inspector/ObserveSignalGraph',
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.SignalGraphView.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def ClearMeasurements(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/looper.inspector.v3.Inspector/ClearMeasurements',
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def DrivePin(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/looper.inspector.v3.Inspector/DrivePin',
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.PinDrive.SerializeToString,
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.PinDriven.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def ApplySignal(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/looper.inspector.v3.Inspector/ApplySignal',
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.SignalRequest.SerializeToString,
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Ack.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def ApplySignalGraph(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/looper.inspector.v3.Inspector/ApplySignalGraph',
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.SignalGraphRequest.SerializeToString,
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Ack.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def ResetModelState(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/looper.inspector.v3.Inspector/ResetModelState',
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ModelNodeChoice.SerializeToString,
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Ack.FromString,
             options,
             channel_credentials,
             insecure,
@@ -1222,9 +1556,9 @@ class Inspector:
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/looper.inspector.v1.Inspector/WatchVariable',
+            '/looper.inspector.v3.Inspector/WatchVariable',
             looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.VariableChoice.SerializeToString,
-            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.WatchView.FromString,
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.WatchStarted.FromString,
             options,
             channel_credentials,
             insecure,
@@ -1249,9 +1583,9 @@ class Inspector:
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/looper.inspector.v1.Inspector/RemoveWatch',
+            '/looper.inspector.v3.Inspector/RemoveWatch',
             looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.WatchChoice.SerializeToString,
-            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.FromString,
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Ack.FromString,
             options,
             channel_credentials,
             insecure,
@@ -1276,9 +1610,9 @@ class Inspector:
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/looper.inspector.v1.Inspector/WriteVariable',
+            '/looper.inspector.v3.Inspector/WriteVariable',
             looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.VariableWrite.SerializeToString,
-            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.FromString,
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Ack.FromString,
             options,
             channel_credentials,
             insecure,
@@ -1303,9 +1637,9 @@ class Inspector:
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/looper.inspector.v1.Inspector/SendBusMessage',
+            '/looper.inspector.v3.Inspector/SendBusMessage',
             looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.BusMessageRequest.SerializeToString,
-            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.FromString,
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.BusMessageReply.FromString,
             options,
             channel_credentials,
             insecure,
@@ -1317,7 +1651,7 @@ class Inspector:
             _registered_method=True)
 
     @staticmethod
-    def AdvanceTime(request,
+    def StartSendJob(request,
             target,
             options=(),
             channel_credentials=None,
@@ -1330,9 +1664,360 @@ class Inspector:
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/looper.inspector.v1.Inspector/AdvanceTime',
-            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.TimeStep.SerializeToString,
-            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.FromString,
+            '/looper.inspector.v3.Inspector/StartSendJob',
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.SendJob.SerializeToString,
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.JobView.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def StopSendJob(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/looper.inspector.v3.Inspector/StopSendJob',
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.JobChoice.SerializeToString,
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.JobView.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def ObserveSendJobs(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/looper.inspector.v3.Inspector/ObserveSendJobs',
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.JobList.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def ListSources(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/looper.inspector.v3.Inspector/ListSources',
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.SourceTreeView.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def ReadSource(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/looper.inspector.v3.Inspector/ReadSource',
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.SourceRequest.SerializeToString,
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.SourceText.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def ObserveSemantics(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/looper.inspector.v3.Inspector/ObserveSemantics',
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.SourceRequest.SerializeToString,
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.SemanticsView.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def ObserveLineCounts(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/looper.inspector.v3.Inspector/ObserveLineCounts',
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.SourceRequest.SerializeToString,
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.LineCountView.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def ObserveCoverage(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/looper.inspector.v3.Inspector/ObserveCoverage',
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.CoverageView.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def ResetLineCounts(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/looper.inspector.v3.Inspector/ResetLineCounts',
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Ack.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def ObserveHotspots(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/looper.inspector.v3.Inspector/ObserveHotspots',
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.HotspotsView.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def ObserveDebugger(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/looper.inspector.v3.Inspector/ObserveDebugger',
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.DebugView.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def ControlDebugger(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/looper.inspector.v3.Inspector/ControlDebugger',
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.DebugControl.SerializeToString,
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.DebugView.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def RestartSimulation(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/looper.inspector.v3.Inspector/RestartSimulation',
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.RestartRequest.SerializeToString,
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.RestartView.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def ObserveRestart(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/looper.inspector.v3.Inspector/ObserveRestart',
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.RestartView.FromString,
             options,
             channel_credentials,
             insecure,
