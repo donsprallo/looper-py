@@ -35,6 +35,8 @@ class Capability(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     CAPABILITY_SOURCES: _ClassVar[Capability]
     CAPABILITY_LINE_COUNTS: _ClassVar[Capability]
     CAPABILITY_DEBUGGER: _ClassVar[Capability]
+    CAPABILITY_LEVELS: _ClassVar[Capability]
+    CAPABILITY_READ_BY_TIME: _ClassVar[Capability]
 
 class ClockMode(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     __slots__ = ()
@@ -130,6 +132,8 @@ CAPABILITY_DEVICE_ACTIONS: Capability
 CAPABILITY_SOURCES: Capability
 CAPABILITY_LINE_COUNTS: Capability
 CAPABILITY_DEBUGGER: Capability
+CAPABILITY_LEVELS: Capability
+CAPABILITY_READ_BY_TIME: Capability
 CLOCK_MODE_HELD: ClockMode
 CLOCK_MODE_PACED: ClockMode
 CLOCK_MODE_MAX: ClockMode
@@ -280,54 +284,98 @@ class RunState(_message.Message):
     def __init__(self, now_us: _Optional[int] = ..., mode: _Optional[_Union[ClockMode, str]] = ..., pace_ratio: _Optional[float] = ..., behind_us: _Optional[int] = ..., slipped_us: _Optional[int] = ..., epoch: _Optional[int] = ..., next_event_seq: _Optional[int] = ..., pass_cost_us: _Optional[int] = ..., target_us: _Optional[int] = ..., queued_commands: _Optional[int] = ..., hold_reason: _Optional[str] = ...) -> None: ...
 
 class Subscription(_message.Message):
-    __slots__ = ("epoch", "from_event_seq", "filter")
+    __slots__ = ("epoch", "from_event_seq", "filter", "with_levels")
     EPOCH_FIELD_NUMBER: _ClassVar[int]
     FROM_EVENT_SEQ_FIELD_NUMBER: _ClassVar[int]
     FILTER_FIELD_NUMBER: _ClassVar[int]
+    WITH_LEVELS_FIELD_NUMBER: _ClassVar[int]
     epoch: int
     from_event_seq: int
     filter: EventFilter
-    def __init__(self, epoch: _Optional[int] = ..., from_event_seq: _Optional[int] = ..., filter: _Optional[_Union[EventFilter, _Mapping]] = ...) -> None: ...
+    with_levels: bool
+    def __init__(self, epoch: _Optional[int] = ..., from_event_seq: _Optional[int] = ..., filter: _Optional[_Union[EventFilter, _Mapping]] = ..., with_levels: _Optional[bool] = ...) -> None: ...
 
 class ReadEventsRequest(_message.Message):
-    __slots__ = ("epoch", "from_event_seq", "max_events", "filter")
+    __slots__ = ("epoch", "from_event_seq", "max_events", "filter", "with_levels", "from_us", "to_us")
     EPOCH_FIELD_NUMBER: _ClassVar[int]
     FROM_EVENT_SEQ_FIELD_NUMBER: _ClassVar[int]
     MAX_EVENTS_FIELD_NUMBER: _ClassVar[int]
     FILTER_FIELD_NUMBER: _ClassVar[int]
+    WITH_LEVELS_FIELD_NUMBER: _ClassVar[int]
+    FROM_US_FIELD_NUMBER: _ClassVar[int]
+    TO_US_FIELD_NUMBER: _ClassVar[int]
     epoch: int
     from_event_seq: int
     max_events: int
     filter: EventFilter
-    def __init__(self, epoch: _Optional[int] = ..., from_event_seq: _Optional[int] = ..., max_events: _Optional[int] = ..., filter: _Optional[_Union[EventFilter, _Mapping]] = ...) -> None: ...
+    with_levels: bool
+    from_us: int
+    to_us: int
+    def __init__(self, epoch: _Optional[int] = ..., from_event_seq: _Optional[int] = ..., max_events: _Optional[int] = ..., filter: _Optional[_Union[EventFilter, _Mapping]] = ..., with_levels: _Optional[bool] = ..., from_us: _Optional[int] = ..., to_us: _Optional[int] = ...) -> None: ...
 
 class EventFilter(_message.Message):
-    __slots__ = ("kinds", "channel_ids", "bus_ids", "sample_stride")
+    __slots__ = ("kinds", "channel_ids", "bus_ids", "sample_stride", "pin_ids", "call_functions")
     KINDS_FIELD_NUMBER: _ClassVar[int]
     CHANNEL_IDS_FIELD_NUMBER: _ClassVar[int]
     BUS_IDS_FIELD_NUMBER: _ClassVar[int]
     SAMPLE_STRIDE_FIELD_NUMBER: _ClassVar[int]
+    PIN_IDS_FIELD_NUMBER: _ClassVar[int]
+    CALL_FUNCTIONS_FIELD_NUMBER: _ClassVar[int]
     kinds: _containers.RepeatedScalarFieldContainer[EventKind]
     channel_ids: _containers.RepeatedScalarFieldContainer[int]
     bus_ids: _containers.RepeatedScalarFieldContainer[int]
     sample_stride: int
-    def __init__(self, kinds: _Optional[_Iterable[_Union[EventKind, str]]] = ..., channel_ids: _Optional[_Iterable[int]] = ..., bus_ids: _Optional[_Iterable[int]] = ..., sample_stride: _Optional[int] = ...) -> None: ...
+    pin_ids: _containers.RepeatedScalarFieldContainer[int]
+    call_functions: _containers.RepeatedScalarFieldContainer[str]
+    def __init__(self, kinds: _Optional[_Iterable[_Union[EventKind, str]]] = ..., channel_ids: _Optional[_Iterable[int]] = ..., bus_ids: _Optional[_Iterable[int]] = ..., sample_stride: _Optional[int] = ..., pin_ids: _Optional[_Iterable[int]] = ..., call_functions: _Optional[_Iterable[str]] = ...) -> None: ...
 
 class EventBatch(_message.Message):
-    __slots__ = ("epoch", "events", "lost", "next_event_seq", "sim_now_us", "epoch_changed")
+    __slots__ = ("epoch", "events", "lost", "next_event_seq", "sim_now_us", "epoch_changed", "levels")
     EPOCH_FIELD_NUMBER: _ClassVar[int]
     EVENTS_FIELD_NUMBER: _ClassVar[int]
     LOST_FIELD_NUMBER: _ClassVar[int]
     NEXT_EVENT_SEQ_FIELD_NUMBER: _ClassVar[int]
     SIM_NOW_US_FIELD_NUMBER: _ClassVar[int]
     EPOCH_CHANGED_FIELD_NUMBER: _ClassVar[int]
+    LEVELS_FIELD_NUMBER: _ClassVar[int]
     epoch: int
     events: _containers.RepeatedCompositeFieldContainer[Event]
     lost: _containers.RepeatedCompositeFieldContainer[Lost]
     next_event_seq: int
     sim_now_us: int
     epoch_changed: bool
-    def __init__(self, epoch: _Optional[int] = ..., events: _Optional[_Iterable[_Union[Event, _Mapping]]] = ..., lost: _Optional[_Iterable[_Union[Lost, _Mapping]]] = ..., next_event_seq: _Optional[int] = ..., sim_now_us: _Optional[int] = ..., epoch_changed: _Optional[bool] = ...) -> None: ...
+    levels: LevelsBefore
+    def __init__(self, epoch: _Optional[int] = ..., events: _Optional[_Iterable[_Union[Event, _Mapping]]] = ..., lost: _Optional[_Iterable[_Union[Lost, _Mapping]]] = ..., next_event_seq: _Optional[int] = ..., sim_now_us: _Optional[int] = ..., epoch_changed: _Optional[bool] = ..., levels: _Optional[_Union[LevelsBefore, _Mapping]] = ...) -> None: ...
+
+class LevelsBefore(_message.Message):
+    __slots__ = ("before_event_seq", "pins", "channels")
+    BEFORE_EVENT_SEQ_FIELD_NUMBER: _ClassVar[int]
+    PINS_FIELD_NUMBER: _ClassVar[int]
+    CHANNELS_FIELD_NUMBER: _ClassVar[int]
+    before_event_seq: int
+    pins: _containers.RepeatedCompositeFieldContainer[PinLevelSince]
+    channels: _containers.RepeatedCompositeFieldContainer[ChannelValueSince]
+    def __init__(self, before_event_seq: _Optional[int] = ..., pins: _Optional[_Iterable[_Union[PinLevelSince, _Mapping]]] = ..., channels: _Optional[_Iterable[_Union[ChannelValueSince, _Mapping]]] = ...) -> None: ...
+
+class PinLevelSince(_message.Message):
+    __slots__ = ("pin_id", "high", "since_us")
+    PIN_ID_FIELD_NUMBER: _ClassVar[int]
+    HIGH_FIELD_NUMBER: _ClassVar[int]
+    SINCE_US_FIELD_NUMBER: _ClassVar[int]
+    pin_id: int
+    high: bool
+    since_us: int
+    def __init__(self, pin_id: _Optional[int] = ..., high: _Optional[bool] = ..., since_us: _Optional[int] = ...) -> None: ...
+
+class ChannelValueSince(_message.Message):
+    __slots__ = ("channel_id", "value", "since_us")
+    CHANNEL_ID_FIELD_NUMBER: _ClassVar[int]
+    VALUE_FIELD_NUMBER: _ClassVar[int]
+    SINCE_US_FIELD_NUMBER: _ClassVar[int]
+    channel_id: int
+    value: float
+    since_us: int
+    def __init__(self, channel_id: _Optional[int] = ..., value: _Optional[float] = ..., since_us: _Optional[int] = ...) -> None: ...
 
 class Event(_message.Message):
     __slots__ = ("event_seq", "sim_us", "sample", "pin", "exchange", "call", "command", "job", "fault", "run")
@@ -1063,7 +1111,7 @@ class VariableChoice(_message.Message):
     def __init__(self, variable_id: _Optional[int] = ..., scaling: _Optional[_Union[Scaling, _Mapping]] = ...) -> None: ...
 
 class WatchView(_message.Message):
-    __slots__ = ("channel_id", "path", "name", "encoding", "byte_width", "runtime_address", "is_writable", "value", "bit_offset", "bit_width", "display_value", "range_text", "lowest", "highest", "resolution", "raw_value", "scaling")
+    __slots__ = ("channel_id", "path", "name", "encoding", "byte_width", "runtime_address", "is_writable", "value", "bit_offset", "bit_width", "display_value", "range_text", "lowest", "highest", "resolution", "raw_value", "scaling", "read_period_us", "read_period_text")
     CHANNEL_ID_FIELD_NUMBER: _ClassVar[int]
     PATH_FIELD_NUMBER: _ClassVar[int]
     NAME_FIELD_NUMBER: _ClassVar[int]
@@ -1081,6 +1129,8 @@ class WatchView(_message.Message):
     RESOLUTION_FIELD_NUMBER: _ClassVar[int]
     RAW_VALUE_FIELD_NUMBER: _ClassVar[int]
     SCALING_FIELD_NUMBER: _ClassVar[int]
+    READ_PERIOD_US_FIELD_NUMBER: _ClassVar[int]
+    READ_PERIOD_TEXT_FIELD_NUMBER: _ClassVar[int]
     channel_id: int
     path: str
     name: str
@@ -1098,7 +1148,9 @@ class WatchView(_message.Message):
     resolution: float
     raw_value: float
     scaling: Scaling
-    def __init__(self, channel_id: _Optional[int] = ..., path: _Optional[str] = ..., name: _Optional[str] = ..., encoding: _Optional[str] = ..., byte_width: _Optional[int] = ..., runtime_address: _Optional[int] = ..., is_writable: _Optional[bool] = ..., value: _Optional[float] = ..., bit_offset: _Optional[int] = ..., bit_width: _Optional[int] = ..., display_value: _Optional[str] = ..., range_text: _Optional[str] = ..., lowest: _Optional[float] = ..., highest: _Optional[float] = ..., resolution: _Optional[float] = ..., raw_value: _Optional[float] = ..., scaling: _Optional[_Union[Scaling, _Mapping]] = ...) -> None: ...
+    read_period_us: int
+    read_period_text: str
+    def __init__(self, channel_id: _Optional[int] = ..., path: _Optional[str] = ..., name: _Optional[str] = ..., encoding: _Optional[str] = ..., byte_width: _Optional[int] = ..., runtime_address: _Optional[int] = ..., is_writable: _Optional[bool] = ..., value: _Optional[float] = ..., bit_offset: _Optional[int] = ..., bit_width: _Optional[int] = ..., display_value: _Optional[str] = ..., range_text: _Optional[str] = ..., lowest: _Optional[float] = ..., highest: _Optional[float] = ..., resolution: _Optional[float] = ..., raw_value: _Optional[float] = ..., scaling: _Optional[_Union[Scaling, _Mapping]] = ..., read_period_us: _Optional[int] = ..., read_period_text: _Optional[str] = ...) -> None: ...
 
 class WatchList(_message.Message):
     __slots__ = ("watches",)
