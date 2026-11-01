@@ -830,7 +830,15 @@ message VariableView {
   string display_type = 16;
   // Link time address in hexadecimal.
   string display_address = 17;
+  // Whether the type is an enumeration, and the names of its values in
+  // declaration order (DW_TAG_enumerator). A client may name single values
+  // itself; the build's names are the default.
+  bool is_enum = 18;
+  repeated Enumerator enumerators = 19;
 }
+
+// One value an enumeration names.
+message Enumerator { int64 value = 1; string name = 2; }
 
 message VariableCatalogue {
   repeated VariableView variables = 1;
@@ -890,6 +898,8 @@ message WatchView {
   // is not seen.
   uint64 read_period_us = 19;
   string read_period_text = 20;
+  // The names of its values, for an enumeration.
+  repeated Enumerator enumerators = 21;
 }
 
 message WatchList {

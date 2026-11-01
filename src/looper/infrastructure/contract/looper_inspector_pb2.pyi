@@ -1049,7 +1049,7 @@ class WaveformList(_message.Message):
     def __init__(self, waveforms: _Optional[_Iterable[_Union[WaveformView, _Mapping]]] = ...) -> None: ...
 
 class VariableView(_message.Message):
-    __slots__ = ("variable_id", "path", "name", "root", "segments", "encoding", "byte_width", "link_time_address", "runtime_address", "is_writable", "bit_offset", "bit_width", "origin", "is_firmware", "declared_in", "display_type", "display_address")
+    __slots__ = ("variable_id", "path", "name", "root", "segments", "encoding", "byte_width", "link_time_address", "runtime_address", "is_writable", "bit_offset", "bit_width", "origin", "is_firmware", "declared_in", "display_type", "display_address", "is_enum", "enumerators")
     VARIABLE_ID_FIELD_NUMBER: _ClassVar[int]
     PATH_FIELD_NUMBER: _ClassVar[int]
     NAME_FIELD_NUMBER: _ClassVar[int]
@@ -1067,6 +1067,8 @@ class VariableView(_message.Message):
     DECLARED_IN_FIELD_NUMBER: _ClassVar[int]
     DISPLAY_TYPE_FIELD_NUMBER: _ClassVar[int]
     DISPLAY_ADDRESS_FIELD_NUMBER: _ClassVar[int]
+    IS_ENUM_FIELD_NUMBER: _ClassVar[int]
+    ENUMERATORS_FIELD_NUMBER: _ClassVar[int]
     variable_id: int
     path: str
     name: str
@@ -1084,7 +1086,17 @@ class VariableView(_message.Message):
     declared_in: str
     display_type: str
     display_address: str
-    def __init__(self, variable_id: _Optional[int] = ..., path: _Optional[str] = ..., name: _Optional[str] = ..., root: _Optional[str] = ..., segments: _Optional[_Iterable[str]] = ..., encoding: _Optional[str] = ..., byte_width: _Optional[int] = ..., link_time_address: _Optional[int] = ..., runtime_address: _Optional[int] = ..., is_writable: _Optional[bool] = ..., bit_offset: _Optional[int] = ..., bit_width: _Optional[int] = ..., origin: _Optional[str] = ..., is_firmware: _Optional[bool] = ..., declared_in: _Optional[str] = ..., display_type: _Optional[str] = ..., display_address: _Optional[str] = ...) -> None: ...
+    is_enum: bool
+    enumerators: _containers.RepeatedCompositeFieldContainer[Enumerator]
+    def __init__(self, variable_id: _Optional[int] = ..., path: _Optional[str] = ..., name: _Optional[str] = ..., root: _Optional[str] = ..., segments: _Optional[_Iterable[str]] = ..., encoding: _Optional[str] = ..., byte_width: _Optional[int] = ..., link_time_address: _Optional[int] = ..., runtime_address: _Optional[int] = ..., is_writable: _Optional[bool] = ..., bit_offset: _Optional[int] = ..., bit_width: _Optional[int] = ..., origin: _Optional[str] = ..., is_firmware: _Optional[bool] = ..., declared_in: _Optional[str] = ..., display_type: _Optional[str] = ..., display_address: _Optional[str] = ..., is_enum: _Optional[bool] = ..., enumerators: _Optional[_Iterable[_Union[Enumerator, _Mapping]]] = ...) -> None: ...
+
+class Enumerator(_message.Message):
+    __slots__ = ("value", "name")
+    VALUE_FIELD_NUMBER: _ClassVar[int]
+    NAME_FIELD_NUMBER: _ClassVar[int]
+    value: int
+    name: str
+    def __init__(self, value: _Optional[int] = ..., name: _Optional[str] = ...) -> None: ...
 
 class VariableCatalogue(_message.Message):
     __slots__ = ("variables", "unavailable_reason")
@@ -1111,7 +1123,7 @@ class VariableChoice(_message.Message):
     def __init__(self, variable_id: _Optional[int] = ..., scaling: _Optional[_Union[Scaling, _Mapping]] = ...) -> None: ...
 
 class WatchView(_message.Message):
-    __slots__ = ("channel_id", "path", "name", "encoding", "byte_width", "runtime_address", "is_writable", "value", "bit_offset", "bit_width", "display_value", "range_text", "lowest", "highest", "resolution", "raw_value", "scaling", "read_period_us", "read_period_text")
+    __slots__ = ("channel_id", "path", "name", "encoding", "byte_width", "runtime_address", "is_writable", "value", "bit_offset", "bit_width", "display_value", "range_text", "lowest", "highest", "resolution", "raw_value", "scaling", "read_period_us", "read_period_text", "enumerators")
     CHANNEL_ID_FIELD_NUMBER: _ClassVar[int]
     PATH_FIELD_NUMBER: _ClassVar[int]
     NAME_FIELD_NUMBER: _ClassVar[int]
@@ -1131,6 +1143,7 @@ class WatchView(_message.Message):
     SCALING_FIELD_NUMBER: _ClassVar[int]
     READ_PERIOD_US_FIELD_NUMBER: _ClassVar[int]
     READ_PERIOD_TEXT_FIELD_NUMBER: _ClassVar[int]
+    ENUMERATORS_FIELD_NUMBER: _ClassVar[int]
     channel_id: int
     path: str
     name: str
@@ -1150,7 +1163,8 @@ class WatchView(_message.Message):
     scaling: Scaling
     read_period_us: int
     read_period_text: str
-    def __init__(self, channel_id: _Optional[int] = ..., path: _Optional[str] = ..., name: _Optional[str] = ..., encoding: _Optional[str] = ..., byte_width: _Optional[int] = ..., runtime_address: _Optional[int] = ..., is_writable: _Optional[bool] = ..., value: _Optional[float] = ..., bit_offset: _Optional[int] = ..., bit_width: _Optional[int] = ..., display_value: _Optional[str] = ..., range_text: _Optional[str] = ..., lowest: _Optional[float] = ..., highest: _Optional[float] = ..., resolution: _Optional[float] = ..., raw_value: _Optional[float] = ..., scaling: _Optional[_Union[Scaling, _Mapping]] = ..., read_period_us: _Optional[int] = ..., read_period_text: _Optional[str] = ...) -> None: ...
+    enumerators: _containers.RepeatedCompositeFieldContainer[Enumerator]
+    def __init__(self, channel_id: _Optional[int] = ..., path: _Optional[str] = ..., name: _Optional[str] = ..., encoding: _Optional[str] = ..., byte_width: _Optional[int] = ..., runtime_address: _Optional[int] = ..., is_writable: _Optional[bool] = ..., value: _Optional[float] = ..., bit_offset: _Optional[int] = ..., bit_width: _Optional[int] = ..., display_value: _Optional[str] = ..., range_text: _Optional[str] = ..., lowest: _Optional[float] = ..., highest: _Optional[float] = ..., resolution: _Optional[float] = ..., raw_value: _Optional[float] = ..., scaling: _Optional[_Union[Scaling, _Mapping]] = ..., read_period_us: _Optional[int] = ..., read_period_text: _Optional[str] = ..., enumerators: _Optional[_Iterable[_Union[Enumerator, _Mapping]]] = ...) -> None: ...
 
 class WatchList(_message.Message):
     __slots__ = ("watches",)
