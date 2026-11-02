@@ -129,6 +129,7 @@ environment -- only the `looper-cli` command. See [How it works](concepts.md).
 | want to see a test pass before reading anything else | [Your first test](getting-started/first-test.md) |
 | want to know what happens when a test runs | [How it works](concepts.md) |
 | have a concrete question about your firmware | [Recipes](recipes/index.md) |
+| want the simulation to tell you when a pin changed or a value was reached | [Triggers](guides/triggers.md) |
 | want to know every expectation there is | [Expecting things](guides/expectations.md) and the [reference](reference/expectations.md) |
 | are setting up a test suite and CI | [Tests in pytest and CI](guides/pytest.md) |
 | see an error you do not understand | [Troubleshooting](troubleshooting.md) |
@@ -149,6 +150,7 @@ concepts
 guides/reaching
 guides/scene
 guides/variables
+guides/triggers
 guides/expectations
 guides/pytest
 ```
@@ -164,6 +166,7 @@ recipes/hollow-adapter
 recipes/memory
 recipes/stack
 recipes/periodic-task
+recipes/trigger-reaction
 recipes/bus
 recipes/sweeps
 ```

@@ -365,10 +365,37 @@ def report_anatomy():
     svg.save("report-anatomy.svg")
 
 
+def trigger_hold():
+    svg = Svg(940, 270, "A SINGLE trigger fires, and holds the simulation post_us later")
+    left, right, axis = 60, 880, 140
+    svg.text(left, 34, "advance(2.0) after arming a SINGLE trigger with post_us=1_000", size=12.5,
+             weight="bold")
+    svg.line(left, axis, right, axis, stroke=MUTED)
+    fire_x, hold_x, end_x = 380, 470, right
+    svg.rect(left, axis - 14, hold_x - left, 28, fill=BLUE_SOFT, stroke=ACCENT, rx=6)
+    svg.text(left + 8, axis + 5, "the simulation runs", size=12, fill=ACCENT)
+    svg.rect(hold_x, axis - 14, end_x - hold_x, 28, fill=RAISED, stroke=BORDER, rx=6, dash="5 4")
+    svg.text(end_x - 8, axis + 5, "time that advance never gets to", size=12, fill=MUTED,
+             anchor="end")
+    svg.line(fire_x, axis - 62, fire_x, axis - 16, stroke=GOOD, width=2, arrow=True)
+    svg.text(fire_x, axis - 70, "fires at last_fired_at_us", size=12, fill=GOOD, anchor="middle",
+             weight="bold")
+    svg.line(hold_x, axis + 16, hold_x, axis + 62, stroke=WARN, width=2)
+    svg.text(hold_x, axis + 80, "held: state HELD, advance returns here", size=12, fill=WARN,
+             anchor="middle", weight="bold")
+    svg.text(hold_x, axis + 98, "= last_fired_at_us + post_us = hold_at_us", size=11.5, fill=MUTED,
+             anchor="middle", mono=True)
+    svg.line(fire_x + 3, axis + 40, hold_x - 3, axis + 40, stroke=WARN, arrow=True)
+    svg.text((fire_x + hold_x) / 2 - 90, axis + 44, "post_us", size=12, fill=WARN, anchor="middle")
+    svg.text(left, 250, "Every client sees the hold -- a looper-rs window on the same simulation "
+             "stops at the same instant.", size=12, fill=MUTED)
+    svg.save("trigger-hold.svg")
+
+
 def main() -> int:
     OUT.mkdir(parents=True, exist_ok=True)
     figures = [system_overview, lockstep, evaluate_steps, waveforms, channel_checks, window_edges,
-               report_anatomy]
+               report_anatomy, trigger_hold]
     for figure in figures:
         figure()
     print(f"wrote {len(figures)} figures to {OUT}")

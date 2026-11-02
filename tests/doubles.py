@@ -23,6 +23,10 @@ from looper.domain.model import (
     RunStatus,
     Sample,
     Signal,
+    Trigger,
+    TriggerMode,
+    TriggerRequest,
+    TriggerState,
     Variable,
     Watch,
 )
@@ -58,6 +62,8 @@ class ScriptedInspector(Inspector):
         self.variables: tuple[Variable, ...] = ()
         self.watches: list[Watch] = []
         self.written: list[tuple[int, float]] = []
+        self.triggers: dict[int, Trigger] = {}
+        self.armed: list[TriggerRequest] = []
         self.closed = 0
 
     def describe(self) -> Description:
@@ -161,6 +167,45 @@ class ScriptedInspector(Inspector):
 
     def read_watches(self) -> tuple[Watch, ...]:
         return tuple(self.watches)
+
+    def arm_trigger(self, request: TriggerRequest, armed_by: str) -> Trigger:
+        if self.refusal is not None:
+            raise SimulationRefusedError(self.refusal)
+        self.armed.append(request)
+        trigger = Trigger(
+            trigger_id=len(self.triggers) + 1,
+            label=request.label,
+            description="a condition",
+            state=TriggerState.ARMED,
+            mode=request.mode,
+            armed_at_us=self.run.now_us,
+            armed_by=armed_by,
+        )
+        self.triggers[trigger.trigger_id] = trigger
+        return trigger
+
+    def disarm_trigger(self, trigger_id: int, by_client: str) -> Trigger:
+        if trigger_id not in self.triggers:
+            raise SimulationRefusedError(f"no armed trigger {trigger_id}")
+        disarmed = replace(
+            self.triggers[trigger_id], state=TriggerState.DISARMED, disarmed_by=by_client
+        )
+        self.triggers[trigger_id] = disarmed
+        return disarmed
+
+    def read_triggers(self) -> tuple[Trigger, ...]:
+        return tuple(self.triggers.values())
+
+    def fire(self, trigger_id: int, at_us: int) -> None:
+        """Have a trigger fire, as the simulation would; a SINGLE one then holds."""
+        trigger = self.triggers[trigger_id]
+        single = trigger.mode is TriggerMode.SINGLE
+        self.triggers[trigger_id] = replace(
+            trigger,
+            state=TriggerState.HELD if single else TriggerState.ARMED,
+            fires=trigger.fires + 1,
+            last_fired_at_us=at_us,
+        )
 
     def close(self) -> None:
         self.closed += 1

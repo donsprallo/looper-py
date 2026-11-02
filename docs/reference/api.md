@@ -12,6 +12,11 @@ looper.Pin, looper.Channel, looper.Bus            # what you read
 looper.Variable, looper.Watch                     # the firmware's variables
 looper.ExpectationReport, looper.Outcome          # what comes back
 looper.ClockMode
+looper.Triggers, looper.Trigger                   # arming and reading triggers
+looper.Edge, looper.Pattern, looper.EdgeWhile     # trigger conditions
+looper.Width, looper.Quiet, looper.Value
+looper.PinLevel, looper.Polarity, looper.Comparison
+looper.TriggerMode, looper.TriggerState
 looper.SimulationRefusedError, looper.SimulationUnreachableError
 looper.LooperCliError, looper.ContractMismatchError
 ```
@@ -96,6 +101,49 @@ looper.LooperCliError, looper.ContractMismatchError
 .. autoclass:: looper.Watch
 
 .. autoclass:: looper.ClockMode
+   :members:
+   :undoc-members:
+```
+
+## Triggers
+
+`simulation.triggers` is a `Triggers`; the guide [Triggers](../guides/triggers.md)
+explains how they are used.
+
+```{eval-rst}
+.. autoclass:: looper.Triggers
+   :members:
+
+.. autoclass:: looper.Trigger
+   :members: has_fired, is_live
+
+.. autoclass:: looper.TriggerMode
+   :members:
+   :undoc-members:
+
+.. autoclass:: looper.TriggerState
+   :members:
+   :undoc-members:
+
+.. autoclass:: looper.Edge
+
+.. autoclass:: looper.Pattern
+
+.. autoclass:: looper.PinLevel
+
+.. autoclass:: looper.EdgeWhile
+
+.. autoclass:: looper.Width
+
+.. autoclass:: looper.Quiet
+
+.. autoclass:: looper.Value
+
+.. autoclass:: looper.Polarity
+   :members:
+   :undoc-members:
+
+.. autoclass:: looper.Comparison
    :members:
    :undoc-members:
 ```

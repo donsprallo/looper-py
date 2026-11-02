@@ -19,6 +19,22 @@ from looper.domain.model.readings import (
     Sample,
 )
 from looper.domain.model.requests import BusMessage, Signal
+from looper.domain.model.triggers import (
+    Comparison,
+    Edge,
+    EdgeWhile,
+    Pattern,
+    PinLevel,
+    Polarity,
+    Quiet,
+    Trigger,
+    TriggerCondition,
+    TriggerMode,
+    TriggerRequest,
+    TriggerState,
+    Value,
+    Width,
+)
 from looper.domain.model.variables import Variable, Watch
 
 __all__ = [
@@ -27,7 +43,10 @@ __all__ = [
     "CallTiming",
     "Channel",
     "ClockMode",
+    "Comparison",
     "Description",
+    "Edge",
+    "EdgeWhile",
     "EventPage",
     "Exchange",
     "ExpectationReport",
@@ -35,10 +54,21 @@ __all__ = [
     "MemoryUsage",
     "Observation",
     "Outcome",
+    "Pattern",
     "Pin",
+    "PinLevel",
+    "Polarity",
+    "Quiet",
     "RunStatus",
     "Sample",
     "Signal",
+    "Trigger",
+    "TriggerCondition",
+    "TriggerMode",
+    "TriggerRequest",
+    "TriggerState",
+    "Value",
     "Variable",
     "Watch",
+    "Width",
 ]

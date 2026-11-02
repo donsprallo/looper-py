@@ -32,10 +32,12 @@ from looper.domain.model import (
     Pin,
     RunStatus,
     Signal,
+    Trigger,
+    TriggerRequest,
     Variable,
     Watch,
 )
-from looper.infrastructure import translation
+from looper.infrastructure import translation, trigger_translation
 from looper.infrastructure.contract import looper_inspector_pb2 as contract
 from looper.infrastructure.contract import looper_inspector_pb2_grpc as service
 
@@ -181,6 +183,25 @@ class GrpcInspector(Inspector):
     def read_watches(self) -> tuple[Watch, ...]:
         """Every variable being sampled, with its value now."""
         return translation.watches_of(self._call(self._stub.ObserveWatches, EMPTY))
+
+    def arm_trigger(self, request: TriggerRequest, armed_by: str) -> Trigger:
+        """Have the simulation watch for a condition."""
+        spec = trigger_translation.spec_of(request, armed_by)
+        view = self._call(self._stub.ArmTrigger, spec)
+        _acknowledged(view.ack)
+        return trigger_translation.trigger_of(view)
+
+    def disarm_trigger(self, trigger_id: int, by_client: str) -> Trigger:
+        """Stop a trigger, whichever client armed it."""
+        choice = contract.TriggerChoice(trigger_id=trigger_id, by_client=by_client)
+        view = self._call(self._stub.DisarmTrigger, choice)
+        _acknowledged(view.ack)
+        return trigger_translation.trigger_of(view)
+
+    def read_triggers(self) -> tuple[Trigger, ...]:
+        """Every trigger the simulation holds, armed or not, from every client."""
+        listing = self._call(self._stub.ObserveTriggers, EMPTY)
+        return tuple(trigger_translation.trigger_of(view) for view in listing.triggers)
 
     def close(self) -> None:
         """Let go of the connection. Closing twice is allowed."""

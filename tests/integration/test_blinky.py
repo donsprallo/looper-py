@@ -76,3 +76,38 @@ def test_pressing_the_button_makes_it_blink_faster(simulation: looper.Simulation
 
     simulation.toggle_pin(button.pin_id)
     assert report, f"button driven {pressed}\n{report.summary}"
+
+
+def test_a_single_trigger_holds_the_run_just_after_the_led_changes(
+    simulation: looper.Simulation,
+) -> None:
+    led = simulation.pin("LED_STATUS")
+    trigger = simulation.triggers.arm(looper.Edge(led.pin_id), post_us=1_000)
+    try:
+        simulation.advance(2.0)
+        fired = simulation.triggers.current(trigger)
+        held_at_us = round(simulation.simulated_seconds * 1_000_000)
+    finally:
+        simulation.triggers.disarm_own()
+
+    assert fired.state is looper.TriggerState.HELD
+    assert fired.fires == 1
+    assert held_at_us == fired.last_fired_at_us + 1_000
+
+
+def test_a_normal_trigger_counts_every_edge_and_lets_the_run_go_on(
+    simulation: looper.Simulation,
+) -> None:
+    led = simulation.pin("LED_STATUS")
+    rising = looper.Edge(led.pin_id, looper.Polarity.RISE)
+    trigger = simulation.triggers.arm(rising, mode=looper.TriggerMode.NORMAL)
+    before = simulation.simulated_seconds
+    try:
+        simulation.advance(2.0)
+        counted = simulation.triggers.current(trigger)
+    finally:
+        simulation.triggers.disarm_own()
+
+    assert simulation.simulated_seconds - before == pytest.approx(2.0, abs=0.001)
+    assert counted.fires >= 2
+    assert counted.state is looper.TriggerState.ARMED

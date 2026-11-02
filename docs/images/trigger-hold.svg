@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="940" height="270" viewBox="0 0 940 270" role="img">
+<title>A SINGLE trigger fires, and holds the simulation post_us later</title>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="context-stroke"/></marker></defs>
+<rect x="0.5" y="0.5" width="939" height="269" rx="12" fill="#ffffff" stroke="#d7dbe4"/>
+<text x="60" y="34" font-family="Segoe UI, Helvetica Neue, Helvetica, Arial, sans-serif" font-size="12.5" fill="#1b1f2a" font-weight="bold" text-anchor="start">advance(2.0) after arming a SINGLE trigger with post_us=1_000</text>
+<line x1="60" y1="140" x2="880" y2="140" stroke="#5f6879" stroke-width="1.5"/>
+<rect x="60" y="126" width="410" height="28" rx="6" fill="#dbe7ff" stroke="#2563eb" stroke-width="1"/>
+<text x="68" y="145" font-family="Segoe UI, Helvetica Neue, Helvetica, Arial, sans-serif" font-size="12" fill="#2563eb" font-weight="normal" text-anchor="start">the simulation runs</text>
+<rect x="470" y="126" width="410" height="28" rx="6" fill="#eef0f5" stroke="#d7dbe4" stroke-width="1" stroke-dasharray="5 4"/>
+<text x="872" y="145" font-family="Segoe UI, Helvetica Neue, Helvetica, Arial, sans-serif" font-size="12" fill="#5f6879" font-weight="normal" text-anchor="end">time that advance never gets to</text>
+<line x1="380" y1="78" x2="380" y2="124" stroke="#108b63" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="380" y="70" font-family="Segoe UI, Helvetica Neue, Helvetica, Arial, sans-serif" font-size="12" fill="#108b63" font-weight="bold" text-anchor="middle">fires at last_fired_at_us</text>
+<line x1="470" y1="156" x2="470" y2="202" stroke="#b57d09" stroke-width="2"/>
+<text x="470" y="220" font-family="Segoe UI, Helvetica Neue, Helvetica, Arial, sans-serif" font-size="12" fill="#b57d09" font-weight="bold" text-anchor="middle">held: state HELD, advance returns here</text>
+<text x="470" y="238" font-family="Consolas, Menlo, DejaVu Sans Mono, monospace" font-size="11.5" fill="#5f6879" font-weight="normal" text-anchor="middle" xml:space="preserve">= last_fired_at_us + post_us = hold_at_us</text>
+<line x1="383" y1="180" x2="467" y2="180" stroke="#b57d09" stroke-width="1.5" marker-end="url(#arrow)"/>
+<text x="335.0" y="184" font-family="Segoe UI, Helvetica Neue, Helvetica, Arial, sans-serif" font-size="12" fill="#b57d09" font-weight="normal" text-anchor="middle">post_us</text>
+<text x="60" y="250" font-family="Segoe UI, Helvetica Neue, Helvetica, Arial, sans-serif" font-size="12" fill="#5f6879" font-weight="normal" text-anchor="start">Every client sees the hold -- a looper-rs window on the same simulation stops at the same instant.</text>
+</svg>

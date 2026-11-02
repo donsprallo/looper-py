@@ -27,6 +27,8 @@ from looper.domain.model import (
     Pin,
     RunStatus,
     Signal,
+    Trigger,
+    TriggerRequest,
     Variable,
     Watch,
 )
@@ -163,6 +165,27 @@ class Inspector(ABC):
     @abstractmethod
     def read_watches(self) -> tuple[Watch, ...]:
         """Every variable being sampled, with its value now."""
+
+    @abstractmethod
+    def arm_trigger(self, request: TriggerRequest, armed_by: str) -> Trigger:
+        """Have the simulation watch for a condition.
+
+        Raises:
+            SimulationRefusedError: If the simulation cannot watch for it;
+                the message says what it can.
+        """
+
+    @abstractmethod
+    def disarm_trigger(self, trigger_id: int, by_client: str) -> Trigger:
+        """Stop a trigger, whichever client armed it.
+
+        Raises:
+            SimulationRefusedError: If no such trigger was armed.
+        """
+
+    @abstractmethod
+    def read_triggers(self) -> tuple[Trigger, ...]:
+        """Every trigger the simulation holds, armed or not, from every client."""
 
     @abstractmethod
     def close(self) -> None:

@@ -66,6 +66,12 @@ A test behaves as if an old firmware were running, with `build=False`
   `evaluate` was reading them. Run the test again, and keep other clients
   from clearing a simulation a test is using.
 
+`advance` returns early, the simulated time is less than you asked for
+: A SINGLE trigger fired and holds the simulation at its hold point. Read
+  `simulation.simulated_seconds`, and disarm the trigger. If you did not arm
+  one, another client did: `simulation.triggers.live()` lists them. See
+  [Triggers](guides/triggers.md).
+
 `looper.SimulationRefusedError` with the reason a debugger gives
 : A debugger has stopped the firmware at a line. `evaluate` and every other
   call refuse until it runs again.

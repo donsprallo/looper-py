@@ -67,6 +67,7 @@ The command that runs looper-cli defaults to `looper-cli`, or to the
 | `clear_recordings()`, `clear_measurements()` | throwing away what was recorded and counted, between two phases of a test |
 | `run_state()`, `timings()`, `memory()` | the run, the call counts and the heap and stack as they stand |
 | `expect()` | begin declaring what should be true |
+| `triggers.arm(looper.Edge(pin_id), ...)`, `triggers.current(trigger)`, `triggers.disarm_own()` | have the simulation watch for a pin edge, pattern, pulse width or value, and read when it fired |
 
 | Subject | Expectation |
 | --- | --- |

@@ -204,6 +204,21 @@ class InspectorStub:
                 request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
                 response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.JobList.FromString,
                 _registered_method=True)
+        self.ArmTrigger = channel.unary_unary(
+                '/looper.inspector.v3.Inspector/ArmTrigger',
+                request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.TriggerSpec.SerializeToString,
+                response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.TriggerView.FromString,
+                _registered_method=True)
+        self.DisarmTrigger = channel.unary_unary(
+                '/looper.inspector.v3.Inspector/DisarmTrigger',
+                request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.TriggerChoice.SerializeToString,
+                response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.TriggerView.FromString,
+                _registered_method=True)
+        self.ObserveTriggers = channel.unary_unary(
+                '/looper.inspector.v3.Inspector/ObserveTriggers',
+                request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
+                response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.TriggerList.FromString,
+                _registered_method=True)
         self.ListSources = channel.unary_unary(
                 '/looper.inspector.v3.Inspector/ListSources',
                 request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
@@ -489,6 +504,27 @@ class InspectorServicer:
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def ArmTrigger(self, request, context):
+        """Triggers (CAPABILITY_TRIGGERS): watched by the simulation, shared by every client.
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def DisarmTrigger(self, request, context):
+        """any client, any trigger
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def ObserveTriggers(self, request, context):
+        """every trigger, armed or not
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
     def ListSources(self, request, context):
         """---- Source code: the files the build was made of ----
         Every file worth showing, with whether it changed since the build.
@@ -746,6 +782,21 @@ def add_InspectorServicer_to_server(servicer, server):
                     servicer.ObserveSendJobs,
                     request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.FromString,
                     response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.JobList.SerializeToString,
+            ),
+            'ArmTrigger': grpc.unary_unary_rpc_method_handler(
+                    servicer.ArmTrigger,
+                    request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.TriggerSpec.FromString,
+                    response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.TriggerView.SerializeToString,
+            ),
+            'DisarmTrigger': grpc.unary_unary_rpc_method_handler(
+                    servicer.DisarmTrigger,
+                    request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.TriggerChoice.FromString,
+                    response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.TriggerView.SerializeToString,
+            ),
+            'ObserveTriggers': grpc.unary_unary_rpc_method_handler(
+                    servicer.ObserveTriggers,
+                    request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.FromString,
+                    response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.TriggerList.SerializeToString,
             ),
             'ListSources': grpc.unary_unary_rpc_method_handler(
                     servicer.ListSources,
@@ -1721,6 +1772,87 @@ class Inspector:
             '/looper.inspector.v3.Inspector/ObserveSendJobs',
             looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
             looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.JobList.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def ArmTrigger(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/looper.inspector.v3.Inspector/ArmTrigger',
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.TriggerSpec.SerializeToString,
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.TriggerView.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def DisarmTrigger(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/looper.inspector.v3.Inspector/DisarmTrigger',
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.TriggerChoice.SerializeToString,
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.TriggerView.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def ObserveTriggers(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/looper.inspector.v3.Inspector/ObserveTriggers',
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.TriggerList.FromString,
             options,
             channel_credentials,
             insecure,

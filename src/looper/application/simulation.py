@@ -14,6 +14,7 @@ from types import TracebackType
 from looper.application.event_stream import EventStream
 from looper.application.expectations import MICROSECONDS_PER_SECOND, Expectations
 from looper.application.ports import Inspector, SimulationRefusedError
+from looper.application.triggers import Triggers
 from looper.domain.model import (
     Bus,
     BusMessage,
@@ -45,6 +46,7 @@ class Simulation:
         self._on_close = on_close
         self._description = inspector.describe()
         self._events = EventStream(inspector)
+        self._triggers = Triggers(inspector)
         self._closed = False
 
     @property
@@ -84,6 +86,11 @@ class Simulation:
         held, when it is.
         """
         return self._inspector.run_state()
+
+    @property
+    def triggers(self) -> Triggers:
+        """The conditions the simulation watches for, shared with every client."""
+        return self._triggers
 
     def expect(self) -> Expectations:
         """Begin declaring what should be true of the next stretch of the run."""

@@ -71,11 +71,13 @@ src/looper/
 │   ├── expectations.py   # deklarieren, Zeit vergehen lassen, prüfen
 │   ├── event_window.py   # ein Fenster des Ereignisstroms lesen
 │   ├── subjects.py       # check.channel(...).reaches(...)
-│   └── simulation.py     # was ein Test mit einer Simulation tut
+│   ├── simulation.py     # was ein Test mit einer Simulation tut
+│   └── triggers.py       # Trigger scharf machen, lesen, entschärfen
 └── infrastructure/
     ├── contract/         # Kopie des Vertrags und die generierten Bindings
     ├── grpc_inspector.py
     ├── translation.py    # Nachrichten -> Domain
+    ├── trigger_translation.py  # Trigger <-> Vertrag
     └── looper_cli.py     # `looper-cli run` als Kindprozess
 
 ## 5. Regeln für Claude bei der Code-Generierung

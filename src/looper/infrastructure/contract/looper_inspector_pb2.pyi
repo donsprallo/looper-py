@@ -37,6 +37,7 @@ class Capability(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     CAPABILITY_DEBUGGER: _ClassVar[Capability]
     CAPABILITY_LEVELS: _ClassVar[Capability]
     CAPABILITY_READ_BY_TIME: _ClassVar[Capability]
+    CAPABILITY_TRIGGERS: _ClassVar[Capability]
 
 class ClockMode(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     __slots__ = ()
@@ -55,6 +56,7 @@ class EventKind(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     EVENT_KIND_JOB: _ClassVar[EventKind]
     EVENT_KIND_FAULT: _ClassVar[EventKind]
     EVENT_KIND_RUN: _ClassVar[EventKind]
+    EVENT_KIND_TRIGGER: _ClassVar[EventKind]
 
 class LossReason(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     __slots__ = ()
@@ -76,6 +78,26 @@ class Source(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     SOURCE_JOB: _ClassVar[Source]
     SOURCE_RULE: _ClassVar[Source]
     SOURCE_COMPONENT: _ClassVar[Source]
+
+class TriggerMode(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+    __slots__ = ()
+    TRIGGER_MODE_SINGLE: _ClassVar[TriggerMode]
+    TRIGGER_MODE_NORMAL: _ClassVar[TriggerMode]
+
+class EdgePolarity(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+    __slots__ = ()
+    EDGE_RISE: _ClassVar[EdgePolarity]
+    EDGE_FALL: _ClassVar[EdgePolarity]
+    EDGE_ANY: _ClassVar[EdgePolarity]
+
+class Comparison(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+    __slots__ = ()
+    CMP_EQ: _ClassVar[Comparison]
+    CMP_NE: _ClassVar[Comparison]
+    CMP_LT: _ClassVar[Comparison]
+    CMP_LE: _ClassVar[Comparison]
+    CMP_GT: _ClassVar[Comparison]
+    CMP_GE: _ClassVar[Comparison]
 
 class ExchangeUnit(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     __slots__ = ()
@@ -134,6 +156,7 @@ CAPABILITY_LINE_COUNTS: Capability
 CAPABILITY_DEBUGGER: Capability
 CAPABILITY_LEVELS: Capability
 CAPABILITY_READ_BY_TIME: Capability
+CAPABILITY_TRIGGERS: Capability
 CLOCK_MODE_HELD: ClockMode
 CLOCK_MODE_PACED: ClockMode
 CLOCK_MODE_MAX: ClockMode
@@ -146,6 +169,7 @@ EVENT_KIND_COMMAND: EventKind
 EVENT_KIND_JOB: EventKind
 EVENT_KIND_FAULT: EventKind
 EVENT_KIND_RUN: EventKind
+EVENT_KIND_TRIGGER: EventKind
 LOSS_REASON_UNSPECIFIED: LossReason
 LOSS_REASON_RING_FULL: LossReason
 LOSS_REASON_CLIENT_TOO_SLOW: LossReason
@@ -158,6 +182,17 @@ SOURCE_CLIENT: Source
 SOURCE_JOB: Source
 SOURCE_RULE: Source
 SOURCE_COMPONENT: Source
+TRIGGER_MODE_SINGLE: TriggerMode
+TRIGGER_MODE_NORMAL: TriggerMode
+EDGE_RISE: EdgePolarity
+EDGE_FALL: EdgePolarity
+EDGE_ANY: EdgePolarity
+CMP_EQ: Comparison
+CMP_NE: Comparison
+CMP_LT: Comparison
+CMP_LE: Comparison
+CMP_GT: Comparison
+CMP_GE: Comparison
 EXCHANGE_UNIT_UNSPECIFIED: ExchangeUnit
 EXCHANGE_UNIT_BYTE: ExchangeUnit
 EXCHANGE_UNIT_WRITE: ExchangeUnit
@@ -378,7 +413,7 @@ class ChannelValueSince(_message.Message):
     def __init__(self, channel_id: _Optional[int] = ..., value: _Optional[float] = ..., since_us: _Optional[int] = ...) -> None: ...
 
 class Event(_message.Message):
-    __slots__ = ("event_seq", "sim_us", "sample", "pin", "exchange", "call", "command", "job", "fault", "run")
+    __slots__ = ("event_seq", "sim_us", "sample", "pin", "exchange", "call", "command", "job", "fault", "run", "trigger_fired", "trigger_disarmed")
     EVENT_SEQ_FIELD_NUMBER: _ClassVar[int]
     SIM_US_FIELD_NUMBER: _ClassVar[int]
     SAMPLE_FIELD_NUMBER: _ClassVar[int]
@@ -389,6 +424,8 @@ class Event(_message.Message):
     JOB_FIELD_NUMBER: _ClassVar[int]
     FAULT_FIELD_NUMBER: _ClassVar[int]
     RUN_FIELD_NUMBER: _ClassVar[int]
+    TRIGGER_FIRED_FIELD_NUMBER: _ClassVar[int]
+    TRIGGER_DISARMED_FIELD_NUMBER: _ClassVar[int]
     event_seq: int
     sim_us: int
     sample: Sample
@@ -399,7 +436,9 @@ class Event(_message.Message):
     job: JobEvent
     fault: Fault
     run: RunEvent
-    def __init__(self, event_seq: _Optional[int] = ..., sim_us: _Optional[int] = ..., sample: _Optional[_Union[Sample, _Mapping]] = ..., pin: _Optional[_Union[PinChange, _Mapping]] = ..., exchange: _Optional[_Union[Exchange, _Mapping]] = ..., call: _Optional[_Union[Call, _Mapping]] = ..., command: _Optional[_Union[CommandApplied, _Mapping]] = ..., job: _Optional[_Union[JobEvent, _Mapping]] = ..., fault: _Optional[_Union[Fault, _Mapping]] = ..., run: _Optional[_Union[RunEvent, _Mapping]] = ...) -> None: ...
+    trigger_fired: TriggerFired
+    trigger_disarmed: TriggerDisarmed
+    def __init__(self, event_seq: _Optional[int] = ..., sim_us: _Optional[int] = ..., sample: _Optional[_Union[Sample, _Mapping]] = ..., pin: _Optional[_Union[PinChange, _Mapping]] = ..., exchange: _Optional[_Union[Exchange, _Mapping]] = ..., call: _Optional[_Union[Call, _Mapping]] = ..., command: _Optional[_Union[CommandApplied, _Mapping]] = ..., job: _Optional[_Union[JobEvent, _Mapping]] = ..., fault: _Optional[_Union[Fault, _Mapping]] = ..., run: _Optional[_Union[RunEvent, _Mapping]] = ..., trigger_fired: _Optional[_Union[TriggerFired, _Mapping]] = ..., trigger_disarmed: _Optional[_Union[TriggerDisarmed, _Mapping]] = ...) -> None: ...
 
 class Lost(_message.Message):
     __slots__ = ("from_event_seq", "to_event_seq", "from_us", "to_us", "reason")
@@ -778,6 +817,216 @@ class JobList(_message.Message):
     JOBS_FIELD_NUMBER: _ClassVar[int]
     jobs: _containers.RepeatedCompositeFieldContainer[JobView]
     def __init__(self, jobs: _Optional[_Iterable[_Union[JobView, _Mapping]]] = ...) -> None: ...
+
+class TriggerSpec(_message.Message):
+    __slots__ = ("label", "condition", "mode", "pre_us", "post_us", "capture_us", "armed_by", "replaces_trigger_id", "when")
+    LABEL_FIELD_NUMBER: _ClassVar[int]
+    CONDITION_FIELD_NUMBER: _ClassVar[int]
+    MODE_FIELD_NUMBER: _ClassVar[int]
+    PRE_US_FIELD_NUMBER: _ClassVar[int]
+    POST_US_FIELD_NUMBER: _ClassVar[int]
+    CAPTURE_US_FIELD_NUMBER: _ClassVar[int]
+    ARMED_BY_FIELD_NUMBER: _ClassVar[int]
+    REPLACES_TRIGGER_ID_FIELD_NUMBER: _ClassVar[int]
+    WHEN_FIELD_NUMBER: _ClassVar[int]
+    label: str
+    condition: TriggerCondition
+    mode: TriggerMode
+    pre_us: int
+    post_us: int
+    capture_us: int
+    armed_by: str
+    replaces_trigger_id: int
+    when: When
+    def __init__(self, label: _Optional[str] = ..., condition: _Optional[_Union[TriggerCondition, _Mapping]] = ..., mode: _Optional[_Union[TriggerMode, str]] = ..., pre_us: _Optional[int] = ..., post_us: _Optional[int] = ..., capture_us: _Optional[int] = ..., armed_by: _Optional[str] = ..., replaces_trigger_id: _Optional[int] = ..., when: _Optional[_Union[When, _Mapping]] = ...) -> None: ...
+
+class TriggerCondition(_message.Message):
+    __slots__ = ("edge", "pattern", "edge_while", "width", "quiet", "value", "analog", "exchange", "sequence")
+    EDGE_FIELD_NUMBER: _ClassVar[int]
+    PATTERN_FIELD_NUMBER: _ClassVar[int]
+    EDGE_WHILE_FIELD_NUMBER: _ClassVar[int]
+    WIDTH_FIELD_NUMBER: _ClassVar[int]
+    QUIET_FIELD_NUMBER: _ClassVar[int]
+    VALUE_FIELD_NUMBER: _ClassVar[int]
+    ANALOG_FIELD_NUMBER: _ClassVar[int]
+    EXCHANGE_FIELD_NUMBER: _ClassVar[int]
+    SEQUENCE_FIELD_NUMBER: _ClassVar[int]
+    edge: EdgeCondition
+    pattern: PatternCondition
+    edge_while: EdgeWhileCondition
+    width: WidthCondition
+    quiet: QuietCondition
+    value: ValueCondition
+    analog: AnalogCondition
+    exchange: ExchangeCondition
+    sequence: SequenceCondition
+    def __init__(self, edge: _Optional[_Union[EdgeCondition, _Mapping]] = ..., pattern: _Optional[_Union[PatternCondition, _Mapping]] = ..., edge_while: _Optional[_Union[EdgeWhileCondition, _Mapping]] = ..., width: _Optional[_Union[WidthCondition, _Mapping]] = ..., quiet: _Optional[_Union[QuietCondition, _Mapping]] = ..., value: _Optional[_Union[ValueCondition, _Mapping]] = ..., analog: _Optional[_Union[AnalogCondition, _Mapping]] = ..., exchange: _Optional[_Union[ExchangeCondition, _Mapping]] = ..., sequence: _Optional[_Union[SequenceCondition, _Mapping]] = ...) -> None: ...
+
+class EdgeCondition(_message.Message):
+    __slots__ = ("pin_id", "polarity")
+    PIN_ID_FIELD_NUMBER: _ClassVar[int]
+    POLARITY_FIELD_NUMBER: _ClassVar[int]
+    pin_id: int
+    polarity: EdgePolarity
+    def __init__(self, pin_id: _Optional[int] = ..., polarity: _Optional[_Union[EdgePolarity, str]] = ...) -> None: ...
+
+class PinLevelCondition(_message.Message):
+    __slots__ = ("pin_id", "high")
+    PIN_ID_FIELD_NUMBER: _ClassVar[int]
+    HIGH_FIELD_NUMBER: _ClassVar[int]
+    pin_id: int
+    high: bool
+    def __init__(self, pin_id: _Optional[int] = ..., high: _Optional[bool] = ...) -> None: ...
+
+class PatternCondition(_message.Message):
+    __slots__ = ("levels",)
+    LEVELS_FIELD_NUMBER: _ClassVar[int]
+    levels: _containers.RepeatedCompositeFieldContainer[PinLevelCondition]
+    def __init__(self, levels: _Optional[_Iterable[_Union[PinLevelCondition, _Mapping]]] = ...) -> None: ...
+
+class EdgeWhileCondition(_message.Message):
+    __slots__ = ("edge", "levels")
+    EDGE_FIELD_NUMBER: _ClassVar[int]
+    LEVELS_FIELD_NUMBER: _ClassVar[int]
+    edge: EdgeCondition
+    levels: _containers.RepeatedCompositeFieldContainer[PinLevelCondition]
+    def __init__(self, edge: _Optional[_Union[EdgeCondition, _Mapping]] = ..., levels: _Optional[_Iterable[_Union[PinLevelCondition, _Mapping]]] = ...) -> None: ...
+
+class WidthCondition(_message.Message):
+    __slots__ = ("pin_id", "high", "op", "duration_us")
+    PIN_ID_FIELD_NUMBER: _ClassVar[int]
+    HIGH_FIELD_NUMBER: _ClassVar[int]
+    OP_FIELD_NUMBER: _ClassVar[int]
+    DURATION_US_FIELD_NUMBER: _ClassVar[int]
+    pin_id: int
+    high: bool
+    op: Comparison
+    duration_us: int
+    def __init__(self, pin_id: _Optional[int] = ..., high: _Optional[bool] = ..., op: _Optional[_Union[Comparison, str]] = ..., duration_us: _Optional[int] = ...) -> None: ...
+
+class QuietCondition(_message.Message):
+    __slots__ = ("pin_id", "duration_us")
+    PIN_ID_FIELD_NUMBER: _ClassVar[int]
+    DURATION_US_FIELD_NUMBER: _ClassVar[int]
+    pin_id: int
+    duration_us: int
+    def __init__(self, pin_id: _Optional[int] = ..., duration_us: _Optional[int] = ...) -> None: ...
+
+class ValueCondition(_message.Message):
+    __slots__ = ("channel_id", "op", "value", "mask", "on_change")
+    CHANNEL_ID_FIELD_NUMBER: _ClassVar[int]
+    OP_FIELD_NUMBER: _ClassVar[int]
+    VALUE_FIELD_NUMBER: _ClassVar[int]
+    MASK_FIELD_NUMBER: _ClassVar[int]
+    ON_CHANGE_FIELD_NUMBER: _ClassVar[int]
+    channel_id: int
+    op: Comparison
+    value: int
+    mask: int
+    on_change: bool
+    def __init__(self, channel_id: _Optional[int] = ..., op: _Optional[_Union[Comparison, str]] = ..., value: _Optional[int] = ..., mask: _Optional[int] = ..., on_change: _Optional[bool] = ...) -> None: ...
+
+class AnalogCondition(_message.Message):
+    __slots__ = ("channel_id", "level", "hysteresis", "direction")
+    CHANNEL_ID_FIELD_NUMBER: _ClassVar[int]
+    LEVEL_FIELD_NUMBER: _ClassVar[int]
+    HYSTERESIS_FIELD_NUMBER: _ClassVar[int]
+    DIRECTION_FIELD_NUMBER: _ClassVar[int]
+    channel_id: int
+    level: float
+    hysteresis: float
+    direction: EdgePolarity
+    def __init__(self, channel_id: _Optional[int] = ..., level: _Optional[float] = ..., hysteresis: _Optional[float] = ..., direction: _Optional[_Union[EdgePolarity, str]] = ...) -> None: ...
+
+class ExchangeCondition(_message.Message):
+    __slots__ = ("bus_id", "query")
+    BUS_ID_FIELD_NUMBER: _ClassVar[int]
+    QUERY_FIELD_NUMBER: _ClassVar[int]
+    bus_id: int
+    query: str
+    def __init__(self, bus_id: _Optional[int] = ..., query: _Optional[str] = ...) -> None: ...
+
+class SequenceCondition(_message.Message):
+    __slots__ = ("first", "second", "within_us", "second_absent")
+    FIRST_FIELD_NUMBER: _ClassVar[int]
+    SECOND_FIELD_NUMBER: _ClassVar[int]
+    WITHIN_US_FIELD_NUMBER: _ClassVar[int]
+    SECOND_ABSENT_FIELD_NUMBER: _ClassVar[int]
+    first: TriggerCondition
+    second: TriggerCondition
+    within_us: int
+    second_absent: bool
+    def __init__(self, first: _Optional[_Union[TriggerCondition, _Mapping]] = ..., second: _Optional[_Union[TriggerCondition, _Mapping]] = ..., within_us: _Optional[int] = ..., second_absent: _Optional[bool] = ...) -> None: ...
+
+class TriggerChoice(_message.Message):
+    __slots__ = ("trigger_id", "by_client")
+    TRIGGER_ID_FIELD_NUMBER: _ClassVar[int]
+    BY_CLIENT_FIELD_NUMBER: _ClassVar[int]
+    trigger_id: int
+    by_client: str
+    def __init__(self, trigger_id: _Optional[int] = ..., by_client: _Optional[str] = ...) -> None: ...
+
+class TriggerView(_message.Message):
+    __slots__ = ("trigger_id", "spec", "state", "armed_at_us", "fires", "last_fired_at_us", "ack", "description", "command_seq", "disarmed_by", "hold_at_us")
+    class State(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+        __slots__ = ()
+        ARMED: _ClassVar[TriggerView.State]
+        FIRED: _ClassVar[TriggerView.State]
+        HELD: _ClassVar[TriggerView.State]
+        DISARMED: _ClassVar[TriggerView.State]
+        REFUSED: _ClassVar[TriggerView.State]
+    ARMED: TriggerView.State
+    FIRED: TriggerView.State
+    HELD: TriggerView.State
+    DISARMED: TriggerView.State
+    REFUSED: TriggerView.State
+    TRIGGER_ID_FIELD_NUMBER: _ClassVar[int]
+    SPEC_FIELD_NUMBER: _ClassVar[int]
+    STATE_FIELD_NUMBER: _ClassVar[int]
+    ARMED_AT_US_FIELD_NUMBER: _ClassVar[int]
+    FIRES_FIELD_NUMBER: _ClassVar[int]
+    LAST_FIRED_AT_US_FIELD_NUMBER: _ClassVar[int]
+    ACK_FIELD_NUMBER: _ClassVar[int]
+    DESCRIPTION_FIELD_NUMBER: _ClassVar[int]
+    COMMAND_SEQ_FIELD_NUMBER: _ClassVar[int]
+    DISARMED_BY_FIELD_NUMBER: _ClassVar[int]
+    HOLD_AT_US_FIELD_NUMBER: _ClassVar[int]
+    trigger_id: int
+    spec: TriggerSpec
+    state: TriggerView.State
+    armed_at_us: int
+    fires: int
+    last_fired_at_us: int
+    ack: Ack
+    description: str
+    command_seq: int
+    disarmed_by: str
+    hold_at_us: int
+    def __init__(self, trigger_id: _Optional[int] = ..., spec: _Optional[_Union[TriggerSpec, _Mapping]] = ..., state: _Optional[_Union[TriggerView.State, str]] = ..., armed_at_us: _Optional[int] = ..., fires: _Optional[int] = ..., last_fired_at_us: _Optional[int] = ..., ack: _Optional[_Union[Ack, _Mapping]] = ..., description: _Optional[str] = ..., command_seq: _Optional[int] = ..., disarmed_by: _Optional[str] = ..., hold_at_us: _Optional[int] = ...) -> None: ...
+
+class TriggerList(_message.Message):
+    __slots__ = ("triggers",)
+    TRIGGERS_FIELD_NUMBER: _ClassVar[int]
+    triggers: _containers.RepeatedCompositeFieldContainer[TriggerView]
+    def __init__(self, triggers: _Optional[_Iterable[_Union[TriggerView, _Mapping]]] = ...) -> None: ...
+
+class TriggerFired(_message.Message):
+    __slots__ = ("trigger_id", "fire_n", "hold_at_us")
+    TRIGGER_ID_FIELD_NUMBER: _ClassVar[int]
+    FIRE_N_FIELD_NUMBER: _ClassVar[int]
+    HOLD_AT_US_FIELD_NUMBER: _ClassVar[int]
+    trigger_id: int
+    fire_n: int
+    hold_at_us: int
+    def __init__(self, trigger_id: _Optional[int] = ..., fire_n: _Optional[int] = ..., hold_at_us: _Optional[int] = ...) -> None: ...
+
+class TriggerDisarmed(_message.Message):
+    __slots__ = ("trigger_id", "by_client")
+    TRIGGER_ID_FIELD_NUMBER: _ClassVar[int]
+    BY_CLIENT_FIELD_NUMBER: _ClassVar[int]
+    trigger_id: int
+    by_client: str
+    def __init__(self, trigger_id: _Optional[int] = ..., by_client: _Optional[str] = ...) -> None: ...
 
 class CurvePoint(_message.Message):
     __slots__ = ("sim_us", "value")

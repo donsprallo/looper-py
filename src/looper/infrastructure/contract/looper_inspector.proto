@@ -136,6 +136,7 @@ enum Capability {
   CAPABILITY_DEBUGGER = 8;         // ObserveDebugger, ControlDebugger
   CAPABILITY_LEVELS = 9;           // ReadEventsRequest.with_levels, Subscription.with_levels
   CAPABILITY_READ_BY_TIME = 10;    // ReadEventsRequest.from_us / to_us; EventFilter.pin_ids, call_functions
+  CAPABILITY_TRIGGERS = 11;        // ArmTrigger, DisarmTrigger, ObserveTriggers
 }
 
 enum ClockMode {
@@ -233,6 +234,7 @@ enum EventKind {
   EVENT_KIND_JOB = 6;        // a job started, stopped, sent, was late
   EVENT_KIND_FAULT = 7;      // a model stopped, a wait failed
   EVENT_KIND_RUN = 8;        // a run reached its target; held; slipped (PACED)
+  EVENT_KIND_TRIGGER = 9;    // a trigger fired, or was disarmed
 }
 
 message EventBatch {
@@ -278,6 +280,8 @@ message Event {
     JobEvent job = 8;
     Fault fault = 9;
     RunEvent run = 10;
+    TriggerFired trigger_fired = 11;
+    TriggerDisarmed trigger_disarmed = 12;
   }
 }
 
@@ -493,6 +497,103 @@ message JobView {
 
 message JobList { repeated JobView jobs = 1; }
 
+// ---- Triggers ---------------------------------------------------------------
+//
+// The simulation watches for a condition where the facts are recorded and
+// fires at the simulated instant it became true. Shared like jobs: every
+// client sees every armed trigger, any client may disarm any, and a SINGLE
+// trigger holds the simulation for everyone.
+
+enum TriggerMode {
+  TRIGGER_MODE_SINGLE = 0;   // fires once, holds post_us later -- for every client
+  TRIGGER_MODE_NORMAL = 1;   // records every fire, at most once per post_us, never holds
+  // No AUTO: that is a client's view rule on a NORMAL trigger.
+}
+
+enum EdgePolarity { EDGE_RISE = 0; EDGE_FALL = 1; EDGE_ANY = 2; }
+enum Comparison { CMP_EQ = 0; CMP_NE = 1; CMP_LT = 2; CMP_LE = 3; CMP_GT = 4; CMP_GE = 5; }
+
+message TriggerSpec {
+  string label = 1;                // the expression as written, for every client
+  TriggerCondition condition = 2;
+  TriggerMode mode = 3;
+  uint64 pre_us = 4;               // framing for every client; the log holds the data
+  uint64 post_us = 5;
+  uint64 capture_us = 6;           // framing; AUTO clients measure against it
+  string armed_by = 7;             // the name a client gives itself, display only
+  optional uint32 replaces_trigger_id = 8;   // one trigger per analyzer: rearm replaces
+  When when = 15;
+}
+
+message TriggerCondition {
+  oneof kind {
+    EdgeCondition edge = 1;
+    PatternCondition pattern = 2;       // fires on becoming true
+    EdgeWhileCondition edge_while = 3;
+    WidthCondition width = 4;
+    QuietCondition quiet = 5;           // no edge for duration_us
+    ValueCondition value = 6;           // when the value changes, at the reads of a pass
+    AnalogCondition analog = 7;         // second cut: refused for now
+    ExchangeCondition exchange = 8;     // second cut: refused for now
+    SequenceCondition sequence = 9;     // second cut: refused for now
+  }
+}
+
+message EdgeCondition { uint32 pin_id = 1; EdgePolarity polarity = 2; }
+message PinLevelCondition { uint32 pin_id = 1; bool high = 2; }
+message PatternCondition { repeated PinLevelCondition levels = 1; }
+message EdgeWhileCondition { EdgeCondition edge = 1; repeated PinLevelCondition levels = 2; }
+message WidthCondition {
+  uint32 pin_id = 1;
+  bool high = 2;
+  Comparison op = 3;
+  uint64 duration_us = 4;
+  // GT and GE fire the moment the duration is exceeded (scheduled); the others at the closing edge.
+}
+message QuietCondition { uint32 pin_id = 1; uint64 duration_us = 2; }
+message ValueCondition {
+  uint32 channel_id = 1;
+  Comparison op = 2;
+  int64 value = 3;                // compared with the stored number after `& mask`
+  uint64 mask = 4;                // 0: all bits
+  bool on_change = 5;             // app.state:change
+}
+message AnalogCondition { uint32 channel_id = 1; double level = 2; double hysteresis = 3; EdgePolarity direction = 4; }
+message ExchangeCondition { uint32 bus_id = 1; string query = 2; }
+message SequenceCondition {
+  TriggerCondition first = 1;
+  TriggerCondition second = 2;
+  uint64 within_us = 3;           // 0: no window
+  bool second_absent = 4;         // fire when the window passes without `second`
+}
+
+message TriggerChoice { uint32 trigger_id = 1; string by_client = 2; }
+
+message TriggerView {
+  uint32 trigger_id = 1;
+  TriggerSpec spec = 2;
+  enum State { ARMED = 0; FIRED = 1; HELD = 2; DISARMED = 3; REFUSED = 4; }
+  State state = 3;
+  uint64 armed_at_us = 4;
+  uint32 fires = 5;
+  uint64 last_fired_at_us = 6;
+  Ack ack = 7;
+  string description = 8;          // "BUTTON falls" -- the server's words
+  uint64 command_seq = 9;          // of the arming
+  string disarmed_by = 10;
+  uint64 hold_at_us = 11;          // SINGLE, fired: when the simulation holds
+}
+
+message TriggerList { repeated TriggerView triggers = 1; }
+
+message TriggerFired {
+  uint32 trigger_id = 1;
+  uint32 fire_n = 2;               // the how-manieth fire, from 1
+  uint64 hold_at_us = 3;           // 0 for NORMAL
+}
+
+message TriggerDisarmed { uint32 trigger_id = 1; string by_client = 2; }
+
 enum ExchangeUnit {
   EXCHANGE_UNIT_UNSPECIFIED = 0;
   EXCHANGE_UNIT_BYTE = 1;
@@ -571,6 +672,11 @@ service Inspector {
   rpc StartSendJob(SendJob) returns (JobView);
   rpc StopSendJob(JobChoice) returns (JobView);
   rpc ObserveSendJobs(Empty) returns (JobList);
+
+  // Triggers (CAPABILITY_TRIGGERS): watched by the simulation, shared by every client.
+  rpc ArmTrigger(TriggerSpec) returns (TriggerView);
+  rpc DisarmTrigger(TriggerChoice) returns (TriggerView);   // any client, any trigger
+  rpc ObserveTriggers(Empty) returns (TriggerList);         // every trigger, armed or not
 
   // ---- Source code: the files the build was made of ----
   // Every file worth showing, with whether it changed since the build.
