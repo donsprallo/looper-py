@@ -723,6 +723,13 @@ service Inspector {
   // simulation does, and one that fails leaves it running.
   rpc RestartSimulation(RestartRequest) returns (RestartView);
   rpc ObserveRestart(Empty) returns (RestartView);
+
+  // ---- Architecture (CAPABILITY_ARCHITECTURE) ----
+  // Read from the project's code index, which the server builds in the
+  // background; every answer says how far it got. A request naming the
+  // revision the client has is answered with `unchanged` and nothing else.
+  rpc ObserveFunctionMetrics(ArchitectureRequest) returns (FunctionMetricsView);
+  rpc ObserveFileMetrics(ArchitectureRequest) returns (FileMetricsView);
 }
 
 message PinView {
@@ -1644,4 +1651,80 @@ message RestartView {
   BuildResult last_build = 6;     // unset when no build was asked for here
   uint64 generation = 7;          // restarts so far; tells one from the next
   string done_text = 8;           // what the last restart did, for a notice
+}
+
+// ---- Architecture ----
+
+message ArchitectureRequest {
+  uint64 known_revision = 1;  // zero: whatever there is
+  string path = 2;            // only this file's functions; empty: all
+}
+
+enum Tier {
+  TIER_GOOD = 0;
+  TIER_NOTICEABLE = 1;
+  TIER_CRITICAL = 2;
+}
+
+message IndexProgress {
+  uint32 files_read = 1;
+  uint32 files_total = 2;
+  bool complete = 3;
+  string text = 4;                  // "143 of 512 files read · flags from compile_commands.json"
+  repeated string unreadable = 5;   // "can.c: line 12: unknown type name ..."
+}
+
+message MeasureDescription {
+  string key = 1;          // "cognitive", "nesting", ... as every value names it
+  string title = 2;        // column heading
+  string description = 3;  // what it means and how it is counted
+  bool judged = 4;         // held against limits; "returns" never is
+}
+
+message MeasureValue {
+  string key = 1;
+  double value = 2;
+  string value_text = 3;
+  Tier tier = 4;
+  string limit_text = 5;   // "critical from 25"
+  string explanation = 6;  // only when not good: what it means and what helps
+}
+
+message FunctionMeasures {
+  string name = 1;
+  string signature = 2;
+  string path = 3;
+  uint32 first_line = 4;
+  uint32 last_line = 5;
+  string module = 6;
+  bool is_static = 7;
+  repeated MeasureValue measures = 8;   // in the order of the descriptions
+  Tier worst_tier = 9;
+}
+
+message FunctionMetricsView {
+  uint64 revision = 1;
+  bool unchanged = 2;
+  IndexProgress progress = 3;
+  string profile = 4;                   // "HIS-like"
+  repeated MeasureDescription measures = 5;
+  repeated FunctionMeasures functions = 6;
+  string note = 7;
+}
+
+message FileMeasures {
+  string path = 1;
+  string display_path = 2;
+  string module = 3;
+  repeated MeasureValue measures = 4;
+  Tier worst_tier = 5;
+}
+
+message FileMetricsView {
+  uint64 revision = 1;
+  bool unchanged = 2;
+  IndexProgress progress = 3;
+  string profile = 4;
+  repeated MeasureDescription measures = 5;
+  repeated FileMeasures files = 6;
 }

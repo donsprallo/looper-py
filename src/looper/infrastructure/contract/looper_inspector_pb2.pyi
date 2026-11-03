@@ -141,6 +141,12 @@ class RestartPhase(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     RESTART_PHASE_RUNNING: _ClassVar[RestartPhase]
     RESTART_PHASE_BUILDING: _ClassVar[RestartPhase]
     RESTART_PHASE_RESTARTING: _ClassVar[RestartPhase]
+
+class Tier(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+    __slots__ = ()
+    TIER_GOOD: _ClassVar[Tier]
+    TIER_NOTICEABLE: _ClassVar[Tier]
+    TIER_CRITICAL: _ClassVar[Tier]
 CONTRACT_VERSION_UNSPECIFIED: ContractVersion
 CONTRACT_VERSION_CURRENT: ContractVersion
 REFUSAL_NONE: Refusal
@@ -228,6 +234,9 @@ SYMBOL_KIND_TYPE: SymbolKind
 RESTART_PHASE_RUNNING: RestartPhase
 RESTART_PHASE_BUILDING: RestartPhase
 RESTART_PHASE_RESTARTING: RestartPhase
+TIER_GOOD: Tier
+TIER_NOTICEABLE: Tier
+TIER_CRITICAL: Tier
 
 class Empty(_message.Message):
     __slots__ = ()
@@ -2387,3 +2396,123 @@ class RestartView(_message.Message):
     generation: int
     done_text: str
     def __init__(self, phase: _Optional[_Union[RestartPhase, str]] = ..., can_restart: _Optional[bool] = ..., restart_unavailable: _Optional[str] = ..., can_rebuild: _Optional[bool] = ..., rebuild_unavailable: _Optional[str] = ..., last_build: _Optional[_Union[BuildResult, _Mapping]] = ..., generation: _Optional[int] = ..., done_text: _Optional[str] = ...) -> None: ...
+
+class ArchitectureRequest(_message.Message):
+    __slots__ = ("known_revision", "path")
+    KNOWN_REVISION_FIELD_NUMBER: _ClassVar[int]
+    PATH_FIELD_NUMBER: _ClassVar[int]
+    known_revision: int
+    path: str
+    def __init__(self, known_revision: _Optional[int] = ..., path: _Optional[str] = ...) -> None: ...
+
+class IndexProgress(_message.Message):
+    __slots__ = ("files_read", "files_total", "complete", "text", "unreadable")
+    FILES_READ_FIELD_NUMBER: _ClassVar[int]
+    FILES_TOTAL_FIELD_NUMBER: _ClassVar[int]
+    COMPLETE_FIELD_NUMBER: _ClassVar[int]
+    TEXT_FIELD_NUMBER: _ClassVar[int]
+    UNREADABLE_FIELD_NUMBER: _ClassVar[int]
+    files_read: int
+    files_total: int
+    complete: bool
+    text: str
+    unreadable: _containers.RepeatedScalarFieldContainer[str]
+    def __init__(self, files_read: _Optional[int] = ..., files_total: _Optional[int] = ..., complete: _Optional[bool] = ..., text: _Optional[str] = ..., unreadable: _Optional[_Iterable[str]] = ...) -> None: ...
+
+class MeasureDescription(_message.Message):
+    __slots__ = ("key", "title", "description", "judged")
+    KEY_FIELD_NUMBER: _ClassVar[int]
+    TITLE_FIELD_NUMBER: _ClassVar[int]
+    DESCRIPTION_FIELD_NUMBER: _ClassVar[int]
+    JUDGED_FIELD_NUMBER: _ClassVar[int]
+    key: str
+    title: str
+    description: str
+    judged: bool
+    def __init__(self, key: _Optional[str] = ..., title: _Optional[str] = ..., description: _Optional[str] = ..., judged: _Optional[bool] = ...) -> None: ...
+
+class MeasureValue(_message.Message):
+    __slots__ = ("key", "value", "value_text", "tier", "limit_text", "explanation")
+    KEY_FIELD_NUMBER: _ClassVar[int]
+    VALUE_FIELD_NUMBER: _ClassVar[int]
+    VALUE_TEXT_FIELD_NUMBER: _ClassVar[int]
+    TIER_FIELD_NUMBER: _ClassVar[int]
+    LIMIT_TEXT_FIELD_NUMBER: _ClassVar[int]
+    EXPLANATION_FIELD_NUMBER: _ClassVar[int]
+    key: str
+    value: float
+    value_text: str
+    tier: Tier
+    limit_text: str
+    explanation: str
+    def __init__(self, key: _Optional[str] = ..., value: _Optional[float] = ..., value_text: _Optional[str] = ..., tier: _Optional[_Union[Tier, str]] = ..., limit_text: _Optional[str] = ..., explanation: _Optional[str] = ...) -> None: ...
+
+class FunctionMeasures(_message.Message):
+    __slots__ = ("name", "signature", "path", "first_line", "last_line", "module", "is_static", "measures", "worst_tier")
+    NAME_FIELD_NUMBER: _ClassVar[int]
+    SIGNATURE_FIELD_NUMBER: _ClassVar[int]
+    PATH_FIELD_NUMBER: _ClassVar[int]
+    FIRST_LINE_FIELD_NUMBER: _ClassVar[int]
+    LAST_LINE_FIELD_NUMBER: _ClassVar[int]
+    MODULE_FIELD_NUMBER: _ClassVar[int]
+    IS_STATIC_FIELD_NUMBER: _ClassVar[int]
+    MEASURES_FIELD_NUMBER: _ClassVar[int]
+    WORST_TIER_FIELD_NUMBER: _ClassVar[int]
+    name: str
+    signature: str
+    path: str
+    first_line: int
+    last_line: int
+    module: str
+    is_static: bool
+    measures: _containers.RepeatedCompositeFieldContainer[MeasureValue]
+    worst_tier: Tier
+    def __init__(self, name: _Optional[str] = ..., signature: _Optional[str] = ..., path: _Optional[str] = ..., first_line: _Optional[int] = ..., last_line: _Optional[int] = ..., module: _Optional[str] = ..., is_static: _Optional[bool] = ..., measures: _Optional[_Iterable[_Union[MeasureValue, _Mapping]]] = ..., worst_tier: _Optional[_Union[Tier, str]] = ...) -> None: ...
+
+class FunctionMetricsView(_message.Message):
+    __slots__ = ("revision", "unchanged", "progress", "profile", "measures", "functions", "note")
+    REVISION_FIELD_NUMBER: _ClassVar[int]
+    UNCHANGED_FIELD_NUMBER: _ClassVar[int]
+    PROGRESS_FIELD_NUMBER: _ClassVar[int]
+    PROFILE_FIELD_NUMBER: _ClassVar[int]
+    MEASURES_FIELD_NUMBER: _ClassVar[int]
+    FUNCTIONS_FIELD_NUMBER: _ClassVar[int]
+    NOTE_FIELD_NUMBER: _ClassVar[int]
+    revision: int
+    unchanged: bool
+    progress: IndexProgress
+    profile: str
+    measures: _containers.RepeatedCompositeFieldContainer[MeasureDescription]
+    functions: _containers.RepeatedCompositeFieldContainer[FunctionMeasures]
+    note: str
+    def __init__(self, revision: _Optional[int] = ..., unchanged: _Optional[bool] = ..., progress: _Optional[_Union[IndexProgress, _Mapping]] = ..., profile: _Optional[str] = ..., measures: _Optional[_Iterable[_Union[MeasureDescription, _Mapping]]] = ..., functions: _Optional[_Iterable[_Union[FunctionMeasures, _Mapping]]] = ..., note: _Optional[str] = ...) -> None: ...
+
+class FileMeasures(_message.Message):
+    __slots__ = ("path", "display_path", "module", "measures", "worst_tier")
+    PATH_FIELD_NUMBER: _ClassVar[int]
+    DISPLAY_PATH_FIELD_NUMBER: _ClassVar[int]
+    MODULE_FIELD_NUMBER: _ClassVar[int]
+    MEASURES_FIELD_NUMBER: _ClassVar[int]
+    WORST_TIER_FIELD_NUMBER: _ClassVar[int]
+    path: str
+    display_path: str
+    module: str
+    measures: _containers.RepeatedCompositeFieldContainer[MeasureValue]
+    worst_tier: Tier
+    def __init__(self, path: _Optional[str] = ..., display_path: _Optional[str] = ..., module: _Optional[str] = ..., measures: _Optional[_Iterable[_Union[MeasureValue, _Mapping]]] = ..., worst_tier: _Optional[_Union[Tier, str]] = ...) -> None: ...
+
+class FileMetricsView(_message.Message):
+    __slots__ = ("revision", "unchanged", "progress", "profile", "measures", "files")
+    REVISION_FIELD_NUMBER: _ClassVar[int]
+    UNCHANGED_FIELD_NUMBER: _ClassVar[int]
+    PROGRESS_FIELD_NUMBER: _ClassVar[int]
+    PROFILE_FIELD_NUMBER: _ClassVar[int]
+    MEASURES_FIELD_NUMBER: _ClassVar[int]
+    FILES_FIELD_NUMBER: _ClassVar[int]
+    revision: int
+    unchanged: bool
+    progress: IndexProgress
+    profile: str
+    measures: _containers.RepeatedCompositeFieldContainer[MeasureDescription]
+    files: _containers.RepeatedCompositeFieldContainer[FileMeasures]
+    def __init__(self, revision: _Optional[int] = ..., unchanged: _Optional[bool] = ..., progress: _Optional[_Union[IndexProgress, _Mapping]] = ..., profile: _Optional[str] = ..., measures: _Optional[_Iterable[_Union[MeasureDescription, _Mapping]]] = ..., files: _Optional[_Iterable[_Union[FileMeasures, _Mapping]]] = ...) -> None: ...
