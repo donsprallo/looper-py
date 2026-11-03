@@ -748,6 +748,9 @@ service Inspector {
   // The firmware's state machines: a switch over a variable the code sets.
   rpc ObserveStateMachines(Empty) returns (StateMachineList);
   rpc ObserveStateMachine(StateMachineChoice) returns (FirmwareStateMachine);
+  // Follow a machine in the run (a simulation only): a watch on its
+  // variable, read back as the states it took -- once per loop pass.
+  rpc FollowStateMachine(MachineFollowRequest) returns (Ack);
 }
 
 message PinView {
@@ -1940,6 +1943,9 @@ message StateMachineChoice {
 message MachineState {
   string name = 1;
   bool is_initial = 2;
+  bool reached = 3;            // true when the run is not followed
+  string dwell_text = 4;       // "dwell 18 % · 4×"
+  bool is_current = 5;
 }
 
 message MachineTransition {
@@ -1950,6 +1956,8 @@ message MachineTransition {
   uint32 line = 5;
   string function = 6;
   string note = 7;
+  sint32 count = 8;            // taken in the run; -1 when not followed
+  bool observed_only = 9;      // the run made it, the code writes no such step
 }
 
 // Named apart from the StateModels of the device models.
@@ -1964,4 +1972,14 @@ message FirmwareStateMachine {
   string initial_note = 8;
   repeated MachineTransition transitions = 9;
   bool found = 10;
+  bool observed = 11;
+  string observation_text = 12;   // how exact: once per loop pass
+  string coverage_text = 13;
+  string instance = 14;           // the variable followed
+}
+
+message MachineFollowRequest {
+  string machine_id = 1;
+  string variable_path = 2;       // the variable that holds it, an instance for a field
+  bool follow = 3;
 }
