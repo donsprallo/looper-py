@@ -120,6 +120,13 @@ message Description {
   // How far back the server can resume a stream, and the largest page.
   uint64 retention_us = 7;
   uint32 max_events_per_batch = 8;
+  // What the server serves: a running simulation, or a project's code
+  // without one (`looper-cli inspect`), where only CAPABILITY_SOURCES and
+  // CAPABILITY_ARCHITECTURE are answered and every other call is refused
+  // with FAILED_PRECONDITION.
+  ServerMode mode = 9;
+  string mode_text = 10;      // e.g. "Static analysis - no simulation"
+  string input_text = 11;     // e.g. "compile_commands.json, 5 files"
   reserved 3;
   reserved "time_mode";
 }
@@ -137,6 +144,12 @@ enum Capability {
   CAPABILITY_LEVELS = 9;           // ReadEventsRequest.with_levels, Subscription.with_levels
   CAPABILITY_READ_BY_TIME = 10;    // ReadEventsRequest.from_us / to_us; EventFilter.pin_ids, call_functions
   CAPABILITY_TRIGGERS = 11;        // ArmTrigger, DisarmTrigger, ObserveTriggers
+  CAPABILITY_ARCHITECTURE = 12;    // the project's code index: metrics, dependencies, findings
+}
+
+enum ServerMode {
+  SERVER_MODE_SIMULATION = 0;
+  SERVER_MODE_STATIC = 1;
 }
 
 enum ClockMode {
@@ -882,6 +895,19 @@ message ModelNodeView {
 message SignalGraphView {
   // Only the model nodes, in the order of the graph.
   repeated ModelNodeView models = 1;
+  // The probes of the applied graph, each with the trace channel its
+  // samples arrive on. A probe keeps its channel while its name stays.
+  repeated ProbeView probes = 2;
+}
+
+// A signal inside the applied graph that is recorded like a channel.
+message ProbeView {
+  string name = 1;
+  // The trace channel its samples arrive on, as EVENT_KIND_SAMPLE.
+  uint32 channel_id = 2;
+  // The node it records, by the key the client gave it, and which output.
+  string node = 3;
+  uint32 output = 4;
 }
 
 message ModelList {
@@ -900,9 +926,23 @@ message SignalTargetRequest {
   uint32 output = 3;
 }
 
+// A signal inside the graph to record: only a target reaches the firmware,
+// what feeds it exists nowhere else. Recorded whenever the graph is
+// evaluated, which is when the firmware reads an input the graph drives;
+// a graph that drives no input records nothing.
+message SignalProbeRequest {
+  // What the client calls it; unique in the graph. The trace channel
+  // follows the name, see SignalGraphView.probes.
+  string name = 1;
+  string node = 2;
+  // Which of the node's outputs; only a model has more than one.
+  uint32 output = 3;
+}
+
 message SignalGraphRequest {
   repeated SignalNodeRequest nodes = 1;
   repeated SignalTargetRequest targets = 2;
+  repeated SignalProbeRequest probes = 3;
   When when = 15;
 }
 
@@ -1332,6 +1372,7 @@ enum SourceState {
   SOURCE_STATE_CHANGED = 1;   // edited since; the kept copy is shown
   SOURCE_STATE_MISSING = 2;   // gone from disk; the kept copy is shown
   SOURCE_STATE_UNKEPT = 3;    // the build kept no copy; the disk is shown
+  SOURCE_STATE_ON_DISK = 4;   // there is no build: static analysis reads the disk
 }
 
 message SourceFileView {

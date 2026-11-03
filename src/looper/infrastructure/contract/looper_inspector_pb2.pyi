@@ -38,6 +38,12 @@ class Capability(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     CAPABILITY_LEVELS: _ClassVar[Capability]
     CAPABILITY_READ_BY_TIME: _ClassVar[Capability]
     CAPABILITY_TRIGGERS: _ClassVar[Capability]
+    CAPABILITY_ARCHITECTURE: _ClassVar[Capability]
+
+class ServerMode(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+    __slots__ = ()
+    SERVER_MODE_SIMULATION: _ClassVar[ServerMode]
+    SERVER_MODE_STATIC: _ClassVar[ServerMode]
 
 class ClockMode(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     __slots__ = ()
@@ -114,6 +120,7 @@ class SourceState(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     SOURCE_STATE_CHANGED: _ClassVar[SourceState]
     SOURCE_STATE_MISSING: _ClassVar[SourceState]
     SOURCE_STATE_UNKEPT: _ClassVar[SourceState]
+    SOURCE_STATE_ON_DISK: _ClassVar[SourceState]
 
 class SymbolKind(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     __slots__ = ()
@@ -157,6 +164,9 @@ CAPABILITY_DEBUGGER: Capability
 CAPABILITY_LEVELS: Capability
 CAPABILITY_READ_BY_TIME: Capability
 CAPABILITY_TRIGGERS: Capability
+CAPABILITY_ARCHITECTURE: Capability
+SERVER_MODE_SIMULATION: ServerMode
+SERVER_MODE_STATIC: ServerMode
 CLOCK_MODE_HELD: ClockMode
 CLOCK_MODE_PACED: ClockMode
 CLOCK_MODE_MAX: ClockMode
@@ -203,6 +213,7 @@ SOURCE_STATE_AS_BUILT: SourceState
 SOURCE_STATE_CHANGED: SourceState
 SOURCE_STATE_MISSING: SourceState
 SOURCE_STATE_UNKEPT: SourceState
+SOURCE_STATE_ON_DISK: SourceState
 SYMBOL_KIND_UNSPECIFIED: SymbolKind
 SYMBOL_KIND_FUNCTION: SymbolKind
 SYMBOL_KIND_ADAPTER_CALL: SymbolKind
@@ -251,7 +262,7 @@ class When(_message.Message):
     def __init__(self, at_us: _Optional[int] = ..., after_us: _Optional[int] = ..., allow_late: _Optional[bool] = ...) -> None: ...
 
 class Description(_message.Message):
-    __slots__ = ("contract_version", "firmware_name", "reads_the_build", "definition_path", "capabilities", "retention_us", "max_events_per_batch")
+    __slots__ = ("contract_version", "firmware_name", "reads_the_build", "definition_path", "capabilities", "retention_us", "max_events_per_batch", "mode", "mode_text", "input_text")
     CONTRACT_VERSION_FIELD_NUMBER: _ClassVar[int]
     FIRMWARE_NAME_FIELD_NUMBER: _ClassVar[int]
     READS_THE_BUILD_FIELD_NUMBER: _ClassVar[int]
@@ -259,6 +270,9 @@ class Description(_message.Message):
     CAPABILITIES_FIELD_NUMBER: _ClassVar[int]
     RETENTION_US_FIELD_NUMBER: _ClassVar[int]
     MAX_EVENTS_PER_BATCH_FIELD_NUMBER: _ClassVar[int]
+    MODE_FIELD_NUMBER: _ClassVar[int]
+    MODE_TEXT_FIELD_NUMBER: _ClassVar[int]
+    INPUT_TEXT_FIELD_NUMBER: _ClassVar[int]
     contract_version: ContractVersion
     firmware_name: str
     reads_the_build: bool
@@ -266,7 +280,10 @@ class Description(_message.Message):
     capabilities: _containers.RepeatedScalarFieldContainer[Capability]
     retention_us: int
     max_events_per_batch: int
-    def __init__(self, contract_version: _Optional[_Union[ContractVersion, str]] = ..., firmware_name: _Optional[str] = ..., reads_the_build: _Optional[bool] = ..., definition_path: _Optional[str] = ..., capabilities: _Optional[_Iterable[_Union[Capability, str]]] = ..., retention_us: _Optional[int] = ..., max_events_per_batch: _Optional[int] = ...) -> None: ...
+    mode: ServerMode
+    mode_text: str
+    input_text: str
+    def __init__(self, contract_version: _Optional[_Union[ContractVersion, str]] = ..., firmware_name: _Optional[str] = ..., reads_the_build: _Optional[bool] = ..., definition_path: _Optional[str] = ..., capabilities: _Optional[_Iterable[_Union[Capability, str]]] = ..., retention_us: _Optional[int] = ..., max_events_per_batch: _Optional[int] = ..., mode: _Optional[_Union[ServerMode, str]] = ..., mode_text: _Optional[str] = ..., input_text: _Optional[str] = ...) -> None: ...
 
 class RunControl(_message.Message):
     __slots__ = ("hold", "run_for_us", "run_until_us", "step_pass", "pace_ratio", "max_speed")
@@ -1258,10 +1275,24 @@ class ModelNodeView(_message.Message):
     def __init__(self, node: _Optional[str] = ..., execution: _Optional[str] = ..., execution_label: _Optional[str] = ..., execution_reason: _Optional[str] = ..., fault: _Optional[str] = ..., state: _Optional[_Iterable[_Union[ModelStateView, _Mapping]]] = ...) -> None: ...
 
 class SignalGraphView(_message.Message):
-    __slots__ = ("models",)
+    __slots__ = ("models", "probes")
     MODELS_FIELD_NUMBER: _ClassVar[int]
+    PROBES_FIELD_NUMBER: _ClassVar[int]
     models: _containers.RepeatedCompositeFieldContainer[ModelNodeView]
-    def __init__(self, models: _Optional[_Iterable[_Union[ModelNodeView, _Mapping]]] = ...) -> None: ...
+    probes: _containers.RepeatedCompositeFieldContainer[ProbeView]
+    def __init__(self, models: _Optional[_Iterable[_Union[ModelNodeView, _Mapping]]] = ..., probes: _Optional[_Iterable[_Union[ProbeView, _Mapping]]] = ...) -> None: ...
+
+class ProbeView(_message.Message):
+    __slots__ = ("name", "channel_id", "node", "output")
+    NAME_FIELD_NUMBER: _ClassVar[int]
+    CHANNEL_ID_FIELD_NUMBER: _ClassVar[int]
+    NODE_FIELD_NUMBER: _ClassVar[int]
+    OUTPUT_FIELD_NUMBER: _ClassVar[int]
+    name: str
+    channel_id: int
+    node: str
+    output: int
+    def __init__(self, name: _Optional[str] = ..., channel_id: _Optional[int] = ..., node: _Optional[str] = ..., output: _Optional[int] = ...) -> None: ...
 
 class ModelList(_message.Message):
     __slots__ = ("models", "unavailable_reason")
@@ -1281,15 +1312,27 @@ class SignalTargetRequest(_message.Message):
     output: int
     def __init__(self, channel_id: _Optional[int] = ..., node: _Optional[str] = ..., output: _Optional[int] = ...) -> None: ...
 
+class SignalProbeRequest(_message.Message):
+    __slots__ = ("name", "node", "output")
+    NAME_FIELD_NUMBER: _ClassVar[int]
+    NODE_FIELD_NUMBER: _ClassVar[int]
+    OUTPUT_FIELD_NUMBER: _ClassVar[int]
+    name: str
+    node: str
+    output: int
+    def __init__(self, name: _Optional[str] = ..., node: _Optional[str] = ..., output: _Optional[int] = ...) -> None: ...
+
 class SignalGraphRequest(_message.Message):
-    __slots__ = ("nodes", "targets", "when")
+    __slots__ = ("nodes", "targets", "probes", "when")
     NODES_FIELD_NUMBER: _ClassVar[int]
     TARGETS_FIELD_NUMBER: _ClassVar[int]
+    PROBES_FIELD_NUMBER: _ClassVar[int]
     WHEN_FIELD_NUMBER: _ClassVar[int]
     nodes: _containers.RepeatedCompositeFieldContainer[SignalNodeRequest]
     targets: _containers.RepeatedCompositeFieldContainer[SignalTargetRequest]
+    probes: _containers.RepeatedCompositeFieldContainer[SignalProbeRequest]
     when: When
-    def __init__(self, nodes: _Optional[_Iterable[_Union[SignalNodeRequest, _Mapping]]] = ..., targets: _Optional[_Iterable[_Union[SignalTargetRequest, _Mapping]]] = ..., when: _Optional[_Union[When, _Mapping]] = ...) -> None: ...
+    def __init__(self, nodes: _Optional[_Iterable[_Union[SignalNodeRequest, _Mapping]]] = ..., targets: _Optional[_Iterable[_Union[SignalTargetRequest, _Mapping]]] = ..., probes: _Optional[_Iterable[_Union[SignalProbeRequest, _Mapping]]] = ..., when: _Optional[_Union[When, _Mapping]] = ...) -> None: ...
 
 class WaveformList(_message.Message):
     __slots__ = ("waveforms",)
