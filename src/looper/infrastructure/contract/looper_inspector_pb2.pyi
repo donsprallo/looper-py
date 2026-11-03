@@ -2516,3 +2516,239 @@ class FileMetricsView(_message.Message):
     measures: _containers.RepeatedCompositeFieldContainer[MeasureDescription]
     files: _containers.RepeatedCompositeFieldContainer[FileMeasures]
     def __init__(self, revision: _Optional[int] = ..., unchanged: _Optional[bool] = ..., progress: _Optional[_Union[IndexProgress, _Mapping]] = ..., profile: _Optional[str] = ..., measures: _Optional[_Iterable[_Union[MeasureDescription, _Mapping]]] = ..., files: _Optional[_Iterable[_Union[FileMeasures, _Mapping]]] = ...) -> None: ...
+
+class ArchitectureFocus(_message.Message):
+    __slots__ = ("node_id", "focus", "depth", "kinds", "known_revision")
+    NODE_ID_FIELD_NUMBER: _ClassVar[int]
+    FOCUS_FIELD_NUMBER: _ClassVar[int]
+    DEPTH_FIELD_NUMBER: _ClassVar[int]
+    KINDS_FIELD_NUMBER: _ClassVar[int]
+    KNOWN_REVISION_FIELD_NUMBER: _ClassVar[int]
+    node_id: str
+    focus: str
+    depth: int
+    kinds: _containers.RepeatedScalarFieldContainer[str]
+    known_revision: int
+    def __init__(self, node_id: _Optional[str] = ..., focus: _Optional[str] = ..., depth: _Optional[int] = ..., kinds: _Optional[_Iterable[str]] = ..., known_revision: _Optional[int] = ...) -> None: ...
+
+class ArchitectureCrumb(_message.Message):
+    __slots__ = ("node_id", "title", "kind")
+    NODE_ID_FIELD_NUMBER: _ClassVar[int]
+    TITLE_FIELD_NUMBER: _ClassVar[int]
+    KIND_FIELD_NUMBER: _ClassVar[int]
+    node_id: str
+    title: str
+    kind: str
+    def __init__(self, node_id: _Optional[str] = ..., title: _Optional[str] = ..., kind: _Optional[str] = ...) -> None: ...
+
+class ArchitectureBand(_message.Message):
+    __slots__ = ("name", "title", "is_scope", "proposed")
+    NAME_FIELD_NUMBER: _ClassVar[int]
+    TITLE_FIELD_NUMBER: _ClassVar[int]
+    IS_SCOPE_FIELD_NUMBER: _ClassVar[int]
+    PROPOSED_FIELD_NUMBER: _ClassVar[int]
+    name: str
+    title: str
+    is_scope: bool
+    proposed: bool
+    def __init__(self, name: _Optional[str] = ..., title: _Optional[str] = ..., is_scope: _Optional[bool] = ..., proposed: _Optional[bool] = ...) -> None: ...
+
+class ArchitectureNode(_message.Message):
+    __slots__ = ("node_id", "kind", "title", "band", "metrics_text", "critical", "noticeable", "cycle_id", "has_children", "path", "line", "ring", "caption", "worst_tier")
+    NODE_ID_FIELD_NUMBER: _ClassVar[int]
+    KIND_FIELD_NUMBER: _ClassVar[int]
+    TITLE_FIELD_NUMBER: _ClassVar[int]
+    BAND_FIELD_NUMBER: _ClassVar[int]
+    METRICS_TEXT_FIELD_NUMBER: _ClassVar[int]
+    CRITICAL_FIELD_NUMBER: _ClassVar[int]
+    NOTICEABLE_FIELD_NUMBER: _ClassVar[int]
+    CYCLE_ID_FIELD_NUMBER: _ClassVar[int]
+    HAS_CHILDREN_FIELD_NUMBER: _ClassVar[int]
+    PATH_FIELD_NUMBER: _ClassVar[int]
+    LINE_FIELD_NUMBER: _ClassVar[int]
+    RING_FIELD_NUMBER: _ClassVar[int]
+    CAPTION_FIELD_NUMBER: _ClassVar[int]
+    WORST_TIER_FIELD_NUMBER: _ClassVar[int]
+    node_id: str
+    kind: str
+    title: str
+    band: int
+    metrics_text: str
+    critical: int
+    noticeable: int
+    cycle_id: str
+    has_children: bool
+    path: str
+    line: int
+    ring: int
+    caption: str
+    worst_tier: Tier
+    def __init__(self, node_id: _Optional[str] = ..., kind: _Optional[str] = ..., title: _Optional[str] = ..., band: _Optional[int] = ..., metrics_text: _Optional[str] = ..., critical: _Optional[int] = ..., noticeable: _Optional[int] = ..., cycle_id: _Optional[str] = ..., has_children: _Optional[bool] = ..., path: _Optional[str] = ..., line: _Optional[int] = ..., ring: _Optional[int] = ..., caption: _Optional[str] = ..., worst_tier: _Optional[_Union[Tier, str]] = ...) -> None: ...
+
+class ArchitectureEdge(_message.Message):
+    __slots__ = ("edge_id", "from_id", "to_id", "weight", "kinds_text", "direction", "violation", "exception", "cycle_id", "in_cut")
+    EDGE_ID_FIELD_NUMBER: _ClassVar[int]
+    FROM_ID_FIELD_NUMBER: _ClassVar[int]
+    TO_ID_FIELD_NUMBER: _ClassVar[int]
+    WEIGHT_FIELD_NUMBER: _ClassVar[int]
+    KINDS_TEXT_FIELD_NUMBER: _ClassVar[int]
+    DIRECTION_FIELD_NUMBER: _ClassVar[int]
+    VIOLATION_FIELD_NUMBER: _ClassVar[int]
+    EXCEPTION_FIELD_NUMBER: _ClassVar[int]
+    CYCLE_ID_FIELD_NUMBER: _ClassVar[int]
+    IN_CUT_FIELD_NUMBER: _ClassVar[int]
+    edge_id: str
+    from_id: str
+    to_id: str
+    weight: int
+    kinds_text: str
+    direction: str
+    violation: str
+    exception: str
+    cycle_id: str
+    in_cut: bool
+    def __init__(self, edge_id: _Optional[str] = ..., from_id: _Optional[str] = ..., to_id: _Optional[str] = ..., weight: _Optional[int] = ..., kinds_text: _Optional[str] = ..., direction: _Optional[str] = ..., violation: _Optional[str] = ..., exception: _Optional[str] = ..., cycle_id: _Optional[str] = ..., in_cut: _Optional[bool] = ...) -> None: ...
+
+class ArchitectureCycle(_message.Message):
+    __slots__ = ("cycle_id", "text")
+    CYCLE_ID_FIELD_NUMBER: _ClassVar[int]
+    TEXT_FIELD_NUMBER: _ClassVar[int]
+    cycle_id: str
+    text: str
+    def __init__(self, cycle_id: _Optional[str] = ..., text: _Optional[str] = ...) -> None: ...
+
+class ArchitectureGraph(_message.Message):
+    __slots__ = ("revision", "unchanged", "progress", "crumbs", "bands", "nodes", "edges", "cycles", "banner", "shown_text")
+    REVISION_FIELD_NUMBER: _ClassVar[int]
+    UNCHANGED_FIELD_NUMBER: _ClassVar[int]
+    PROGRESS_FIELD_NUMBER: _ClassVar[int]
+    CRUMBS_FIELD_NUMBER: _ClassVar[int]
+    BANDS_FIELD_NUMBER: _ClassVar[int]
+    NODES_FIELD_NUMBER: _ClassVar[int]
+    EDGES_FIELD_NUMBER: _ClassVar[int]
+    CYCLES_FIELD_NUMBER: _ClassVar[int]
+    BANNER_FIELD_NUMBER: _ClassVar[int]
+    SHOWN_TEXT_FIELD_NUMBER: _ClassVar[int]
+    revision: int
+    unchanged: bool
+    progress: IndexProgress
+    crumbs: _containers.RepeatedCompositeFieldContainer[ArchitectureCrumb]
+    bands: _containers.RepeatedCompositeFieldContainer[ArchitectureBand]
+    nodes: _containers.RepeatedCompositeFieldContainer[ArchitectureNode]
+    edges: _containers.RepeatedCompositeFieldContainer[ArchitectureEdge]
+    cycles: _containers.RepeatedCompositeFieldContainer[ArchitectureCycle]
+    banner: str
+    shown_text: str
+    def __init__(self, revision: _Optional[int] = ..., unchanged: _Optional[bool] = ..., progress: _Optional[_Union[IndexProgress, _Mapping]] = ..., crumbs: _Optional[_Iterable[_Union[ArchitectureCrumb, _Mapping]]] = ..., bands: _Optional[_Iterable[_Union[ArchitectureBand, _Mapping]]] = ..., nodes: _Optional[_Iterable[_Union[ArchitectureNode, _Mapping]]] = ..., edges: _Optional[_Iterable[_Union[ArchitectureEdge, _Mapping]]] = ..., cycles: _Optional[_Iterable[_Union[ArchitectureCycle, _Mapping]]] = ..., banner: _Optional[str] = ..., shown_text: _Optional[str] = ...) -> None: ...
+
+class FindingFilter(_message.Message):
+    __slots__ = ("node_id", "known_revision")
+    NODE_ID_FIELD_NUMBER: _ClassVar[int]
+    KNOWN_REVISION_FIELD_NUMBER: _ClassVar[int]
+    node_id: str
+    known_revision: int
+    def __init__(self, node_id: _Optional[str] = ..., known_revision: _Optional[int] = ...) -> None: ...
+
+class CodePlace(_message.Message):
+    __slots__ = ("path", "line", "kind", "what")
+    PATH_FIELD_NUMBER: _ClassVar[int]
+    LINE_FIELD_NUMBER: _ClassVar[int]
+    KIND_FIELD_NUMBER: _ClassVar[int]
+    WHAT_FIELD_NUMBER: _ClassVar[int]
+    path: str
+    line: int
+    kind: str
+    what: str
+    def __init__(self, path: _Optional[str] = ..., line: _Optional[int] = ..., kind: _Optional[str] = ..., what: _Optional[str] = ...) -> None: ...
+
+class ArchitectureFinding(_message.Message):
+    __slots__ = ("key", "kind", "severity", "title", "explanation", "places", "node_ids", "edge_ids", "function")
+    KEY_FIELD_NUMBER: _ClassVar[int]
+    KIND_FIELD_NUMBER: _ClassVar[int]
+    SEVERITY_FIELD_NUMBER: _ClassVar[int]
+    TITLE_FIELD_NUMBER: _ClassVar[int]
+    EXPLANATION_FIELD_NUMBER: _ClassVar[int]
+    PLACES_FIELD_NUMBER: _ClassVar[int]
+    NODE_IDS_FIELD_NUMBER: _ClassVar[int]
+    EDGE_IDS_FIELD_NUMBER: _ClassVar[int]
+    FUNCTION_FIELD_NUMBER: _ClassVar[int]
+    key: str
+    kind: str
+    severity: Tier
+    title: str
+    explanation: str
+    places: _containers.RepeatedCompositeFieldContainer[CodePlace]
+    node_ids: _containers.RepeatedScalarFieldContainer[str]
+    edge_ids: _containers.RepeatedScalarFieldContainer[str]
+    function: str
+    def __init__(self, key: _Optional[str] = ..., kind: _Optional[str] = ..., severity: _Optional[_Union[Tier, str]] = ..., title: _Optional[str] = ..., explanation: _Optional[str] = ..., places: _Optional[_Iterable[_Union[CodePlace, _Mapping]]] = ..., node_ids: _Optional[_Iterable[str]] = ..., edge_ids: _Optional[_Iterable[str]] = ..., function: _Optional[str] = ...) -> None: ...
+
+class FindingList(_message.Message):
+    __slots__ = ("revision", "unchanged", "findings", "complete", "note")
+    REVISION_FIELD_NUMBER: _ClassVar[int]
+    UNCHANGED_FIELD_NUMBER: _ClassVar[int]
+    FINDINGS_FIELD_NUMBER: _ClassVar[int]
+    COMPLETE_FIELD_NUMBER: _ClassVar[int]
+    NOTE_FIELD_NUMBER: _ClassVar[int]
+    revision: int
+    unchanged: bool
+    findings: _containers.RepeatedCompositeFieldContainer[ArchitectureFinding]
+    complete: bool
+    note: str
+    def __init__(self, revision: _Optional[int] = ..., unchanged: _Optional[bool] = ..., findings: _Optional[_Iterable[_Union[ArchitectureFinding, _Mapping]]] = ..., complete: _Optional[bool] = ..., note: _Optional[str] = ...) -> None: ...
+
+class PlacesRequest(_message.Message):
+    __slots__ = ("edge_id", "kinds")
+    EDGE_ID_FIELD_NUMBER: _ClassVar[int]
+    KINDS_FIELD_NUMBER: _ClassVar[int]
+    edge_id: str
+    kinds: _containers.RepeatedScalarFieldContainer[str]
+    def __init__(self, edge_id: _Optional[str] = ..., kinds: _Optional[_Iterable[str]] = ...) -> None: ...
+
+class PlaceList(_message.Message):
+    __slots__ = ("places",)
+    PLACES_FIELD_NUMBER: _ClassVar[int]
+    places: _containers.RepeatedCompositeFieldContainer[CodePlace]
+    def __init__(self, places: _Optional[_Iterable[_Union[CodePlace, _Mapping]]] = ...) -> None: ...
+
+class LayerRuleView(_message.Message):
+    __slots__ = ("name", "folders", "patterns", "may_skip", "modules")
+    NAME_FIELD_NUMBER: _ClassVar[int]
+    FOLDERS_FIELD_NUMBER: _ClassVar[int]
+    PATTERNS_FIELD_NUMBER: _ClassVar[int]
+    MAY_SKIP_FIELD_NUMBER: _ClassVar[int]
+    MODULES_FIELD_NUMBER: _ClassVar[int]
+    name: str
+    folders: _containers.RepeatedScalarFieldContainer[str]
+    patterns: _containers.RepeatedScalarFieldContainer[str]
+    may_skip: bool
+    modules: int
+    def __init__(self, name: _Optional[str] = ..., folders: _Optional[_Iterable[str]] = ..., patterns: _Optional[_Iterable[str]] = ..., may_skip: _Optional[bool] = ..., modules: _Optional[int] = ...) -> None: ...
+
+class DependencyRuleView(_message.Message):
+    __slots__ = ("user", "used", "reason")
+    USER_FIELD_NUMBER: _ClassVar[int]
+    USED_FIELD_NUMBER: _ClassVar[int]
+    REASON_FIELD_NUMBER: _ClassVar[int]
+    user: str
+    used: str
+    reason: str
+    def __init__(self, user: _Optional[str] = ..., used: _Optional[str] = ..., reason: _Optional[str] = ...) -> None: ...
+
+class ArchitectureRulesView(_message.Message):
+    __slots__ = ("revision", "path", "is_proposed", "problem", "layers", "exceptions", "prohibitions")
+    REVISION_FIELD_NUMBER: _ClassVar[int]
+    PATH_FIELD_NUMBER: _ClassVar[int]
+    IS_PROPOSED_FIELD_NUMBER: _ClassVar[int]
+    PROBLEM_FIELD_NUMBER: _ClassVar[int]
+    LAYERS_FIELD_NUMBER: _ClassVar[int]
+    EXCEPTIONS_FIELD_NUMBER: _ClassVar[int]
+    PROHIBITIONS_FIELD_NUMBER: _ClassVar[int]
+    revision: str
+    path: str
+    is_proposed: bool
+    problem: str
+    layers: _containers.RepeatedCompositeFieldContainer[LayerRuleView]
+    exceptions: _containers.RepeatedCompositeFieldContainer[DependencyRuleView]
+    prohibitions: _containers.RepeatedCompositeFieldContainer[DependencyRuleView]
+    def __init__(self, revision: _Optional[str] = ..., path: _Optional[str] = ..., is_proposed: _Optional[bool] = ..., problem: _Optional[str] = ..., layers: _Optional[_Iterable[_Union[LayerRuleView, _Mapping]]] = ..., exceptions: _Optional[_Iterable[_Union[DependencyRuleView, _Mapping]]] = ..., prohibitions: _Optional[_Iterable[_Union[DependencyRuleView, _Mapping]]] = ...) -> None: ...

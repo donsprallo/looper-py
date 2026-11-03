@@ -730,6 +730,15 @@ service Inspector {
   // revision the client has is answered with `unchanged` and nothing else.
   rpc ObserveFunctionMetrics(ArchitectureRequest) returns (FunctionMetricsView);
   rpc ObserveFileMetrics(ArchitectureRequest) returns (FileMetricsView);
+  // The nodes and dependencies of a scope (the project's layers, a layer's
+  // modules, a module's functions) or of a focus on one module.
+  rpc ObserveArchitecture(ArchitectureFocus) returns (ArchitectureGraph);
+  // The findings about a node, or all of them.
+  rpc ObserveFindings(FindingFilter) returns (FindingList);
+  // The places in the code that make one drawn dependency.
+  rpc ObserveDependencyPlaces(PlacesRequest) returns (PlaceList);
+  // The rules as they stand: architecture.toml's, or proposed from the folders.
+  rpc ObserveArchitectureRules(Empty) returns (ArchitectureRulesView);
 }
 
 message PinView {
@@ -1727,4 +1736,138 @@ message FileMetricsView {
   string profile = 4;
   repeated MeasureDescription measures = 5;
   repeated FileMeasures files = 6;
+}
+
+message ArchitectureFocus {
+  string node_id = 1;          // "" the project, "layer:app", "module:app/blinker"
+  string focus = 2;            // "module:..." to draw its neighbourhood instead
+  uint32 depth = 3;            // rings of a focus, 1 to 3
+  repeated string kinds = 4;   // calls, reads, writes, address, types, macros, includes; empty: the use graph
+  uint64 known_revision = 5;
+}
+
+message ArchitectureCrumb {
+  string node_id = 1;
+  string title = 2;
+  string kind = 3;             // project, layer, module
+}
+
+message ArchitectureBand {
+  string name = 1;             // "" for what no layer claims
+  string title = 2;
+  bool is_scope = 3;
+  bool proposed = 4;
+}
+
+message ArchitectureNode {
+  string node_id = 1;
+  string kind = 2;             // layer, module, function, stub
+  string title = 3;
+  uint32 band = 4;
+  string metrics_text = 5;
+  uint32 critical = 6;
+  uint32 noticeable = 7;
+  string cycle_id = 8;
+  bool has_children = 9;
+  string path = 10;
+  uint32 line = 11;
+  sint32 ring = 12;            // in a focus: users negative, used positive
+  string caption = 13;
+  Tier worst_tier = 14;
+}
+
+message ArchitectureEdge {
+  string edge_id = 1;          // "<from>-><to>"
+  string from_id = 2;
+  string to_id = 3;
+  uint32 weight = 4;           // places
+  string kinds_text = 5;       // "calls 12 · reads 3"
+  string direction = 6;        // down, sideways, up
+  string violation = 7;
+  string exception = 8;
+  string cycle_id = 9;
+  bool in_cut = 10;            // in the cut proposed to break its cycle
+}
+
+message ArchitectureCycle {
+  string cycle_id = 1;
+  string text = 2;
+}
+
+message ArchitectureGraph {
+  uint64 revision = 1;
+  bool unchanged = 2;
+  IndexProgress progress = 3;
+  repeated ArchitectureCrumb crumbs = 4;
+  repeated ArchitectureBand bands = 5;
+  repeated ArchitectureNode nodes = 6;
+  repeated ArchitectureEdge edges = 7;
+  repeated ArchitectureCycle cycles = 8;
+  string banner = 9;
+  string shown_text = 10;
+}
+
+message FindingFilter {
+  string node_id = 1;          // "" every finding
+  uint64 known_revision = 2;
+}
+
+message CodePlace {
+  string path = 1;
+  uint32 line = 2;
+  string kind = 3;
+  string what = 4;
+}
+
+message ArchitectureFinding {
+  string key = 1;              // kind and subject, stable across edits
+  string kind = 2;
+  Tier severity = 3;
+  string title = 4;
+  string explanation = 5;
+  repeated CodePlace places = 6;
+  repeated string node_ids = 7;
+  repeated string edge_ids = 8;
+  string function = 9;
+}
+
+message FindingList {
+  uint64 revision = 1;
+  bool unchanged = 2;
+  repeated ArchitectureFinding findings = 3;
+  bool complete = 4;
+  string note = 5;
+}
+
+message PlacesRequest {
+  string edge_id = 1;
+  repeated string kinds = 2;
+}
+
+message PlaceList {
+  repeated CodePlace places = 1;
+}
+
+message LayerRuleView {
+  string name = 1;
+  repeated string folders = 2;
+  repeated string patterns = 3;
+  bool may_skip = 4;
+  uint32 modules = 5;
+}
+
+message DependencyRuleView {
+  string user = 1;             // "layer:app" or "module:app/blinker"
+  string used = 2;
+  string reason = 3;
+}
+
+message ArchitectureRulesView {
+  string revision = 1;
+  string path = 2;
+  bool is_proposed = 3;
+  string problem = 4;
+  repeated LayerRuleView layers = 5;
+  repeated DependencyRuleView exceptions = 6;
+  repeated DependencyRuleView prohibitions = 7;
 }

@@ -284,6 +284,26 @@ class InspectorStub:
                 request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ArchitectureRequest.SerializeToString,
                 response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.FileMetricsView.FromString,
                 _registered_method=True)
+        self.ObserveArchitecture = channel.unary_unary(
+                '/looper.inspector.v3.Inspector/ObserveArchitecture',
+                request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ArchitectureFocus.SerializeToString,
+                response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ArchitectureGraph.FromString,
+                _registered_method=True)
+        self.ObserveFindings = channel.unary_unary(
+                '/looper.inspector.v3.Inspector/ObserveFindings',
+                request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.FindingFilter.SerializeToString,
+                response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.FindingList.FromString,
+                _registered_method=True)
+        self.ObserveDependencyPlaces = channel.unary_unary(
+                '/looper.inspector.v3.Inspector/ObserveDependencyPlaces',
+                request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.PlacesRequest.SerializeToString,
+                response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.PlaceList.FromString,
+                _registered_method=True)
+        self.ObserveArchitectureRules = channel.unary_unary(
+                '/looper.inspector.v3.Inspector/ObserveArchitectureRules',
+                request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
+                response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ArchitectureRulesView.FromString,
+                _registered_method=True)
 
 
 class InspectorServicer:
@@ -636,6 +656,35 @@ class InspectorServicer:
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def ObserveArchitecture(self, request, context):
+        """The nodes and dependencies of a scope (the project's layers, a layer's
+        modules, a module's functions) or of a focus on one module.
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def ObserveFindings(self, request, context):
+        """The findings about a node, or all of them.
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def ObserveDependencyPlaces(self, request, context):
+        """The places in the code that make one drawn dependency.
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def ObserveArchitectureRules(self, request, context):
+        """The rules as they stand: architecture.toml's, or proposed from the folders.
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_InspectorServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -888,6 +937,26 @@ def add_InspectorServicer_to_server(servicer, server):
                     servicer.ObserveFileMetrics,
                     request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ArchitectureRequest.FromString,
                     response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.FileMetricsView.SerializeToString,
+            ),
+            'ObserveArchitecture': grpc.unary_unary_rpc_method_handler(
+                    servicer.ObserveArchitecture,
+                    request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ArchitectureFocus.FromString,
+                    response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ArchitectureGraph.SerializeToString,
+            ),
+            'ObserveFindings': grpc.unary_unary_rpc_method_handler(
+                    servicer.ObserveFindings,
+                    request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.FindingFilter.FromString,
+                    response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.FindingList.SerializeToString,
+            ),
+            'ObserveDependencyPlaces': grpc.unary_unary_rpc_method_handler(
+                    servicer.ObserveDependencyPlaces,
+                    request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.PlacesRequest.FromString,
+                    response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.PlaceList.SerializeToString,
+            ),
+            'ObserveArchitectureRules': grpc.unary_unary_rpc_method_handler(
+                    servicer.ObserveArchitectureRules,
+                    request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.FromString,
+                    response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ArchitectureRulesView.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -2240,6 +2309,114 @@ class Inspector:
             '/looper.inspector.v3.Inspector/ObserveFileMetrics',
             looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ArchitectureRequest.SerializeToString,
             looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.FileMetricsView.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def ObserveArchitecture(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/looper.inspector.v3.Inspector/ObserveArchitecture',
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ArchitectureFocus.SerializeToString,
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ArchitectureGraph.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def ObserveFindings(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/looper.inspector.v3.Inspector/ObserveFindings',
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.FindingFilter.SerializeToString,
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.FindingList.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def ObserveDependencyPlaces(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/looper.inspector.v3.Inspector/ObserveDependencyPlaces',
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.PlacesRequest.SerializeToString,
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.PlaceList.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def ObserveArchitectureRules(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/looper.inspector.v3.Inspector/ObserveArchitectureRules',
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ArchitectureRulesView.FromString,
             options,
             channel_credentials,
             insecure,
