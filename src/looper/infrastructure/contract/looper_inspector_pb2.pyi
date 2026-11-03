@@ -2752,3 +2752,51 @@ class ArchitectureRulesView(_message.Message):
     exceptions: _containers.RepeatedCompositeFieldContainer[DependencyRuleView]
     prohibitions: _containers.RepeatedCompositeFieldContainer[DependencyRuleView]
     def __init__(self, revision: _Optional[str] = ..., path: _Optional[str] = ..., is_proposed: _Optional[bool] = ..., problem: _Optional[str] = ..., layers: _Optional[_Iterable[_Union[LayerRuleView, _Mapping]]] = ..., exceptions: _Optional[_Iterable[_Union[DependencyRuleView, _Mapping]]] = ..., prohibitions: _Optional[_Iterable[_Union[DependencyRuleView, _Mapping]]] = ...) -> None: ...
+
+class RuleChange(_message.Message):
+    __slots__ = ("operation", "layer", "name", "position", "folder", "pattern", "may_skip", "user", "used", "reason", "folders", "patterns")
+    OPERATION_FIELD_NUMBER: _ClassVar[int]
+    LAYER_FIELD_NUMBER: _ClassVar[int]
+    NAME_FIELD_NUMBER: _ClassVar[int]
+    POSITION_FIELD_NUMBER: _ClassVar[int]
+    FOLDER_FIELD_NUMBER: _ClassVar[int]
+    PATTERN_FIELD_NUMBER: _ClassVar[int]
+    MAY_SKIP_FIELD_NUMBER: _ClassVar[int]
+    USER_FIELD_NUMBER: _ClassVar[int]
+    USED_FIELD_NUMBER: _ClassVar[int]
+    REASON_FIELD_NUMBER: _ClassVar[int]
+    FOLDERS_FIELD_NUMBER: _ClassVar[int]
+    PATTERNS_FIELD_NUMBER: _ClassVar[int]
+    operation: str
+    layer: str
+    name: str
+    position: int
+    folder: str
+    pattern: str
+    may_skip: bool
+    user: str
+    used: str
+    reason: str
+    folders: _containers.RepeatedScalarFieldContainer[str]
+    patterns: _containers.RepeatedScalarFieldContainer[str]
+    def __init__(self, operation: _Optional[str] = ..., layer: _Optional[str] = ..., name: _Optional[str] = ..., position: _Optional[int] = ..., folder: _Optional[str] = ..., pattern: _Optional[str] = ..., may_skip: _Optional[bool] = ..., user: _Optional[str] = ..., used: _Optional[str] = ..., reason: _Optional[str] = ..., folders: _Optional[_Iterable[str]] = ..., patterns: _Optional[_Iterable[str]] = ...) -> None: ...
+
+class RuleChangeRequest(_message.Message):
+    __slots__ = ("change", "base_revision", "dry_run")
+    CHANGE_FIELD_NUMBER: _ClassVar[int]
+    BASE_REVISION_FIELD_NUMBER: _ClassVar[int]
+    DRY_RUN_FIELD_NUMBER: _ClassVar[int]
+    change: RuleChange
+    base_revision: str
+    dry_run: bool
+    def __init__(self, change: _Optional[_Union[RuleChange, _Mapping]] = ..., base_revision: _Optional[str] = ..., dry_run: _Optional[bool] = ...) -> None: ...
+
+class RuleChangeReply(_message.Message):
+    __slots__ = ("revision", "inverse", "effect")
+    REVISION_FIELD_NUMBER: _ClassVar[int]
+    INVERSE_FIELD_NUMBER: _ClassVar[int]
+    EFFECT_FIELD_NUMBER: _ClassVar[int]
+    revision: str
+    inverse: RuleChange
+    effect: str
+    def __init__(self, revision: _Optional[str] = ..., inverse: _Optional[_Union[RuleChange, _Mapping]] = ..., effect: _Optional[str] = ...) -> None: ...

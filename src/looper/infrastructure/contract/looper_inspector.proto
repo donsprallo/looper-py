@@ -739,6 +739,10 @@ service Inspector {
   rpc ObserveDependencyPlaces(PlacesRequest) returns (PlaceList);
   // The rules as they stand: architecture.toml's, or proposed from the folders.
   rpc ObserveArchitectureRules(Empty) returns (ArchitectureRulesView);
+  // One small change to the rules, written to architecture.toml at once.
+  // Refused (FAILED_PRECONDITION) when the file changed since base_revision;
+  // the answer carries the change that undoes it.
+  rpc ChangeArchitectureRules(RuleChangeRequest) returns (RuleChangeReply);
 }
 
 message PinView {
@@ -1870,4 +1874,34 @@ message ArchitectureRulesView {
   repeated LayerRuleView layers = 5;
   repeated DependencyRuleView exceptions = 6;
   repeated DependencyRuleView prohibitions = 7;
+}
+
+message RuleChange {
+  // add layer, remove layer, rename layer, move layer, assign folder,
+  // unassign folder, add pattern, remove pattern, set skip, add exception,
+  // remove exception, add prohibition, remove prohibition, keep
+  string operation = 1;
+  string layer = 2;
+  string name = 3;
+  uint32 position = 4;
+  string folder = 5;
+  string pattern = 6;
+  bool may_skip = 7;
+  string user = 8;
+  string used = 9;
+  string reason = 10;
+  repeated string folders = 11;
+  repeated string patterns = 12;
+}
+
+message RuleChangeRequest {
+  RuleChange change = 1;
+  string base_revision = 2;   // the rules' revision the change was made against
+  bool dry_run = 3;           // only say what it would do
+}
+
+message RuleChangeReply {
+  string revision = 1;        // of the rules after the change
+  RuleChange inverse = 2;     // what undoes it
+  string effect = 3;          // "3 modules change layer."
 }
