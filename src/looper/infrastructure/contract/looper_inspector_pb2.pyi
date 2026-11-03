@@ -2662,7 +2662,7 @@ class CodePlace(_message.Message):
     def __init__(self, path: _Optional[str] = ..., line: _Optional[int] = ..., kind: _Optional[str] = ..., what: _Optional[str] = ...) -> None: ...
 
 class ArchitectureFinding(_message.Message):
-    __slots__ = ("key", "kind", "severity", "title", "explanation", "places", "node_ids", "edge_ids", "function")
+    __slots__ = ("key", "kind", "severity", "title", "explanation", "places", "node_ids", "edge_ids", "function", "state", "note")
     KEY_FIELD_NUMBER: _ClassVar[int]
     KIND_FIELD_NUMBER: _ClassVar[int]
     SEVERITY_FIELD_NUMBER: _ClassVar[int]
@@ -2672,6 +2672,8 @@ class ArchitectureFinding(_message.Message):
     NODE_IDS_FIELD_NUMBER: _ClassVar[int]
     EDGE_IDS_FIELD_NUMBER: _ClassVar[int]
     FUNCTION_FIELD_NUMBER: _ClassVar[int]
+    STATE_FIELD_NUMBER: _ClassVar[int]
+    NOTE_FIELD_NUMBER: _ClassVar[int]
     key: str
     kind: str
     severity: Tier
@@ -2681,21 +2683,25 @@ class ArchitectureFinding(_message.Message):
     node_ids: _containers.RepeatedScalarFieldContainer[str]
     edge_ids: _containers.RepeatedScalarFieldContainer[str]
     function: str
-    def __init__(self, key: _Optional[str] = ..., kind: _Optional[str] = ..., severity: _Optional[_Union[Tier, str]] = ..., title: _Optional[str] = ..., explanation: _Optional[str] = ..., places: _Optional[_Iterable[_Union[CodePlace, _Mapping]]] = ..., node_ids: _Optional[_Iterable[str]] = ..., edge_ids: _Optional[_Iterable[str]] = ..., function: _Optional[str] = ...) -> None: ...
+    state: str
+    note: str
+    def __init__(self, key: _Optional[str] = ..., kind: _Optional[str] = ..., severity: _Optional[_Union[Tier, str]] = ..., title: _Optional[str] = ..., explanation: _Optional[str] = ..., places: _Optional[_Iterable[_Union[CodePlace, _Mapping]]] = ..., node_ids: _Optional[_Iterable[str]] = ..., edge_ids: _Optional[_Iterable[str]] = ..., function: _Optional[str] = ..., state: _Optional[str] = ..., note: _Optional[str] = ...) -> None: ...
 
 class FindingList(_message.Message):
-    __slots__ = ("revision", "unchanged", "findings", "complete", "note")
+    __slots__ = ("revision", "unchanged", "findings", "complete", "note", "fixed")
     REVISION_FIELD_NUMBER: _ClassVar[int]
     UNCHANGED_FIELD_NUMBER: _ClassVar[int]
     FINDINGS_FIELD_NUMBER: _ClassVar[int]
     COMPLETE_FIELD_NUMBER: _ClassVar[int]
     NOTE_FIELD_NUMBER: _ClassVar[int]
+    FIXED_FIELD_NUMBER: _ClassVar[int]
     revision: int
     unchanged: bool
     findings: _containers.RepeatedCompositeFieldContainer[ArchitectureFinding]
     complete: bool
     note: str
-    def __init__(self, revision: _Optional[int] = ..., unchanged: _Optional[bool] = ..., findings: _Optional[_Iterable[_Union[ArchitectureFinding, _Mapping]]] = ..., complete: _Optional[bool] = ..., note: _Optional[str] = ...) -> None: ...
+    fixed: _containers.RepeatedScalarFieldContainer[str]
+    def __init__(self, revision: _Optional[int] = ..., unchanged: _Optional[bool] = ..., findings: _Optional[_Iterable[_Union[ArchitectureFinding, _Mapping]]] = ..., complete: _Optional[bool] = ..., note: _Optional[str] = ..., fixed: _Optional[_Iterable[str]] = ...) -> None: ...
 
 class PlacesRequest(_message.Message):
     __slots__ = ("edge_id", "kinds")
@@ -2800,3 +2806,13 @@ class RuleChangeReply(_message.Message):
     inverse: RuleChange
     effect: str
     def __init__(self, revision: _Optional[str] = ..., inverse: _Optional[_Union[RuleChange, _Mapping]] = ..., effect: _Optional[str] = ...) -> None: ...
+
+class AcceptFindingsRequest(_message.Message):
+    __slots__ = ("keys", "note", "every")
+    KEYS_FIELD_NUMBER: _ClassVar[int]
+    NOTE_FIELD_NUMBER: _ClassVar[int]
+    EVERY_FIELD_NUMBER: _ClassVar[int]
+    keys: _containers.RepeatedScalarFieldContainer[str]
+    note: str
+    every: bool
+    def __init__(self, keys: _Optional[_Iterable[str]] = ..., note: _Optional[str] = ..., every: _Optional[bool] = ...) -> None: ...

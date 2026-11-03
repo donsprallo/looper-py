@@ -743,6 +743,8 @@ service Inspector {
   // Refused (FAILED_PRECONDITION) when the file changed since base_revision;
   // the answer carries the change that undoes it.
   rpc ChangeArchitectureRules(RuleChangeRequest) returns (RuleChangeReply);
+  // Take findings into architecture-baseline.toml, so they are known rather than new.
+  rpc AcceptFindings(AcceptFindingsRequest) returns (Ack);
 }
 
 message PinView {
@@ -1833,6 +1835,8 @@ message ArchitectureFinding {
   repeated string node_ids = 7;
   repeated string edge_ids = 8;
   string function = 9;
+  string state = 10;           // new, known, accepted -- against the baseline
+  string note = 11;            // what it was accepted with
 }
 
 message FindingList {
@@ -1841,6 +1845,7 @@ message FindingList {
   repeated ArchitectureFinding findings = 3;
   bool complete = 4;
   string note = 5;
+  repeated string fixed = 6;   // keys of accepted findings no longer found
 }
 
 message PlacesRequest {
@@ -1904,4 +1909,10 @@ message RuleChangeReply {
   string revision = 1;        // of the rules after the change
   RuleChange inverse = 2;     // what undoes it
   string effect = 3;          // "3 modules change layer."
+}
+
+message AcceptFindingsRequest {
+  repeated string keys = 1;
+  string note = 2;
+  bool every = 3;              // every finding found now: take a baseline
 }

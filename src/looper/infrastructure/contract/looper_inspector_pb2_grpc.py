@@ -309,6 +309,11 @@ class InspectorStub:
                 request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.RuleChangeRequest.SerializeToString,
                 response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.RuleChangeReply.FromString,
                 _registered_method=True)
+        self.AcceptFindings = channel.unary_unary(
+                '/looper.inspector.v3.Inspector/AcceptFindings',
+                request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.AcceptFindingsRequest.SerializeToString,
+                response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Ack.FromString,
+                _registered_method=True)
 
 
 class InspectorServicer:
@@ -699,6 +704,13 @@ class InspectorServicer:
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def AcceptFindings(self, request, context):
+        """Take findings into architecture-baseline.toml, so they are known rather than new.
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_InspectorServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -976,6 +988,11 @@ def add_InspectorServicer_to_server(servicer, server):
                     servicer.ChangeArchitectureRules,
                     request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.RuleChangeRequest.FromString,
                     response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.RuleChangeReply.SerializeToString,
+            ),
+            'AcceptFindings': grpc.unary_unary_rpc_method_handler(
+                    servicer.AcceptFindings,
+                    request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.AcceptFindingsRequest.FromString,
+                    response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Ack.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -2463,6 +2480,33 @@ class Inspector:
             '/looper.inspector.v3.Inspector/ChangeArchitectureRules',
             looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.RuleChangeRequest.SerializeToString,
             looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.RuleChangeReply.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def AcceptFindings(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/looper.inspector.v3.Inspector/AcceptFindings',
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.AcceptFindingsRequest.SerializeToString,
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Ack.FromString,
             options,
             channel_credentials,
             insecure,
