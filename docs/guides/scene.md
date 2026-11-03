@@ -166,6 +166,46 @@ refused:
 looper.SimulationRefusedError: that bus is not one the simulation models
 ```
 
+## Reading the traffic back
+
+What crossed the buses is recorded, and a test can walk it rather than only
+expect things of it. `exchanges()` yields every recorded exchange, oldest
+first, reading on until it has caught up with the recording:
+
+```python
+simulation.advance(0.2)
+
+for exchange in simulation.exchanges():
+    print(exchange.sim_us, exchange.display_address, exchange.payload.hex())
+```
+
+Each exchange carries its `event_seq`, its place in the stream. Keep the last
+one and ask again from one beyond it to go on where the reading left off --
+between two phases of a test, say:
+
+```python
+seen = 0
+simulation.advance(0.1)
+for exchange in simulation.exchanges():
+    seen = exchange.event_seq + 1
+
+simulation.toggle_pin(button.pin_id)
+simulation.advance(0.1)
+after_the_press = list(simulation.exchanges(since=seen))
+```
+
+`read_events(since)` is the same stream a page at a time, for a test that
+wants the samples too or wants to stop early: the page carries `samples`,
+`exchanges`, how many events were lost, and `next_event_seq`, where the next
+page begins. That number, not the length of the page, says where to go on --
+a page can be empty while more events follow.
+
+A recording another client cleared while it was being read is refused:
+
+```text
+looper.SimulationRefusedError: the recording was cleared while it was being read
+```
+
 ## Putting it together
 
 A typical scene: let the firmware start, change an input, let it react, and

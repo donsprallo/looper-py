@@ -63,6 +63,7 @@ The command that runs looper-cli defaults to `looper-cli`, or to the
 | `pins()`, `toggle_pin(pin_id)` | the pins, and driving an input |
 | `apply_signal(channel_id, looper.Signal(...))` | a generated signal on an analog input |
 | `send_bus_message(looper.BusMessage(...))` | one message onto a bus |
+| `exchanges(since)`, `read_events(since)` | reading the recorded traffic back, exchange by exchange or page by page |
 | `expect()` | begin declaring what should be true |
 
 | Subject | Expectation |

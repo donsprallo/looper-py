@@ -77,6 +77,11 @@ looper.LooperCliError, looper.ContractMismatchError
 
 .. autoclass:: looper.Bus
 
+.. autoclass:: looper.Exchange
+   :members:
+
+.. autoclass:: looper.EventPage
+
 .. autoclass:: looper.Variable
 
 .. autoclass:: looper.Watch

@@ -8,9 +8,10 @@ looking, because there is one simulation.
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Iterator
 from types import TracebackType
 
+from looper.application.event_stream import EventStream
 from looper.application.expectations import MICROSECONDS_PER_SECOND, Expectations
 from looper.application.ports import Inspector, SimulationRefusedError
 from looper.domain.model import (
@@ -19,6 +20,8 @@ from looper.domain.model import (
     Channel,
     ClockMode,
     Description,
+    EventPage,
+    Exchange,
     Pin,
     Signal,
     Variable,
@@ -38,6 +41,7 @@ class Simulation:
         self._inspector = inspector
         self._on_close = on_close
         self._description = inspector.describe()
+        self._events = EventStream(inspector)
         self._closed = False
 
     @property
@@ -80,6 +84,32 @@ class Simulation:
                 says why and what to do.
         """
         self._inspector.run_for(round(seconds * MICROSECONDS_PER_SECOND))
+
+    def read_events(self, since: int = 0) -> EventPage:
+        """One page of the recorded event stream, from event number `since` on.
+
+        Where the next page begins is the page's `next_event_seq`, never the
+        length of the page: a page can be empty while more events follow.
+
+        Raises:
+            SimulationRefusedError: If another client cleared the recording
+                while it was being read.
+        """
+        return self._events.read(since)
+
+    def exchanges(self, since: int = 0) -> Iterator[Exchange]:
+        """Every recorded exchange from event number `since` on, oldest first.
+
+        Reads on until the stream has been read to its present end, so a
+        test that let time pass on a held clock walks exactly the traffic of
+        the recording. Each exchange carries its `event_seq`; keep the last
+        one and ask again from one beyond it to go on where this left off.
+
+        Raises:
+            SimulationRefusedError: If another client cleared the recording
+                while it was being read.
+        """
+        return self._events.exchanges(since)
 
     def pins(self) -> tuple[Pin, ...]:
         """Every pin the firmware registered, with its level now."""
