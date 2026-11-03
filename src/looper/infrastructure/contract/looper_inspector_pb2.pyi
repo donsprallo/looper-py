@@ -2816,3 +2816,81 @@ class AcceptFindingsRequest(_message.Message):
     note: str
     every: bool
     def __init__(self, keys: _Optional[_Iterable[str]] = ..., note: _Optional[str] = ..., every: _Optional[bool] = ...) -> None: ...
+
+class MachineSummary(_message.Message):
+    __slots__ = ("machine_id", "name", "kind_text", "module", "states", "transitions")
+    MACHINE_ID_FIELD_NUMBER: _ClassVar[int]
+    NAME_FIELD_NUMBER: _ClassVar[int]
+    KIND_TEXT_FIELD_NUMBER: _ClassVar[int]
+    MODULE_FIELD_NUMBER: _ClassVar[int]
+    STATES_FIELD_NUMBER: _ClassVar[int]
+    TRANSITIONS_FIELD_NUMBER: _ClassVar[int]
+    machine_id: str
+    name: str
+    kind_text: str
+    module: str
+    states: int
+    transitions: int
+    def __init__(self, machine_id: _Optional[str] = ..., name: _Optional[str] = ..., kind_text: _Optional[str] = ..., module: _Optional[str] = ..., states: _Optional[int] = ..., transitions: _Optional[int] = ...) -> None: ...
+
+class StateMachineList(_message.Message):
+    __slots__ = ("machines",)
+    MACHINES_FIELD_NUMBER: _ClassVar[int]
+    machines: _containers.RepeatedCompositeFieldContainer[MachineSummary]
+    def __init__(self, machines: _Optional[_Iterable[_Union[MachineSummary, _Mapping]]] = ...) -> None: ...
+
+class StateMachineChoice(_message.Message):
+    __slots__ = ("machine_id",)
+    MACHINE_ID_FIELD_NUMBER: _ClassVar[int]
+    machine_id: str
+    def __init__(self, machine_id: _Optional[str] = ...) -> None: ...
+
+class MachineState(_message.Message):
+    __slots__ = ("name", "is_initial")
+    NAME_FIELD_NUMBER: _ClassVar[int]
+    IS_INITIAL_FIELD_NUMBER: _ClassVar[int]
+    name: str
+    is_initial: bool
+    def __init__(self, name: _Optional[str] = ..., is_initial: _Optional[bool] = ...) -> None: ...
+
+class MachineTransition(_message.Message):
+    __slots__ = ("source", "target", "condition", "path", "line", "function", "note")
+    SOURCE_FIELD_NUMBER: _ClassVar[int]
+    TARGET_FIELD_NUMBER: _ClassVar[int]
+    CONDITION_FIELD_NUMBER: _ClassVar[int]
+    PATH_FIELD_NUMBER: _ClassVar[int]
+    LINE_FIELD_NUMBER: _ClassVar[int]
+    FUNCTION_FIELD_NUMBER: _ClassVar[int]
+    NOTE_FIELD_NUMBER: _ClassVar[int]
+    source: str
+    target: str
+    condition: str
+    path: str
+    line: int
+    function: str
+    note: str
+    def __init__(self, source: _Optional[str] = ..., target: _Optional[str] = ..., condition: _Optional[str] = ..., path: _Optional[str] = ..., line: _Optional[int] = ..., function: _Optional[str] = ..., note: _Optional[str] = ...) -> None: ...
+
+class FirmwareStateMachine(_message.Message):
+    __slots__ = ("machine_id", "name", "kind_text", "where_text", "path", "line", "states", "initial_note", "transitions", "found")
+    MACHINE_ID_FIELD_NUMBER: _ClassVar[int]
+    NAME_FIELD_NUMBER: _ClassVar[int]
+    KIND_TEXT_FIELD_NUMBER: _ClassVar[int]
+    WHERE_TEXT_FIELD_NUMBER: _ClassVar[int]
+    PATH_FIELD_NUMBER: _ClassVar[int]
+    LINE_FIELD_NUMBER: _ClassVar[int]
+    STATES_FIELD_NUMBER: _ClassVar[int]
+    INITIAL_NOTE_FIELD_NUMBER: _ClassVar[int]
+    TRANSITIONS_FIELD_NUMBER: _ClassVar[int]
+    FOUND_FIELD_NUMBER: _ClassVar[int]
+    machine_id: str
+    name: str
+    kind_text: str
+    where_text: str
+    path: str
+    line: int
+    states: _containers.RepeatedCompositeFieldContainer[MachineState]
+    initial_note: str
+    transitions: _containers.RepeatedCompositeFieldContainer[MachineTransition]
+    found: bool
+    def __init__(self, machine_id: _Optional[str] = ..., name: _Optional[str] = ..., kind_text: _Optional[str] = ..., where_text: _Optional[str] = ..., path: _Optional[str] = ..., line: _Optional[int] = ..., states: _Optional[_Iterable[_Union[MachineState, _Mapping]]] = ..., initial_note: _Optional[str] = ..., transitions: _Optional[_Iterable[_Union[MachineTransition, _Mapping]]] = ..., found: _Optional[bool] = ...) -> None: ...

@@ -745,6 +745,9 @@ service Inspector {
   rpc ChangeArchitectureRules(RuleChangeRequest) returns (RuleChangeReply);
   // Take findings into architecture-baseline.toml, so they are known rather than new.
   rpc AcceptFindings(AcceptFindingsRequest) returns (Ack);
+  // The firmware's state machines: a switch over a variable the code sets.
+  rpc ObserveStateMachines(Empty) returns (StateMachineList);
+  rpc ObserveStateMachine(StateMachineChoice) returns (FirmwareStateMachine);
 }
 
 message PinView {
@@ -1915,4 +1918,50 @@ message AcceptFindingsRequest {
   repeated string keys = 1;
   string note = 2;
   bool every = 3;              // every finding found now: take a baseline
+}
+
+message MachineSummary {
+  string machine_id = 1;
+  string name = 2;
+  string kind_text = 3;        // "switch over an enum"
+  string module = 4;
+  uint32 states = 5;
+  uint32 transitions = 6;
+}
+
+message StateMachineList {
+  repeated MachineSummary machines = 1;
+}
+
+message StateMachineChoice {
+  string machine_id = 1;
+}
+
+message MachineState {
+  string name = 1;
+  bool is_initial = 2;
+}
+
+message MachineTransition {
+  string source = 1;           // "*": from any state
+  string target = 2;
+  string condition = 3;
+  string path = 4;
+  uint32 line = 5;
+  string function = 6;
+  string note = 7;
+}
+
+// Named apart from the StateModels of the device models.
+message FirmwareStateMachine {
+  string machine_id = 1;
+  string name = 2;
+  string kind_text = 3;
+  string where_text = 4;       // "switch in blinker_step (blinker.c:22)"
+  string path = 5;
+  uint32 line = 6;
+  repeated MachineState states = 7;
+  string initial_note = 8;
+  repeated MachineTransition transitions = 9;
+  bool found = 10;
 }
