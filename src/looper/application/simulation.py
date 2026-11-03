@@ -17,12 +17,15 @@ from looper.application.ports import Inspector, SimulationRefusedError
 from looper.domain.model import (
     Bus,
     BusMessage,
+    CallTiming,
     Channel,
     ClockMode,
     Description,
     EventPage,
     Exchange,
+    MemoryUsage,
     Pin,
+    RunStatus,
     Signal,
     Variable,
     Watch,
@@ -72,6 +75,16 @@ class Simulation:
         """How much simulated time has passed."""
         return self._inspector.run_state().now_us / MICROSECONDS_PER_SECOND
 
+    def run_state(self) -> RunStatus:
+        """Where the clock is, how it goes, and where the recording stands.
+
+        One reading of everything the server says about the run: the time,
+        the clock mode, the recording epoch, the next event number -- a
+        starting point for `exchanges(since=...)` -- and why the firmware is
+        held, when it is.
+        """
+        return self._inspector.run_state()
+
     def expect(self) -> Expectations:
         """Begin declaring what should be true of the next stretch of the run."""
         return Expectations(self._inspector)
@@ -83,7 +96,21 @@ class Simulation:
             SimulationRefusedError: If the clock is not held; the message
                 says why and what to do.
         """
-        self._inspector.run_for(round(seconds * MICROSECONDS_PER_SECOND))
+        self.advance_microseconds(round(seconds * MICROSECONDS_PER_SECOND))
+
+    def advance_microseconds(self, microseconds: int) -> None:
+        """Run a held clock for a span given in whole simulated microseconds.
+
+        The same as `advance`, for a span that is awkward in seconds: a bit
+        period, a sampling interval, a timeout the firmware counts in
+        microseconds. Seconds go through a float and are rounded here, so a
+        test that already knows the microseconds says them.
+
+        Raises:
+            SimulationRefusedError: If the clock is not held; the message
+                says why and what to do.
+        """
+        self._inspector.run_for(microseconds)
 
     def read_events(self, since: int = 0) -> EventPage:
         """One page of the recorded event stream, from event number `since` on.
@@ -110,6 +137,40 @@ class Simulation:
                 while it was being read.
         """
         return self._events.exchanges(since)
+
+    def clear_recordings(self) -> None:
+        """Throw away the recorded events and begin the next recording.
+
+        What a test wants between two phases: let the first one happen, then
+        clear, so that what is read afterwards is the second phase alone.
+        Event numbers keep counting across the clear, so one held from
+        before the clear still says where to go on.
+
+        The clearing reaches every client of the simulation, a window
+        included: there is one simulation and one recording.
+
+        Raises:
+            SimulationRefusedError: If another client cleared in the moment
+                between reading the epoch and asking.
+        """
+        self._inspector.clear_recordings(self._inspector.run_state().epoch)
+
+    def clear_measurements(self) -> None:
+        """Begin the call counts, the profile and the heap figures again."""
+        self._inspector.clear_measurements()
+
+    def timings(self) -> tuple[CallTiming, ...]:
+        """How often each adapter function was called since the last clearing."""
+        return self._inspector.read_timings()
+
+    def memory(self) -> MemoryUsage:
+        """The heap and the deepest the stack went.
+
+        Raises:
+            SimulationRefusedError: If the build cannot be read; the message
+                says why.
+        """
+        return self._inspector.read_memory()
 
     def pins(self) -> tuple[Pin, ...]:
         """Every pin the firmware registered, with its level now."""

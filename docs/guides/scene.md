@@ -47,7 +47,14 @@ level now, not when the test started.
 ```python
 simulation.advance(1.0)        # one second of simulated time
 simulation.simulated_seconds   # 1.0
+
+simulation.advance_microseconds(8_681)   # a bit period, said exactly
 ```
+
+Seconds go through a float and are rounded to whole microseconds; a test
+that already knows the microseconds -- a bit period, a sampling interval, a
+timeout the firmware counts in microseconds -- says them with
+`advance_microseconds` instead.
 
 On a held clock nothing happens between your calls -- the firmware is
 held. `advance` is refused when the clock is not held (`paced` or `max`):
@@ -205,6 +212,49 @@ A recording another client cleared while it was being read is refused:
 ```text
 looper.SimulationRefusedError: the recording was cleared while it was being read
 ```
+
+## Between two phases
+
+A test with two phases does not want the first one in what it reads of the
+second. `clear_recordings()` throws the recorded events away and begins the
+next recording; `clear_measurements()` does the same for the call counts, the
+profile and the heap figures:
+
+```python
+simulation.advance(0.5)        # let the firmware settle
+simulation.clear_recordings()
+simulation.clear_measurements()
+
+simulation.toggle_pin(button.pin_id)
+simulation.advance(0.1)
+after_the_press = list(simulation.exchanges())
+```
+
+Both reach every client of the simulation, a window included: there is one
+simulation and one recording. `expect().evaluate(for_seconds=...)` clears the
+same way at the start of its window, so a test that only expects things needs
+neither call.
+
+Event numbers keep counting across a clear, so one held from before it still
+says where to go on.
+
+## What the simulation stands at
+
+`run_state()` reads the run in one go: `now_us` and `clock_mode`, the
+recording `epoch`, `next_event_seq` -- a starting point for
+`exchanges(since=...)` -- and `hold_reason`, why the firmware answers nothing
+right now, such as a debugger stopped at a line.
+
+```python
+start = simulation.run_state().next_event_seq
+simulation.advance(0.1)
+fresh = list(simulation.exchanges(since=start))
+```
+
+`timings()` says how often each adapter function was called and how often it
+was answered, and `memory()` gives the heap and the deepest the stack went --
+both as they stand, rather than over a window the way an expectation sees
+them. A build that is not watching its memory refuses `memory()`.
 
 ## Putting it together
 

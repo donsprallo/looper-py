@@ -59,11 +59,13 @@ The command that runs looper-cli defaults to `looper-cli`, or to the
 | On `simulation` | |
 | --- | --- |
 | `firmware_name`, `definition_path` | what the server said about it |
-| `clock_mode`, `simulated_seconds`, `advance(seconds)` | how the clock goes (held, paced or max), where it is, and running a held one for a span |
+| `clock_mode`, `simulated_seconds`, `advance(seconds)`, `advance_microseconds(us)` | how the clock goes (held, paced or max), where it is, and running a held one for a span |
 | `pins()`, `toggle_pin(pin_id)` | the pins, and driving an input |
 | `apply_signal(channel_id, looper.Signal(...))` | a generated signal on an analog input |
 | `send_bus_message(looper.BusMessage(...))` | one message onto a bus |
 | `exchanges(since)`, `read_events(since)` | reading the recorded traffic back, exchange by exchange or page by page |
+| `clear_recordings()`, `clear_measurements()` | throwing away what was recorded and counted, between two phases of a test |
+| `run_state()`, `timings()`, `memory()` | the run, the call counts and the heap and stack as they stand |
 | `expect()` | begin declaring what should be true |
 
 | Subject | Expectation |

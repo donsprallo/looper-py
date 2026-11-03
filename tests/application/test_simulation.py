@@ -8,9 +8,13 @@ from doubles import ScriptedInspector
 from looper import (
     Bus,
     BusMessage,
+    CallTiming,
     Channel,
     ClockMode,
+    HeapUsage,
+    MemoryUsage,
     Pin,
+    RunStatus,
     Signal,
     Simulation,
     SimulationRefusedError,
@@ -62,6 +66,22 @@ def test_a_span_is_rounded_to_whole_microseconds() -> None:
     Simulation(inspector).advance(0.57)
 
     assert inspector.asked == ["advance 570000"]
+
+
+def test_a_span_that_is_known_in_microseconds_is_passed_on_untouched() -> None:
+    inspector = ScriptedInspector()
+
+    Simulation(inspector).advance_microseconds(8_681)
+
+    assert inspector.asked == ["advance 8681"]
+    assert inspector.run.now_us == 8_681
+
+
+def test_a_clock_that_runs_by_itself_cannot_be_advanced_in_microseconds_either() -> None:
+    simulation = Simulation(ScriptedInspector(ClockMode.PACED))
+
+    with pytest.raises(SimulationRefusedError, match="cannot be advanced"):
+        simulation.advance_microseconds(100)
 
 
 def test_a_clock_that_runs_by_itself_cannot_be_advanced() -> None:
@@ -133,3 +153,67 @@ def test_a_name_nothing_has_says_which_names_there_are() -> None:
 
     with pytest.raises(SimulationRefusedError, match="it has BUTTON_MODE, LED_STATUS"):
         Simulation(inspector).pin("BUTTON")
+
+
+def test_the_recording_is_cleared_at_the_epoch_the_simulation_stands_at() -> None:
+    inspector = ScriptedInspector()
+    simulation = Simulation(inspector)
+
+    simulation.clear_recordings()
+
+    assert "clear recordings epoch 1" in inspector.asked
+    assert simulation.run_state().epoch == 2
+
+
+def test_a_recording_another_client_cleared_first_is_a_refusal() -> None:
+    inspector = ScriptedInspector()
+    inspector.refusal = "another client cleared the recording"
+
+    with pytest.raises(SimulationRefusedError, match="another client cleared"):
+        Simulation(inspector).clear_recordings()
+
+
+def test_the_measurements_are_cleared_apart_from_the_recording() -> None:
+    inspector = ScriptedInspector()
+
+    Simulation(inspector).clear_measurements()
+
+    assert inspector.asked == ["clear measurements"]
+
+
+def test_the_run_state_says_where_the_clock_and_the_recording_stand() -> None:
+    inspector = ScriptedInspector()
+    inspector.run = RunStatus(now_us=500, clock_mode=ClockMode.HELD, epoch=3, next_event_seq=12)
+
+    state = Simulation(inspector).run_state()
+
+    assert (state.now_us, state.epoch, state.next_event_seq) == (500, 3, 12)
+    assert state.clock_mode is ClockMode.HELD
+
+
+def test_the_call_counts_are_read_as_they_stand() -> None:
+    inspector = ScriptedInspector()
+    inspector.timings = (CallTiming(function="adapter_gpio_write", calls=8, answered_calls=6),)
+
+    timings = Simulation(inspector).timings()
+
+    assert timings[0].function == "adapter_gpio_write"
+    assert timings[0].unanswered_calls == 2
+
+
+def test_the_memory_is_read_as_it_stands() -> None:
+    inspector = ScriptedInspector()
+    inspector.memory = MemoryUsage(heap=HeapUsage(allocations=2, is_watched=True), stack_bytes=640)
+
+    memory = Simulation(inspector).memory()
+
+    assert memory.heap.allocations == 2
+    assert memory.stack_bytes == 640
+
+
+def test_a_build_whose_memory_cannot_be_read_is_refused() -> None:
+    inspector = ScriptedInspector()
+    inspector.memory = None
+
+    with pytest.raises(SimulationRefusedError, match="the build cannot be read"):
+        Simulation(inspector).memory()

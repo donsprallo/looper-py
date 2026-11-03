@@ -82,6 +82,15 @@ looper.LooperCliError, looper.ContractMismatchError
 
 .. autoclass:: looper.EventPage
 
+.. autoclass:: looper.RunStatus
+
+.. autoclass:: looper.CallTiming
+   :members:
+
+.. autoclass:: looper.MemoryUsage
+
+.. autoclass:: looper.HeapUsage
+
 .. autoclass:: looper.Variable
 
 .. autoclass:: looper.Watch
