@@ -754,6 +754,11 @@ service Inspector {
   // The calls one function makes, in the order the code writes them, a few
   // calls deep, as a sequence: free, and without a simulation (plan 4.4).
   rpc ObserveCallTree(CallTreeRequest) returns (CallTree);
+  // Record from now on the calls that cross between these modules, or stop
+  // (Pro, plan 4.3). Needs a profile build; refused without a running one.
+  rpc FollowSequence(SequenceFollowRequest) returns (Ack);
+  // The recorded calls of a stretch of the run, pass by pass (Pro).
+  rpc ObserveSequence(SequenceRequest) returns (RecordedSequence);
 }
 
 message PinView {
@@ -2173,4 +2178,37 @@ message CallTree {
   repeated SequenceMessage messages = 5;
   repeated SequenceFragment fragments = 6;
   string banner_text = 7;       // "Static – the order of the calls in the code, not what ran."
+}
+
+message SequenceFollowRequest {
+  bool follow = 1;              // false stops the recording
+  repeated string lifeline_ids = 2;  // the modules to record; none for every module
+}
+
+message SequenceRequest {
+  uint64 from_us = 1;
+  uint64 to_us = 2;             // 0: the last 10 ms of the run
+}
+
+// One pass of the loop, or a run of passes that were all alike.
+message SequencePass {
+  uint64 sim_us = 1;            // when the first of them ran
+  string header_text = 2;       // "12.400 s", "12.400–12.460 s · loop ×12"
+  uint32 repeats = 3;
+  repeated SequenceMessage messages = 4;  // order counts from 1 within the pass
+}
+
+message RecordedSequence {
+  bool recording = 1;
+  repeated string recorded = 2;            // the lifelines recorded, by id
+  repeated SequenceLifeline choices = 3;   // every module that could be one
+  repeated SequenceLifeline lifelines = 4; // of the drawing, in order
+  repeated SequencePass passes = 5;        // oldest first
+  uint64 from_us = 6;
+  uint64 to_us = 7;
+  string range_text = 8;        // "12.400–12.410 s"
+  string recording_text = 9;    // "Recording app, light_show since 12.380 s"
+  string state_text = 10;       // why there is nothing to draw, or empty
+  string banner_text = 11;      // lost or cut, or empty
+  uint32 message_count = 12;
 }

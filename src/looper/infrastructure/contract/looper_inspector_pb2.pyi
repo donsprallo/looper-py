@@ -3233,3 +3233,59 @@ class CallTree(_message.Message):
     fragments: _containers.RepeatedCompositeFieldContainer[SequenceFragment]
     banner_text: str
     def __init__(self, function: _Optional[str] = ..., found: _Optional[bool] = ..., functions: _Optional[_Iterable[str]] = ..., lifelines: _Optional[_Iterable[_Union[SequenceLifeline, _Mapping]]] = ..., messages: _Optional[_Iterable[_Union[SequenceMessage, _Mapping]]] = ..., fragments: _Optional[_Iterable[_Union[SequenceFragment, _Mapping]]] = ..., banner_text: _Optional[str] = ...) -> None: ...
+
+class SequenceFollowRequest(_message.Message):
+    __slots__ = ("follow", "lifeline_ids")
+    FOLLOW_FIELD_NUMBER: _ClassVar[int]
+    LIFELINE_IDS_FIELD_NUMBER: _ClassVar[int]
+    follow: bool
+    lifeline_ids: _containers.RepeatedScalarFieldContainer[str]
+    def __init__(self, follow: _Optional[bool] = ..., lifeline_ids: _Optional[_Iterable[str]] = ...) -> None: ...
+
+class SequenceRequest(_message.Message):
+    __slots__ = ("from_us", "to_us")
+    FROM_US_FIELD_NUMBER: _ClassVar[int]
+    TO_US_FIELD_NUMBER: _ClassVar[int]
+    from_us: int
+    to_us: int
+    def __init__(self, from_us: _Optional[int] = ..., to_us: _Optional[int] = ...) -> None: ...
+
+class SequencePass(_message.Message):
+    __slots__ = ("sim_us", "header_text", "repeats", "messages")
+    SIM_US_FIELD_NUMBER: _ClassVar[int]
+    HEADER_TEXT_FIELD_NUMBER: _ClassVar[int]
+    REPEATS_FIELD_NUMBER: _ClassVar[int]
+    MESSAGES_FIELD_NUMBER: _ClassVar[int]
+    sim_us: int
+    header_text: str
+    repeats: int
+    messages: _containers.RepeatedCompositeFieldContainer[SequenceMessage]
+    def __init__(self, sim_us: _Optional[int] = ..., header_text: _Optional[str] = ..., repeats: _Optional[int] = ..., messages: _Optional[_Iterable[_Union[SequenceMessage, _Mapping]]] = ...) -> None: ...
+
+class RecordedSequence(_message.Message):
+    __slots__ = ("recording", "recorded", "choices", "lifelines", "passes", "from_us", "to_us", "range_text", "recording_text", "state_text", "banner_text", "message_count")
+    RECORDING_FIELD_NUMBER: _ClassVar[int]
+    RECORDED_FIELD_NUMBER: _ClassVar[int]
+    CHOICES_FIELD_NUMBER: _ClassVar[int]
+    LIFELINES_FIELD_NUMBER: _ClassVar[int]
+    PASSES_FIELD_NUMBER: _ClassVar[int]
+    FROM_US_FIELD_NUMBER: _ClassVar[int]
+    TO_US_FIELD_NUMBER: _ClassVar[int]
+    RANGE_TEXT_FIELD_NUMBER: _ClassVar[int]
+    RECORDING_TEXT_FIELD_NUMBER: _ClassVar[int]
+    STATE_TEXT_FIELD_NUMBER: _ClassVar[int]
+    BANNER_TEXT_FIELD_NUMBER: _ClassVar[int]
+    MESSAGE_COUNT_FIELD_NUMBER: _ClassVar[int]
+    recording: bool
+    recorded: _containers.RepeatedScalarFieldContainer[str]
+    choices: _containers.RepeatedCompositeFieldContainer[SequenceLifeline]
+    lifelines: _containers.RepeatedCompositeFieldContainer[SequenceLifeline]
+    passes: _containers.RepeatedCompositeFieldContainer[SequencePass]
+    from_us: int
+    to_us: int
+    range_text: str
+    recording_text: str
+    state_text: str
+    banner_text: str
+    message_count: int
+    def __init__(self, recording: _Optional[bool] = ..., recorded: _Optional[_Iterable[str]] = ..., choices: _Optional[_Iterable[_Union[SequenceLifeline, _Mapping]]] = ..., lifelines: _Optional[_Iterable[_Union[SequenceLifeline, _Mapping]]] = ..., passes: _Optional[_Iterable[_Union[SequencePass, _Mapping]]] = ..., from_us: _Optional[int] = ..., to_us: _Optional[int] = ..., range_text: _Optional[str] = ..., recording_text: _Optional[str] = ..., state_text: _Optional[str] = ..., banner_text: _Optional[str] = ..., message_count: _Optional[int] = ...) -> None: ...

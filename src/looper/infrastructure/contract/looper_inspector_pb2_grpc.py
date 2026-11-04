@@ -334,6 +334,16 @@ class InspectorStub:
                 request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.CallTreeRequest.SerializeToString,
                 response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.CallTree.FromString,
                 _registered_method=True)
+        self.FollowSequence = channel.unary_unary(
+                '/looper.inspector.v3.Inspector/FollowSequence',
+                request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.SequenceFollowRequest.SerializeToString,
+                response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Ack.FromString,
+                _registered_method=True)
+        self.ObserveSequence = channel.unary_unary(
+                '/looper.inspector.v3.Inspector/ObserveSequence',
+                request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.SequenceRequest.SerializeToString,
+                response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.RecordedSequence.FromString,
+                _registered_method=True)
 
 
 class InspectorServicer:
@@ -760,6 +770,21 @@ class InspectorServicer:
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def FollowSequence(self, request, context):
+        """Record from now on the calls that cross between these modules, or stop
+        (Pro, plan 4.3). Needs a profile build; refused without a running one.
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def ObserveSequence(self, request, context):
+        """The recorded calls of a stretch of the run, pass by pass (Pro).
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_InspectorServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -1062,6 +1087,16 @@ def add_InspectorServicer_to_server(servicer, server):
                     servicer.ObserveCallTree,
                     request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.CallTreeRequest.FromString,
                     response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.CallTree.SerializeToString,
+            ),
+            'FollowSequence': grpc.unary_unary_rpc_method_handler(
+                    servicer.FollowSequence,
+                    request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.SequenceFollowRequest.FromString,
+                    response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Ack.SerializeToString,
+            ),
+            'ObserveSequence': grpc.unary_unary_rpc_method_handler(
+                    servicer.ObserveSequence,
+                    request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.SequenceRequest.FromString,
+                    response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.RecordedSequence.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -2684,6 +2719,60 @@ class Inspector:
             '/looper.inspector.v3.Inspector/ObserveCallTree',
             looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.CallTreeRequest.SerializeToString,
             looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.CallTree.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def FollowSequence(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/looper.inspector.v3.Inspector/FollowSequence',
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.SequenceFollowRequest.SerializeToString,
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Ack.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def ObserveSequence(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/looper.inspector.v3.Inspector/ObserveSequence',
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.SequenceRequest.SerializeToString,
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.RecordedSequence.FromString,
             options,
             channel_credentials,
             insecure,
