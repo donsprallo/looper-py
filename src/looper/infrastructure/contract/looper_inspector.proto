@@ -751,6 +751,9 @@ service Inspector {
   // Follow a machine in the run (a simulation only): a watch on its
   // variable, read back as the states it took -- once per loop pass.
   rpc FollowStateMachine(MachineFollowRequest) returns (Ack);
+  // The calls one function makes, in the order the code writes them, a few
+  // calls deep, as a sequence: free, and without a simulation (plan 4.4).
+  rpc ObserveCallTree(CallTreeRequest) returns (CallTree);
 }
 
 message PinView {
@@ -1930,6 +1933,59 @@ message MachineSummary {
   string module = 4;
   uint32 states = 5;
   uint32 transitions = 6;
+  string display_name = 7;     // the name, with its file when two machines share it
+  string carrier_text = 8;     // "file-static variable", "field of pulse_t"
+  string naming_text = 9;      // "enum show_state_t", "named values (#define)"
+  repeated string parent_ids = 10;  // the machines it runs inside; empty at the top
+  uint32 depth = 11;           // how deep it is nested, 0 at the top
+  string nesting_note = 12;    // why it is not nested although it runs inside a state
+  string parent_text = 13;     // "in SHOW_RUNNING"
+  NestingKind nesting = 14;
+}
+
+// How a machine relates to the machines it runs inside.
+enum NestingKind {
+  NESTING_KIND_NONE = 0;             // runs inside no state of another machine
+  NESTING_KIND_INSIDE = 1;           // only inside states of one machine
+  NESTING_KIND_ALSO_OUTSIDE = 2;     // inside a state and also from elsewhere: not nested
+  NESTING_KIND_SEVERAL_PARENTS = 3;  // inside states of two or more machines
+}
+
+// How a parent's transition starts or leaves an inner machine.
+enum InnerEntryKind {
+  INNER_ENTRY_KIND_RESET = 0;           // the same branch assigns the inner variable
+  INNER_ENTRY_KIND_RESUME = 1;          // nothing assigns it: it goes on where it was
+  INNER_ENTRY_KIND_RESET_ON_EXIT = 2;   // the branch that leaves the state assigns it
+}
+
+message InnerEntry {
+  string machine_id = 1;       // the inner machine
+  InnerEntryKind kind = 2;
+  string state = 3;            // the inner state a reset sets; empty for a resume
+  string text = 4;             // "Enters expander_state at EXPANDER_PROBE – …"
+  sint32 count = 5;            // how often the run took it; -1 when not followed
+  string parent_state = 6;     // the parent's state it comes from: "SHOW_IDLE"
+  string transition_id = 7;    // the parent's transition
+  string label = 8;            // on the inner frame: "reset from SHOW_IDLE"
+}
+
+// An inner machine a state runs.
+message Submachine {
+  string machine_id = 1;
+  string name = 2;
+  string via_text = 3;         // "expander_step() in case SHOW_RUNNING"
+  string path = 4;             // where the call is
+  uint32 line = 5;
+  string current_text = 6;     // the inner state while followed: "CHASE_UP", "held at CHASE_DOWN"
+  NestingKind kind = 7;
+}
+
+// A machine an inner machine runs inside.
+message MachineParent {
+  string machine_id = 1;
+  string name = 2;
+  repeated string states = 3;
+  string via_text = 4;
 }
 
 message StateMachineList {
@@ -1946,6 +2002,38 @@ message MachineState {
   bool reached = 3;            // true when the run is not followed
   string dwell_text = 4;       // "dwell 18 % · 4×"
   bool is_current = 5;
+  string value = 6;            // the enum value, "1"; empty when unknown
+  string path = 7;             // where its case is; empty when no case names it
+  uint32 line = 8;
+  repeated string do_calls = 9;  // what its case calls outside any if: "lights_off()"
+  repeated Submachine submachines = 10;  // the machines it runs; their calls are not do_calls
+  bool held = 11;              // an inner machine's state while its parent is elsewhere
+  string held_text = 12;       // "Held in CHASE_DOWN while show_state is in SHOW_PAUSED"
+}
+
+// Where a machine comes from in the code.
+enum TransitionOrigin {
+  TRANSITION_ORIGIN_STATE = 0;   // an assignment in a case: leaves that case's states
+  TRANSITION_ORIGIN_ANY = 1;     // outside the switch: can happen in any state
+  TRANSITION_ORIGIN_INIT = 2;    // reserved: the setup is the initial state, not a transition
+  TRANSITION_ORIGIN_PARENT_ENTRY = 3;  // set by the parent's step: an entry, drawn as a mark
+}
+
+// What a transition on the diagram rests on.
+enum TransitionEvidence {
+  TRANSITION_EVIDENCE_CODE = 0;            // the code writes it
+  TRANSITION_EVIDENCE_BETWEEN_PASSES = 1;  // the run made it, the code writes no such step
+  TRANSITION_EVIDENCE_NOT_IN_CODE = 2;     // reserved: with the exact recording
+  TRANSITION_EVIDENCE_OUTSIDE_PARENT = 3;  // reserved: an inner machine moved outside its parent
+}
+
+// An if chain that leads a state two or more ways: a choice pseudostate.
+message MachineChoice {
+  string choice_id = 1;
+  string state = 2;            // the state it leaves
+  string path = 3;             // where the chain's first if is
+  uint32 line = 4;
+  string stay_text = 5;        // "otherwise stays in SHOW_RUNNING"; empty with an else
 }
 
 message MachineTransition {
@@ -1960,6 +2048,17 @@ message MachineTransition {
   bool observed_only = 9;      // the run made it, the code writes no such step
   bool count_shared = 10;      // the count is of every transition between these two
                                // states: the run cannot tell which one was taken
+  TransitionOrigin origin = 11;
+  string transition_id = 12;   // stable across answers while the code is unchanged
+  string guard_text = 13;      // all that must hold, earlier arms negated
+  string effect_text = 14;     // "pauses_left--; since_ms = now_ms"
+  string guard_note = 15;      // "calls move_light – the condition has an effect"
+  string choice_id = 16;       // the MachineChoice it leaves through; empty for none
+  uint32 branch_order = 17;    // its arm in the if chain, from 1; 0 outside one
+  bool is_else = 18;           // the chain's else: drawn [else]
+  string order_text = 19;      // "2nd of 3 in the if chain at light_show.c:113"
+  TransitionEvidence evidence = 20;  // replaces observed_only
+  repeated InnerEntry inner_entries = 21;  // how it starts or leaves the inner machines
 }
 
 // Named apart from the StateModels of the device models.
@@ -1978,10 +2077,100 @@ message FirmwareStateMachine {
   string observation_text = 12;   // how exact: once per loop pass
   string coverage_text = 13;
   string instance = 14;           // the variable followed
+  string display_name = 15;
+  string carrier_text = 16;
+  string naming_text = 17;
+  repeated string instance_choices = 18;  // a field machine's variables; empty otherwise
+  bool is_field = 19;             // a field machine, also when no instance was found
+  string initial_text = 20;       // "light_show_init()", "= SHOW_IDLE at definition",
+                                  // "value 0 – C default"
+  repeated MachineChoice choices = 21;
+  repeated MachineParent parents = 22;  // the machines it runs inside
+  string nesting_note = 23;
+  repeated InnerEntry entries = 24;     // how its parents start it: the marks on its frame
+  NestingKind nesting = 25;
+  string held_while_text = 26;  // "held while SHOW_IDLE, SHOW_PAUSED, SHOW_STOPPING"
+  string follow_note = 27;      // "followed together with show_state"
 }
 
 message MachineFollowRequest {
   string machine_id = 1;
   string variable_path = 2;       // the variable that holds it, an instance for a field
   bool follow = 3;
+  bool with_parent = 4;           // follow the machine it runs inside too: states relative to it
+}
+
+// --- Sequences (architecture analysis, stage 4) ---
+
+message CallTreeRequest {
+  string function = 1;          // by name
+  uint32 depth = 2;             // how many calls deep, 1 to 6
+}
+
+enum LifelineKind {
+  LIFELINE_KIND_MODULE = 0;
+  LIFELINE_KIND_EXTERNAL = 1;   // functions the project does not define
+  LIFELINE_KIND_DEVICE = 2;     // a bus device or peripheral
+  LIFELINE_KIND_ISR = 3;
+}
+
+message SequenceLifeline {
+  string lifeline_id = 1;
+  string name = 2;              // ":light_show"
+  string caption = 3;           // its layer
+  LifelineKind kind = 4;
+  string stereotype = 5;        // "device"; empty otherwise
+}
+
+// A UML combined fragment.
+enum FragmentKind {
+  FRAGMENT_KIND_LOOP = 0;
+  FRAGMENT_KIND_ALT = 1;        // an if chain or a switch
+  FRAGMENT_KIND_OPT = 2;        // a lone if
+  FRAGMENT_KIND_REF = 3;        // a group folded away
+}
+
+message SequenceFragment {
+  string fragment_id = 1;
+  FragmentKind kind = 2;
+  string parent_id = 3;         // the fragment it lies in; empty at the top
+  repeated string guards = 4;   // per operand, in order: "[over_current]", "[else]"; empty when unknown
+  string path = 5;
+  uint32 line = 6;
+}
+
+message FragmentOperand {
+  string fragment_id = 1;
+  uint32 operand = 2;           // from 1
+}
+
+enum MessageKind {
+  MESSAGE_KIND_CALL = 0;
+  MESSAGE_KIND_RETURN = 1;
+  MESSAGE_KIND_FOUND = 2;       // a handler the simulation runs: nobody in the firmware calls it
+  MESSAGE_KIND_HAL = 3;
+  MESSAGE_KIND_BUS = 4;
+}
+
+message SequenceMessage {
+  uint32 order = 1;
+  string from_lifeline = 2;
+  string to_lifeline = 3;
+  string label = 4;             // "expander_step()"
+  MessageKind kind = 5;
+  uint32 depth = 6;             // calls deep
+  string path = 7;              // where the call is written
+  uint32 line = 8;
+  repeated FragmentOperand fragments = 9;  // outermost first
+  bool cut = 10;                // the callee makes calls that are not shown
+}
+
+message CallTree {
+  string function = 1;
+  bool found = 2;
+  repeated string functions = 3;  // what a tree can start from, by name
+  repeated SequenceLifeline lifelines = 4;
+  repeated SequenceMessage messages = 5;
+  repeated SequenceFragment fragments = 6;
+  string banner_text = 7;       // "Static – the order of the calls in the code, not what ran."
 }

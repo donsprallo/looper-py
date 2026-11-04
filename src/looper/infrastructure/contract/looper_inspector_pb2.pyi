@@ -147,6 +147,55 @@ class Tier(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     TIER_GOOD: _ClassVar[Tier]
     TIER_NOTICEABLE: _ClassVar[Tier]
     TIER_CRITICAL: _ClassVar[Tier]
+
+class NestingKind(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+    __slots__ = ()
+    NESTING_KIND_NONE: _ClassVar[NestingKind]
+    NESTING_KIND_INSIDE: _ClassVar[NestingKind]
+    NESTING_KIND_ALSO_OUTSIDE: _ClassVar[NestingKind]
+    NESTING_KIND_SEVERAL_PARENTS: _ClassVar[NestingKind]
+
+class InnerEntryKind(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+    __slots__ = ()
+    INNER_ENTRY_KIND_RESET: _ClassVar[InnerEntryKind]
+    INNER_ENTRY_KIND_RESUME: _ClassVar[InnerEntryKind]
+    INNER_ENTRY_KIND_RESET_ON_EXIT: _ClassVar[InnerEntryKind]
+
+class TransitionOrigin(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+    __slots__ = ()
+    TRANSITION_ORIGIN_STATE: _ClassVar[TransitionOrigin]
+    TRANSITION_ORIGIN_ANY: _ClassVar[TransitionOrigin]
+    TRANSITION_ORIGIN_INIT: _ClassVar[TransitionOrigin]
+    TRANSITION_ORIGIN_PARENT_ENTRY: _ClassVar[TransitionOrigin]
+
+class TransitionEvidence(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+    __slots__ = ()
+    TRANSITION_EVIDENCE_CODE: _ClassVar[TransitionEvidence]
+    TRANSITION_EVIDENCE_BETWEEN_PASSES: _ClassVar[TransitionEvidence]
+    TRANSITION_EVIDENCE_NOT_IN_CODE: _ClassVar[TransitionEvidence]
+    TRANSITION_EVIDENCE_OUTSIDE_PARENT: _ClassVar[TransitionEvidence]
+
+class LifelineKind(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+    __slots__ = ()
+    LIFELINE_KIND_MODULE: _ClassVar[LifelineKind]
+    LIFELINE_KIND_EXTERNAL: _ClassVar[LifelineKind]
+    LIFELINE_KIND_DEVICE: _ClassVar[LifelineKind]
+    LIFELINE_KIND_ISR: _ClassVar[LifelineKind]
+
+class FragmentKind(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+    __slots__ = ()
+    FRAGMENT_KIND_LOOP: _ClassVar[FragmentKind]
+    FRAGMENT_KIND_ALT: _ClassVar[FragmentKind]
+    FRAGMENT_KIND_OPT: _ClassVar[FragmentKind]
+    FRAGMENT_KIND_REF: _ClassVar[FragmentKind]
+
+class MessageKind(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+    __slots__ = ()
+    MESSAGE_KIND_CALL: _ClassVar[MessageKind]
+    MESSAGE_KIND_RETURN: _ClassVar[MessageKind]
+    MESSAGE_KIND_FOUND: _ClassVar[MessageKind]
+    MESSAGE_KIND_HAL: _ClassVar[MessageKind]
+    MESSAGE_KIND_BUS: _ClassVar[MessageKind]
 CONTRACT_VERSION_UNSPECIFIED: ContractVersion
 CONTRACT_VERSION_CURRENT: ContractVersion
 REFUSAL_NONE: Refusal
@@ -237,6 +286,34 @@ RESTART_PHASE_RESTARTING: RestartPhase
 TIER_GOOD: Tier
 TIER_NOTICEABLE: Tier
 TIER_CRITICAL: Tier
+NESTING_KIND_NONE: NestingKind
+NESTING_KIND_INSIDE: NestingKind
+NESTING_KIND_ALSO_OUTSIDE: NestingKind
+NESTING_KIND_SEVERAL_PARENTS: NestingKind
+INNER_ENTRY_KIND_RESET: InnerEntryKind
+INNER_ENTRY_KIND_RESUME: InnerEntryKind
+INNER_ENTRY_KIND_RESET_ON_EXIT: InnerEntryKind
+TRANSITION_ORIGIN_STATE: TransitionOrigin
+TRANSITION_ORIGIN_ANY: TransitionOrigin
+TRANSITION_ORIGIN_INIT: TransitionOrigin
+TRANSITION_ORIGIN_PARENT_ENTRY: TransitionOrigin
+TRANSITION_EVIDENCE_CODE: TransitionEvidence
+TRANSITION_EVIDENCE_BETWEEN_PASSES: TransitionEvidence
+TRANSITION_EVIDENCE_NOT_IN_CODE: TransitionEvidence
+TRANSITION_EVIDENCE_OUTSIDE_PARENT: TransitionEvidence
+LIFELINE_KIND_MODULE: LifelineKind
+LIFELINE_KIND_EXTERNAL: LifelineKind
+LIFELINE_KIND_DEVICE: LifelineKind
+LIFELINE_KIND_ISR: LifelineKind
+FRAGMENT_KIND_LOOP: FragmentKind
+FRAGMENT_KIND_ALT: FragmentKind
+FRAGMENT_KIND_OPT: FragmentKind
+FRAGMENT_KIND_REF: FragmentKind
+MESSAGE_KIND_CALL: MessageKind
+MESSAGE_KIND_RETURN: MessageKind
+MESSAGE_KIND_FOUND: MessageKind
+MESSAGE_KIND_HAL: MessageKind
+MESSAGE_KIND_BUS: MessageKind
 
 class Empty(_message.Message):
     __slots__ = ()
@@ -2818,20 +2895,86 @@ class AcceptFindingsRequest(_message.Message):
     def __init__(self, keys: _Optional[_Iterable[str]] = ..., note: _Optional[str] = ..., every: _Optional[bool] = ...) -> None: ...
 
 class MachineSummary(_message.Message):
-    __slots__ = ("machine_id", "name", "kind_text", "module", "states", "transitions")
+    __slots__ = ("machine_id", "name", "kind_text", "module", "states", "transitions", "display_name", "carrier_text", "naming_text", "parent_ids", "depth", "nesting_note", "parent_text", "nesting")
     MACHINE_ID_FIELD_NUMBER: _ClassVar[int]
     NAME_FIELD_NUMBER: _ClassVar[int]
     KIND_TEXT_FIELD_NUMBER: _ClassVar[int]
     MODULE_FIELD_NUMBER: _ClassVar[int]
     STATES_FIELD_NUMBER: _ClassVar[int]
     TRANSITIONS_FIELD_NUMBER: _ClassVar[int]
+    DISPLAY_NAME_FIELD_NUMBER: _ClassVar[int]
+    CARRIER_TEXT_FIELD_NUMBER: _ClassVar[int]
+    NAMING_TEXT_FIELD_NUMBER: _ClassVar[int]
+    PARENT_IDS_FIELD_NUMBER: _ClassVar[int]
+    DEPTH_FIELD_NUMBER: _ClassVar[int]
+    NESTING_NOTE_FIELD_NUMBER: _ClassVar[int]
+    PARENT_TEXT_FIELD_NUMBER: _ClassVar[int]
+    NESTING_FIELD_NUMBER: _ClassVar[int]
     machine_id: str
     name: str
     kind_text: str
     module: str
     states: int
     transitions: int
-    def __init__(self, machine_id: _Optional[str] = ..., name: _Optional[str] = ..., kind_text: _Optional[str] = ..., module: _Optional[str] = ..., states: _Optional[int] = ..., transitions: _Optional[int] = ...) -> None: ...
+    display_name: str
+    carrier_text: str
+    naming_text: str
+    parent_ids: _containers.RepeatedScalarFieldContainer[str]
+    depth: int
+    nesting_note: str
+    parent_text: str
+    nesting: NestingKind
+    def __init__(self, machine_id: _Optional[str] = ..., name: _Optional[str] = ..., kind_text: _Optional[str] = ..., module: _Optional[str] = ..., states: _Optional[int] = ..., transitions: _Optional[int] = ..., display_name: _Optional[str] = ..., carrier_text: _Optional[str] = ..., naming_text: _Optional[str] = ..., parent_ids: _Optional[_Iterable[str]] = ..., depth: _Optional[int] = ..., nesting_note: _Optional[str] = ..., parent_text: _Optional[str] = ..., nesting: _Optional[_Union[NestingKind, str]] = ...) -> None: ...
+
+class InnerEntry(_message.Message):
+    __slots__ = ("machine_id", "kind", "state", "text", "count", "parent_state", "transition_id", "label")
+    MACHINE_ID_FIELD_NUMBER: _ClassVar[int]
+    KIND_FIELD_NUMBER: _ClassVar[int]
+    STATE_FIELD_NUMBER: _ClassVar[int]
+    TEXT_FIELD_NUMBER: _ClassVar[int]
+    COUNT_FIELD_NUMBER: _ClassVar[int]
+    PARENT_STATE_FIELD_NUMBER: _ClassVar[int]
+    TRANSITION_ID_FIELD_NUMBER: _ClassVar[int]
+    LABEL_FIELD_NUMBER: _ClassVar[int]
+    machine_id: str
+    kind: InnerEntryKind
+    state: str
+    text: str
+    count: int
+    parent_state: str
+    transition_id: str
+    label: str
+    def __init__(self, machine_id: _Optional[str] = ..., kind: _Optional[_Union[InnerEntryKind, str]] = ..., state: _Optional[str] = ..., text: _Optional[str] = ..., count: _Optional[int] = ..., parent_state: _Optional[str] = ..., transition_id: _Optional[str] = ..., label: _Optional[str] = ...) -> None: ...
+
+class Submachine(_message.Message):
+    __slots__ = ("machine_id", "name", "via_text", "path", "line", "current_text", "kind")
+    MACHINE_ID_FIELD_NUMBER: _ClassVar[int]
+    NAME_FIELD_NUMBER: _ClassVar[int]
+    VIA_TEXT_FIELD_NUMBER: _ClassVar[int]
+    PATH_FIELD_NUMBER: _ClassVar[int]
+    LINE_FIELD_NUMBER: _ClassVar[int]
+    CURRENT_TEXT_FIELD_NUMBER: _ClassVar[int]
+    KIND_FIELD_NUMBER: _ClassVar[int]
+    machine_id: str
+    name: str
+    via_text: str
+    path: str
+    line: int
+    current_text: str
+    kind: NestingKind
+    def __init__(self, machine_id: _Optional[str] = ..., name: _Optional[str] = ..., via_text: _Optional[str] = ..., path: _Optional[str] = ..., line: _Optional[int] = ..., current_text: _Optional[str] = ..., kind: _Optional[_Union[NestingKind, str]] = ...) -> None: ...
+
+class MachineParent(_message.Message):
+    __slots__ = ("machine_id", "name", "states", "via_text")
+    MACHINE_ID_FIELD_NUMBER: _ClassVar[int]
+    NAME_FIELD_NUMBER: _ClassVar[int]
+    STATES_FIELD_NUMBER: _ClassVar[int]
+    VIA_TEXT_FIELD_NUMBER: _ClassVar[int]
+    machine_id: str
+    name: str
+    states: _containers.RepeatedScalarFieldContainer[str]
+    via_text: str
+    def __init__(self, machine_id: _Optional[str] = ..., name: _Optional[str] = ..., states: _Optional[_Iterable[str]] = ..., via_text: _Optional[str] = ...) -> None: ...
 
 class StateMachineList(_message.Message):
     __slots__ = ("machines",)
@@ -2846,21 +2989,49 @@ class StateMachineChoice(_message.Message):
     def __init__(self, machine_id: _Optional[str] = ...) -> None: ...
 
 class MachineState(_message.Message):
-    __slots__ = ("name", "is_initial", "reached", "dwell_text", "is_current")
+    __slots__ = ("name", "is_initial", "reached", "dwell_text", "is_current", "value", "path", "line", "do_calls", "submachines", "held", "held_text")
     NAME_FIELD_NUMBER: _ClassVar[int]
     IS_INITIAL_FIELD_NUMBER: _ClassVar[int]
     REACHED_FIELD_NUMBER: _ClassVar[int]
     DWELL_TEXT_FIELD_NUMBER: _ClassVar[int]
     IS_CURRENT_FIELD_NUMBER: _ClassVar[int]
+    VALUE_FIELD_NUMBER: _ClassVar[int]
+    PATH_FIELD_NUMBER: _ClassVar[int]
+    LINE_FIELD_NUMBER: _ClassVar[int]
+    DO_CALLS_FIELD_NUMBER: _ClassVar[int]
+    SUBMACHINES_FIELD_NUMBER: _ClassVar[int]
+    HELD_FIELD_NUMBER: _ClassVar[int]
+    HELD_TEXT_FIELD_NUMBER: _ClassVar[int]
     name: str
     is_initial: bool
     reached: bool
     dwell_text: str
     is_current: bool
-    def __init__(self, name: _Optional[str] = ..., is_initial: _Optional[bool] = ..., reached: _Optional[bool] = ..., dwell_text: _Optional[str] = ..., is_current: _Optional[bool] = ...) -> None: ...
+    value: str
+    path: str
+    line: int
+    do_calls: _containers.RepeatedScalarFieldContainer[str]
+    submachines: _containers.RepeatedCompositeFieldContainer[Submachine]
+    held: bool
+    held_text: str
+    def __init__(self, name: _Optional[str] = ..., is_initial: _Optional[bool] = ..., reached: _Optional[bool] = ..., dwell_text: _Optional[str] = ..., is_current: _Optional[bool] = ..., value: _Optional[str] = ..., path: _Optional[str] = ..., line: _Optional[int] = ..., do_calls: _Optional[_Iterable[str]] = ..., submachines: _Optional[_Iterable[_Union[Submachine, _Mapping]]] = ..., held: _Optional[bool] = ..., held_text: _Optional[str] = ...) -> None: ...
+
+class MachineChoice(_message.Message):
+    __slots__ = ("choice_id", "state", "path", "line", "stay_text")
+    CHOICE_ID_FIELD_NUMBER: _ClassVar[int]
+    STATE_FIELD_NUMBER: _ClassVar[int]
+    PATH_FIELD_NUMBER: _ClassVar[int]
+    LINE_FIELD_NUMBER: _ClassVar[int]
+    STAY_TEXT_FIELD_NUMBER: _ClassVar[int]
+    choice_id: str
+    state: str
+    path: str
+    line: int
+    stay_text: str
+    def __init__(self, choice_id: _Optional[str] = ..., state: _Optional[str] = ..., path: _Optional[str] = ..., line: _Optional[int] = ..., stay_text: _Optional[str] = ...) -> None: ...
 
 class MachineTransition(_message.Message):
-    __slots__ = ("source", "target", "condition", "path", "line", "function", "note", "count", "observed_only", "count_shared")
+    __slots__ = ("source", "target", "condition", "path", "line", "function", "note", "count", "observed_only", "count_shared", "origin", "transition_id", "guard_text", "effect_text", "guard_note", "choice_id", "branch_order", "is_else", "order_text", "evidence", "inner_entries")
     SOURCE_FIELD_NUMBER: _ClassVar[int]
     TARGET_FIELD_NUMBER: _ClassVar[int]
     CONDITION_FIELD_NUMBER: _ClassVar[int]
@@ -2871,6 +3042,17 @@ class MachineTransition(_message.Message):
     COUNT_FIELD_NUMBER: _ClassVar[int]
     OBSERVED_ONLY_FIELD_NUMBER: _ClassVar[int]
     COUNT_SHARED_FIELD_NUMBER: _ClassVar[int]
+    ORIGIN_FIELD_NUMBER: _ClassVar[int]
+    TRANSITION_ID_FIELD_NUMBER: _ClassVar[int]
+    GUARD_TEXT_FIELD_NUMBER: _ClassVar[int]
+    EFFECT_TEXT_FIELD_NUMBER: _ClassVar[int]
+    GUARD_NOTE_FIELD_NUMBER: _ClassVar[int]
+    CHOICE_ID_FIELD_NUMBER: _ClassVar[int]
+    BRANCH_ORDER_FIELD_NUMBER: _ClassVar[int]
+    IS_ELSE_FIELD_NUMBER: _ClassVar[int]
+    ORDER_TEXT_FIELD_NUMBER: _ClassVar[int]
+    EVIDENCE_FIELD_NUMBER: _ClassVar[int]
+    INNER_ENTRIES_FIELD_NUMBER: _ClassVar[int]
     source: str
     target: str
     condition: str
@@ -2881,10 +3063,21 @@ class MachineTransition(_message.Message):
     count: int
     observed_only: bool
     count_shared: bool
-    def __init__(self, source: _Optional[str] = ..., target: _Optional[str] = ..., condition: _Optional[str] = ..., path: _Optional[str] = ..., line: _Optional[int] = ..., function: _Optional[str] = ..., note: _Optional[str] = ..., count: _Optional[int] = ..., observed_only: _Optional[bool] = ..., count_shared: _Optional[bool] = ...) -> None: ...
+    origin: TransitionOrigin
+    transition_id: str
+    guard_text: str
+    effect_text: str
+    guard_note: str
+    choice_id: str
+    branch_order: int
+    is_else: bool
+    order_text: str
+    evidence: TransitionEvidence
+    inner_entries: _containers.RepeatedCompositeFieldContainer[InnerEntry]
+    def __init__(self, source: _Optional[str] = ..., target: _Optional[str] = ..., condition: _Optional[str] = ..., path: _Optional[str] = ..., line: _Optional[int] = ..., function: _Optional[str] = ..., note: _Optional[str] = ..., count: _Optional[int] = ..., observed_only: _Optional[bool] = ..., count_shared: _Optional[bool] = ..., origin: _Optional[_Union[TransitionOrigin, str]] = ..., transition_id: _Optional[str] = ..., guard_text: _Optional[str] = ..., effect_text: _Optional[str] = ..., guard_note: _Optional[str] = ..., choice_id: _Optional[str] = ..., branch_order: _Optional[int] = ..., is_else: _Optional[bool] = ..., order_text: _Optional[str] = ..., evidence: _Optional[_Union[TransitionEvidence, str]] = ..., inner_entries: _Optional[_Iterable[_Union[InnerEntry, _Mapping]]] = ...) -> None: ...
 
 class FirmwareStateMachine(_message.Message):
-    __slots__ = ("machine_id", "name", "kind_text", "where_text", "path", "line", "states", "initial_note", "transitions", "found", "observed", "observation_text", "coverage_text", "instance")
+    __slots__ = ("machine_id", "name", "kind_text", "where_text", "path", "line", "states", "initial_note", "transitions", "found", "observed", "observation_text", "coverage_text", "instance", "display_name", "carrier_text", "naming_text", "instance_choices", "is_field", "initial_text", "choices", "parents", "nesting_note", "entries", "nesting", "held_while_text", "follow_note")
     MACHINE_ID_FIELD_NUMBER: _ClassVar[int]
     NAME_FIELD_NUMBER: _ClassVar[int]
     KIND_TEXT_FIELD_NUMBER: _ClassVar[int]
@@ -2899,6 +3092,19 @@ class FirmwareStateMachine(_message.Message):
     OBSERVATION_TEXT_FIELD_NUMBER: _ClassVar[int]
     COVERAGE_TEXT_FIELD_NUMBER: _ClassVar[int]
     INSTANCE_FIELD_NUMBER: _ClassVar[int]
+    DISPLAY_NAME_FIELD_NUMBER: _ClassVar[int]
+    CARRIER_TEXT_FIELD_NUMBER: _ClassVar[int]
+    NAMING_TEXT_FIELD_NUMBER: _ClassVar[int]
+    INSTANCE_CHOICES_FIELD_NUMBER: _ClassVar[int]
+    IS_FIELD_FIELD_NUMBER: _ClassVar[int]
+    INITIAL_TEXT_FIELD_NUMBER: _ClassVar[int]
+    CHOICES_FIELD_NUMBER: _ClassVar[int]
+    PARENTS_FIELD_NUMBER: _ClassVar[int]
+    NESTING_NOTE_FIELD_NUMBER: _ClassVar[int]
+    ENTRIES_FIELD_NUMBER: _ClassVar[int]
+    NESTING_FIELD_NUMBER: _ClassVar[int]
+    HELD_WHILE_TEXT_FIELD_NUMBER: _ClassVar[int]
+    FOLLOW_NOTE_FIELD_NUMBER: _ClassVar[int]
     machine_id: str
     name: str
     kind_text: str
@@ -2913,14 +3119,117 @@ class FirmwareStateMachine(_message.Message):
     observation_text: str
     coverage_text: str
     instance: str
-    def __init__(self, machine_id: _Optional[str] = ..., name: _Optional[str] = ..., kind_text: _Optional[str] = ..., where_text: _Optional[str] = ..., path: _Optional[str] = ..., line: _Optional[int] = ..., states: _Optional[_Iterable[_Union[MachineState, _Mapping]]] = ..., initial_note: _Optional[str] = ..., transitions: _Optional[_Iterable[_Union[MachineTransition, _Mapping]]] = ..., found: _Optional[bool] = ..., observed: _Optional[bool] = ..., observation_text: _Optional[str] = ..., coverage_text: _Optional[str] = ..., instance: _Optional[str] = ...) -> None: ...
+    display_name: str
+    carrier_text: str
+    naming_text: str
+    instance_choices: _containers.RepeatedScalarFieldContainer[str]
+    is_field: bool
+    initial_text: str
+    choices: _containers.RepeatedCompositeFieldContainer[MachineChoice]
+    parents: _containers.RepeatedCompositeFieldContainer[MachineParent]
+    nesting_note: str
+    entries: _containers.RepeatedCompositeFieldContainer[InnerEntry]
+    nesting: NestingKind
+    held_while_text: str
+    follow_note: str
+    def __init__(self, machine_id: _Optional[str] = ..., name: _Optional[str] = ..., kind_text: _Optional[str] = ..., where_text: _Optional[str] = ..., path: _Optional[str] = ..., line: _Optional[int] = ..., states: _Optional[_Iterable[_Union[MachineState, _Mapping]]] = ..., initial_note: _Optional[str] = ..., transitions: _Optional[_Iterable[_Union[MachineTransition, _Mapping]]] = ..., found: _Optional[bool] = ..., observed: _Optional[bool] = ..., observation_text: _Optional[str] = ..., coverage_text: _Optional[str] = ..., instance: _Optional[str] = ..., display_name: _Optional[str] = ..., carrier_text: _Optional[str] = ..., naming_text: _Optional[str] = ..., instance_choices: _Optional[_Iterable[str]] = ..., is_field: _Optional[bool] = ..., initial_text: _Optional[str] = ..., choices: _Optional[_Iterable[_Union[MachineChoice, _Mapping]]] = ..., parents: _Optional[_Iterable[_Union[MachineParent, _Mapping]]] = ..., nesting_note: _Optional[str] = ..., entries: _Optional[_Iterable[_Union[InnerEntry, _Mapping]]] = ..., nesting: _Optional[_Union[NestingKind, str]] = ..., held_while_text: _Optional[str] = ..., follow_note: _Optional[str] = ...) -> None: ...
 
 class MachineFollowRequest(_message.Message):
-    __slots__ = ("machine_id", "variable_path", "follow")
+    __slots__ = ("machine_id", "variable_path", "follow", "with_parent")
     MACHINE_ID_FIELD_NUMBER: _ClassVar[int]
     VARIABLE_PATH_FIELD_NUMBER: _ClassVar[int]
     FOLLOW_FIELD_NUMBER: _ClassVar[int]
+    WITH_PARENT_FIELD_NUMBER: _ClassVar[int]
     machine_id: str
     variable_path: str
     follow: bool
-    def __init__(self, machine_id: _Optional[str] = ..., variable_path: _Optional[str] = ..., follow: _Optional[bool] = ...) -> None: ...
+    with_parent: bool
+    def __init__(self, machine_id: _Optional[str] = ..., variable_path: _Optional[str] = ..., follow: _Optional[bool] = ..., with_parent: _Optional[bool] = ...) -> None: ...
+
+class CallTreeRequest(_message.Message):
+    __slots__ = ("function", "depth")
+    FUNCTION_FIELD_NUMBER: _ClassVar[int]
+    DEPTH_FIELD_NUMBER: _ClassVar[int]
+    function: str
+    depth: int
+    def __init__(self, function: _Optional[str] = ..., depth: _Optional[int] = ...) -> None: ...
+
+class SequenceLifeline(_message.Message):
+    __slots__ = ("lifeline_id", "name", "caption", "kind", "stereotype")
+    LIFELINE_ID_FIELD_NUMBER: _ClassVar[int]
+    NAME_FIELD_NUMBER: _ClassVar[int]
+    CAPTION_FIELD_NUMBER: _ClassVar[int]
+    KIND_FIELD_NUMBER: _ClassVar[int]
+    STEREOTYPE_FIELD_NUMBER: _ClassVar[int]
+    lifeline_id: str
+    name: str
+    caption: str
+    kind: LifelineKind
+    stereotype: str
+    def __init__(self, lifeline_id: _Optional[str] = ..., name: _Optional[str] = ..., caption: _Optional[str] = ..., kind: _Optional[_Union[LifelineKind, str]] = ..., stereotype: _Optional[str] = ...) -> None: ...
+
+class SequenceFragment(_message.Message):
+    __slots__ = ("fragment_id", "kind", "parent_id", "guards", "path", "line")
+    FRAGMENT_ID_FIELD_NUMBER: _ClassVar[int]
+    KIND_FIELD_NUMBER: _ClassVar[int]
+    PARENT_ID_FIELD_NUMBER: _ClassVar[int]
+    GUARDS_FIELD_NUMBER: _ClassVar[int]
+    PATH_FIELD_NUMBER: _ClassVar[int]
+    LINE_FIELD_NUMBER: _ClassVar[int]
+    fragment_id: str
+    kind: FragmentKind
+    parent_id: str
+    guards: _containers.RepeatedScalarFieldContainer[str]
+    path: str
+    line: int
+    def __init__(self, fragment_id: _Optional[str] = ..., kind: _Optional[_Union[FragmentKind, str]] = ..., parent_id: _Optional[str] = ..., guards: _Optional[_Iterable[str]] = ..., path: _Optional[str] = ..., line: _Optional[int] = ...) -> None: ...
+
+class FragmentOperand(_message.Message):
+    __slots__ = ("fragment_id", "operand")
+    FRAGMENT_ID_FIELD_NUMBER: _ClassVar[int]
+    OPERAND_FIELD_NUMBER: _ClassVar[int]
+    fragment_id: str
+    operand: int
+    def __init__(self, fragment_id: _Optional[str] = ..., operand: _Optional[int] = ...) -> None: ...
+
+class SequenceMessage(_message.Message):
+    __slots__ = ("order", "from_lifeline", "to_lifeline", "label", "kind", "depth", "path", "line", "fragments", "cut")
+    ORDER_FIELD_NUMBER: _ClassVar[int]
+    FROM_LIFELINE_FIELD_NUMBER: _ClassVar[int]
+    TO_LIFELINE_FIELD_NUMBER: _ClassVar[int]
+    LABEL_FIELD_NUMBER: _ClassVar[int]
+    KIND_FIELD_NUMBER: _ClassVar[int]
+    DEPTH_FIELD_NUMBER: _ClassVar[int]
+    PATH_FIELD_NUMBER: _ClassVar[int]
+    LINE_FIELD_NUMBER: _ClassVar[int]
+    FRAGMENTS_FIELD_NUMBER: _ClassVar[int]
+    CUT_FIELD_NUMBER: _ClassVar[int]
+    order: int
+    from_lifeline: str
+    to_lifeline: str
+    label: str
+    kind: MessageKind
+    depth: int
+    path: str
+    line: int
+    fragments: _containers.RepeatedCompositeFieldContainer[FragmentOperand]
+    cut: bool
+    def __init__(self, order: _Optional[int] = ..., from_lifeline: _Optional[str] = ..., to_lifeline: _Optional[str] = ..., label: _Optional[str] = ..., kind: _Optional[_Union[MessageKind, str]] = ..., depth: _Optional[int] = ..., path: _Optional[str] = ..., line: _Optional[int] = ..., fragments: _Optional[_Iterable[_Union[FragmentOperand, _Mapping]]] = ..., cut: _Optional[bool] = ...) -> None: ...
+
+class CallTree(_message.Message):
+    __slots__ = ("function", "found", "functions", "lifelines", "messages", "fragments", "banner_text")
+    FUNCTION_FIELD_NUMBER: _ClassVar[int]
+    FOUND_FIELD_NUMBER: _ClassVar[int]
+    FUNCTIONS_FIELD_NUMBER: _ClassVar[int]
+    LIFELINES_FIELD_NUMBER: _ClassVar[int]
+    MESSAGES_FIELD_NUMBER: _ClassVar[int]
+    FRAGMENTS_FIELD_NUMBER: _ClassVar[int]
+    BANNER_TEXT_FIELD_NUMBER: _ClassVar[int]
+    function: str
+    found: bool
+    functions: _containers.RepeatedScalarFieldContainer[str]
+    lifelines: _containers.RepeatedCompositeFieldContainer[SequenceLifeline]
+    messages: _containers.RepeatedCompositeFieldContainer[SequenceMessage]
+    fragments: _containers.RepeatedCompositeFieldContainer[SequenceFragment]
+    banner_text: str
+    def __init__(self, function: _Optional[str] = ..., found: _Optional[bool] = ..., functions: _Optional[_Iterable[str]] = ..., lifelines: _Optional[_Iterable[_Union[SequenceLifeline, _Mapping]]] = ..., messages: _Optional[_Iterable[_Union[SequenceMessage, _Mapping]]] = ..., fragments: _Optional[_Iterable[_Union[SequenceFragment, _Mapping]]] = ..., banner_text: _Optional[str] = ...) -> None: ...
