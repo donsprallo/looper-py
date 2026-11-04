@@ -2860,7 +2860,7 @@ class MachineState(_message.Message):
     def __init__(self, name: _Optional[str] = ..., is_initial: _Optional[bool] = ..., reached: _Optional[bool] = ..., dwell_text: _Optional[str] = ..., is_current: _Optional[bool] = ...) -> None: ...
 
 class MachineTransition(_message.Message):
-    __slots__ = ("source", "target", "condition", "path", "line", "function", "note", "count", "observed_only")
+    __slots__ = ("source", "target", "condition", "path", "line", "function", "note", "count", "observed_only", "count_shared")
     SOURCE_FIELD_NUMBER: _ClassVar[int]
     TARGET_FIELD_NUMBER: _ClassVar[int]
     CONDITION_FIELD_NUMBER: _ClassVar[int]
@@ -2870,6 +2870,7 @@ class MachineTransition(_message.Message):
     NOTE_FIELD_NUMBER: _ClassVar[int]
     COUNT_FIELD_NUMBER: _ClassVar[int]
     OBSERVED_ONLY_FIELD_NUMBER: _ClassVar[int]
+    COUNT_SHARED_FIELD_NUMBER: _ClassVar[int]
     source: str
     target: str
     condition: str
@@ -2879,7 +2880,8 @@ class MachineTransition(_message.Message):
     note: str
     count: int
     observed_only: bool
-    def __init__(self, source: _Optional[str] = ..., target: _Optional[str] = ..., condition: _Optional[str] = ..., path: _Optional[str] = ..., line: _Optional[int] = ..., function: _Optional[str] = ..., note: _Optional[str] = ..., count: _Optional[int] = ..., observed_only: _Optional[bool] = ...) -> None: ...
+    count_shared: bool
+    def __init__(self, source: _Optional[str] = ..., target: _Optional[str] = ..., condition: _Optional[str] = ..., path: _Optional[str] = ..., line: _Optional[int] = ..., function: _Optional[str] = ..., note: _Optional[str] = ..., count: _Optional[int] = ..., observed_only: _Optional[bool] = ..., count_shared: _Optional[bool] = ...) -> None: ...
 
 class FirmwareStateMachine(_message.Message):
     __slots__ = ("machine_id", "name", "kind_text", "where_text", "path", "line", "states", "initial_note", "transitions", "found", "observed", "observation_text", "coverage_text", "instance")

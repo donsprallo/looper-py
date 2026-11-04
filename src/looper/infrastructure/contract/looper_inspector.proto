@@ -1958,6 +1958,8 @@ message MachineTransition {
   string note = 7;
   sint32 count = 8;            // taken in the run; -1 when not followed
   bool observed_only = 9;      // the run made it, the code writes no such step
+  bool count_shared = 10;      // the count is of every transition between these two
+                               // states: the run cannot tell which one was taken
 }
 
 // Named apart from the StateModels of the device models.
