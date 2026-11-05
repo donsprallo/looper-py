@@ -4,6 +4,8 @@ The contract has two ways to refuse and one to fail, and they become the
 port's two. A change a server declines comes back acknowledged with a
 refusal and its text; a read it declines, or any call while a debugger holds
 the firmware, is `FAILED_PRECONDITION`. Both are `SimulationRefusedError`.
+A part of looper Pro without a licence is `PERMISSION_DENIED`, which is
+`ProFeatureLockedError`, a kind of refusal.
 Anything else means the simulation can no longer be read.
 """
 
@@ -18,6 +20,7 @@ import grpc
 from looper.application.ports import (
     ContractNotServedError,
     Inspector,
+    ProFeatureLockedError,
     SimulationRefusedError,
     SimulationUnreachableError,
 )
@@ -243,6 +246,8 @@ class GrpcInspector(Inspector):
         try:
             return method(request)
         except grpc.RpcError as error:
+            if error.code() == grpc.StatusCode.PERMISSION_DENIED:
+                raise ProFeatureLockedError(error.details()) from error
             if error.code() == grpc.StatusCode.FAILED_PRECONDITION:
                 raise SimulationRefusedError(error.details()) from error
             if error.code() == grpc.StatusCode.UNIMPLEMENTED:

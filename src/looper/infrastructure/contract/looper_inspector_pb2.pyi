@@ -24,6 +24,16 @@ class Refusal(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     REFUSAL_WRONG_MODE: _ClassVar[Refusal]
     REFUSAL_OTHER: _ClassVar[Refusal]
 
+class Edition(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+    __slots__ = ()
+    EDITION_FREE: _ClassVar[Edition]
+    EDITION_PRO: _ClassVar[Edition]
+
+class ProFeature(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+    __slots__ = ()
+    PRO_FEATURE_UNSPECIFIED: _ClassVar[ProFeature]
+    PRO_FEATURE_ARCHITECTURE: _ClassVar[ProFeature]
+
 class Capability(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     __slots__ = ()
     CAPABILITY_UNSPECIFIED: _ClassVar[Capability]
@@ -207,6 +217,10 @@ REFUSAL_WRONG_EPOCH: Refusal
 REFUSAL_INVALID: Refusal
 REFUSAL_WRONG_MODE: Refusal
 REFUSAL_OTHER: Refusal
+EDITION_FREE: Edition
+EDITION_PRO: Edition
+PRO_FEATURE_UNSPECIFIED: ProFeature
+PRO_FEATURE_ARCHITECTURE: ProFeature
 CAPABILITY_UNSPECIFIED: Capability
 CAPABILITY_PACED: Capability
 CAPABILITY_JOBS: Capability
@@ -348,7 +362,7 @@ class When(_message.Message):
     def __init__(self, at_us: _Optional[int] = ..., after_us: _Optional[int] = ..., allow_late: _Optional[bool] = ...) -> None: ...
 
 class Description(_message.Message):
-    __slots__ = ("contract_version", "firmware_name", "reads_the_build", "definition_path", "capabilities", "retention_us", "max_events_per_batch", "mode", "mode_text", "input_text")
+    __slots__ = ("contract_version", "firmware_name", "reads_the_build", "definition_path", "capabilities", "retention_us", "max_events_per_batch", "mode", "mode_text", "input_text", "license")
     CONTRACT_VERSION_FIELD_NUMBER: _ClassVar[int]
     FIRMWARE_NAME_FIELD_NUMBER: _ClassVar[int]
     READS_THE_BUILD_FIELD_NUMBER: _ClassVar[int]
@@ -359,6 +373,7 @@ class Description(_message.Message):
     MODE_FIELD_NUMBER: _ClassVar[int]
     MODE_TEXT_FIELD_NUMBER: _ClassVar[int]
     INPUT_TEXT_FIELD_NUMBER: _ClassVar[int]
+    LICENSE_FIELD_NUMBER: _ClassVar[int]
     contract_version: ContractVersion
     firmware_name: str
     reads_the_build: bool
@@ -369,7 +384,26 @@ class Description(_message.Message):
     mode: ServerMode
     mode_text: str
     input_text: str
-    def __init__(self, contract_version: _Optional[_Union[ContractVersion, str]] = ..., firmware_name: _Optional[str] = ..., reads_the_build: _Optional[bool] = ..., definition_path: _Optional[str] = ..., capabilities: _Optional[_Iterable[_Union[Capability, str]]] = ..., retention_us: _Optional[int] = ..., max_events_per_batch: _Optional[int] = ..., mode: _Optional[_Union[ServerMode, str]] = ..., mode_text: _Optional[str] = ..., input_text: _Optional[str] = ...) -> None: ...
+    license: LicenseView
+    def __init__(self, contract_version: _Optional[_Union[ContractVersion, str]] = ..., firmware_name: _Optional[str] = ..., reads_the_build: _Optional[bool] = ..., definition_path: _Optional[str] = ..., capabilities: _Optional[_Iterable[_Union[Capability, str]]] = ..., retention_us: _Optional[int] = ..., max_events_per_batch: _Optional[int] = ..., mode: _Optional[_Union[ServerMode, str]] = ..., mode_text: _Optional[str] = ..., input_text: _Optional[str] = ..., license: _Optional[_Union[LicenseView, _Mapping]] = ...) -> None: ...
+
+class LicenseView(_message.Message):
+    __slots__ = ("edition", "unlocked", "licensee", "expires_text", "source_text", "note", "install_path")
+    EDITION_FIELD_NUMBER: _ClassVar[int]
+    UNLOCKED_FIELD_NUMBER: _ClassVar[int]
+    LICENSEE_FIELD_NUMBER: _ClassVar[int]
+    EXPIRES_TEXT_FIELD_NUMBER: _ClassVar[int]
+    SOURCE_TEXT_FIELD_NUMBER: _ClassVar[int]
+    NOTE_FIELD_NUMBER: _ClassVar[int]
+    INSTALL_PATH_FIELD_NUMBER: _ClassVar[int]
+    edition: Edition
+    unlocked: _containers.RepeatedScalarFieldContainer[ProFeature]
+    licensee: str
+    expires_text: str
+    source_text: str
+    note: str
+    install_path: str
+    def __init__(self, edition: _Optional[_Union[Edition, str]] = ..., unlocked: _Optional[_Iterable[_Union[ProFeature, str]]] = ..., licensee: _Optional[str] = ..., expires_text: _Optional[str] = ..., source_text: _Optional[str] = ..., note: _Optional[str] = ..., install_path: _Optional[str] = ...) -> None: ...
 
 class RunControl(_message.Message):
     __slots__ = ("hold", "run_for_us", "run_until_us", "step_pass", "pace_ratio", "max_speed")

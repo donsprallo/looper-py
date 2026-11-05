@@ -127,8 +127,34 @@ message Description {
   ServerMode mode = 9;
   string mode_text = 10;      // e.g. "Static analysis - no simulation"
   string input_text = 11;     // e.g. "compile_commands.json, 5 files"
+  // What the licence allows, decided once when the server started. A call
+  // into a Pro part the licence does not unlock is refused with
+  // PERMISSION_DENIED and a sentence saying what is locked and why.
+  LicenseView license = 12;
   reserved 3;
   reserved "time_mode";
+}
+
+enum Edition {
+  EDITION_FREE = 0;
+  EDITION_PRO = 1;
+}
+
+// A part of looper that needs a licence. Today one: the whole Architect
+// (metrics of single functions stay free; the Source view shows them).
+enum ProFeature {
+  PRO_FEATURE_UNSPECIFIED = 0;
+  PRO_FEATURE_ARCHITECTURE = 1;   // graph, findings, rules, baseline, machines, call tree, sequences
+}
+
+message LicenseView {
+  Edition edition = 1;
+  repeated ProFeature unlocked = 2;  // what may be used now
+  string licensee = 3;               // "" without a licence
+  string expires_text = 4;           // e.g. "31 Dec 2027"
+  string source_text = 5;            // where the licence was read from
+  string note = 6;                   // why it is free, or that it ran out and Pro stops soon
+  string install_path = 7;           // where a licence is installed for this user (~/.looper/license.toml)
 }
 
 enum Capability {

@@ -22,7 +22,11 @@ simulation together.
 from __future__ import annotations
 
 from looper.application.expectations import Expectations
-from looper.application.ports import SimulationRefusedError, SimulationUnreachableError
+from looper.application.ports import (
+    ProFeatureLockedError,
+    SimulationRefusedError,
+    SimulationUnreachableError,
+)
 from looper.application.simulation import Simulation
 from looper.application.triggers import Triggers
 from looper.domain.model import (
@@ -106,6 +110,7 @@ __all__ = [
     "SignalModel",
     "SignalNodeKind",
     "Simulation",
+    "ProFeatureLockedError",
     "SimulationRefusedError",
     "SimulationUnreachableError",
     "Trigger",

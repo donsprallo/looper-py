@@ -35,12 +35,16 @@ class Description:
         definition_path: The build definition it was started with, empty
             when it was started without one.
         reads_the_build: Whether the debug information could be read.
+        edition: ``pro`` when the server's licence unlocks a Pro part, else ``free``.
+        licence_note: Why it is free, or that the licence ran out; empty otherwise.
     """
 
     contract_version: int
     firmware_name: str
     definition_path: str = ""
     reads_the_build: bool = False
+    edition: str = "free"
+    licence_note: str = ""
 
 
 @dataclass(frozen=True)

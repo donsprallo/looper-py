@@ -42,6 +42,15 @@ class SimulationRefusedError(ValueError):
     """The simulation refused what was asked of it, and says why."""
 
 
+class ProFeatureLockedError(SimulationRefusedError):
+    """A part of looper Pro was asked for, and the server's licence does not unlock it.
+
+    A kind of refusal, so code that handles refusals handles this too; its
+    own type, so that a test or a pipeline can tell a missing licence from a
+    firmware that said no. In CI the licence goes into ``LOOPER_LICENSE``.
+    """
+
+
 class SimulationUnreachableError(ConnectionError):
     """The simulation, or the server in front of it, stopped answering."""
 

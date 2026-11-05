@@ -20,6 +20,10 @@ import pytest
 
 import looper
 
+# The findings are part of looper Pro. looper-cli is started from a checkout,
+# where the development switch unlocks Pro, so no licence is needed here.
+os.environ["LOOPER_DEV_EDITION"] = "pro"
+
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 CORE = Path(os.environ.get("LOOPER_CORE", PROJECT_ROOT.parent / "looper-core"))
 DEFINITION = CORE / "examples" / "blinky" / "looper.toml"

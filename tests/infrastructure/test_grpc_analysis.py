@@ -14,7 +14,7 @@ from typing import Any
 import grpc
 import pytest
 
-from looper import Dependency, Signal, SignalGraph, SimulationRefusedError
+from looper import Dependency, ProFeatureLockedError, Signal, SignalGraph, SimulationRefusedError
 from looper.infrastructure.contract import looper_inspector_pb2 as contract
 from looper.infrastructure.contract import looper_inspector_pb2_grpc as service
 from looper.infrastructure.grpc_inspector import GrpcInspector
@@ -51,6 +51,7 @@ class AnalysisServicer(service.InspectorServicer):  # type: ignore[misc]
         self.graph: contract.SignalGraphRequest | None = None
         self.graph_ack = contract.Ack()
         self.reads_the_code = True
+        self.licensed = True
         self.models = contract.ModelList(
             models=[
                 contract.ModelView(
@@ -85,6 +86,11 @@ class AnalysisServicer(service.InspectorServicer):  # type: ignore[misc]
         )
 
     def ObserveFindings(self, request: Any, context: Any) -> contract.FindingList:
+        if not self.licensed:
+            context.abort(
+                grpc.StatusCode.PERMISSION_DENIED,
+                "The Architect is part of looper Pro - no licence found.",
+            )
         if not self.reads_the_code:
             context.abort(
                 grpc.StatusCode.FAILED_PRECONDITION, "this server does not read the project's code"
@@ -149,6 +155,15 @@ def test_a_server_that_does_not_read_the_code_refuses_the_findings(
     servicer.reads_the_code = False
 
     with pytest.raises(SimulationRefusedError, match="does not read the project's code"):
+        inspector.read_findings()
+
+
+def test_a_part_of_pro_without_a_licence_is_its_own_refusal(
+    servicer: AnalysisServicer, inspector: GrpcInspector
+) -> None:
+    servicer.licensed = False
+
+    with pytest.raises(ProFeatureLockedError, match="part of looper Pro"):
         inspector.read_findings()
 
 

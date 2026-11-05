@@ -51,6 +51,8 @@ def description_of(message: contract.Description) -> Description:
         firmware_name=message.firmware_name,
         definition_path=message.definition_path,
         reads_the_build=message.reads_the_build,
+        edition="pro" if message.license.edition == contract.EDITION_PRO else "free",
+        licence_note=message.license.note,
     )
 
 
