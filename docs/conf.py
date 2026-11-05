@@ -11,6 +11,9 @@ import os
 import sys
 from pathlib import Path
 
+from docutils import nodes
+from sphinx.application import Sphinx
+
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 project = "looper-py"
@@ -64,6 +67,34 @@ extlinks = {
     "learn": (f"{LEARN_DOCS}/%s", "%s"),
 }
 extlinks_detect_hardcoded_links = True
+
+
+# The defaults above are relative to the root of this handbook, where the
+# builds sit side by side. A link is written into a page, though, and from a
+# page one folder down it takes one more "../" to reach the same neighbour.
+# An absolute URL, as a deployment sets through the variables, is left alone.
+RELATIVE_HANDBOOKS = tuple(
+    base.removesuffix("%s")
+    for base, _caption in extlinks.values()
+    if "://" not in base and not base.startswith("/")
+)
+
+
+def _relative_to_page(_app: Sphinx, doctree: nodes.document, docname: str) -> None:
+    """Prefix each link to a neighbouring handbook with one ``../`` per folder."""
+    prefix = "../" * docname.count("/")
+    if not prefix:
+        return
+    for reference in doctree.findall(nodes.reference):
+        uri = reference.get("refuri", "")
+        if uri.startswith(RELATIVE_HANDBOOKS):
+            reference["refuri"] = prefix + uri
+
+
+def setup(app: Sphinx) -> None:
+    """Correct the links once every link of a page is resolved."""
+    app.connect("doctree-resolved", _relative_to_page)
+
 
 # Prompts and output are not copied with the code.
 copybutton_prompt_text = r"\$ |>>> "
