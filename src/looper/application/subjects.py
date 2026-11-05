@@ -21,6 +21,9 @@ from looper.domain.checks import (
     ChannelReaches,
     ChannelStaysBetween,
     HeapStaysBelow,
+    MessageCount,
+    MessageFilter,
+    MessageRate,
     NeverAllocates,
     NothingLeaked,
     StackNoDeeperThan,
@@ -67,6 +70,53 @@ class BusExpectation:
     def carried_at_least(self, count: int) -> Expectations:
         """Expect at least so many exchanges."""
         return self._expectations.add(BusCarriedAtLeast(self._bus_id, self._name, count))
+
+    def message(
+        self,
+        address: int | None = None,
+        *,
+        direction: str | None = None,
+        starts_with: bytes = b"",
+    ) -> MessageExpectation:
+        """Narrow the expectation to messages of one kind.
+
+        ``check.bus("CAN1").message(0x321, direction="outbound").happened_at(10)``
+        expects the firmware's status message ten times a second. The address
+        is the CAN identifier, the I2C address or the chip select.
+        """
+        wanted = MessageFilter(address, direction, bytes(starts_with))
+        return MessageExpectation(self._expectations, self._bus_id, self._name, wanted)
+
+
+class MessageExpectation:
+    """What is expected of the messages of one kind on a bus."""
+
+    def __init__(
+        self, expectations: Expectations, bus_id: int, name: str, wanted: MessageFilter
+    ) -> None:
+        self._expectations = expectations
+        self._bus_id = bus_id
+        self._name = name
+        self._wanted = wanted
+
+    def happened_at_least(self, count: int) -> Expectations:
+        """Expect at least so many of them."""
+        return self._add(MessageCount(self._bus_id, self._name, self._wanted, count))
+
+    def happened_between(self, at_least: int, at_most: int) -> Expectations:
+        """Expect their number to be within a range, both ends included."""
+        return self._add(MessageCount(self._bus_id, self._name, self._wanted, at_least, at_most))
+
+    def never(self) -> Expectations:
+        """Expect none of them at all."""
+        return self._add(MessageCount(self._bus_id, self._name, self._wanted, 0, 0))
+
+    def happened_at(self, hertz: float, tolerance: float = 0.05) -> Expectations:
+        """Expect them at about a given rate."""
+        return self._add(MessageRate(self._bus_id, self._name, self._wanted, hertz, tolerance))
+
+    def _add(self, check: MessageCount | MessageRate) -> Expectations:
+        return self._expectations.add(check)
 
 
 class CallExpectation:

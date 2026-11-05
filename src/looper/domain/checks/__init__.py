@@ -2,7 +2,13 @@
 
 from __future__ import annotations
 
-from looper.domain.checks.bus_checks import BusCarriedAtLeast, BusNothingRefused
+from looper.domain.checks.bus_checks import (
+    BusCarriedAtLeast,
+    BusNothingRefused,
+    MessageCount,
+    MessageFilter,
+    MessageRate,
+)
 from looper.domain.checks.call_checks import (
     CallHappened,
     CallRate,
@@ -30,6 +36,9 @@ __all__ = [
     "Check",
     "FirmwareIsAlive",
     "HeapStaysBelow",
+    "MessageCount",
+    "MessageFilter",
+    "MessageRate",
     "NeverAllocates",
     "NothingLeaked",
     "StackNoDeeperThan",
