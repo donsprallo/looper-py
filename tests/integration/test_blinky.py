@@ -1,4 +1,4 @@
-"""The blinky example of looper-core, run and checked from a test.
+"""The blinky test firmware of looper-core, run and checked from a test.
 
 The whole path a user takes: looper-cli builds the firmware, starts it on a
 virtual clock and serves it; this library attaches, sets the scene and
@@ -26,7 +26,7 @@ os.environ["LOOPER_DEV_EDITION"] = "pro"
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 CORE = Path(os.environ.get("LOOPER_CORE", PROJECT_ROOT.parent / "looper-core"))
-DEFINITION = CORE / "examples" / "blinky" / "looper.toml"
+DEFINITION = CORE / "tests" / "fixtures" / "blinky" / "looper.toml"
 
 #: looper-cli from the neighbouring checkout, run as a module so that the
 #: test does not depend on its console script being installed.
