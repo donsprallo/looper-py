@@ -41,6 +41,12 @@ packages = ["src/looper"]
 testpaths = ["tests"]
 # "tests" so that the stand-in inspector can be shared between directories.
 pythonpath = ["src", "tests"]
+# The tutorial checks take minutes; a plain `pytest` leaves them out, and
+# `pytest -m tutorial` runs them alone (the last -m given wins).
+addopts = "-m 'not tutorial'"
+markers = [
+    "tutorial: checks the claims of the tutorial against its lessons in looper-core (slow; `-m tutorial` runs them alone)",
+]
 
 [tool.mypy]
 python_version = "3.13"

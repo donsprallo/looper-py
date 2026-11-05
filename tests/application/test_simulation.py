@@ -102,6 +102,27 @@ def test_a_signal_and_a_message_reach_the_simulation() -> None:
     assert inspector.messages[0].address == 0x6FF
 
 
+def test_a_message_longer_than_the_bus_carries_is_refused_not_cut() -> None:
+    inspector = ScriptedInspector()
+    inspector.buses = (Bus(2, "uart", "UART1", accepts_messages=True, max_payload_bytes=64),)
+    simulation = Simulation(inspector)
+
+    with pytest.raises(SimulationRefusedError, match="UART1 carries at most 64 bytes"):
+        simulation.send_bus_message(BusMessage(bus_id=2, address=0, payload=b"x" * 65))
+
+    assert inspector.messages == []
+
+
+def test_a_message_as_long_as_the_bus_carries_is_sent() -> None:
+    inspector = ScriptedInspector()
+    inspector.buses = (Bus(2, "uart", "UART1", accepts_messages=True, max_payload_bytes=64),)
+    simulation = Simulation(inspector)
+
+    simulation.send_bus_message(BusMessage(bus_id=2, address=0, payload=b"x" * 64))
+
+    assert len(inspector.messages[0].payload) == 64
+
+
 def test_a_variable_is_watched_written_and_let_go() -> None:
     inspector = ScriptedInspector()
     inspector.variables = (Variable(7, "config.gain", "gain", "uint", 1, 0x2000, is_writable=True),)

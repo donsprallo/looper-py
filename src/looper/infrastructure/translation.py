@@ -138,6 +138,7 @@ def buses_of(message: contract.BusList) -> tuple[Bus, ...]:
             name=one.name,
             bitrate_bps=one.bitrate_bps,
             accepts_messages=one.accepts_messages,
+            max_payload_bytes=one.max_payload_bytes,
         )
         for one in message.buses
     )

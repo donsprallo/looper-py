@@ -232,6 +232,8 @@ class Bus:
         bitrate_bps: Its bit rate, zero when none was configured.
         accepts_messages: Whether a test may put a message on it. On SPI
             and I2C the firmware is the master and nothing else sends.
+        max_payload_bytes: The most bytes one message on it may carry, as
+            the simulation says; zero when it does not say.
     """
 
     bus_id: int
@@ -239,3 +241,4 @@ class Bus:
     name: str
     bitrate_bps: int = 0
     accepts_messages: bool = False
+    max_payload_bytes: int = 0

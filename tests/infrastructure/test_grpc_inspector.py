@@ -26,6 +26,7 @@ from looper.infrastructure import grpc_inspector
 from looper.infrastructure.contract import looper_inspector_pb2 as contract
 from looper.infrastructure.contract import looper_inspector_pb2_grpc as service
 from looper.infrastructure.grpc_inspector import GrpcInspector
+from looper.infrastructure.translation import buses_of
 from looper.starting import connect
 
 A_VARIABLE = contract.VariableView(
@@ -436,3 +437,11 @@ def test_a_server_without_this_contract_is_a_mismatch_not_unreachable() -> None:
 def test_an_address_nothing_answers_at_is_unreachable() -> None:
     with pytest.raises(SimulationUnreachableError, match="no inspector server"):
         GrpcInspector("127.0.0.1:9", timeout_seconds=0.2)
+
+
+def test_a_bus_says_how_many_bytes_one_message_on_it_carries() -> None:
+    listed = contract.BusList(
+        buses=[contract.BusView(bus_id=2, kind="uart", name="UART1", max_payload_bytes=64)]
+    )
+
+    assert buses_of(listed)[0].max_payload_bytes == 64

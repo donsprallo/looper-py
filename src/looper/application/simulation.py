@@ -296,10 +296,27 @@ class Simulation:
     def send_bus_message(self, message: BusMessage) -> None:
         """Put one message on a bus.
 
+        A message longer than the bus carries is refused here rather than
+        sent: cut short on the way, it would arrive as a different message.
+
         Raises:
-            SimulationRefusedError: If the bus takes no messages.
+            SimulationRefusedError: If the bus takes no messages, or the
+                message is longer than one message on it may be.
         """
+        self._refuse_if_too_long(message)
         self._inspector.send_bus_message(message)
+
+    def _refuse_if_too_long(self, message: BusMessage) -> None:
+        """Refuse a payload longer than the bus says one message carries."""
+        bus = next((one for one in self.buses() if one.bus_id == message.bus_id), None)
+        if bus is None or bus.max_payload_bytes == 0:
+            return
+        if len(message.payload) <= bus.max_payload_bytes:
+            return
+        raise SimulationRefusedError(
+            f"{bus.name} carries at most {bus.max_payload_bytes} bytes in one message, "
+            f"and this one has {len(message.payload)}; send it as several"
+        )
 
     def variables(self) -> tuple[Variable, ...]:
         """The catalogue of the firmware's variables.
