@@ -177,6 +177,11 @@ class GrpcInspector(Inspector):
         request = signal_graph_translation.signal_graph_request_of(graph)
         _acknowledged(self._call(self._stub.ApplySignalGraph, request))
 
+    def set_graph_value(self, node: str, value: float) -> None:
+        """Change what one value node of the applied graph gives."""
+        request = contract.GraphValueRequest(node=node, value=value)
+        _acknowledged(self._call(self._stub.SetGraphValue, request))
+
     def list_models(self) -> tuple[SignalModel, ...]:
         """The models the project offers the signal graph."""
         listing = self._call(self._stub.ListModels, EMPTY)

@@ -161,6 +161,15 @@ class Inspector(ABC):
         """
 
     @abstractmethod
+    def set_graph_value(self, node: str, value: float) -> None:
+        """Change what one value node of the applied graph gives.
+
+        Raises:
+            SimulationRefusedError: If the graph has no value node of that key,
+                or the value is outside a parameter it gives.
+        """
+
+    @abstractmethod
     def list_models(self) -> tuple[SignalModel, ...]:
         """The models the project offers the signal graph.
 

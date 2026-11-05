@@ -169,6 +169,11 @@ class InspectorStub:
                 request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ModelNodeChoice.SerializeToString,
                 response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Ack.FromString,
                 _registered_method=True)
+        self.SetGraphValue = channel.unary_unary(
+                '/looper.inspector.v3.Inspector/SetGraphValue',
+                request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.GraphValueRequest.SerializeToString,
+                response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Ack.FromString,
+                _registered_method=True)
         self.WatchVariable = channel.unary_unary(
                 '/looper.inspector.v3.Inspector/WatchVariable',
                 request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.VariableChoice.SerializeToString,
@@ -526,6 +531,18 @@ class InspectorServicer:
 
     def ResetModelState(self, request, context):
         """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def SetGraphValue(self, request, context):
+        """Change what one value node of the applied graph gives, without sending
+        the graph again. A model it supplies a parameter to is made again with
+        the new value and keeps its state, as ApplySignalGraph would keep it.
+        REFUSAL_UNKNOWN_TARGET: no value node of that key in the applied graph.
+        REFUSAL_INVALID: outside the limits of a parameter it supplies, or the
+        model failed with it; the graph runs on as it was.
+        """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
@@ -921,6 +938,11 @@ def add_InspectorServicer_to_server(servicer, server):
             'ResetModelState': grpc.unary_unary_rpc_method_handler(
                     servicer.ResetModelState,
                     request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ModelNodeChoice.FromString,
+                    response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Ack.SerializeToString,
+            ),
+            'SetGraphValue': grpc.unary_unary_rpc_method_handler(
+                    servicer.SetGraphValue,
+                    request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.GraphValueRequest.FromString,
                     response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Ack.SerializeToString,
             ),
             'WatchVariable': grpc.unary_unary_rpc_method_handler(
@@ -1827,6 +1849,33 @@ class Inspector:
             target,
             '/looper.inspector.v3.Inspector/ResetModelState',
             looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ModelNodeChoice.SerializeToString,
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Ack.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def SetGraphValue(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/looper.inspector.v3.Inspector/SetGraphValue',
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.GraphValueRequest.SerializeToString,
             looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Ack.FromString,
             options,
             channel_credentials,

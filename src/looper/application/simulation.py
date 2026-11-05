@@ -277,6 +277,18 @@ class Simulation:
         """
         self._inspector.apply_signal_graph(graph)
 
+    def set_graph_value(self, node: str, value: float) -> None:
+        """Give a value node of the applied graph a new value, without applying it again.
+
+        A model the node gives a parameter to is made again with the value
+        and keeps its state.
+
+        Raises:
+            SimulationRefusedError: If the graph has no value node `node`, or
+                the value is outside the limits of a parameter it gives.
+        """
+        self._inspector.set_graph_value(node, value)
+
     def models(self) -> tuple[SignalModel, ...]:
         """The models the project offers the signal graph, read afresh from its files.
 

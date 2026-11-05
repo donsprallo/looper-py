@@ -50,6 +50,7 @@ class AnalysisServicer(service.InspectorServicer):  # type: ignore[misc]
     def __init__(self) -> None:
         self.graph: contract.SignalGraphRequest | None = None
         self.graph_ack = contract.Ack()
+        self.graph_values: list[contract.GraphValueRequest] = []
         self.reads_the_code = True
         self.licensed = True
         self.models = contract.ModelList(
@@ -58,7 +59,12 @@ class AnalysisServicer(service.InspectorServicer):  # type: ignore[misc]
                     name="DcMotor",
                     inputs=["voltage", "load"],
                     outputs=["speed", "current"],
-                    parameters=[contract.ModelParameterView(name="supply", default_value=24.0)],
+                    parameters=[
+                        contract.ModelParameterView(name="supply", default_value=24.0),
+                        contract.ModelParameterView(
+                            name="inertia", default_value=2e-4, lowest=1e-5, highest=1e-2
+                        ),
+                    ],
                     kind="state",
                     origin="project",
                 )
@@ -103,6 +109,15 @@ class AnalysisServicer(service.InspectorServicer):  # type: ignore[misc]
 
     def ListModels(self, request: Any, context: Any) -> contract.ModelList:
         return self.models
+
+    def SetGraphValue(self, request: Any, context: Any) -> contract.Ack:
+        self.graph_values.append(request)
+        if request.node != "inertia":
+            return contract.Ack(
+                refusal=contract.REFUSAL_UNKNOWN_TARGET,
+                refusal_text="that value node is not in the applied graph",
+            )
+        return contract.Ack()
 
 
 @pytest.fixture
@@ -223,3 +238,43 @@ def test_a_simulation_without_models_refuses_with_its_reason(
 
     with pytest.raises(SimulationRefusedError, match="without a definition"):
         inspector.list_models()
+
+
+def test_a_value_node_and_the_parameter_it_gives_go_out_as_the_contract_carries_them(
+    servicer: AnalysisServicer, inspector: GrpcInspector
+) -> None:
+    graph = (
+        SignalGraph()
+        .value("inertia", 3e-4)
+        .model("motor", "DcMotor", parameter_sources={"inertia": "inertia"})
+    )
+
+    inspector.apply_signal_graph(graph)
+
+    sent = servicer.graph
+    assert sent is not None
+    value, motor = sent.nodes
+    assert (value.kind, value.value) == ("value", 3e-4)
+    assert dict(motor.parameter_sources) == {"inertia": "inertia"}
+
+
+def test_a_value_node_is_set_and_an_unknown_one_is_refused(
+    servicer: AnalysisServicer, inspector: GrpcInspector
+) -> None:
+    inspector.set_graph_value("inertia", 4e-4)
+
+    with pytest.raises(SimulationRefusedError, match="not in the applied graph"):
+        inspector.set_graph_value("mass", 1.0)
+    assert [(one.node, one.value) for one in servicer.graph_values] == [
+        ("inertia", 4e-4),
+        ("mass", 1.0),
+    ]
+
+
+def test_a_parameter_s_limits_come_back_only_where_the_model_declares_them(
+    inspector: GrpcInspector,
+) -> None:
+    supply, inertia = inspector.list_models()[0].parameters
+
+    assert (supply.lowest, supply.highest) == (None, None)
+    assert (inertia.lowest, inertia.highest) == (1e-5, 1e-2)

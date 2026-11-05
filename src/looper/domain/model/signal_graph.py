@@ -42,6 +42,7 @@ class SignalNodeKind(StrEnum):
     MULTIPLY = "multiply"
     DIVIDE = "divide"
     MODEL = "model"
+    VALUE = "value"
 
 
 #: The kinds that combine two inputs into one value.
@@ -79,6 +80,11 @@ class SignalNode:
             out keeps the model's default.
         interpreted: Step the model in Python even if it could be compiled,
             so that a breakpoint in it is reached.
+        value: What a value node gives until `Simulation.set_graph_value`
+            changes it.
+        parameter_sources: Parameters of a model node another node gives,
+            by parameter name: the key of a value node or a constant
+            generator. One given here overrides the same name in `parameters`.
     """
 
     key: str
@@ -89,6 +95,8 @@ class SignalNode:
     model: str = ""
     parameters: tuple[tuple[str, float], ...] = ()
     interpreted: bool = False
+    value: float = 0.0
+    parameter_sources: tuple[tuple[str, str], ...] = ()
 
 
 @dataclass(frozen=True)
@@ -155,6 +163,10 @@ class SignalGraph:
         """Add a node that reads a watched variable, by its watch channel."""
         return self._with(SignalNode(key, SignalNodeKind.WATCH, source=channel_id))
 
+    def value(self, key: str, value: float) -> SignalGraph:
+        """Add a node that gives a value a test sets, to an input or a model's parameter."""
+        return self._with(SignalNode(key, SignalNodeKind.VALUE, value=value))
+
     def operation(
         self, key: str, kind: SignalNodeKind, first: InputSpec, second: InputSpec
     ) -> SignalGraph:
@@ -174,8 +186,13 @@ class SignalGraph:
         inputs: Iterable[InputSpec] = (),
         parameters: Mapping[str, float] | None = None,
         interpreted: bool = False,
+        parameter_sources: Mapping[str, str] | None = None,
     ) -> SignalGraph:
-        """Add a model the simulation steps, fed from `inputs` in the model's order."""
+        """Add a model the simulation steps, fed from `inputs` in the model's order.
+
+        `parameter_sources` gives parameters from value nodes, by parameter
+        name, so that `Simulation.set_graph_value` changes them later.
+        """
         node = SignalNode(
             key,
             SignalNodeKind.MODEL,
@@ -183,6 +200,7 @@ class SignalGraph:
             model=name,
             parameters=tuple(sorted((parameters or {}).items())),
             interpreted=interpreted,
+            parameter_sources=tuple(sorted((parameter_sources or {}).items())),
         )
         return self._with(node)
 
@@ -211,11 +229,15 @@ class ModelParameter:
         name: What the model calls it.
         default_value: What it is when a graph leaves it out.
         unit: What it is measured in; empty for nothing.
+        lowest: The lowest value the model accepts; None where it says nothing.
+        highest: The highest value the model accepts; None where it says nothing.
     """
 
     name: str
     default_value: float
     unit: str = ""
+    lowest: float | None = None
+    highest: float | None = None
 
 
 @dataclass(frozen=True)

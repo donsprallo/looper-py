@@ -53,6 +53,7 @@ class ScriptedInspector(Inspector):
         self.findings: list[Findings] | None = [Findings(is_complete=True)]
         self.models: tuple[SignalModel, ...] | None = ()
         self.graphs: list[SignalGraph] = []
+        self.graph_values: list[tuple[str, float]] = []
         self.pins: tuple[Pin, ...] = ()
         self.channels: tuple[Channel, ...] = ()
         self.buses: tuple[Bus, ...] = ()
@@ -159,6 +160,11 @@ class ScriptedInspector(Inspector):
         if self.refusal is not None:
             raise SimulationRefusedError(self.refusal)
         self.graphs.append(graph)
+
+    def set_graph_value(self, node: str, value: float) -> None:
+        if self.refusal is not None:
+            raise SimulationRefusedError(self.refusal)
+        self.graph_values.append((node, value))
 
     def list_models(self) -> tuple[SignalModel, ...]:
         if self.models is None:

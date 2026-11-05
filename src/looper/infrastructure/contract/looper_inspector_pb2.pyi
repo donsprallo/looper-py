@@ -772,24 +772,28 @@ class ClearRequest(_message.Message):
     def __init__(self, epoch: _Optional[int] = ...) -> None: ...
 
 class PinDrive(_message.Message):
-    __slots__ = ("pin_id", "high", "toggle", "when")
+    __slots__ = ("pin_id", "high", "toggle", "active", "when")
     PIN_ID_FIELD_NUMBER: _ClassVar[int]
     HIGH_FIELD_NUMBER: _ClassVar[int]
     TOGGLE_FIELD_NUMBER: _ClassVar[int]
+    ACTIVE_FIELD_NUMBER: _ClassVar[int]
     WHEN_FIELD_NUMBER: _ClassVar[int]
     pin_id: int
     high: bool
     toggle: Empty
+    active: bool
     when: When
-    def __init__(self, pin_id: _Optional[int] = ..., high: _Optional[bool] = ..., toggle: _Optional[_Union[Empty, _Mapping]] = ..., when: _Optional[_Union[When, _Mapping]] = ...) -> None: ...
+    def __init__(self, pin_id: _Optional[int] = ..., high: _Optional[bool] = ..., toggle: _Optional[_Union[Empty, _Mapping]] = ..., active: _Optional[bool] = ..., when: _Optional[_Union[When, _Mapping]] = ...) -> None: ...
 
 class PinDriven(_message.Message):
-    __slots__ = ("ack", "high")
+    __slots__ = ("ack", "high", "active")
     ACK_FIELD_NUMBER: _ClassVar[int]
     HIGH_FIELD_NUMBER: _ClassVar[int]
+    ACTIVE_FIELD_NUMBER: _ClassVar[int]
     ack: Ack
     high: bool
-    def __init__(self, ack: _Optional[_Union[Ack, _Mapping]] = ..., high: _Optional[bool] = ...) -> None: ...
+    active: bool
+    def __init__(self, ack: _Optional[_Union[Ack, _Mapping]] = ..., high: _Optional[bool] = ..., active: _Optional[bool] = ...) -> None: ...
 
 class WatchStarted(_message.Message):
     __slots__ = ("watch", "ack")
@@ -1190,20 +1194,24 @@ class ViewPosition(_message.Message):
     def __init__(self, epoch: _Optional[int] = ..., as_of_event_seq: _Optional[int] = ...) -> None: ...
 
 class PinView(_message.Message):
-    __slots__ = ("pin_id", "name", "direction", "level", "is_active", "is_drivable")
+    __slots__ = ("pin_id", "name", "direction", "level", "is_active", "is_drivable", "polarity", "drive_text")
     PIN_ID_FIELD_NUMBER: _ClassVar[int]
     NAME_FIELD_NUMBER: _ClassVar[int]
     DIRECTION_FIELD_NUMBER: _ClassVar[int]
     LEVEL_FIELD_NUMBER: _ClassVar[int]
     IS_ACTIVE_FIELD_NUMBER: _ClassVar[int]
     IS_DRIVABLE_FIELD_NUMBER: _ClassVar[int]
+    POLARITY_FIELD_NUMBER: _ClassVar[int]
+    DRIVE_TEXT_FIELD_NUMBER: _ClassVar[int]
     pin_id: int
     name: str
     direction: str
     level: str
     is_active: bool
     is_drivable: bool
-    def __init__(self, pin_id: _Optional[int] = ..., name: _Optional[str] = ..., direction: _Optional[str] = ..., level: _Optional[str] = ..., is_active: _Optional[bool] = ..., is_drivable: _Optional[bool] = ...) -> None: ...
+    polarity: str
+    drive_text: str
+    def __init__(self, pin_id: _Optional[int] = ..., name: _Optional[str] = ..., direction: _Optional[str] = ..., level: _Optional[str] = ..., is_active: _Optional[bool] = ..., is_drivable: _Optional[bool] = ..., polarity: _Optional[str] = ..., drive_text: _Optional[str] = ...) -> None: ...
 
 class SimulationView(_message.Message):
     __slots__ = ("sim_us", "pins")
@@ -1228,7 +1236,7 @@ class SignalView(_message.Message):
     def __init__(self, waveform: _Optional[str] = ..., amplitude: _Optional[float] = ..., offset: _Optional[float] = ..., frequency_hz: _Optional[float] = ..., phase_degrees: _Optional[float] = ...) -> None: ...
 
 class ChannelView(_message.Message):
-    __slots__ = ("channel_id", "name", "unit", "direction", "value", "is_drivable", "signal", "is_silent", "display_value", "is_driven_by_graph")
+    __slots__ = ("channel_id", "name", "unit", "direction", "value", "is_drivable", "signal", "is_silent", "display_value", "is_driven_by_graph", "is_settable", "settable_text", "value_text")
     CHANNEL_ID_FIELD_NUMBER: _ClassVar[int]
     NAME_FIELD_NUMBER: _ClassVar[int]
     UNIT_FIELD_NUMBER: _ClassVar[int]
@@ -1239,6 +1247,9 @@ class ChannelView(_message.Message):
     IS_SILENT_FIELD_NUMBER: _ClassVar[int]
     DISPLAY_VALUE_FIELD_NUMBER: _ClassVar[int]
     IS_DRIVEN_BY_GRAPH_FIELD_NUMBER: _ClassVar[int]
+    IS_SETTABLE_FIELD_NUMBER: _ClassVar[int]
+    SETTABLE_TEXT_FIELD_NUMBER: _ClassVar[int]
+    VALUE_TEXT_FIELD_NUMBER: _ClassVar[int]
     channel_id: int
     name: str
     unit: str
@@ -1249,7 +1260,10 @@ class ChannelView(_message.Message):
     is_silent: bool
     display_value: str
     is_driven_by_graph: bool
-    def __init__(self, channel_id: _Optional[int] = ..., name: _Optional[str] = ..., unit: _Optional[str] = ..., direction: _Optional[str] = ..., value: _Optional[float] = ..., is_drivable: _Optional[bool] = ..., signal: _Optional[_Union[SignalView, _Mapping]] = ..., is_silent: _Optional[bool] = ..., display_value: _Optional[str] = ..., is_driven_by_graph: _Optional[bool] = ...) -> None: ...
+    is_settable: bool
+    settable_text: str
+    value_text: str
+    def __init__(self, channel_id: _Optional[int] = ..., name: _Optional[str] = ..., unit: _Optional[str] = ..., direction: _Optional[str] = ..., value: _Optional[float] = ..., is_drivable: _Optional[bool] = ..., signal: _Optional[_Union[SignalView, _Mapping]] = ..., is_silent: _Optional[bool] = ..., display_value: _Optional[str] = ..., is_driven_by_graph: _Optional[bool] = ..., is_settable: _Optional[bool] = ..., settable_text: _Optional[str] = ..., value_text: _Optional[str] = ...) -> None: ...
 
 class ChannelList(_message.Message):
     __slots__ = ("channels",)
@@ -1288,7 +1302,7 @@ class SignalInputRequest(_message.Message):
     def __init__(self, node: _Optional[str] = ..., output: _Optional[int] = ...) -> None: ...
 
 class SignalNodeRequest(_message.Message):
-    __slots__ = ("key", "kind", "signal", "source", "inputs", "model", "parameters", "interpreted")
+    __slots__ = ("key", "kind", "signal", "source", "inputs", "model", "parameters", "interpreted", "value", "parameter_sources")
     class ParametersEntry(_message.Message):
         __slots__ = ("key", "value")
         KEY_FIELD_NUMBER: _ClassVar[int]
@@ -1296,6 +1310,13 @@ class SignalNodeRequest(_message.Message):
         key: str
         value: float
         def __init__(self, key: _Optional[str] = ..., value: _Optional[float] = ...) -> None: ...
+    class ParameterSourcesEntry(_message.Message):
+        __slots__ = ("key", "value")
+        KEY_FIELD_NUMBER: _ClassVar[int]
+        VALUE_FIELD_NUMBER: _ClassVar[int]
+        key: str
+        value: str
+        def __init__(self, key: _Optional[str] = ..., value: _Optional[str] = ...) -> None: ...
     KEY_FIELD_NUMBER: _ClassVar[int]
     KIND_FIELD_NUMBER: _ClassVar[int]
     SIGNAL_FIELD_NUMBER: _ClassVar[int]
@@ -1304,6 +1325,8 @@ class SignalNodeRequest(_message.Message):
     MODEL_FIELD_NUMBER: _ClassVar[int]
     PARAMETERS_FIELD_NUMBER: _ClassVar[int]
     INTERPRETED_FIELD_NUMBER: _ClassVar[int]
+    VALUE_FIELD_NUMBER: _ClassVar[int]
+    PARAMETER_SOURCES_FIELD_NUMBER: _ClassVar[int]
     key: str
     kind: str
     signal: SignalView
@@ -1312,17 +1335,23 @@ class SignalNodeRequest(_message.Message):
     model: str
     parameters: _containers.ScalarMap[str, float]
     interpreted: bool
-    def __init__(self, key: _Optional[str] = ..., kind: _Optional[str] = ..., signal: _Optional[_Union[SignalView, _Mapping]] = ..., source: _Optional[int] = ..., inputs: _Optional[_Iterable[_Union[SignalInputRequest, _Mapping]]] = ..., model: _Optional[str] = ..., parameters: _Optional[_Mapping[str, float]] = ..., interpreted: _Optional[bool] = ...) -> None: ...
+    value: float
+    parameter_sources: _containers.ScalarMap[str, str]
+    def __init__(self, key: _Optional[str] = ..., kind: _Optional[str] = ..., signal: _Optional[_Union[SignalView, _Mapping]] = ..., source: _Optional[int] = ..., inputs: _Optional[_Iterable[_Union[SignalInputRequest, _Mapping]]] = ..., model: _Optional[str] = ..., parameters: _Optional[_Mapping[str, float]] = ..., interpreted: _Optional[bool] = ..., value: _Optional[float] = ..., parameter_sources: _Optional[_Mapping[str, str]] = ...) -> None: ...
 
 class ModelParameterView(_message.Message):
-    __slots__ = ("name", "default_value", "unit")
+    __slots__ = ("name", "default_value", "unit", "lowest", "highest")
     NAME_FIELD_NUMBER: _ClassVar[int]
     DEFAULT_VALUE_FIELD_NUMBER: _ClassVar[int]
     UNIT_FIELD_NUMBER: _ClassVar[int]
+    LOWEST_FIELD_NUMBER: _ClassVar[int]
+    HIGHEST_FIELD_NUMBER: _ClassVar[int]
     name: str
     default_value: float
     unit: str
-    def __init__(self, name: _Optional[str] = ..., default_value: _Optional[float] = ..., unit: _Optional[str] = ...) -> None: ...
+    lowest: float
+    highest: float
+    def __init__(self, name: _Optional[str] = ..., default_value: _Optional[float] = ..., unit: _Optional[str] = ..., lowest: _Optional[float] = ..., highest: _Optional[float] = ...) -> None: ...
 
 class ModelView(_message.Message):
     __slots__ = ("name", "description", "inputs", "outputs", "parameters", "step_us", "source", "problem", "kind", "execution", "execution_label", "execution_reason", "state_names", "origin", "origin_label", "stands_in_for")
@@ -1379,28 +1408,65 @@ class ModelStateView(_message.Message):
     def __init__(self, name: _Optional[str] = ..., value: _Optional[float] = ..., value_text: _Optional[str] = ...) -> None: ...
 
 class ModelNodeView(_message.Message):
-    __slots__ = ("node", "execution", "execution_label", "execution_reason", "fault", "state")
+    __slots__ = ("node", "execution", "execution_label", "execution_reason", "fault", "state", "parameters")
+    class ParametersEntry(_message.Message):
+        __slots__ = ("key", "value")
+        KEY_FIELD_NUMBER: _ClassVar[int]
+        VALUE_FIELD_NUMBER: _ClassVar[int]
+        key: str
+        value: float
+        def __init__(self, key: _Optional[str] = ..., value: _Optional[float] = ...) -> None: ...
     NODE_FIELD_NUMBER: _ClassVar[int]
     EXECUTION_FIELD_NUMBER: _ClassVar[int]
     EXECUTION_LABEL_FIELD_NUMBER: _ClassVar[int]
     EXECUTION_REASON_FIELD_NUMBER: _ClassVar[int]
     FAULT_FIELD_NUMBER: _ClassVar[int]
     STATE_FIELD_NUMBER: _ClassVar[int]
+    PARAMETERS_FIELD_NUMBER: _ClassVar[int]
     node: str
     execution: str
     execution_label: str
     execution_reason: str
     fault: str
     state: _containers.RepeatedCompositeFieldContainer[ModelStateView]
-    def __init__(self, node: _Optional[str] = ..., execution: _Optional[str] = ..., execution_label: _Optional[str] = ..., execution_reason: _Optional[str] = ..., fault: _Optional[str] = ..., state: _Optional[_Iterable[_Union[ModelStateView, _Mapping]]] = ...) -> None: ...
+    parameters: _containers.ScalarMap[str, float]
+    def __init__(self, node: _Optional[str] = ..., execution: _Optional[str] = ..., execution_label: _Optional[str] = ..., execution_reason: _Optional[str] = ..., fault: _Optional[str] = ..., state: _Optional[_Iterable[_Union[ModelStateView, _Mapping]]] = ..., parameters: _Optional[_Mapping[str, float]] = ...) -> None: ...
 
 class SignalGraphView(_message.Message):
-    __slots__ = ("models", "probes")
+    __slots__ = ("models", "probes", "values")
     MODELS_FIELD_NUMBER: _ClassVar[int]
     PROBES_FIELD_NUMBER: _ClassVar[int]
+    VALUES_FIELD_NUMBER: _ClassVar[int]
     models: _containers.RepeatedCompositeFieldContainer[ModelNodeView]
     probes: _containers.RepeatedCompositeFieldContainer[ProbeView]
-    def __init__(self, models: _Optional[_Iterable[_Union[ModelNodeView, _Mapping]]] = ..., probes: _Optional[_Iterable[_Union[ProbeView, _Mapping]]] = ...) -> None: ...
+    values: _containers.RepeatedCompositeFieldContainer[GraphValueView]
+    def __init__(self, models: _Optional[_Iterable[_Union[ModelNodeView, _Mapping]]] = ..., probes: _Optional[_Iterable[_Union[ProbeView, _Mapping]]] = ..., values: _Optional[_Iterable[_Union[GraphValueView, _Mapping]]] = ...) -> None: ...
+
+class GraphValueRequest(_message.Message):
+    __slots__ = ("node", "value", "when")
+    NODE_FIELD_NUMBER: _ClassVar[int]
+    VALUE_FIELD_NUMBER: _ClassVar[int]
+    WHEN_FIELD_NUMBER: _ClassVar[int]
+    node: str
+    value: float
+    when: When
+    def __init__(self, node: _Optional[str] = ..., value: _Optional[float] = ..., when: _Optional[_Union[When, _Mapping]] = ...) -> None: ...
+
+class GraphValueView(_message.Message):
+    __slots__ = ("node", "value", "unit", "lowest", "highest", "feeds_text")
+    NODE_FIELD_NUMBER: _ClassVar[int]
+    VALUE_FIELD_NUMBER: _ClassVar[int]
+    UNIT_FIELD_NUMBER: _ClassVar[int]
+    LOWEST_FIELD_NUMBER: _ClassVar[int]
+    HIGHEST_FIELD_NUMBER: _ClassVar[int]
+    FEEDS_TEXT_FIELD_NUMBER: _ClassVar[int]
+    node: str
+    value: float
+    unit: str
+    lowest: float
+    highest: float
+    feeds_text: str
+    def __init__(self, node: _Optional[str] = ..., value: _Optional[float] = ..., unit: _Optional[str] = ..., lowest: _Optional[float] = ..., highest: _Optional[float] = ..., feeds_text: _Optional[str] = ...) -> None: ...
 
 class ProbeView(_message.Message):
     __slots__ = ("name", "channel_id", "node", "output")
@@ -1535,7 +1601,7 @@ class VariableChoice(_message.Message):
     def __init__(self, variable_id: _Optional[int] = ..., scaling: _Optional[_Union[Scaling, _Mapping]] = ...) -> None: ...
 
 class WatchView(_message.Message):
-    __slots__ = ("channel_id", "path", "name", "encoding", "byte_width", "runtime_address", "is_writable", "value", "bit_offset", "bit_width", "display_value", "range_text", "lowest", "highest", "resolution", "raw_value", "scaling", "read_period_us", "read_period_text", "enumerators")
+    __slots__ = ("channel_id", "path", "name", "encoding", "byte_width", "runtime_address", "is_writable", "value", "bit_offset", "bit_width", "display_value", "range_text", "lowest", "highest", "resolution", "raw_value", "scaling", "read_period_us", "read_period_text", "enumerators", "value_name")
     CHANNEL_ID_FIELD_NUMBER: _ClassVar[int]
     PATH_FIELD_NUMBER: _ClassVar[int]
     NAME_FIELD_NUMBER: _ClassVar[int]
@@ -1556,6 +1622,7 @@ class WatchView(_message.Message):
     READ_PERIOD_US_FIELD_NUMBER: _ClassVar[int]
     READ_PERIOD_TEXT_FIELD_NUMBER: _ClassVar[int]
     ENUMERATORS_FIELD_NUMBER: _ClassVar[int]
+    VALUE_NAME_FIELD_NUMBER: _ClassVar[int]
     channel_id: int
     path: str
     name: str
@@ -1576,7 +1643,8 @@ class WatchView(_message.Message):
     read_period_us: int
     read_period_text: str
     enumerators: _containers.RepeatedCompositeFieldContainer[Enumerator]
-    def __init__(self, channel_id: _Optional[int] = ..., path: _Optional[str] = ..., name: _Optional[str] = ..., encoding: _Optional[str] = ..., byte_width: _Optional[int] = ..., runtime_address: _Optional[int] = ..., is_writable: _Optional[bool] = ..., value: _Optional[float] = ..., bit_offset: _Optional[int] = ..., bit_width: _Optional[int] = ..., display_value: _Optional[str] = ..., range_text: _Optional[str] = ..., lowest: _Optional[float] = ..., highest: _Optional[float] = ..., resolution: _Optional[float] = ..., raw_value: _Optional[float] = ..., scaling: _Optional[_Union[Scaling, _Mapping]] = ..., read_period_us: _Optional[int] = ..., read_period_text: _Optional[str] = ..., enumerators: _Optional[_Iterable[_Union[Enumerator, _Mapping]]] = ...) -> None: ...
+    value_name: str
+    def __init__(self, channel_id: _Optional[int] = ..., path: _Optional[str] = ..., name: _Optional[str] = ..., encoding: _Optional[str] = ..., byte_width: _Optional[int] = ..., runtime_address: _Optional[int] = ..., is_writable: _Optional[bool] = ..., value: _Optional[float] = ..., bit_offset: _Optional[int] = ..., bit_width: _Optional[int] = ..., display_value: _Optional[str] = ..., range_text: _Optional[str] = ..., lowest: _Optional[float] = ..., highest: _Optional[float] = ..., resolution: _Optional[float] = ..., raw_value: _Optional[float] = ..., scaling: _Optional[_Union[Scaling, _Mapping]] = ..., read_period_us: _Optional[int] = ..., read_period_text: _Optional[str] = ..., enumerators: _Optional[_Iterable[_Union[Enumerator, _Mapping]]] = ..., value_name: _Optional[str] = ...) -> None: ...
 
 class WatchList(_message.Message):
     __slots__ = ("watches",)

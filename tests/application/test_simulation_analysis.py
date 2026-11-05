@@ -82,6 +82,14 @@ def test_a_graph_the_simulation_refuses_is_a_refusal_with_its_reason() -> None:
         Simulation(inspector).apply_signal_graph(SignalGraph().model("m", "Nothing"))
 
 
+def test_a_value_node_is_set_through_the_simulation() -> None:
+    inspector = ScriptedInspector()
+
+    Simulation(inspector).set_graph_value("inertia", 4e-4)
+
+    assert inspector.graph_values == [("inertia", 4e-4)]
+
+
 def test_a_model_is_found_by_name_and_a_missing_one_lists_the_others() -> None:
     inspector = ScriptedInspector()
     inspector.models = (SignalModel("DcMotor"), SignalModel("LowPass"))

@@ -51,6 +51,8 @@ def _node_request_of(node: SignalNode) -> contract.SignalNodeRequest:
         model=node.model,
         parameters=dict(node.parameters),
         interpreted=node.interpreted,
+        value=node.value,
+        parameter_sources=dict(node.parameter_sources),
     )
     if node.kind is SignalNodeKind.GENERATOR:
         request.signal.CopyFrom(_signal_view_of(node))
@@ -78,11 +80,19 @@ def _model_of(message: contract.ModelView) -> SignalModel:
         description=message.description,
         inputs=tuple(message.inputs),
         outputs=tuple(message.outputs),
-        parameters=tuple(
-            ModelParameter(name=one.name, default_value=one.default_value, unit=one.unit)
-            for one in message.parameters
-        ),
+        parameters=tuple(_parameter_of(one) for one in message.parameters),
         kind=message.kind,
         origin=message.origin,
         problem=message.problem,
+    )
+
+
+def _parameter_of(message: contract.ModelParameterView) -> ModelParameter:
+    """One parameter, with its limits where the model declares them."""
+    return ModelParameter(
+        name=message.name,
+        default_value=message.default_value,
+        unit=message.unit,
+        lowest=message.lowest if message.HasField("lowest") else None,
+        highest=message.highest if message.HasField("highest") else None,
     )

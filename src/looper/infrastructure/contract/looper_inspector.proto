@@ -437,11 +437,18 @@ message ClearRequest {
 message PinDrive {
   uint32 pin_id = 1;
   // Toggle is done by the simulation, so two clients cannot both "toggle to high".
-  oneof level { bool high = 2; Empty toggle = 3; }
+  // active: the level the pin's polarity calls active (true) or inactive
+  // (false), chosen by the simulation, so that a client never turns a
+  // polarity into a level itself.
+  oneof level { bool high = 2; Empty toggle = 3; bool active = 5; }
   When when = 4;
 }
 
-message PinDriven { Ack ack = 1; bool high = 2; }   // the level that was set
+message PinDriven {
+  Ack ack = 1;
+  bool high = 2;      // the level that was set
+  bool active = 3;    // whether that level is the active one
+}
 
 message WatchStarted { WatchView watch = 1; Ack ack = 2; }
 
@@ -702,6 +709,13 @@ service Inspector {
   rpc ApplySignal(SignalRequest) returns (Ack);
   rpc ApplySignalGraph(SignalGraphRequest) returns (Ack);
   rpc ResetModelState(ModelNodeChoice) returns (Ack);
+  // Change what one value node of the applied graph gives, without sending
+  // the graph again. A model it supplies a parameter to is made again with
+  // the new value and keeps its state, as ApplySignalGraph would keep it.
+  // REFUSAL_UNKNOWN_TARGET: no value node of that key in the applied graph.
+  // REFUSAL_INVALID: outside the limits of a parameter it supplies, or the
+  // model failed with it; the graph runs on as it was.
+  rpc SetGraphValue(GraphValueRequest) returns (Ack);
   rpc WatchVariable(VariableChoice) returns (WatchStarted);
   rpc RemoveWatch(WatchChoice) returns (Ack);        // watches: no `when`, always now
   rpc WriteVariable(VariableWrite) returns (Ack);
@@ -796,6 +810,12 @@ message PinView {
   string level = 4;
   bool is_active = 5;
   bool is_drivable = 6;
+  // Which level the firmware treats as active, as a person reads it:
+  // "active high" or "active low".
+  string polarity = 7;
+  // Why a client cannot drive the pin, in words a person is shown, for
+  // example "the firmware drives this output". Empty when it can.
+  string drive_text = 8;
 }
 
 message SimulationView {
@@ -827,6 +847,16 @@ message ChannelView {
   // Whether the signal graph drives this input, so that its own signal
   // does not apply.
   bool is_driven_by_graph = 10;
+  // Whether a signal a client applies takes effect now: an input the
+  // signal graph does not drive. ApplySignal is still accepted when it
+  // does not, and takes effect once the graph lets go of the input.
+  bool is_settable = 11;
+  // Why not, in words a person is shown: "the firmware writes this
+  // output", "the signal graph drives this input". Empty when settable.
+  string settable_text = 12;
+  // The value as display_value writes it, without the unit; empty for a
+  // silent channel.
+  string value_text = 13;
 }
 
 message ChannelList {
@@ -864,7 +894,7 @@ message SignalNodeRequest {
   // What the client calls the node; unique within the graph.
   string key = 1;
   // "generator", "channel", "pin", "watch", "add", "subtract",
-  // "multiply", "divide" or "model".
+  // "multiply", "divide", "model" or "value".
   string kind = 2;
   // What a generator produces.
   SignalView signal = 3;
@@ -882,6 +912,16 @@ message SignalNodeRequest {
   // that a breakpoint in its step is reached. Ignored for a linear model
   // and for every other kind. The model then runs in the model worker.
   bool interpreted = 8;
+  // What a value node gives until SetGraphValue changes it. A value node
+  // (kind "value") has one output and no inputs; fed into a signal input
+  // it is a constant, fed into a parameter it is the parameter's value.
+  double value = 9;
+  // Parameters of a model node that another node supplies, by parameter
+  // name: the key of that node. Only a value node or a constant generator
+  // may supply a parameter -- a parameter is a constant the model is made
+  // with, so it follows a value someone sets, never a signal. A parameter
+  // supplied here overrides the same name in `parameters`.
+  map<string, string> parameter_sources = 10;
 }
 
 message ModelParameterView {
@@ -889,6 +929,12 @@ message ModelParameterView {
   double default_value = 2;
   // What it is measured in; empty for nothing.
   string unit = 3;
+  // The lowest and highest value the model accepts, where the model
+  // declares them (StateModel.limits, LinearModel.limits). ApplySignalGraph
+  // refuses a value outside them with REFUSAL_INVALID. Unset where the
+  // model says nothing.
+  optional double lowest = 4;
+  optional double highest = 5;
 }
 
 // One model a project offers, or one file that offers nothing usable.
@@ -952,6 +998,10 @@ message ModelNodeView {
   string fault = 5;
   // Empty for a linear model, and for a model that names no state.
   repeated ModelStateView state = 6;
+  // The values the installed node runs with, by parameter name, defaults
+  // and supplied ones included: what the editor shows beside a parameter
+  // fed by a value node.
+  map<string, double> parameters = 7;
 }
 
 message SignalGraphView {
@@ -960,6 +1010,33 @@ message SignalGraphView {
   // The probes of the applied graph, each with the trace channel its
   // samples arrive on. A probe keeps its channel while its name stays.
   repeated ProbeView probes = 2;
+  // The value nodes of the applied graph, each with what it gives now.
+  repeated GraphValueView values = 3;
+}
+
+// Change what one value node of the applied graph gives.
+message GraphValueRequest {
+  // The value node, by its key in the applied graph.
+  string node = 1;
+  double value = 2;
+  When when = 15;
+}
+
+// One value node of the applied graph, as it is now.
+message GraphValueView {
+  // The key the client gave the node.
+  string node = 1;
+  // What it gives now: the last SetGraphValue, else what the graph said.
+  double value = 2;
+  // What it is measured in and what it may be, taken from the parameters
+  // it supplies: the unit of the first, the narrowest common limits.
+  // Empty and unset when it supplies none or they say nothing.
+  string unit = 3;
+  optional double lowest = 4;
+  optional double highest = 5;
+  // What it feeds, as a person reads it: "DcMotor.inertia, SPEED_SETPOINT";
+  // empty when nothing.
+  string feeds_text = 6;
 }
 
 // A signal inside the applied graph that is recorded like a channel.
@@ -1108,6 +1185,13 @@ message WatchView {
   string read_period_text = 20;
   // The names of its values, for an enumeration.
   repeated Enumerator enumerators = 21;
+  // The enumerator that names the value as it is stored, for an
+  // enumeration: the first one declared with that value. Empty when the
+  // value has no name, and for every other type. display_value stays the
+  // number, so that scopes and the Variables page read as before. A flag
+  // and an enumeration are watched without a scaling, whatever the client
+  // asked; range_text then says "enum, scaling ignored".
+  string value_name = 22;
 }
 
 message WatchList {

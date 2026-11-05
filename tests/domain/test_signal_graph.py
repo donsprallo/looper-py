@@ -65,3 +65,11 @@ def test_a_model_names_the_position_of_its_outputs() -> None:
     assert motor.output("current") == 1
     with pytest.raises(ValueError, match="no output 'torque'"):
         motor.output("torque")
+
+
+def test_a_value_node_gives_a_model_s_parameter() -> None:
+    graph = SignalGraph().value("k", 0.5).model("m", "Gain", parameter_sources={"gain": "k"})
+
+    value, model = graph.nodes
+    assert (value.kind, value.value) == (SignalNodeKind.VALUE, 0.5)
+    assert model.parameter_sources == (("gain", "k"),)
