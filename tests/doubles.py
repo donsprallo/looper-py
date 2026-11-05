@@ -18,11 +18,15 @@ from looper.domain.model import (
     Description,
     EventPage,
     Exchange,
+    Findings,
     MemoryUsage,
     Pin,
+    Profile,
     RunStatus,
     Sample,
     Signal,
+    SignalGraph,
+    SignalModel,
     Trigger,
     TriggerMode,
     TriggerRequest,
@@ -45,6 +49,10 @@ class ScriptedInspector(Inspector):
         self.exchanges: tuple[Exchange, ...] = ()
         self.timings: tuple[CallTiming, ...] = ()
         self.memory: MemoryUsage | None = MemoryUsage()
+        self.profile = Profile()
+        self.findings: list[Findings] | None = [Findings(is_complete=True)]
+        self.models: tuple[SignalModel, ...] | None = ()
+        self.graphs: list[SignalGraph] = []
         self.pins: tuple[Pin, ...] = ()
         self.channels: tuple[Channel, ...] = ()
         self.buses: tuple[Bus, ...] = ()
@@ -98,6 +106,17 @@ class ScriptedInspector(Inspector):
             raise SimulationRefusedError("the build cannot be read")
         return self.memory
 
+    def read_profile(self) -> Profile:
+        self.asked.append("read profile")
+        return self.profile
+
+    def read_findings(self) -> Findings:
+        """The next of the scripted answers, the last one again once they run out."""
+        if self.findings is None:
+            raise SimulationRefusedError("this server does not read the project's code")
+        self.asked.append("read findings")
+        return self.findings.pop(0) if len(self.findings) > 1 else self.findings[0]
+
     def read_pins(self) -> tuple[Pin, ...]:
         return self.pins
 
@@ -135,6 +154,16 @@ class ScriptedInspector(Inspector):
 
     def apply_signal(self, channel_id: int, signal: Signal) -> None:
         self.signals.append((channel_id, signal))
+
+    def apply_signal_graph(self, graph: SignalGraph) -> None:
+        if self.refusal is not None:
+            raise SimulationRefusedError(self.refusal)
+        self.graphs.append(graph)
+
+    def list_models(self) -> tuple[SignalModel, ...]:
+        if self.models is None:
+            raise SimulationRefusedError("This simulation has no models directory")
+        return self.models
 
     def send_bus_message(self, message: BusMessage) -> None:
         self.messages.append(message)

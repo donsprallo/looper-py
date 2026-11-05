@@ -23,10 +23,14 @@ from looper.domain.model import (
     Channel,
     Description,
     EventPage,
+    Findings,
     MemoryUsage,
     Pin,
+    Profile,
     RunStatus,
     Signal,
+    SignalGraph,
+    SignalModel,
     Trigger,
     TriggerRequest,
     Variable,
@@ -71,6 +75,18 @@ class Inspector(ABC):
 
         Raises:
             SimulationRefusedError: If the build cannot be read.
+        """
+
+    @abstractmethod
+    def read_profile(self) -> Profile:
+        """Where the simulation spent its time, function by function, since the last clearing."""
+
+    @abstractmethod
+    def read_findings(self) -> Findings:
+        """What the architecture analysis found in the project's code, so far.
+
+        Raises:
+            SimulationRefusedError: If the server does not read the project's code.
         """
 
     @abstractmethod
@@ -124,6 +140,23 @@ class Inspector(ABC):
 
         Raises:
             SimulationRefusedError: If the channel is not an input.
+        """
+
+    @abstractmethod
+    def apply_signal_graph(self, graph: SignalGraph) -> None:
+        """Replace the graph of signals that drives the analog inputs.
+
+        Raises:
+            SimulationRefusedError: If the graph does not hold together, a
+                model is unknown or does not fit, or a target is not an input.
+        """
+
+    @abstractmethod
+    def list_models(self) -> tuple[SignalModel, ...]:
+        """The models the project offers the signal graph.
+
+        Raises:
+            SimulationRefusedError: If the simulation knows of nowhere to find models.
         """
 
     @abstractmethod

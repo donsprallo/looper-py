@@ -111,3 +111,52 @@ def test_a_normal_trigger_counts_every_edge_and_lets_the_run_go_on(
     assert simulation.simulated_seconds - before == pytest.approx(2.0, abs=0.001)
     assert counted.fires >= 2
     assert counted.state is looper.TriggerState.ARMED
+
+
+def test_the_profile_ranks_the_application_step_heaviest_of_the_firmware(
+    simulation: looper.Simulation,
+) -> None:
+    check = simulation.expect()
+    check.profile().heaviest_is("app_step")
+
+    report = check.evaluate(for_seconds=0.5)
+    app_step = simulation.profile().entry("app_step")
+
+    assert report, report.summary
+    assert app_step is not None
+    assert app_step.calls >= 400
+    assert Path(app_step.source_path).name == "app.c"
+
+
+def test_the_architecture_holds_no_finding_the_baseline_does_not(
+    simulation: looper.Simulation,
+) -> None:
+    findings = simulation.findings()
+
+    assert findings.is_complete, findings.note
+    assert findings.findings
+    assert findings.new() == (), [one.title for one in findings.new()]
+
+
+def test_a_motor_model_closes_the_loop_around_the_speed_controller(
+    simulation: looper.Simulation,
+) -> None:
+    motor = simulation.model("DcMotor")
+    voltage = simulation.channel("MOTOR_VOLTAGE")
+    graph = (
+        looper.SignalGraph()
+        .generator("setpoint", looper.Signal("constant", offset=100.0))
+        .generator("no load", looper.Signal("constant"))
+        .channel("voltage", voltage.channel_id)
+        .model("motor", motor.name, inputs=["voltage", "no load"])
+        .drive(simulation.channel("SPEED_SETPOINT").channel_id, "setpoint")
+        .drive(simulation.channel("MOTOR_SPEED").channel_id, "motor", motor.output("speed"))
+    )
+    simulation.apply_signal_graph(graph)
+    try:
+        simulation.advance(0.5)
+        speed = simulation.channel("MOTOR_SPEED").value
+    finally:
+        simulation.apply_signal_graph(looper.SignalGraph())
+
+    assert speed > 1.0

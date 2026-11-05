@@ -10,6 +10,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
+from looper.domain.model.profile import Profile
 from looper.domain.model.readings import CallTiming, Exchange, MemoryUsage, Sample
 
 
@@ -33,6 +34,8 @@ class Observation:
             server does not say whether they were samples or exchanges.
         memory: The heap and the stack, which say nothing at all in a
             build that is not watching them.
+        profile: Where the time went over the window; read only when an
+            expectation is about it, since ranking it costs the server a while.
     """
 
     samples: tuple[Sample, ...]
@@ -41,6 +44,7 @@ class Observation:
     elapsed_seconds: float
     lost_events: int = 0
     memory: MemoryUsage = field(default_factory=MemoryUsage)
+    profile: Profile = field(default_factory=Profile)
 
     @property
     def sample_loss_note(self) -> str:

@@ -28,16 +28,25 @@ from looper.domain.model import (
     Channel,
     Description,
     EventPage,
+    Findings,
     MemoryUsage,
     Pin,
+    Profile,
     RunStatus,
     Signal,
+    SignalGraph,
+    SignalModel,
     Trigger,
     TriggerRequest,
     Variable,
     Watch,
 )
-from looper.infrastructure import translation, trigger_translation
+from looper.infrastructure import (
+    analysis_translation,
+    signal_graph_translation,
+    translation,
+    trigger_translation,
+)
 from looper.infrastructure.contract import looper_inspector_pb2 as contract
 from looper.infrastructure.contract import looper_inspector_pb2_grpc as service
 
@@ -101,6 +110,15 @@ class GrpcInspector(Inspector):
         """The heap and the stack."""
         return translation.memory_of(self._call(self._stub.ObserveMemory, EMPTY))
 
+    def read_profile(self) -> Profile:
+        """Where the simulation spent its time, function by function, since the last clearing."""
+        return analysis_translation.profile_of(self._call(self._stub.ObserveProfile, EMPTY))
+
+    def read_findings(self) -> Findings:
+        """What the architecture analysis found in the project's code, so far."""
+        listing = self._call(self._stub.ObserveFindings, contract.FindingFilter())
+        return analysis_translation.findings_of(listing)
+
     def read_pins(self) -> tuple[Pin, ...]:
         """Every pin the firmware registered, with its level."""
         return translation.pins_of(self._call(self._stub.ObserveSimulation, EMPTY))
@@ -150,6 +168,18 @@ class GrpcInspector(Inspector):
         """Install a generated signal on an analog input."""
         request = translation.signal_request_of(channel_id, signal)
         _acknowledged(self._call(self._stub.ApplySignal, request))
+
+    def apply_signal_graph(self, graph: SignalGraph) -> None:
+        """Replace the graph of signals that drives the analog inputs."""
+        request = signal_graph_translation.signal_graph_request_of(graph)
+        _acknowledged(self._call(self._stub.ApplySignalGraph, request))
+
+    def list_models(self) -> tuple[SignalModel, ...]:
+        """The models the project offers the signal graph."""
+        listing = self._call(self._stub.ListModels, EMPTY)
+        if listing.unavailable_reason:
+            raise SimulationRefusedError(listing.unavailable_reason)
+        return signal_graph_translation.models_of(listing)
 
     def send_bus_message(self, message: BusMessage) -> None:
         """Put one message on a bus."""

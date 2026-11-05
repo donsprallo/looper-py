@@ -21,6 +21,7 @@ from looper.domain.checks import (
     ChannelReaches,
     ChannelStaysBetween,
     HeapStaysBelow,
+    HeaviestFunctionIs,
     MessageCount,
     MessageFilter,
     MessageRate,
@@ -29,6 +30,7 @@ from looper.domain.checks import (
     StackNoDeeperThan,
     StackStaysBelow,
 )
+from looper.domain.model import FIRMWARE_ORIGIN
 
 if TYPE_CHECKING:
     from looper.application.expectations import Expectations
@@ -171,3 +173,14 @@ class StackExpectation:
     def no_deeper_than(self, frames_allowed: int) -> Expectations:
         """Expect the calls never to have nested more than so deep."""
         return self._expectations.add(StackNoDeeperThan(frames_allowed))
+
+
+class ProfileExpectation:
+    """What is expected of where the firmware spends its time."""
+
+    def __init__(self, expectations: Expectations) -> None:
+        self._expectations = expectations
+
+    def heaviest_is(self, function: str, origin: str = FIRMWARE_ORIGIN) -> Expectations:
+        """Expect one function to spend more time in itself than any other of its origin."""
+        return self._expectations.add(HeaviestFunctionIs(function, origin))

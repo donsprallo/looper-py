@@ -13,6 +13,7 @@ from types import TracebackType
 
 from looper.application.event_stream import EventStream
 from looper.application.expectations import MICROSECONDS_PER_SECOND, Expectations
+from looper.application.findings_reading import complete_findings
 from looper.application.ports import Inspector, SimulationRefusedError
 from looper.application.triggers import Triggers
 from looper.domain.model import (
@@ -24,10 +25,14 @@ from looper.domain.model import (
     Description,
     EventPage,
     Exchange,
+    Findings,
     MemoryUsage,
     Pin,
+    Profile,
     RunStatus,
     Signal,
+    SignalGraph,
+    SignalModel,
     Variable,
     Watch,
 )
@@ -179,6 +184,30 @@ class Simulation:
         """
         return self._inspector.read_memory()
 
+    def profile(self) -> Profile:
+        """Where the simulation spent its time, function by function, since the last clearing.
+
+        Clear the measurements first, with `clear_measurements`, to profile
+        one phase of a test alone. In a build that is not woven for
+        profiling every figure is zero; `Profile.is_profiling` says so.
+        """
+        return self._inspector.read_profile()
+
+    def findings(self, wait_seconds: float = 60.0) -> Findings:
+        """What the architecture analysis found in the project's code.
+
+        Waits up to `wait_seconds` for the analysis to have read every
+        file, since some findings are only looked for then; what comes back
+        says in `is_complete` whether it got that far.
+
+        Raises:
+            SimulationRefusedError: If the server does not analyse the
+                project's code: it does when `looper-cli run` or
+                `looper-cli inspect` was started from a looper.toml whose
+                sources it can read.
+        """
+        return complete_findings(self._inspector, wait_seconds)
+
     def pins(self) -> tuple[Pin, ...]:
         """Every pin the firmware registered, with its level now."""
         return self._inspector.read_pins()
@@ -233,6 +262,36 @@ class Simulation:
             SimulationRefusedError: If the channel is not an input.
         """
         self._inspector.apply_signal(channel_id, signal)
+
+    def apply_signal_graph(self, graph: SignalGraph) -> None:
+        """Drive analog inputs from a graph of signals, models among them.
+
+        The graph replaces whatever graph ran before, for every client; an
+        input it no longer drives goes back to its own signal. Applying an
+        empty `SignalGraph` removes the graph.
+
+        Raises:
+            SimulationRefusedError: If the graph does not hold together, a
+                model is unknown or does not fit its inputs, or a target is
+                not an input.
+        """
+        self._inspector.apply_signal_graph(graph)
+
+    def models(self) -> tuple[SignalModel, ...]:
+        """The models the project offers the signal graph, read afresh from its files.
+
+        Raises:
+            SimulationRefusedError: If the simulation knows of nowhere to find models.
+        """
+        return self._inspector.list_models()
+
+    def model(self, name: str) -> SignalModel:
+        """The model the project offers under `name`, with its inputs, outputs and parameters.
+
+        Raises:
+            SimulationRefusedError: If there is none; the message lists the names there are.
+        """
+        return _named(self.models(), name, "model", "the project offers")
 
     def send_bus_message(self, message: BusMessage) -> None:
         """Put one message on a bus.
@@ -295,12 +354,12 @@ class Simulation:
         self.close()
 
 
-def _named[Named: (Pin, Channel, Bus)](things: tuple[Named, ...], name: str, kind: str) -> Named:
+def _named[Named: (Pin, Channel, Bus, SignalModel)](
+    things: tuple[Named, ...], name: str, kind: str, whose: str = "the firmware registered"
+) -> Named:
     """The one thing called `name`, or a refusal that says what there is."""
     for thing in things:
         if thing.name == name:
             return thing
     known = ", ".join(sorted(thing.name for thing in things)) or "none at all"
-    raise SimulationRefusedError(
-        f"the firmware registered no {kind} named {name!r}; it has {known}"
-    )
+    raise SimulationRefusedError(f"{whose} no {kind} named {name!r}; it has {known}")

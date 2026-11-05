@@ -26,6 +26,7 @@ from looper.application.subjects import (
     CallExpectation,
     ChannelExpectation,
     MemoryExpectation,
+    ProfileExpectation,
     StackExpectation,
 )
 from looper.domain.checks import Check, FirmwareIsAlive
@@ -34,6 +35,7 @@ from looper.domain.model import (
     ExpectationReport,
     MemoryUsage,
     Observation,
+    Profile,
     RunStatus,
 )
 
@@ -56,6 +58,7 @@ class Expectations:
     def __init__(self, inspector: Inspector) -> None:
         self._inspector = inspector
         self._checks: list[Check] = []
+        self._reads_profile = False
 
     def add(self, check: Check) -> Expectations:
         """Take one more expectation, and allow another to be chained."""
@@ -81,6 +84,15 @@ class Expectations:
     def stack(self) -> StackExpectation:
         """Expect something of the stack."""
         return StackExpectation(self)
+
+    def profile(self) -> ProfileExpectation:
+        """Expect something of where the firmware spends its time.
+
+        Only a window with such an expectation reads the profile, because
+        ranking it takes the server a while.
+        """
+        self._reads_profile = True
+        return ProfileExpectation(self)
 
     def firmware_is_alive(self) -> Expectations:
         """Expect the firmware to still be reaching the adapter at all."""
@@ -142,7 +154,14 @@ class Expectations:
             elapsed_seconds=(end.now_us - start.now_us) / MICROSECONDS_PER_SECOND,
             lost_events=events.lost_events,
             memory=self._memory(),
+            profile=self._profile(),
         )
+
+    def _profile(self) -> Profile:
+        """The window's profile, when an expectation is about it; nothing measured otherwise."""
+        if not self._reads_profile:
+            return Profile()
+        return self._inspector.read_profile()
 
     def _memory(self) -> MemoryUsage:
         """The heap and the stack, or nothing known when the build cannot be read."""

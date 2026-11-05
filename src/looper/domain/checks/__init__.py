@@ -24,6 +24,7 @@ from looper.domain.checks.memory_checks import (
     StackNoDeeperThan,
     StackStaysBelow,
 )
+from looper.domain.checks.profile_checks import HeaviestFunctionIs
 
 __all__ = [
     "BusCarriedAtLeast",
@@ -36,6 +37,7 @@ __all__ = [
     "Check",
     "FirmwareIsAlive",
     "HeapStaysBelow",
+    "HeaviestFunctionIs",
     "MessageCount",
     "MessageFilter",
     "MessageRate",

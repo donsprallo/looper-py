@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+from looper.domain.model.findings import Dependency, Finding, Findings
 from looper.domain.model.observation import Observation
 from looper.domain.model.outcome import ExpectationReport, Outcome
+from looper.domain.model.profile import FIRMWARE_ORIGIN, Profile, ProfileEntry
 from looper.domain.model.readings import (
     Bus,
     CallTiming,
@@ -19,6 +21,16 @@ from looper.domain.model.readings import (
     Sample,
 )
 from looper.domain.model.requests import BusMessage, Signal
+from looper.domain.model.signal_graph import (
+    ModelParameter,
+    NodeOutput,
+    SignalGraph,
+    SignalModel,
+    SignalNode,
+    SignalNodeKind,
+    SignalProbe,
+    SignalTarget,
+)
 from looper.domain.model.triggers import (
     Comparison,
     Edge,
@@ -44,24 +56,38 @@ __all__ = [
     "Channel",
     "ClockMode",
     "Comparison",
+    "Dependency",
     "Description",
     "Edge",
     "EdgeWhile",
     "EventPage",
     "Exchange",
     "ExpectationReport",
+    "FIRMWARE_ORIGIN",
+    "Finding",
+    "Findings",
     "HeapUsage",
     "MemoryUsage",
+    "ModelParameter",
+    "NodeOutput",
     "Observation",
     "Outcome",
     "Pattern",
     "Pin",
     "PinLevel",
     "Polarity",
+    "Profile",
+    "ProfileEntry",
     "Quiet",
     "RunStatus",
     "Sample",
     "Signal",
+    "SignalGraph",
+    "SignalModel",
+    "SignalNode",
+    "SignalNodeKind",
+    "SignalProbe",
+    "SignalTarget",
     "Trigger",
     "TriggerCondition",
     "TriggerMode",
