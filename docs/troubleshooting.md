@@ -53,6 +53,19 @@ A test behaves as if an old firmware were running, with `build=False`
 `looper.SimulationRefusedError: that bus is not one the simulation models`
 : The bus number is wrong, or the bus takes no messages (SPI, I2C).
 
+`looper.ProFeatureLockedError: The Architect is part of looper Pro - no licence found (looked in ...)`
+: A Pro call -- `simulation.findings()` today -- without a licence the server
+  accepts. The server reads it from `--license`, then `LOOPER_LICENSE`, then
+  `~/.looper/license.toml`, and again at every restart of the simulation. The
+  message says what it looked at and why it did not count: not found, changed
+  since it was issued, or ran out. In CI, hand the secret over in
+  `LOOPER_LICENSE`. See [The profile and the findings](guides/profile-and-findings.md#a-licence).
+
+`looper.SimulationRefusedError: UART1 carries at most 64 bytes in one message, and this one has 65; send it as several`
+: One message on a UART carries at most 64 bytes, the runtime's payload
+  capacity. Send a longer text as several messages. `bus.max_payload_bytes`
+  says the limit of any bus.
+
 `looper.SimulationRefusedError: the clock runs in real time and cannot be advanced`
 : `advance` on a clock that runs by itself (paced or max). Start the
   simulation with `virtual=True`, or ask whoever switched it to hold it.

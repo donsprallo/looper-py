@@ -29,6 +29,27 @@ def test_the_can_bus_is_healthy(simulation):
     assert report, report.summary
 ```
 
+## Example: a message at its rate
+
+`carried_at_least` counts everything on the bus. When a node sends one message
+every 100 ms, say so about that message:
+
+```python
+def test_the_status_goes_out_ten_times_a_second(simulation):
+    can = simulation.bus("CAN2")
+
+    check = simulation.expect()
+    check.bus(can.bus_id, "CAN2").message(0x321, direction="outbound").happened_at(10)
+    check.bus(can.bus_id, "CAN2").message(0x123).never()
+
+    report = check.evaluate(for_seconds=2.0)
+    assert report, report.summary
+```
+
+`message` narrows the expectation by the CAN identifier (or I2C address, or
+chip select), by direction -- `"outbound"` is what the firmware sent -- and by
+the bytes the payload starts with. See [Expecting things](../guides/expectations.md#messages-of-one-kind).
+
 ## Example: provoke the firmware
 
 On CAN and UART a test can put a message on the bus as another node would,

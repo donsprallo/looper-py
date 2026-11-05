@@ -42,6 +42,27 @@ Without the instrument they fail, saying so.
 | `nothing_refused()` | everything that crossed the bus was taken | `saw 1 of 2 refused at 0x701` |
 | `carried_at_least(count)` | at least `count` exchanges crossed it; events the recording lost are named, not counted | `saw 3` |
 
+Narrowed to the messages of one kind -- `check.bus(bus_id, name).message(address=None, direction=None,
+starts_with=b"")`:
+
+| Expectation | Met when | Outcome when met |
+| --- | --- | --- |
+| `happened_at_least(count)` | at least `count` of them crossed | `saw 12` |
+| `happened_between(at_least, at_most)` | their number is within the range | `saw 12` |
+| `never()` | none crossed | `saw 0` |
+| `happened_at(hertz, tolerance=0.05)` | their rate over the window is within `tolerance` of `hertz` | `saw 10 Hz` |
+
+`direction` is `"outbound"` (what the firmware sent) or `"inbound"`; the address is
+the CAN identifier, I2C address or chip select.
+
+## The profile -- `check.profile()`
+
+| Expectation | Met when | Needs in `looper.toml` |
+| --- | --- | --- |
+| `heaviest_is(function, origin="firmware")` | the function spent more time in itself than any other of that origin | `profile = true` |
+
+Without the instrument it fails with `saw the build is not woven for profiling`.
+
 ## The window -- `check.evaluate(for_seconds=1.0)`
 
 1. Clears the recordings and measurements, for every client.

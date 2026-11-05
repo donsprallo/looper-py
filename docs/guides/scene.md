@@ -146,6 +146,78 @@ simulation.advance(0.5)
 simulation.channel("FILTERED").display_value   # '4.967 A' -- almost there
 ```
 
+## A graph of signals
+
+`apply_signal` puts one waveform on one input. A **graph** combines them:
+generators, what the firmware itself published, a pin, a watched variable, the
+four operations and **models** -- a motor, a filter, a room -- that the
+simulation steps on its own clock. A model fed from an output channel and driving
+an input closes the loop around the firmware, which is how a test puts a plant in
+front of a controller.
+
+A `SignalGraph` is a value built step by step; every method returns a new graph:
+
+```python
+import looper
+
+
+def test_the_room_closes_the_loop(simulation):
+    duty = simulation.channel("FAN_DUTY")          # what the firmware publishes
+    sensor = simulation.channel("TEMP_SENSOR")     # what the firmware reads
+
+    graph = (
+        looper.SignalGraph()
+        .generator("heat", looper.Signal(offset=40.0))          # a constant 40 W
+        .channel("duty", duty.channel_id)                       # the firmware's own output
+        .model("room", "Room", inputs=("heat", "duty"))         # a model of the project
+        .drive(sensor.channel_id, "room")                       # the input it feeds
+    )
+    simulation.apply_signal_graph(graph)
+    simulation.advance(40.0)                                    # the room warms up
+```
+
+| Method | Adds |
+| --- | --- |
+| `generator(key, signal)` | a node that produces a `Signal` |
+| `channel(key, channel_id)` | a node that reads an analog channel; an output closes a loop |
+| `pin(key, pin_id)` | a node that reads a pin as 0 or 1 |
+| `watch(key, channel_id)` | a node that reads a watched variable, by its watch channel |
+| `operation(key, kind, first, second)` | `looper.SignalNodeKind.ADD`, `SUBTRACT`, `MULTIPLY` or `DIVIDE` of two other nodes |
+| `model(key, name, inputs, parameters=None)` | a model the simulation steps; `inputs` in the order the model declares them, `parameters` by name |
+| `drive(channel_id, node, output=0)` | the analog **input** that reads one output of a node |
+| `probe(name, node, output=0)` | records an output as a trace of its own, without driving anything |
+
+A bare key stands for the first output of a node; `looper.NodeOutput(node,
+output)` names another one. Applying a graph **replaces** whatever graph ran
+before, for every client -- the window included -- and an input the new graph no
+longer drives goes back to its own signal. `SignalGraph()` applied on its own
+removes the graph. Whether the graph holds together is the simulation's to say:
+
+```text
+looper.SimulationRefusedError: ...
+```
+
+comes back for an unknown model, inputs that do not fit it, or a target that is
+not an input.
+
+`simulation.models()` lists the models the project offers, read afresh from its
+files, and `simulation.model("Room")` gets one by name -- with its `inputs`,
+`outputs`, `parameters` (each with a `default_value` and a `unit`), its `kind`
+(`linear` or `state`), its `origin` (`project` or `built_in`) and, when it cannot
+be used, a `problem`. `model.output("temperature")` is the position of an output,
+for `drive(..., output=...)`:
+
+```python
+room = simulation.model("Room")
+room.inputs                          # ('heat', 'duty')
+room.output("temperature")           # 0
+[(one.name, one.default_value) for one in room.parameters]
+```
+
+How to write a model is described in {core}`Models of your own
+<signals.html#models-of-your-own>`; the window builds the same graph in its
+{rs}`signal editor <gui/signals.html>`.
+
 ## Bus messages
 
 On a bus that takes messages -- CAN and UART; on SPI and I2C the firmware is
@@ -164,6 +236,16 @@ simulation.send_bus_message(BusMessage(bus_id=can.bus_id, address=0x701, payload
 simulation.send_bus_message(
     BusMessage(bus_id=can.bus_id, address=0x18FF50E5, payload=bytes(8), extended=True)
 )
+```
+
+A message carries at most as many bytes as the bus says. On a UART that is 64:
+the runtime keeps a bus payload in 64 bytes, and a longer message would arrive
+cut short. `send_bus_message` therefore refuses a longer payload instead of
+sending it -- send it as several, ten commands of six bytes to a message, say.
+`bus.max_payload_bytes` says the limit of a bus.
+
+```text
+looper.SimulationRefusedError: UART1 carries at most 64 bytes in one message, and this one has 65; send it as several
 ```
 
 A bus the simulation does not model, or one that takes no messages, is

@@ -19,6 +19,11 @@ looper.PinLevel, looper.Polarity, looper.Comparison
 looper.TriggerMode, looper.TriggerState
 looper.SimulationRefusedError, looper.SimulationUnreachableError
 looper.LooperCliError, looper.ContractMismatchError
+looper.ProFeatureLockedError                        # a looper Pro part without a licence
+looper.Profile, looper.ProfileEntry               # where the time went
+looper.Findings, looper.Finding, looper.Dependency  # what the architecture analysis found (Pro)
+looper.SignalGraph, looper.SignalNodeKind         # a graph of signals and models
+looper.NodeOutput, looper.SignalModel, looper.ModelParameter
 ```
 
 ## Reaching a simulation
@@ -56,6 +61,12 @@ looper.LooperCliError, looper.ContractMismatchError
    :members:
 
 .. autoclass:: looper.application.subjects.BusExpectation
+   :members:
+
+.. autoclass:: looper.application.subjects.MessageExpectation
+   :members:
+
+.. autoclass:: looper.application.subjects.ProfileExpectation
    :members:
 ```
 
@@ -105,6 +116,49 @@ looper.LooperCliError, looper.ContractMismatchError
    :undoc-members:
 ```
 
+## The profile and the findings
+
+`simulation.profile()` returns a `Profile`, `simulation.findings()` a
+`Findings`; the guide [The profile and the
+findings](../guides/profile-and-findings.md) explains how they are used.
+
+```{eval-rst}
+.. autoclass:: looper.Profile
+   :members: heaviest_first, heaviest, entry
+
+.. autoclass:: looper.ProfileEntry
+
+.. autoclass:: looper.Findings
+   :members: of_kind, new, between
+
+.. autoclass:: looper.Finding
+   :members: is_new, is_accepted
+
+.. autoclass:: looper.Dependency
+```
+
+## Signal graphs
+
+`simulation.apply_signal_graph(graph)` drives analog inputs from a graph;
+`simulation.models()` and `simulation.model(name)` say which models the project
+offers. See [Setting the scene](../guides/scene.md#a-graph-of-signals).
+
+```{eval-rst}
+.. autoclass:: looper.SignalGraph
+   :members: generator, channel, pin, watch, operation, model, drive, probe
+
+.. autoclass:: looper.SignalNodeKind
+   :members:
+   :undoc-members:
+
+.. autoclass:: looper.NodeOutput
+
+.. autoclass:: looper.SignalModel
+   :members: output
+
+.. autoclass:: looper.ModelParameter
+```
+
 ## Triggers
 
 `simulation.triggers` is a `Triggers`; the guide [Triggers](../guides/triggers.md)
@@ -152,6 +206,8 @@ explains how they are used.
 
 ```{eval-rst}
 .. autoexception:: looper.SimulationRefusedError
+
+.. autoexception:: looper.ProFeatureLockedError
 
 .. autoexception:: looper.SimulationUnreachableError
 

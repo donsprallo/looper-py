@@ -91,7 +91,12 @@ with looper.run("looper.toml", virtual=True) as simulation:
     simulation.definition_path    # absolute path of the looper.toml it runs
     simulation.simulated_seconds  # 0.0 -- nothing has run yet
     simulation.description        # the name, the definition and the contract version
+    simulation.description.edition       # 'free' or 'pro': what the server's licence unlocks
+    simulation.description.licence_note  # why it is free, or that the licence ran out
 ```
+
+The edition is the server's, read from its licence; see
+[The profile and the findings](profile-and-findings.md#a-licence).
 
 ## Closing
 

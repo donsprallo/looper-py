@@ -197,3 +197,37 @@ jobs:
 
 On a held clock the results do not depend on how busy the CI machine is:
 the same commit gives the same report on every run.
+
+### A licence in CI
+
+Tests that read the architecture's findings (`simulation.findings()`) need a
+looper Pro licence on the machine that runs `looper-cli`. Keep the text of the
+licence file in a secret, and give it to the job as `LOOPER_LICENSE`, which takes
+a path or the file's content:
+
+```yaml
+      - working-directory: firmware
+        env:
+          LOOPER_LICENSE: ${{ secrets.LOOPER_LICENSE }}
+        run: uv run pytest
+```
+
+Without it such a test raises `looper.ProFeatureLockedError`; see
+[The profile and the findings](profile-and-findings.md#a-licence) for how to skip
+instead.
+
+## The tutorial's checks: `pytest -m tutorial`
+
+looper-py carries the checks of the {rs}`tutorial <tutorial/index.html>`:
+`tests/tutorial/test_lesson_NN.py`, one file per lesson, each claim of a "What you
+should see" as a test against the lesson's folder in `looper-core`. They build
+the lessons and take minutes, so a plain `pytest` leaves them out, and
+
+```console
+$ pytest -m tutorial
+```
+
+runs them alone. They need a `looper-core` checkout next to `looper-py`
+(`LOOPER_CORE` points at another) and a C compiler, and skip without them. The
+lessons' own tests, which a reader of lesson 11 writes, are a different thing: they
+live in the lesson's folder and run like any other.

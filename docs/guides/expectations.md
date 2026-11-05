@@ -252,6 +252,50 @@ At least so many exchanges crossed the bus in the window:
 check.bus(can.bus_id, "CAN2").carried_at_least(10)
 ```
 
+### Messages of one kind
+
+`carried_at_least` counts every exchange. `message(address, direction=...,
+starts_with=...)` narrows the expectation to
+the messages of one kind, and then says how many there should be:
+
+```python
+can = simulation.bus("CAN1")
+check.bus(can.bus_id, "CAN1").message(0x321, direction="outbound").happened_at(10)
+check.bus(can.bus_id, "CAN1").message(0x7FF).never()
+check.bus(can.bus_id, "CAN1").message(0x321, starts_with=b"\xe4").happened_at_least(5)
+```
+
+| Argument | Matches |
+| --- | --- |
+| `address` | the CAN identifier, the I2C address or the SPI chip select; left out, any |
+| `direction` | `"outbound"` for what the firmware sent, `"inbound"` for what reached it; left out, both |
+| `starts_with` | the bytes the payload has to begin with |
+
+Then one of:
+
+| Expectation | Met when |
+| --- | --- |
+| `happened_at_least(count)` | at least `count` such messages crossed the bus |
+| `happened_between(at_least, at_most)` | their number is within the range, both ends included |
+| `never()` | there was none at all |
+| `happened_at(hertz, tolerance=0.05)` | they came at about that rate over the window |
+
+The report names what was looked at: `CAN1 id=0x321 outbound: expected 10 Hz +/-
+5%, saw 10 Hz`.
+
+## The profile
+
+`check.profile().heaviest_is(function, origin="firmware")` expects one function to
+spend more time in itself than any other of its origin. It is about the *ranking*,
+never about nanoseconds: host time is not target time. The build has to be woven
+for profiling (`profile = true` in `looper.toml`); without it the expectation
+fails, saying so. See [The profile and the findings](profile-and-findings.md).
+
+```python
+check.profile().heaviest_is("sort")
+check.profile().heaviest_is("step", origin="device model")
+```
+
 ## Reading the report
 
 ```{figure} ../images/report-anatomy.svg

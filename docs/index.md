@@ -126,11 +126,14 @@ environment -- only the `looper-cli` command. See [How it works](concepts.md).
 | If you … | read |
 | --- | --- |
 | have not installed anything yet | [Installation](getting-started/installation.md) |
+| want to learn looper by building a small firmware, lesson by lesson, with a test for every lesson | the {rs}`Tutorial <tutorial/index.html>` |
 | want to see a test pass before reading anything else | [Your first test](getting-started/first-test.md) |
 | want to know what happens when a test runs | [How it works](concepts.md) |
 | have a concrete question about your firmware | [Recipes](recipes/index.md) |
 | want the simulation to tell you when a pin changed or a value was reached | [Triggers](guides/triggers.md) |
 | want to know every expectation there is | [Expecting things](guides/expectations.md) and the [reference](reference/expectations.md) |
+| want to close a loop with a model, or drive an input from a graph of signals | [Setting the scene](guides/scene.md#a-graph-of-signals) |
+| want to know where the time goes, or what the architecture analysis found | [The profile and the findings](guides/profile-and-findings.md) |
 | are setting up a test suite and CI | [Tests in pytest and CI](guides/pytest.md) |
 | see an error you do not understand | [Troubleshooting](troubleshooting.md) |
 
@@ -152,6 +155,7 @@ guides/scene
 guides/variables
 guides/triggers
 guides/expectations
+guides/profile-and-findings
 guides/pytest
 ```
 
