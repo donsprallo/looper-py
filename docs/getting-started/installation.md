@@ -1,5 +1,9 @@
 # Installation
 
+This page is what a test written with looper-py needs. Installing the whole
+system – the window, the compilers, `gdb` – is described once, in
+{learn}`Installation <getting-started/installation.html>` of looper-docs.
+
 A test written with looper-py needs three things:
 
 | What | Why | Check with |
@@ -97,11 +101,11 @@ environment, as above.
 
 `looper.run` takes the build definition of a simulation, the `looper.toml`
 that `looper-core` reads. If your firmware has none yet, start with the
-example that ships with `looper-core`:
+example in looper-docs:
 
 ```console
-$ ls ../looper-core/examples/blinky/looper.toml
-../looper-core/examples/blinky/looper.toml
+$ ls ../looper-docs/examples/blinky/looper.toml
+../looper-docs/examples/blinky/looper.toml
 ```
 
 How to write a `looper.toml` for your own firmware is described in
@@ -120,4 +124,7 @@ profile = true
 track_allocations = true
 ```
 
-Next: [Your first test](first-test.md).
+Next: {learn}`Your first test <getting-started/first-test.html>`, which walks
+through a test of the blinky example, or straight to
+[Tests in pytest and CI](../guides/pytest.md) for how to keep tests that share a
+simulation independent of each other.

@@ -55,9 +55,13 @@ intersphinx_mapping = {"python": ("https://docs.python.org/3", None)}
 # defaults assume all of them are deployed side by side.
 CORE_DOCS = os.environ.get("LOOPER_CORE_DOCS", "../looper-core")
 RS_DOCS = os.environ.get("LOOPER_RS_DOCS", "../looper-rs")
+# The tutorial, the installation of the whole system, the first test and the
+# licence are written once, in looper-docs.
+LEARN_DOCS = os.environ.get("LOOPER_LEARN_DOCS", "../looper-docs")
 extlinks = {
     "core": (f"{CORE_DOCS}/%s", "%s"),
     "rs": (f"{RS_DOCS}/%s", "%s"),
+    "learn": (f"{LEARN_DOCS}/%s", "%s"),
 }
 extlinks_detect_hardcoded_links = True
 

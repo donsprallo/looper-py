@@ -10,7 +10,7 @@ import looper
 
 
 def test_pressing_the_button_makes_the_led_blink_faster():
-    with looper.run("examples/blinky/looper.toml", virtual=True) as simulation:
+    with looper.run("../looper-docs/examples/blinky/looper.toml", virtual=True) as simulation:
         button = next(pin for pin in simulation.pins() if pin.name == "BUTTON_MODE")
         simulation.toggle_pin(button.pin_id)
 
@@ -108,9 +108,9 @@ $ uv run pytest
 $ uv run ruff check src tests && uv run mypy
 ```
 
-The tests under `tests/integration` build and run the blinky example of a
-`looper-core` checkout beside this one, and skip without it or without a C
-compiler. `LOOPER_CORE` points at a checkout elsewhere.
+The tests under `tests/integration` build and run the test firmware of a
+`looper-core` checkout beside this one (`tests/fixtures/blinky` there), and skip
+without it or without a C compiler. `LOOPER_CORE` points at a checkout elsewhere.
 
 The contract is `src/looper/infrastructure/contract/looper_inspector.proto`,
 a copy of the schema in `looper-core`; `tests/test_contract_in_step.py` fails

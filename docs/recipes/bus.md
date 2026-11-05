@@ -10,9 +10,9 @@ wrong address, a filter that does not match. It is easy to miss in a log and
 easy to check.
 
 ```{note}
-The blinky example has no bus. The examples on this page assume a firmware
-with a CAN bus the firmware calls `CAN2`; the reports are what such a
-firmware answers.
+The blinky example has a CAN bus, `CAN1`, but the examples on this page assume a
+firmware with one that is called `CAN2`; the reports are what such a firmware
+answers.
 ```
 
 ## Example: nothing refused, enough traffic

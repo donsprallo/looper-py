@@ -5,7 +5,7 @@
     import looper
 
     def test_the_led_blinks():
-        with looper.run("examples/blinky/looper.toml", virtual=True) as simulation:
+        with looper.run("../looper-docs/examples/blinky/looper.toml", virtual=True) as simulation:
             check = simulation.expect()
             check.call("adapter_gpio_write").happened_at_least(2)
             check.memory().never_allocates()

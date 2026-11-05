@@ -216,18 +216,10 @@ Without it such a test raises `looper.ProFeatureLockedError`; see
 [The profile and the findings](profile-and-findings.md#a-licence) for how to skip
 instead.
 
-## The tutorial's checks: `pytest -m tutorial`
+## The tutorial's checks
 
-looper-py carries the checks of the {rs}`tutorial <tutorial/index.html>`:
-`tests/tutorial/test_lesson_NN.py`, one file per lesson, each claim of a "What you
-should see" as a test against the lesson's folder in `looper-core`. They build
-the lessons and take minutes, so a plain `pytest` leaves them out, and
-
-```console
-$ pytest -m tutorial
-```
-
-runs them alone. They need a `looper-core` checkout next to `looper-py`
-(`LOOPER_CORE` points at another) and a C compiler, and skip without them. The
-lessons' own tests, which a reader of lesson 11 writes, are a different thing: they
-live in the lesson's folder and run like any other.
+The checks of the {learn}`tutorial <tutorial/index.html>` – each claim of a "What
+you should see" as a test against the lesson's folder – are written with looper-py
+and live in looper-docs, in `tests/tutorial/`, run with `pytest -m tutorial`. The
+lessons' own tests, which a reader of lesson 11 writes, are a different thing:
+they live in the lesson's folder and run like any other.

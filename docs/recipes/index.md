@@ -1,7 +1,7 @@
 # Recipes
 
 Each recipe starts from a question you have about your firmware and ends with
-a test that answers it. They use the blinky example of `looper-core` where it
+a test that answers it. They use the blinky example of looper-docs (`examples/blinky`) where it
 has what the recipe needs, and say so where they assume more -- a CAN bus,
 say.
 

@@ -10,7 +10,7 @@ import looper
 
 
 def test_pressing_the_button_makes_the_led_blink_faster():
-    with looper.run("examples/blinky/looper.toml", virtual=True) as simulation:
+    with looper.run("../looper-docs/examples/blinky/looper.toml", virtual=True) as simulation:
         simulation.toggle_pin(simulation.pin("BUTTON_MODE").pin_id)
 
         check = simulation.expect()
@@ -126,8 +126,8 @@ environment -- only the `looper-cli` command. See [How it works](concepts.md).
 | If you … | read |
 | --- | --- |
 | have not installed anything yet | [Installation](getting-started/installation.md) |
-| want to learn looper by building a small firmware, lesson by lesson, with a test for every lesson | the {rs}`Tutorial <tutorial/index.html>` |
-| want to see a test pass before reading anything else | [Your first test](getting-started/first-test.md) |
+| want to learn looper by building a small firmware, lesson by lesson | the {learn}`Tutorial <tutorial/index.html>` in looper-docs |
+| want to see a test pass before reading anything else | {learn}`Your first test <getting-started/first-test.html>` in looper-docs |
 | want to know what happens when a test runs | [How it works](concepts.md) |
 | have a concrete question about your firmware | [Recipes](recipes/index.md) |
 | want the simulation to tell you when a pin changed or a value was reached | [Triggers](guides/triggers.md) |
@@ -142,7 +142,6 @@ environment -- only the `looper-cli` command. See [How it works](concepts.md).
 :caption: Getting started
 
 getting-started/installation
-getting-started/first-test
 concepts
 ```
 
