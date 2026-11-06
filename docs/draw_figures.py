@@ -421,10 +421,48 @@ def reset_window():
     svg.save("reset-window.svg")
 
 
+def power_cut_sweep():
+    """What a cut after so many bytes leaves in the partition an update is copied into."""
+    svg = Svg(940, 270, "What a power cut after so many bytes leaves in the partition the update is copied into")
+    left, right = 70, 880
+    total = 24576
+
+    def at(byte):
+        return left + byte / total * (right - left)
+
+    svg.text(left, 30, "A power cut every 4096 bytes of the update's copy into app_b, and what each leaves there", size=12.5,
+             weight="bold")
+    svg.rect(left, 56, at(8256) - left, 40, fill=BLUE_SOFT, stroke=ACCENT, rx=5)
+    svg.text(left + 10, 74, "header 64 B + payload 8192 B", size=12, weight="bold")
+    svg.text(left + 10, 90, "the image: 8256 bytes", size=11, fill=MUTED)
+    svg.rect(at(8256) + 3, 56, right - at(8256) - 3, 40, fill=RAISED, stroke=BORDER, rx=5)
+    svg.text(at(8256) + 13, 74, "the rest of the 24 KiB copy: erased bytes", size=12)
+    svg.text(at(8256) + 13, 90, "the firmware writes them too", size=11, fill=MUTED)
+    axis = 140
+    svg.line(left, axis, right, axis, stroke=MUTED, width=1)
+    outcomes = [
+        (0, "no header", "holds no image header", MUTED),
+        (4096, "broken", "payload CRC", BAD),
+        (8192, "broken", "payload CRC", BAD),
+        (12288, "valid", "app@2.0, not on trial", GOOD),
+        (16384, "valid", "app@2.0, not on trial", GOOD),
+        (20480, "valid", "app@2.0, not on trial", GOOD),
+    ]
+    for byte, state, note, colour in outcomes:
+        x = at(byte)
+        svg.line(x, axis - 6, x, axis + 6, stroke=colour, width=2)
+        svg.text(x, axis + 24, f"{byte}", size=11, anchor="middle", mono=True)
+        svg.text(x, axis + 44, state, size=12, anchor="middle", weight="bold", fill=colour)
+        svg.text(x, axis + 60, note, size=10, anchor="middle", fill=MUTED)
+    svg.text(left, 240, "In every case the boot state is untouched and slot A runs on: the update asks for a trial only after the whole copy.",
+             size=11.5, fill=MUTED)
+    svg.save("power-cut-sweep.svg")
+
+
 def main() -> int:
     OUT.mkdir(parents=True, exist_ok=True)
     figures = [system_overview, lockstep, evaluate_steps, waveforms, channel_checks, window_edges,
-               report_anatomy, trigger_hold, reset_window]
+               report_anatomy, trigger_hold, reset_window, power_cut_sweep]
     for figure in figures:
         figure()
     print(f"wrote {len(figures)} figures to {OUT}")

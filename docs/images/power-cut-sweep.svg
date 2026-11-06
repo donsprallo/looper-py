@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="940" height="270" viewBox="0 0 940 270" role="img">
+<title>What a power cut after so many bytes leaves in the partition the update is copied into</title>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="context-stroke"/></marker></defs>
+<rect x="0.5" y="0.5" width="939" height="269" rx="12" fill="#ffffff" stroke="#d7dbe4"/>
+<text x="70" y="30" font-family="Segoe UI, Helvetica Neue, Helvetica, Arial, sans-serif" font-size="12.5" fill="#1b1f2a" font-weight="bold" text-anchor="start">A power cut every 4096 bytes of the update's copy into app_b, and what each leaves there</text>
+<rect x="70" y="56" width="272.109375" height="40" rx="5" fill="#dbe7ff" stroke="#2563eb" stroke-width="1"/>
+<text x="80" y="74" font-family="Segoe UI, Helvetica Neue, Helvetica, Arial, sans-serif" font-size="12" fill="#1b1f2a" font-weight="bold" text-anchor="start">header 64 B + payload 8192 B</text>
+<text x="80" y="90" font-family="Segoe UI, Helvetica Neue, Helvetica, Arial, sans-serif" font-size="11" fill="#5f6879" font-weight="normal" text-anchor="start">the image: 8256 bytes</text>
+<rect x="345.109375" y="56" width="534.890625" height="40" rx="5" fill="#eef0f5" stroke="#d7dbe4" stroke-width="1"/>
+<text x="355.109375" y="74" font-family="Segoe UI, Helvetica Neue, Helvetica, Arial, sans-serif" font-size="12" fill="#1b1f2a" font-weight="normal" text-anchor="start">the rest of the 24 KiB copy: erased bytes</text>
+<text x="355.109375" y="90" font-family="Segoe UI, Helvetica Neue, Helvetica, Arial, sans-serif" font-size="11" fill="#5f6879" font-weight="normal" text-anchor="start">the firmware writes them too</text>
+<line x1="70" y1="140" x2="880" y2="140" stroke="#5f6879" stroke-width="1"/>
+<line x1="70.0" y1="134" x2="70.0" y2="146" stroke="#5f6879" stroke-width="2"/>
+<text x="70.0" y="164" font-family="Consolas, Menlo, DejaVu Sans Mono, monospace" font-size="11" fill="#1b1f2a" font-weight="normal" text-anchor="middle" xml:space="preserve">0</text>
+<text x="70.0" y="184" font-family="Segoe UI, Helvetica Neue, Helvetica, Arial, sans-serif" font-size="12" fill="#5f6879" font-weight="bold" text-anchor="middle">no header</text>
+<text x="70.0" y="200" font-family="Segoe UI, Helvetica Neue, Helvetica, Arial, sans-serif" font-size="10" fill="#5f6879" font-weight="normal" text-anchor="middle">holds no image header</text>
+<line x1="205.0" y1="134" x2="205.0" y2="146" stroke="#c93b3b" stroke-width="2"/>
+<text x="205.0" y="164" font-family="Consolas, Menlo, DejaVu Sans Mono, monospace" font-size="11" fill="#1b1f2a" font-weight="normal" text-anchor="middle" xml:space="preserve">4096</text>
+<text x="205.0" y="184" font-family="Segoe UI, Helvetica Neue, Helvetica, Arial, sans-serif" font-size="12" fill="#c93b3b" font-weight="bold" text-anchor="middle">broken</text>
+<text x="205.0" y="200" font-family="Segoe UI, Helvetica Neue, Helvetica, Arial, sans-serif" font-size="10" fill="#5f6879" font-weight="normal" text-anchor="middle">payload CRC</text>
+<line x1="340.0" y1="134" x2="340.0" y2="146" stroke="#c93b3b" stroke-width="2"/>
+<text x="340.0" y="164" font-family="Consolas, Menlo, DejaVu Sans Mono, monospace" font-size="11" fill="#1b1f2a" font-weight="normal" text-anchor="middle" xml:space="preserve">8192</text>
+<text x="340.0" y="184" font-family="Segoe UI, Helvetica Neue, Helvetica, Arial, sans-serif" font-size="12" fill="#c93b3b" font-weight="bold" text-anchor="middle">broken</text>
+<text x="340.0" y="200" font-family="Segoe UI, Helvetica Neue, Helvetica, Arial, sans-serif" font-size="10" fill="#5f6879" font-weight="normal" text-anchor="middle">payload CRC</text>
+<line x1="475.0" y1="134" x2="475.0" y2="146" stroke="#108b63" stroke-width="2"/>
+<text x="475.0" y="164" font-family="Consolas, Menlo, DejaVu Sans Mono, monospace" font-size="11" fill="#1b1f2a" font-weight="normal" text-anchor="middle" xml:space="preserve">12288</text>
+<text x="475.0" y="184" font-family="Segoe UI, Helvetica Neue, Helvetica, Arial, sans-serif" font-size="12" fill="#108b63" font-weight="bold" text-anchor="middle">valid</text>
+<text x="475.0" y="200" font-family="Segoe UI, Helvetica Neue, Helvetica, Arial, sans-serif" font-size="10" fill="#5f6879" font-weight="normal" text-anchor="middle">app@2.0, not on trial</text>
+<line x1="610.0" y1="134" x2="610.0" y2="146" stroke="#108b63" stroke-width="2"/>
+<text x="610.0" y="164" font-family="Consolas, Menlo, DejaVu Sans Mono, monospace" font-size="11" fill="#1b1f2a" font-weight="normal" text-anchor="middle" xml:space="preserve">16384</text>
+<text x="610.0" y="184" font-family="Segoe UI, Helvetica Neue, Helvetica, Arial, sans-serif" font-size="12" fill="#108b63" font-weight="bold" text-anchor="middle">valid</text>
+<text x="610.0" y="200" font-family="Segoe UI, Helvetica Neue, Helvetica, Arial, sans-serif" font-size="10" fill="#5f6879" font-weight="normal" text-anchor="middle">app@2.0, not on trial</text>
+<line x1="745.0" y1="134" x2="745.0" y2="146" stroke="#108b63" stroke-width="2"/>
+<text x="745.0" y="164" font-family="Consolas, Menlo, DejaVu Sans Mono, monospace" font-size="11" fill="#1b1f2a" font-weight="normal" text-anchor="middle" xml:space="preserve">20480</text>
+<text x="745.0" y="184" font-family="Segoe UI, Helvetica Neue, Helvetica, Arial, sans-serif" font-size="12" fill="#108b63" font-weight="bold" text-anchor="middle">valid</text>
+<text x="745.0" y="200" font-family="Segoe UI, Helvetica Neue, Helvetica, Arial, sans-serif" font-size="10" fill="#5f6879" font-weight="normal" text-anchor="middle">app@2.0, not on trial</text>
+<text x="70" y="240" font-family="Segoe UI, Helvetica Neue, Helvetica, Arial, sans-serif" font-size="11.5" fill="#5f6879" font-weight="normal" text-anchor="start">In every case the boot state is untouched and slot A runs on: the update asks for a trial only after the whole copy.</text>
+</svg>

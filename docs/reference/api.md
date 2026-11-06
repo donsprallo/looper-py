@@ -49,7 +49,7 @@ looper.NodeOutput, looper.SignalModel, looper.ModelParameter
 
 ```{eval-rst}
 .. autoclass:: looper.Expectations
-   :members: channel, bus, call, memory, stack, reset, flash, firmware_is_alive, add, evaluate
+   :members: channel, bus, call, memory, stack, reset, flash, boot_chain, firmware_is_alive, add, evaluate
 
 .. autoclass:: looper.application.subjects.ChannelExpectation
    :members:
@@ -76,6 +76,12 @@ looper.NodeOutput, looper.SignalModel, looper.ModelParameter
    :members:
 
 .. autoclass:: looper.application.subjects.FlashExpectation
+   :members:
+
+.. autoclass:: looper.application.subjects.PartitionExpectation
+   :members:
+
+.. autoclass:: looper.application.subjects.BootChainExpectation
    :members:
 ```
 
@@ -172,6 +178,31 @@ memories](../guides/resets-and-memories.md) explains how they are used.
 .. autoclass:: looper.ResetMark
 
 .. autoclass:: looper.FlashMark
+```
+
+## The bootloader (Pro)
+
+`simulation.images()`, `simulation.boot_chains()`, `simulation.power_cut()`,
+`simulation.disarm_power_cut()` and `simulation.otp()` reach the bootloader's
+parts; `flash.partition(name).write_image(...)` and `.header()` write an image
+into a partition and read what it holds. The guide [The bootloader from a
+test](../guides/bootloader.md) explains how they are used; the calls are looper
+Pro, except for the partition names.
+
+```{eval-rst}
+.. autoclass:: looper.Image
+
+.. autoclass:: looper.PartitionHeader
+
+.. autoclass:: looper.BootChain
+   :members:
+
+.. autoclass:: looper.BootStep
+
+.. autoclass:: looper.Otp
+   :members:
+
+.. autofunction:: looper.sweep_power_cuts
 ```
 
 ## Signal graphs

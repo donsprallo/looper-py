@@ -15,6 +15,7 @@ say.
 | Does a periodic task keep its rate? | [Periodic task](periodic-task.md) | `happened_at` |
 | What does the firmware do right after an event? | [Trigger reaction](trigger-reaction.md) | triggers instead of expectations |
 | Is the firmware reset when it should be, and does it come back as it should? | [Reset](reset.md) | `reset(...).happened_once`, `no_loop`, `flash().no_violation` |
+| Does an update survive a power cut, and does a bad one get rolled back? (Pro) | [Update](update.md) | `boot_chain().went`, `flash().partition(...).is_valid` |
 | Does a bus carry what it should, and is nothing refused? | [Bus](bus.md) | `nothing_refused`, `carried_at_least` |
 | Does it hold across a range of inputs? | [Sweeps](sweeps.md) | any, with `parametrize` |
 

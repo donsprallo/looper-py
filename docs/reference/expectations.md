@@ -75,6 +75,27 @@ the server's sentence, `Reset loop: 10 resets within 1 s (watchdog each time).`
 
 When it fails it names the offsets and the partitions: `saw at 0x3000 (config)`.
 
+## The boot chain -- `check.boot_chain()` (Pro)
+
+| Expectation | Met when | Outcome when met |
+| --- | --- | --- |
+| `went(*partitions)` | the last start of the board in the window went through these partitions, in order | `saw stage0 → stage1_a 1.0 → app_b 2.1` |
+
+It fails with `no boot chain` when there was none. The last chain is the one that
+counts: a window that holds several starts expects the newest.
+
+## A partition's header -- `check.flash().partition(name)` (Pro)
+
+| Expectation | Met when | Outcome when met |
+| --- | --- | --- |
+| `is_valid(image="")` | the header at the window's end is `valid`, and names `image` when one is given | `saw valid · app@2.1 · v0x0201` |
+| `is_invalid()` | the header is `broken`, `unknown image` or `empty`: no image a bootloader would start | `saw broken: the payload CRC does not match (…)` |
+| `is_empty()` | the partition is erased | `saw empty (erased)` |
+
+A partition with no image header at all (data, a boot state) has no state, so
+`is_invalid()` is not met by it. Without the licence the server gives no state and
+the outcome says so.
+
 ## The profile -- `check.profile()`
 
 | Expectation | Met when | Needs in `looper.toml` |

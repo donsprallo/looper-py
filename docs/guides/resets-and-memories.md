@@ -78,6 +78,7 @@ reason names the way out. `simulation.reset()` (the pin) or
 | `text` | the line the window shows for it |
 | `has_dump` | whether what it left behind can be read |
 | `is_running` | whether it is the life that runs now |
+| `image`, `partition`, `entered_by` | with several images (Pro): the image the life ran and the partition it started from, and how it began: `reset`, `jump` or `power-on`; see [The bootloader from a test](bootloader.md#which-image-each-life-ran) |
 
 ```python
 first, second = simulation.lives()
@@ -252,6 +253,10 @@ violations = [one for one in marks if one.kind == "violation"]
 - It does not stop the jobs on a bus: they go on in the next life, but their
   counters start over, and the rest of a round already started is not sent. The
   number of times a trigger fired is not summed over the lives.
+
+A jump from one image into the next is not a reset: it ends a life and begins
+another without a reset flag. The power cut, which begins its next life as a
+power-on, is in [The bootloader from a test](bootloader.md#cutting-the-power).
 
 A hang is noticed after about 2 s of real time in which simulated time stood
 still while a request waited, so a test that makes the firmware hang waits that
