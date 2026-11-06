@@ -83,3 +83,39 @@ def test_the_images_are_listed_with_their_variants(simulation: looper.Simulation
 
     assert "app@2.1-unconfirmed" in [image.ref for image in images]
     assert all(image.built for image in images)
+
+
+COPY_UPDATE = 4
+
+
+def test_a_confirmed_update_is_expected_as_the_way_the_board_went(
+    simulation: looper.Simulation,
+) -> None:
+    simulation.advance(0.05)
+    simulation.flash().partition("app_b").write_image("app@2.1")
+    simulation.flash().write(BOOT_STATE, _boot_state(SLOT_A, ON_TRIAL), raw=True)
+    check = simulation.expect()
+    check.boot_chain().went("stage0", "stage1_a", "app_b")
+    simulation.reset()
+
+    report = check.evaluate(for_seconds=0.05)
+
+    assert report, report.summary
+    assert simulation.otp().read(0, 1) == b"\x01"
+
+
+def test_a_power_cut_in_the_middle_of_an_update_leaves_b_invalid_and_a_runs(
+    simulation: looper.Simulation,
+) -> None:
+    simulation.advance(0.05)
+    simulation.power_cut(after_bytes=8192, during="flash.write", off_for_us=5000, seed=1)
+    simulation.toggle_pin(COPY_UPDATE)
+    simulation.advance(0.012)
+    simulation.toggle_pin(COPY_UPDATE)
+    check = simulation.expect()
+    check.boot_chain().went("stage0", "stage1_a", "app_a")
+    check.flash().partition("app_b").is_invalid()
+
+    report = check.evaluate(for_seconds=0.1)
+
+    assert report, report.summary

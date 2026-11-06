@@ -41,3 +41,24 @@ class PartitionHolds(Check):
         seen = header.text or NO_STATE
         named = not self.image or f"· {self.image} ·" in f"{header.text} "
         return Outcome(subject, expected, seen, met=header.state in self.states and named)
+
+
+@dataclass(frozen=True)
+class BootChainWent(Check):
+    """The last start of the board in the window went through these partitions, in order.
+
+    Attributes:
+        partitions: ``stage0``, ``stage1_a``, ``app_b``.
+    """
+
+    partitions: tuple[str, ...]
+
+    def evaluate(self, observed: Observation) -> Outcome:
+        """Compare the window's last boot chain with the partitions."""
+        expected = " → ".join(self.partitions)
+        if not observed.boot_chains:
+            return Outcome("the boot chain", expected, "no boot chain", met=False)
+        last = observed.boot_chains[-1]
+        return Outcome(
+            "the boot chain", expected, last.text, met=last.partitions == self.partitions
+        )

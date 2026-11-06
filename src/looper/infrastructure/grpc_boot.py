@@ -11,7 +11,7 @@ from collections.abc import Callable
 from typing import Any
 
 from looper.application.boot_port import BootInspector
-from looper.domain.model import Image, PartitionHeader
+from looper.domain.model import BootChain, Image, PartitionHeader
 from looper.infrastructure import boot_translation
 from looper.infrastructure.contract import looper_inspector_pb2 as contract
 from looper.infrastructure.contract import looper_inspector_pb2_grpc as service
@@ -52,3 +52,23 @@ class GrpcBootCalls(BootInspector):
         target = contract.PartitionOffset(name=partition)
         request = contract.FlashWrite(partition=target, image_file=path)
         self._taken(self._call(self._stub.WriteFlash, request))
+
+    def read_boot_chains(self) -> tuple[BootChain, ...]:
+        """The run's lives as boot chains."""
+        return boot_translation.chains_of(self._call(self._stub.ObserveBootChain, EMPTY))
+
+    def cut_power(
+        self, after_bytes: int | None, during: str, off_for_us: int, seed: int, disarm: bool = False
+    ) -> None:
+        """Arm a power cut, cut it now, or disarm one."""
+        request = boot_translation.power_cut_request(after_bytes, during, off_for_us, seed, disarm)
+        self._taken(self._call(self._stub.CutPower, request))
+
+    def read_otp(self) -> bytes:
+        """The whole OTP."""
+        return bytes(self._call(self._stub.ObserveOtp, EMPTY).content)
+
+    def burn_otp(self, offset: int, data: bytes) -> None:
+        """Burn the bits that are 1 in the data."""
+        request = contract.OtpBurn(offset=offset, data=data)
+        self._taken(self._call(self._stub.BurnOtp, request))

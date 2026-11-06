@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from looper.domain.model.boot import PartitionHeader
+from looper.domain.model.boot import BootChain, PartitionHeader
 from looper.domain.model.marks import FlashMark, ResetMark
 from looper.domain.model.profile import Profile
 from looper.domain.model.readings import CallTiming, Exchange, MemoryUsage, Sample
@@ -43,6 +43,8 @@ class Observation:
         loop_finding: The server's reset loop finding at the window's end, or empty.
         headers: What each partition holds at the window's end (Pro); read
             only when an expectation is about it.
+        boot_chains: The run's boot chains at the window's end (Pro); read
+            only when an expectation is about them.
     """
 
     samples: tuple[Sample, ...]
@@ -56,6 +58,7 @@ class Observation:
     flash_marks: tuple[FlashMark, ...] = ()
     loop_finding: str = ""
     headers: dict[str, PartitionHeader] = field(default_factory=dict)
+    boot_chains: tuple[BootChain, ...] = ()
 
     @property
     def sample_loss_note(self) -> str:

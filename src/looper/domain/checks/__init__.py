@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from looper.domain.checks.boot_checks import PartitionHolds
+from looper.domain.checks.boot_checks import BootChainWent, PartitionHolds
 from looper.domain.checks.bus_checks import (
     BusCarriedAtLeast,
     BusNothingRefused,
@@ -29,6 +29,7 @@ from looper.domain.checks.profile_checks import HeaviestFunctionIs
 from looper.domain.checks.reset_checks import NoFlashViolation, NoResetLoop, ResetHappened
 
 __all__ = [
+    "BootChainWent",
     "BusCarriedAtLeast",
     "BusNothingRefused",
     "CallHappened",

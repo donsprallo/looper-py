@@ -21,6 +21,7 @@ simulation together.
 
 from __future__ import annotations
 
+from looper.application.bootloader import Otp, sweep_power_cuts
 from looper.application.expectations import Expectations
 from looper.application.memories import Flash, FlashPartition, Retained
 from looper.application.ports import (
@@ -31,6 +32,8 @@ from looper.application.ports import (
 from looper.application.simulation import Simulation
 from looper.application.triggers import Triggers
 from looper.domain.model import (
+    BootChain,
+    BootStep,
     Bus,
     BusMessage,
     CallTiming,
@@ -47,6 +50,7 @@ from looper.domain.model import (
     Findings,
     FlashMark,
     HeapUsage,
+    Image,
     Life,
     LifeDump,
     Lives,
@@ -54,6 +58,7 @@ from looper.domain.model import (
     ModelParameter,
     NodeOutput,
     Outcome,
+    PartitionHeader,
     Pattern,
     Pin,
     PinLevel,
@@ -81,6 +86,8 @@ from looper.starting import ContractMismatchError, connect, run
 __version__ = "0.2.0"
 
 __all__ = [
+    "BootChain",
+    "BootStep",
     "Flash",
     "FlashMark",
     "FlashPartition",
@@ -106,11 +113,14 @@ __all__ = [
     "Finding",
     "Findings",
     "HeapUsage",
+    "Image",
     "LooperCliError",
     "MemoryUsage",
     "ModelParameter",
     "NodeOutput",
+    "Otp",
     "Outcome",
+    "PartitionHeader",
     "Pattern",
     "Pin",
     "PinLevel",
@@ -138,4 +148,5 @@ __all__ = [
     "__version__",
     "connect",
     "run",
+    "sweep_power_cuts",
 ]

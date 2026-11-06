@@ -6,7 +6,7 @@ The memories are byte arrays a test reads and writes; lives are a script.
 from __future__ import annotations
 
 from looper.application.ports import SimulationRefusedError
-from looper.domain.model import Image, Life, LifeDump, Lives, PartitionHeader
+from looper.domain.model import BootChain, Image, Life, LifeDump, Lives, PartitionHeader
 
 FLASH_SIZE = 4096
 
@@ -26,6 +26,10 @@ class ScriptedLives:
         self.images: tuple[Image, ...] = ()
         self.headers: dict[str, PartitionHeader] = {}
         self.images_written: list[tuple[str, str]] = []
+        self.chains: tuple[BootChain, ...] = ()
+        self.power_cuts: list[tuple[int | None, str, int, int, bool]] = []
+        self.otp = bytearray(32)
+        self.loaded: list[bytes] = []
 
     def reset_firmware(self, cause: str) -> None:
         if cause not in ("pin", "power-on", "brown-out", "software", "watchdog"):
@@ -78,3 +82,18 @@ class ScriptedLives:
 
     def write_image_file(self, partition: str, path: str) -> None:
         self.images_written.append((partition, path))
+
+    def read_boot_chains(self) -> tuple[BootChain, ...]:
+        return self.chains
+
+    def cut_power(
+        self, after_bytes: int | None, during: str, off_for_us: int, seed: int, disarm: bool = False
+    ) -> None:
+        self.power_cuts.append((after_bytes, during, off_for_us, seed, disarm))
+
+    def read_otp(self) -> bytes:
+        return bytes(self.otp)
+
+    def burn_otp(self, offset: int, data: bytes) -> None:
+        for index, byte in enumerate(data):
+            self.otp[offset + index] |= byte

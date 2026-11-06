@@ -1,4 +1,4 @@
-"""What the port answers about the bootloader: images, partition headers, writing an image (Pro).
+"""What the port answers about the bootloader: images, headers, chains, the power, the OTP (Pro).
 
 Apart from the rest of the port so that both stay readable; `Inspector`
 inherits it. Whether the licence allows a call is the server's to say: a
@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 
-from looper.domain.model import Image, PartitionHeader
+from looper.domain.model import BootChain, Image, PartitionHeader
 
 
 class BootInspector(ABC):
@@ -44,3 +44,32 @@ class BootInspector(ABC):
 
         The path is the server's: it reads the file.
         """
+
+    @abstractmethod
+    def read_boot_chains(self) -> tuple[BootChain, ...]:
+        """The run's lives as boot chains, oldest first."""
+
+    @abstractmethod
+    def cut_power(
+        self, after_bytes: int | None, during: str, off_for_us: int, seed: int, disarm: bool = False
+    ) -> None:
+        """Arm a power cut after so many bytes of the firmware's flash calls, or cut it now.
+
+        Args:
+            after_bytes: Bytes programmed or erased from now; ``None`` cuts at once.
+            during: ``flash.write``, ``flash.erase`` or ``any``.
+            off_for_us: How long the board stays without power.
+            seed: Which bits of the word in flight change.
+            disarm: Take an armed cut back instead.
+
+        Raises:
+            ValueError: If ``during`` is none of the three; nothing is sent.
+        """
+
+    @abstractmethod
+    def read_otp(self) -> bytes:
+        """The whole OTP; empty when there is none."""
+
+    @abstractmethod
+    def burn_otp(self, offset: int, data: bytes) -> None:
+        """Burn the bits that are 1 in the data; nothing takes a burned bit back."""

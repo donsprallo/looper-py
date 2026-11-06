@@ -22,6 +22,7 @@ import time
 from looper.application.event_window import WindowReader
 from looper.application.ports import Inspector, SimulationRefusedError
 from looper.application.subjects import (
+    BootChainExpectation,
     BusExpectation,
     CallExpectation,
     ChannelExpectation,
@@ -62,6 +63,7 @@ class Expectations:
         self._checks: list[Check] = []
         self._reads_profile = False
         self._reads_headers = False
+        self._reads_chains = False
 
     def add(self, check: Check) -> Expectations:
         """Take one more expectation, and allow another to be chained."""
@@ -104,6 +106,14 @@ class Expectations:
     def flash(self) -> FlashExpectation:
         """Expect something of the flash."""
         return FlashExpectation(self)
+
+    def boot_chain(self) -> BootChainExpectation:
+        """Expect something of the way the board started: its boot chain (Pro)."""
+        return BootChainExpectation(self)
+
+    def reads_boot_chains(self) -> None:
+        """Have the window read the boot chains at its end, which only some checks need."""
+        self._reads_chains = True
 
     def reads_headers(self) -> None:
         """Have the window read the partitions' headers at its end, which only some checks need."""
@@ -174,6 +184,7 @@ class Expectations:
             flash_marks=events.flash_marks,
             loop_finding=self._inspector.read_lives().loop_finding,
             headers=self._inspector.read_headers() if self._reads_headers else {},
+            boot_chains=self._inspector.read_boot_chains() if self._reads_chains else (),
         )
 
     def _profile(self) -> Profile:

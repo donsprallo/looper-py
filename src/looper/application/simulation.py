@@ -11,6 +11,7 @@ from __future__ import annotations
 from collections.abc import Callable, Iterator
 from types import TracebackType
 
+from looper.application.bootloader import Otp
 from looper.application.event_stream import EventStream
 from looper.application.expectations import MICROSECONDS_PER_SECOND, Expectations
 from looper.application.findings_reading import complete_findings
@@ -18,6 +19,7 @@ from looper.application.memories import Flash, Retained
 from looper.application.ports import Inspector, SimulationRefusedError
 from looper.application.triggers import Triggers
 from looper.domain.model import (
+    BootChain,
     Bus,
     BusMessage,
     CallTiming,
@@ -408,6 +410,36 @@ class Simulation:
             ProFeatureLockedError: Without a licence for the bootloader.
         """
         return self._inspector.read_images()
+
+    def boot_chains(self) -> tuple[BootChain, ...]:
+        """The run's lives as boot chains: the stages each start of the board went through (Pro)."""
+        return self._inspector.read_boot_chains()
+
+    def power_cut(
+        self,
+        after_bytes: int | None = None,
+        during: str = "flash.write",
+        off_for_us: int = 0,
+        seed: int = 0,
+    ) -> None:
+        """Cut the power now, or after the firmware programs so many more bytes (Pro).
+
+        The word in flight when it goes is left partly programmed, the bits
+        chosen by the seed; the board stays off for ``off_for_us`` and comes
+        back with a power-on.
+
+        Raises:
+            ValueError: If ``during`` is not ``flash.write``, ``flash.erase`` or ``any``.
+        """
+        self._inspector.cut_power(after_bytes, during, off_for_us, seed)
+
+    def disarm_power_cut(self) -> None:
+        """Take an armed power cut back (Pro)."""
+        self._inspector.cut_power(None, "any", 0, 0, disarm=True)
+
+    def otp(self) -> Otp:
+        """The one-time-programmable memory (Pro)."""
+        return Otp(self._inspector)
 
     def close(self) -> None:
         """Let go of the simulation. Closing twice is allowed."""

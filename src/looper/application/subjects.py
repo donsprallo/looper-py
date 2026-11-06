@@ -13,6 +13,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from looper.domain.checks import (
+    BootChainWent,
     BusCarriedAtLeast,
     BusNothingRefused,
     CallHappened,
@@ -223,6 +224,18 @@ class FlashExpectation:
     def partition(self, name: str) -> PartitionExpectation:
         """Expect something of what a partition holds at the window's end (Pro)."""
         return PartitionExpectation(self._expectations, name)
+
+
+class BootChainExpectation:
+    """What is expected of the way the board started (Pro)."""
+
+    def __init__(self, expectations: Expectations) -> None:
+        self._expectations = expectations
+
+    def went(self, *partitions: str) -> Expectations:
+        """Expect the window's last start to go through these partitions, in order."""
+        self._expectations.reads_boot_chains()
+        return self._expectations.add(BootChainWent(tuple(partitions)))
 
 
 class PartitionExpectation:
