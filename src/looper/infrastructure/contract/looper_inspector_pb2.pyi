@@ -35,6 +35,7 @@ class ProFeature(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     PRO_FEATURE_UNSPECIFIED: _ClassVar[ProFeature]
     PRO_FEATURE_ARCHITECTURE: _ClassVar[ProFeature]
     PRO_FEATURE_BOOTLOADER: _ClassVar[ProFeature]
+    PRO_FEATURE_RUN_FINDINGS: _ClassVar[ProFeature]
 
 class Capability(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     __slots__ = ()
@@ -292,6 +293,7 @@ EDITION_PRO: Edition
 PRO_FEATURE_UNSPECIFIED: ProFeature
 PRO_FEATURE_ARCHITECTURE: ProFeature
 PRO_FEATURE_BOOTLOADER: ProFeature
+PRO_FEATURE_RUN_FINDINGS: ProFeature
 CAPABILITY_UNSPECIFIED: Capability
 CAPABILITY_PACED: Capability
 CAPABILITY_JOBS: Capability
@@ -4013,3 +4015,51 @@ class InterruptReport(_message.Message):
     note: str
     installed: bool
     def __init__(self, sources: _Optional[_Iterable[_Union[InterruptSourceView, _Mapping]]] = ..., lock: _Optional[_Union[InterruptLockView, _Mapping]] = ..., points_text: _Optional[str] = ..., note: _Optional[str] = ..., installed: _Optional[bool] = ...) -> None: ...
+
+class RunFindingFilter(_message.Message):
+    __slots__ = ("kinds", "known_revision")
+    KINDS_FIELD_NUMBER: _ClassVar[int]
+    KNOWN_REVISION_FIELD_NUMBER: _ClassVar[int]
+    kinds: _containers.RepeatedScalarFieldContainer[str]
+    known_revision: int
+    def __init__(self, kinds: _Optional[_Iterable[str]] = ..., known_revision: _Optional[int] = ...) -> None: ...
+
+class RunFinding(_message.Message):
+    __slots__ = ("key", "kind", "severity", "title", "explanation", "sim_us", "event_seq", "occurrences", "source_id", "dma_id", "places", "check_text")
+    KEY_FIELD_NUMBER: _ClassVar[int]
+    KIND_FIELD_NUMBER: _ClassVar[int]
+    SEVERITY_FIELD_NUMBER: _ClassVar[int]
+    TITLE_FIELD_NUMBER: _ClassVar[int]
+    EXPLANATION_FIELD_NUMBER: _ClassVar[int]
+    SIM_US_FIELD_NUMBER: _ClassVar[int]
+    EVENT_SEQ_FIELD_NUMBER: _ClassVar[int]
+    OCCURRENCES_FIELD_NUMBER: _ClassVar[int]
+    SOURCE_ID_FIELD_NUMBER: _ClassVar[int]
+    DMA_ID_FIELD_NUMBER: _ClassVar[int]
+    PLACES_FIELD_NUMBER: _ClassVar[int]
+    CHECK_TEXT_FIELD_NUMBER: _ClassVar[int]
+    key: str
+    kind: str
+    severity: Tier
+    title: str
+    explanation: str
+    sim_us: int
+    event_seq: int
+    occurrences: int
+    source_id: int
+    dma_id: int
+    places: _containers.RepeatedCompositeFieldContainer[CodePlace]
+    check_text: str
+    def __init__(self, key: _Optional[str] = ..., kind: _Optional[str] = ..., severity: _Optional[_Union[Tier, str]] = ..., title: _Optional[str] = ..., explanation: _Optional[str] = ..., sim_us: _Optional[int] = ..., event_seq: _Optional[int] = ..., occurrences: _Optional[int] = ..., source_id: _Optional[int] = ..., dma_id: _Optional[int] = ..., places: _Optional[_Iterable[_Union[CodePlace, _Mapping]]] = ..., check_text: _Optional[str] = ...) -> None: ...
+
+class RunFindingList(_message.Message):
+    __slots__ = ("revision", "unchanged", "findings", "note")
+    REVISION_FIELD_NUMBER: _ClassVar[int]
+    UNCHANGED_FIELD_NUMBER: _ClassVar[int]
+    FINDINGS_FIELD_NUMBER: _ClassVar[int]
+    NOTE_FIELD_NUMBER: _ClassVar[int]
+    revision: int
+    unchanged: bool
+    findings: _containers.RepeatedCompositeFieldContainer[RunFinding]
+    note: str
+    def __init__(self, revision: _Optional[int] = ..., unchanged: _Optional[bool] = ..., findings: _Optional[_Iterable[_Union[RunFinding, _Mapping]]] = ..., note: _Optional[str] = ...) -> None: ...

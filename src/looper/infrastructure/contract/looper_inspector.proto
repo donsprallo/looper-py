@@ -149,6 +149,10 @@ enum ProFeature {
   // Images and their variants, partition headers, boot.jump, boot chains,
   // the OTP and the power cut. Partition names stay free.
   PRO_FEATURE_BOOTLOADER = 2;
+  // Findings from the run: interrupts masked too long, lost, an ISR longer
+  // than its period, DMA overruns and length errors, reading while DMA
+  // writes; the race mode and the checks of looper-py on them.
+  PRO_FEATURE_RUN_FINDINGS = 3;
 }
 
 message LicenseView {
@@ -966,6 +970,11 @@ service Inspector {
   // that is not `is_raisable`, or one before the table is installed, is
   // refused with REFUSAL_NOT_ACCEPTED and a sentence.
   rpc RaiseInterrupt(InterruptRaise) returns (Ack);
+  // Pro (RUN_FINDINGS): what the run's interrupt and DMA events amount to,
+  // judged by the server against looper.toml's limits; without the licence
+  // PERMISSION_DENIED with the sentence. A request naming the revision the
+  // client has is answered with `unchanged` and nothing else.
+  rpc ObserveRunFindings(RunFindingFilter) returns (RunFindingList);
 
   // ---- Architecture (CAPABILITY_ARCHITECTURE) ----
   // Read from the project's code index, which the server builds in the
@@ -2754,4 +2763,34 @@ message InterruptReport {
   string points_text = 3;      // "Interruption points: adapter calls, waits, the end of a pass"
   string note = 4;             // the time model, or why nothing is there
   bool installed = 5;          // the firmware called an interrupt role, so the counts are live
+}
+
+// ---- Run findings (Pro) --------------------------------------------------------
+
+message RunFindingFilter {
+  repeated string kinds = 1;   // "IRQ_LOCK_TOO_LONG", ...; empty: every kind
+  uint64 known_revision = 2;
+}
+
+// One finding of the run: a fact of the runtime judged by the server.
+message RunFinding {
+  string key = 1;              // kind, source or channel, place: the same across runs
+  string kind = 2;             // IRQ_LOCK_TOO_LONG, IRQ_LOST, IRQ_LONGER_THAN_PERIOD, IRQ_LATENCY, IRQ_STORM, IRQ_NEVER_HANDLED, DMA_*
+  Tier severity = 3;
+  string title = 4;            // "Interrupts disabled for 2 ms (limit 1 ms)"
+  string explanation = 5;
+  uint64 sim_us = 6;           // first time it happened
+  uint64 event_seq = 7;        // the event to jump to in Logic
+  uint32 occurrences = 8;
+  uint32 source_id = 9;        // 0 without
+  uint32 dma_id = 10;          // 0 without
+  repeated CodePlace places = 11;
+  string check_text = 12;      // the looper-py check that expects it away: check.interrupt("TIM2").never_lost()
+}
+
+message RunFindingList {
+  uint64 revision = 1;
+  bool unchanged = 2;
+  repeated RunFinding findings = 3;
+  string note = 4;
 }

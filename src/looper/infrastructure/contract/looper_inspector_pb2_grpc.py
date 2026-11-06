@@ -364,6 +364,11 @@ class InspectorStub:
                 request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.InterruptRaise.SerializeToString,
                 response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Ack.FromString,
                 _registered_method=True)
+        self.ObserveRunFindings = channel.unary_unary(
+                '/looper.inspector.v3.Inspector/ObserveRunFindings',
+                request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.RunFindingFilter.SerializeToString,
+                response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.RunFindingList.FromString,
+                _registered_method=True)
         self.ObserveFunctionMetrics = channel.unary_unary(
                 '/looper.inspector.v3.Inspector/ObserveFunctionMetrics',
                 request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ArchitectureRequest.SerializeToString,
@@ -914,6 +919,16 @@ class InspectorServicer:
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def ObserveRunFindings(self, request, context):
+        """Pro (RUN_FINDINGS): what the run's interrupt and DMA events amount to,
+        judged by the server against looper.toml's limits; without the licence
+        PERMISSION_DENIED with the sentence. A request naming the revision the
+        client has is answered with `unchanged` and nothing else.
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
     def ObserveFunctionMetrics(self, request, context):
         """---- Architecture (CAPABILITY_ARCHITECTURE) ----
         Read from the project's code index, which the server builds in the
@@ -1351,6 +1366,11 @@ def add_InspectorServicer_to_server(servicer, server):
                     servicer.RaiseInterrupt,
                     request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.InterruptRaise.FromString,
                     response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Ack.SerializeToString,
+            ),
+            'ObserveRunFindings': grpc.unary_unary_rpc_method_handler(
+                    servicer.ObserveRunFindings,
+                    request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.RunFindingFilter.FromString,
+                    response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.RunFindingList.SerializeToString,
             ),
             'ObserveFunctionMetrics': grpc.unary_unary_rpc_method_handler(
                     servicer.ObserveFunctionMetrics,
@@ -3205,6 +3225,33 @@ class Inspector:
             '/looper.inspector.v3.Inspector/RaiseInterrupt',
             looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.InterruptRaise.SerializeToString,
             looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Ack.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def ObserveRunFindings(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/looper.inspector.v3.Inspector/ObserveRunFindings',
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.RunFindingFilter.SerializeToString,
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.RunFindingList.FromString,
             options,
             channel_credentials,
             insecure,
