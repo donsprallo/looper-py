@@ -1,0 +1,43 @@
+"""The interrupt calls over gRPC, mixed into `GrpcInspector`.
+
+A mixin rather than more methods on `GrpcInspector`, so that both files
+stay readable; it uses the inspector's stub and its one way of making a
+call.
+"""
+
+from __future__ import annotations
+
+from collections.abc import Callable
+from typing import Any
+
+from looper.application.interrupt_port import InterruptInspector
+from looper.domain.model.interrupts import Interrupts
+from looper.infrastructure import interrupt_translation
+from looper.infrastructure.contract import looper_inspector_pb2 as contract
+from looper.infrastructure.contract import looper_inspector_pb2_grpc as service
+
+EMPTY = contract.Empty()
+
+
+class GrpcInterruptCalls(InterruptInspector):
+    """The interrupt sources, the lock, and raising a source, over the inspector's stub."""
+
+    _stub: service.InspectorStub
+
+    @staticmethod
+    def _call(method: Callable[[Any], Any], request: Any) -> Any:
+        raise NotImplementedError
+
+    @staticmethod
+    def _taken(ack: contract.Ack) -> None:
+        raise NotImplementedError
+
+    def read_interrupts(self) -> Interrupts:
+        """Every source and the lock."""
+        report = self._call(self._stub.ObserveInterrupts, EMPTY)
+        return interrupt_translation.interrupts_of(report)
+
+    def raise_interrupt(self, source_id: int, after_us: int = 0) -> None:
+        """Make a source due, now or later."""
+        request = interrupt_translation.raise_request(source_id, after_us)
+        self._taken(self._call(self._stub.RaiseInterrupt, request))

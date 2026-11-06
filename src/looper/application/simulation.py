@@ -42,6 +42,7 @@ from looper.domain.model import (
     Variable,
     Watch,
 )
+from looper.domain.model.interrupts import Interrupts
 
 
 class Simulation:
@@ -394,6 +395,24 @@ class Simulation:
                 it is no longer kept.
         """
         return self._inspector.read_life_dump(number)
+
+    def interrupts(self) -> Interrupts:
+        """The firmware's interrupt sources with what they did in this life, and the lock."""
+        return self._inspector.read_interrupts()
+
+    def raise_interrupt(self, source: str, after_us: int = 0) -> None:
+        """Make an interrupt source due, as its pin or timer would: now, or so long from now.
+
+        Args:
+            source: Its name in contract.toml, such as EXTI0.
+            after_us: Simulated microseconds from now; 0 raises it at once.
+
+        Raises:
+            KeyError: If there is no source of that name.
+            SimulationRefusedError: If the server refuses it.
+        """
+        source_id = self._inspector.read_interrupts().source(source).source_id
+        self._inspector.raise_interrupt(source_id, after_us)
 
     def retained(self) -> Retained:
         """The retained memory, which survives a reset."""
