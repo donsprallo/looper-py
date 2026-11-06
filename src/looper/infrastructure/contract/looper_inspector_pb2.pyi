@@ -23,6 +23,7 @@ class Refusal(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     REFUSAL_INVALID: _ClassVar[Refusal]
     REFUSAL_WRONG_MODE: _ClassVar[Refusal]
     REFUSAL_OTHER: _ClassVar[Refusal]
+    REFUSAL_RESETTING: _ClassVar[Refusal]
 
 class Edition(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     __slots__ = ()
@@ -49,6 +50,8 @@ class Capability(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     CAPABILITY_READ_BY_TIME: _ClassVar[Capability]
     CAPABILITY_TRIGGERS: _ClassVar[Capability]
     CAPABILITY_ARCHITECTURE: _ClassVar[Capability]
+    CAPABILITY_RESET: _ClassVar[Capability]
+    CAPABILITY_FLASH: _ClassVar[Capability]
 
 class ServerMode(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     __slots__ = ()
@@ -73,6 +76,45 @@ class EventKind(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     EVENT_KIND_FAULT: _ClassVar[EventKind]
     EVENT_KIND_RUN: _ClassVar[EventKind]
     EVENT_KIND_TRIGGER: _ClassVar[EventKind]
+    EVENT_KIND_RESET: _ClassVar[EventKind]
+    EVENT_KIND_FLASH: _ClassVar[EventKind]
+
+class FlashMarkKind(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+    __slots__ = ()
+    FLASH_MARK_UNSPECIFIED: _ClassVar[FlashMarkKind]
+    FLASH_MARK_WRITE: _ClassVar[FlashMarkKind]
+    FLASH_MARK_ERASE: _ClassVar[FlashMarkKind]
+    FLASH_MARK_VIOLATION: _ClassVar[FlashMarkKind]
+    FLASH_MARK_CUT: _ClassVar[FlashMarkKind]
+
+class ChangeSource(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+    __slots__ = ()
+    CHANGE_SOURCE_UNSPECIFIED: _ClassVar[ChangeSource]
+    CHANGE_SOURCE_FIRMWARE: _ClassVar[ChangeSource]
+    CHANGE_SOURCE_CLIENT: _ClassVar[ChangeSource]
+
+class ResetCause(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+    __slots__ = ()
+    RESET_CAUSE_UNSPECIFIED: _ClassVar[ResetCause]
+    RESET_CAUSE_POWER_ON: _ClassVar[ResetCause]
+    RESET_CAUSE_SOFTWARE: _ClassVar[ResetCause]
+    RESET_CAUSE_WATCHDOG: _ClassVar[ResetCause]
+    RESET_CAUSE_PIN: _ClassVar[ResetCause]
+    RESET_CAUSE_BROWN_OUT: _ClassVar[ResetCause]
+
+class LifeEndReason(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+    __slots__ = ()
+    LIFE_END_REASON_UNSPECIFIED: _ClassVar[LifeEndReason]
+    LIFE_END_REASON_RESET: _ClassVar[LifeEndReason]
+    LIFE_END_REASON_JUMP: _ClassVar[LifeEndReason]
+    LIFE_END_REASON_POWER_CUT: _ClassVar[LifeEndReason]
+
+class EnteredBy(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+    __slots__ = ()
+    ENTERED_BY_UNSPECIFIED: _ClassVar[EnteredBy]
+    ENTERED_BY_RESET: _ClassVar[EnteredBy]
+    ENTERED_BY_JUMP: _ClassVar[EnteredBy]
+    ENTERED_BY_POWER_ON: _ClassVar[EnteredBy]
 
 class LossReason(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     __slots__ = ()
@@ -123,6 +165,14 @@ class ExchangeUnit(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     EXCHANGE_UNIT_LINE: _ClassVar[ExchangeUnit]
     EXCHANGE_UNIT_FRAME: _ClassVar[ExchangeUnit]
     EXCHANGE_UNIT_TRANSACTION: _ClassVar[ExchangeUnit]
+
+class HeaderState(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+    __slots__ = ()
+    HEADER_STATE_UNSPECIFIED: _ClassVar[HeaderState]
+    HEADER_STATE_EMPTY: _ClassVar[HeaderState]
+    HEADER_STATE_VALID: _ClassVar[HeaderState]
+    HEADER_STATE_BROKEN: _ClassVar[HeaderState]
+    HEADER_STATE_UNKNOWN_IMAGE: _ClassVar[HeaderState]
 
 class SourceState(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     __slots__ = ()
@@ -217,6 +267,7 @@ REFUSAL_WRONG_EPOCH: Refusal
 REFUSAL_INVALID: Refusal
 REFUSAL_WRONG_MODE: Refusal
 REFUSAL_OTHER: Refusal
+REFUSAL_RESETTING: Refusal
 EDITION_FREE: Edition
 EDITION_PRO: Edition
 PRO_FEATURE_UNSPECIFIED: ProFeature
@@ -234,6 +285,8 @@ CAPABILITY_LEVELS: Capability
 CAPABILITY_READ_BY_TIME: Capability
 CAPABILITY_TRIGGERS: Capability
 CAPABILITY_ARCHITECTURE: Capability
+CAPABILITY_RESET: Capability
+CAPABILITY_FLASH: Capability
 SERVER_MODE_SIMULATION: ServerMode
 SERVER_MODE_STATIC: ServerMode
 CLOCK_MODE_HELD: ClockMode
@@ -249,6 +302,30 @@ EVENT_KIND_JOB: EventKind
 EVENT_KIND_FAULT: EventKind
 EVENT_KIND_RUN: EventKind
 EVENT_KIND_TRIGGER: EventKind
+EVENT_KIND_RESET: EventKind
+EVENT_KIND_FLASH: EventKind
+FLASH_MARK_UNSPECIFIED: FlashMarkKind
+FLASH_MARK_WRITE: FlashMarkKind
+FLASH_MARK_ERASE: FlashMarkKind
+FLASH_MARK_VIOLATION: FlashMarkKind
+FLASH_MARK_CUT: FlashMarkKind
+CHANGE_SOURCE_UNSPECIFIED: ChangeSource
+CHANGE_SOURCE_FIRMWARE: ChangeSource
+CHANGE_SOURCE_CLIENT: ChangeSource
+RESET_CAUSE_UNSPECIFIED: ResetCause
+RESET_CAUSE_POWER_ON: ResetCause
+RESET_CAUSE_SOFTWARE: ResetCause
+RESET_CAUSE_WATCHDOG: ResetCause
+RESET_CAUSE_PIN: ResetCause
+RESET_CAUSE_BROWN_OUT: ResetCause
+LIFE_END_REASON_UNSPECIFIED: LifeEndReason
+LIFE_END_REASON_RESET: LifeEndReason
+LIFE_END_REASON_JUMP: LifeEndReason
+LIFE_END_REASON_POWER_CUT: LifeEndReason
+ENTERED_BY_UNSPECIFIED: EnteredBy
+ENTERED_BY_RESET: EnteredBy
+ENTERED_BY_JUMP: EnteredBy
+ENTERED_BY_POWER_ON: EnteredBy
 LOSS_REASON_UNSPECIFIED: LossReason
 LOSS_REASON_RING_FULL: LossReason
 LOSS_REASON_CLIENT_TOO_SLOW: LossReason
@@ -278,6 +355,11 @@ EXCHANGE_UNIT_WRITE: ExchangeUnit
 EXCHANGE_UNIT_LINE: ExchangeUnit
 EXCHANGE_UNIT_FRAME: ExchangeUnit
 EXCHANGE_UNIT_TRANSACTION: ExchangeUnit
+HEADER_STATE_UNSPECIFIED: HeaderState
+HEADER_STATE_EMPTY: HeaderState
+HEADER_STATE_VALID: HeaderState
+HEADER_STATE_BROKEN: HeaderState
+HEADER_STATE_UNKNOWN_IMAGE: HeaderState
 SOURCE_STATE_AS_BUILT: SourceState
 SOURCE_STATE_CHANGED: SourceState
 SOURCE_STATE_MISSING: SourceState
@@ -430,7 +512,7 @@ class RunReply(_message.Message):
     def __init__(self, ack: _Optional[_Union[Ack, _Mapping]] = ..., state: _Optional[_Union[RunState, _Mapping]] = ...) -> None: ...
 
 class RunState(_message.Message):
-    __slots__ = ("now_us", "mode", "pace_ratio", "behind_us", "slipped_us", "epoch", "next_event_seq", "pass_cost_us", "target_us", "queued_commands", "hold_reason")
+    __slots__ = ("now_us", "mode", "pace_ratio", "behind_us", "slipped_us", "epoch", "next_event_seq", "pass_cost_us", "target_us", "queued_commands", "hold_reason", "life", "resets", "life_text")
     NOW_US_FIELD_NUMBER: _ClassVar[int]
     MODE_FIELD_NUMBER: _ClassVar[int]
     PACE_RATIO_FIELD_NUMBER: _ClassVar[int]
@@ -442,6 +524,9 @@ class RunState(_message.Message):
     TARGET_US_FIELD_NUMBER: _ClassVar[int]
     QUEUED_COMMANDS_FIELD_NUMBER: _ClassVar[int]
     HOLD_REASON_FIELD_NUMBER: _ClassVar[int]
+    LIFE_FIELD_NUMBER: _ClassVar[int]
+    RESETS_FIELD_NUMBER: _ClassVar[int]
+    LIFE_TEXT_FIELD_NUMBER: _ClassVar[int]
     now_us: int
     mode: ClockMode
     pace_ratio: float
@@ -453,7 +538,10 @@ class RunState(_message.Message):
     target_us: int
     queued_commands: int
     hold_reason: str
-    def __init__(self, now_us: _Optional[int] = ..., mode: _Optional[_Union[ClockMode, str]] = ..., pace_ratio: _Optional[float] = ..., behind_us: _Optional[int] = ..., slipped_us: _Optional[int] = ..., epoch: _Optional[int] = ..., next_event_seq: _Optional[int] = ..., pass_cost_us: _Optional[int] = ..., target_us: _Optional[int] = ..., queued_commands: _Optional[int] = ..., hold_reason: _Optional[str] = ...) -> None: ...
+    life: int
+    resets: int
+    life_text: str
+    def __init__(self, now_us: _Optional[int] = ..., mode: _Optional[_Union[ClockMode, str]] = ..., pace_ratio: _Optional[float] = ..., behind_us: _Optional[int] = ..., slipped_us: _Optional[int] = ..., epoch: _Optional[int] = ..., next_event_seq: _Optional[int] = ..., pass_cost_us: _Optional[int] = ..., target_us: _Optional[int] = ..., queued_commands: _Optional[int] = ..., hold_reason: _Optional[str] = ..., life: _Optional[int] = ..., resets: _Optional[int] = ..., life_text: _Optional[str] = ...) -> None: ...
 
 class Subscription(_message.Message):
     __slots__ = ("epoch", "from_event_seq", "filter", "with_levels")
@@ -550,7 +638,7 @@ class ChannelValueSince(_message.Message):
     def __init__(self, channel_id: _Optional[int] = ..., value: _Optional[float] = ..., since_us: _Optional[int] = ...) -> None: ...
 
 class Event(_message.Message):
-    __slots__ = ("event_seq", "sim_us", "sample", "pin", "exchange", "call", "command", "job", "fault", "run", "trigger_fired", "trigger_disarmed")
+    __slots__ = ("event_seq", "sim_us", "sample", "pin", "exchange", "call", "command", "job", "fault", "run", "trigger_fired", "trigger_disarmed", "reset", "life", "flash")
     EVENT_SEQ_FIELD_NUMBER: _ClassVar[int]
     SIM_US_FIELD_NUMBER: _ClassVar[int]
     SAMPLE_FIELD_NUMBER: _ClassVar[int]
@@ -563,6 +651,9 @@ class Event(_message.Message):
     RUN_FIELD_NUMBER: _ClassVar[int]
     TRIGGER_FIRED_FIELD_NUMBER: _ClassVar[int]
     TRIGGER_DISARMED_FIELD_NUMBER: _ClassVar[int]
+    RESET_FIELD_NUMBER: _ClassVar[int]
+    LIFE_FIELD_NUMBER: _ClassVar[int]
+    FLASH_FIELD_NUMBER: _ClassVar[int]
     event_seq: int
     sim_us: int
     sample: Sample
@@ -575,7 +666,52 @@ class Event(_message.Message):
     run: RunEvent
     trigger_fired: TriggerFired
     trigger_disarmed: TriggerDisarmed
-    def __init__(self, event_seq: _Optional[int] = ..., sim_us: _Optional[int] = ..., sample: _Optional[_Union[Sample, _Mapping]] = ..., pin: _Optional[_Union[PinChange, _Mapping]] = ..., exchange: _Optional[_Union[Exchange, _Mapping]] = ..., call: _Optional[_Union[Call, _Mapping]] = ..., command: _Optional[_Union[CommandApplied, _Mapping]] = ..., job: _Optional[_Union[JobEvent, _Mapping]] = ..., fault: _Optional[_Union[Fault, _Mapping]] = ..., run: _Optional[_Union[RunEvent, _Mapping]] = ..., trigger_fired: _Optional[_Union[TriggerFired, _Mapping]] = ..., trigger_disarmed: _Optional[_Union[TriggerDisarmed, _Mapping]] = ...) -> None: ...
+    reset: ResetMark
+    life: LifeMark
+    flash: FlashMark
+    def __init__(self, event_seq: _Optional[int] = ..., sim_us: _Optional[int] = ..., sample: _Optional[_Union[Sample, _Mapping]] = ..., pin: _Optional[_Union[PinChange, _Mapping]] = ..., exchange: _Optional[_Union[Exchange, _Mapping]] = ..., call: _Optional[_Union[Call, _Mapping]] = ..., command: _Optional[_Union[CommandApplied, _Mapping]] = ..., job: _Optional[_Union[JobEvent, _Mapping]] = ..., fault: _Optional[_Union[Fault, _Mapping]] = ..., run: _Optional[_Union[RunEvent, _Mapping]] = ..., trigger_fired: _Optional[_Union[TriggerFired, _Mapping]] = ..., trigger_disarmed: _Optional[_Union[TriggerDisarmed, _Mapping]] = ..., reset: _Optional[_Union[ResetMark, _Mapping]] = ..., life: _Optional[_Union[LifeMark, _Mapping]] = ..., flash: _Optional[_Union[FlashMark, _Mapping]] = ...) -> None: ...
+
+class ResetMark(_message.Message):
+    __slots__ = ("cause", "cause_text", "life", "reason", "jump_target")
+    CAUSE_FIELD_NUMBER: _ClassVar[int]
+    CAUSE_TEXT_FIELD_NUMBER: _ClassVar[int]
+    LIFE_FIELD_NUMBER: _ClassVar[int]
+    REASON_FIELD_NUMBER: _ClassVar[int]
+    JUMP_TARGET_FIELD_NUMBER: _ClassVar[int]
+    cause: ResetCause
+    cause_text: str
+    life: int
+    reason: LifeEndReason
+    jump_target: int
+    def __init__(self, cause: _Optional[_Union[ResetCause, str]] = ..., cause_text: _Optional[str] = ..., life: _Optional[int] = ..., reason: _Optional[_Union[LifeEndReason, str]] = ..., jump_target: _Optional[int] = ...) -> None: ...
+
+class LifeMark(_message.Message):
+    __slots__ = ("life", "image", "partition", "entered_by", "text")
+    LIFE_FIELD_NUMBER: _ClassVar[int]
+    IMAGE_FIELD_NUMBER: _ClassVar[int]
+    PARTITION_FIELD_NUMBER: _ClassVar[int]
+    ENTERED_BY_FIELD_NUMBER: _ClassVar[int]
+    TEXT_FIELD_NUMBER: _ClassVar[int]
+    life: int
+    image: str
+    partition: str
+    entered_by: EnteredBy
+    text: str
+    def __init__(self, life: _Optional[int] = ..., image: _Optional[str] = ..., partition: _Optional[str] = ..., entered_by: _Optional[_Union[EnteredBy, str]] = ..., text: _Optional[str] = ...) -> None: ...
+
+class FlashMark(_message.Message):
+    __slots__ = ("kind", "offset", "length", "partition", "source")
+    KIND_FIELD_NUMBER: _ClassVar[int]
+    OFFSET_FIELD_NUMBER: _ClassVar[int]
+    LENGTH_FIELD_NUMBER: _ClassVar[int]
+    PARTITION_FIELD_NUMBER: _ClassVar[int]
+    SOURCE_FIELD_NUMBER: _ClassVar[int]
+    kind: FlashMarkKind
+    offset: int
+    length: int
+    partition: str
+    source: ChangeSource
+    def __init__(self, kind: _Optional[_Union[FlashMarkKind, str]] = ..., offset: _Optional[int] = ..., length: _Optional[int] = ..., partition: _Optional[str] = ..., source: _Optional[_Union[ChangeSource, str]] = ...) -> None: ...
 
 class Lost(_message.Message):
     __slots__ = ("from_event_seq", "to_event_seq", "from_us", "to_us", "reason")
@@ -1192,6 +1328,190 @@ class ViewPosition(_message.Message):
     epoch: int
     as_of_event_seq: int
     def __init__(self, epoch: _Optional[int] = ..., as_of_event_seq: _Optional[int] = ...) -> None: ...
+
+class ResetRequest(_message.Message):
+    __slots__ = ("cause", "when")
+    CAUSE_FIELD_NUMBER: _ClassVar[int]
+    WHEN_FIELD_NUMBER: _ClassVar[int]
+    cause: ResetCause
+    when: When
+    def __init__(self, cause: _Optional[_Union[ResetCause, str]] = ..., when: _Optional[_Union[When, _Mapping]] = ...) -> None: ...
+
+class LifeView(_message.Message):
+    __slots__ = ("life", "image", "partition", "entered_by", "started_at_us", "ended_at_us", "ended_by", "cause", "text", "has_dump")
+    LIFE_FIELD_NUMBER: _ClassVar[int]
+    IMAGE_FIELD_NUMBER: _ClassVar[int]
+    PARTITION_FIELD_NUMBER: _ClassVar[int]
+    ENTERED_BY_FIELD_NUMBER: _ClassVar[int]
+    STARTED_AT_US_FIELD_NUMBER: _ClassVar[int]
+    ENDED_AT_US_FIELD_NUMBER: _ClassVar[int]
+    ENDED_BY_FIELD_NUMBER: _ClassVar[int]
+    CAUSE_FIELD_NUMBER: _ClassVar[int]
+    TEXT_FIELD_NUMBER: _ClassVar[int]
+    HAS_DUMP_FIELD_NUMBER: _ClassVar[int]
+    life: int
+    image: str
+    partition: str
+    entered_by: EnteredBy
+    started_at_us: int
+    ended_at_us: int
+    ended_by: LifeEndReason
+    cause: ResetCause
+    text: str
+    has_dump: bool
+    def __init__(self, life: _Optional[int] = ..., image: _Optional[str] = ..., partition: _Optional[str] = ..., entered_by: _Optional[_Union[EnteredBy, str]] = ..., started_at_us: _Optional[int] = ..., ended_at_us: _Optional[int] = ..., ended_by: _Optional[_Union[LifeEndReason, str]] = ..., cause: _Optional[_Union[ResetCause, str]] = ..., text: _Optional[str] = ..., has_dump: _Optional[bool] = ...) -> None: ...
+
+class LifeList(_message.Message):
+    __slots__ = ("lives", "resets", "last_cause_text", "running_text", "loop_finding", "lives_forgotten")
+    LIVES_FIELD_NUMBER: _ClassVar[int]
+    RESETS_FIELD_NUMBER: _ClassVar[int]
+    LAST_CAUSE_TEXT_FIELD_NUMBER: _ClassVar[int]
+    RUNNING_TEXT_FIELD_NUMBER: _ClassVar[int]
+    LOOP_FINDING_FIELD_NUMBER: _ClassVar[int]
+    LIVES_FORGOTTEN_FIELD_NUMBER: _ClassVar[int]
+    lives: _containers.RepeatedCompositeFieldContainer[LifeView]
+    resets: int
+    last_cause_text: str
+    running_text: str
+    loop_finding: str
+    lives_forgotten: int
+    def __init__(self, lives: _Optional[_Iterable[_Union[LifeView, _Mapping]]] = ..., resets: _Optional[int] = ..., last_cause_text: _Optional[str] = ..., running_text: _Optional[str] = ..., loop_finding: _Optional[str] = ..., lives_forgotten: _Optional[int] = ...) -> None: ...
+
+class LifeChoice(_message.Message):
+    __slots__ = ("life",)
+    LIFE_FIELD_NUMBER: _ClassVar[int]
+    life: int
+    def __init__(self, life: _Optional[int] = ...) -> None: ...
+
+class RetainedView(_message.Message):
+    __slots__ = ("size", "content", "battery", "note")
+    SIZE_FIELD_NUMBER: _ClassVar[int]
+    CONTENT_FIELD_NUMBER: _ClassVar[int]
+    BATTERY_FIELD_NUMBER: _ClassVar[int]
+    NOTE_FIELD_NUMBER: _ClassVar[int]
+    size: int
+    content: bytes
+    battery: bool
+    note: str
+    def __init__(self, size: _Optional[int] = ..., content: _Optional[bytes] = ..., battery: _Optional[bool] = ..., note: _Optional[str] = ...) -> None: ...
+
+class RetainedWrite(_message.Message):
+    __slots__ = ("offset", "data", "when")
+    OFFSET_FIELD_NUMBER: _ClassVar[int]
+    DATA_FIELD_NUMBER: _ClassVar[int]
+    WHEN_FIELD_NUMBER: _ClassVar[int]
+    offset: int
+    data: bytes
+    when: When
+    def __init__(self, offset: _Optional[int] = ..., data: _Optional[bytes] = ..., when: _Optional[_Union[When, _Mapping]] = ...) -> None: ...
+
+class FlashRequest(_message.Message):
+    __slots__ = ("offset", "length")
+    OFFSET_FIELD_NUMBER: _ClassVar[int]
+    LENGTH_FIELD_NUMBER: _ClassVar[int]
+    offset: int
+    length: int
+    def __init__(self, offset: _Optional[int] = ..., length: _Optional[int] = ...) -> None: ...
+
+class PartitionView(_message.Message):
+    __slots__ = ("name", "offset", "size", "read_only", "header", "header_text")
+    NAME_FIELD_NUMBER: _ClassVar[int]
+    OFFSET_FIELD_NUMBER: _ClassVar[int]
+    SIZE_FIELD_NUMBER: _ClassVar[int]
+    READ_ONLY_FIELD_NUMBER: _ClassVar[int]
+    HEADER_FIELD_NUMBER: _ClassVar[int]
+    HEADER_TEXT_FIELD_NUMBER: _ClassVar[int]
+    name: str
+    offset: int
+    size: int
+    read_only: bool
+    header: HeaderState
+    header_text: str
+    def __init__(self, name: _Optional[str] = ..., offset: _Optional[int] = ..., size: _Optional[int] = ..., read_only: _Optional[bool] = ..., header: _Optional[_Union[HeaderState, str]] = ..., header_text: _Optional[str] = ...) -> None: ...
+
+class FlashView(_message.Message):
+    __slots__ = ("base", "size", "sector_size", "word_size", "partitions", "offset", "content", "persist", "note", "written_sectors", "erased_value", "persist_text")
+    BASE_FIELD_NUMBER: _ClassVar[int]
+    SIZE_FIELD_NUMBER: _ClassVar[int]
+    SECTOR_SIZE_FIELD_NUMBER: _ClassVar[int]
+    WORD_SIZE_FIELD_NUMBER: _ClassVar[int]
+    PARTITIONS_FIELD_NUMBER: _ClassVar[int]
+    OFFSET_FIELD_NUMBER: _ClassVar[int]
+    CONTENT_FIELD_NUMBER: _ClassVar[int]
+    PERSIST_FIELD_NUMBER: _ClassVar[int]
+    NOTE_FIELD_NUMBER: _ClassVar[int]
+    WRITTEN_SECTORS_FIELD_NUMBER: _ClassVar[int]
+    ERASED_VALUE_FIELD_NUMBER: _ClassVar[int]
+    PERSIST_TEXT_FIELD_NUMBER: _ClassVar[int]
+    base: int
+    size: int
+    sector_size: int
+    word_size: int
+    partitions: _containers.RepeatedCompositeFieldContainer[PartitionView]
+    offset: int
+    content: bytes
+    persist: bool
+    note: str
+    written_sectors: _containers.RepeatedScalarFieldContainer[int]
+    erased_value: int
+    persist_text: str
+    def __init__(self, base: _Optional[int] = ..., size: _Optional[int] = ..., sector_size: _Optional[int] = ..., word_size: _Optional[int] = ..., partitions: _Optional[_Iterable[_Union[PartitionView, _Mapping]]] = ..., offset: _Optional[int] = ..., content: _Optional[bytes] = ..., persist: _Optional[bool] = ..., note: _Optional[str] = ..., written_sectors: _Optional[_Iterable[int]] = ..., erased_value: _Optional[int] = ..., persist_text: _Optional[str] = ...) -> None: ...
+
+class FlashWrite(_message.Message):
+    __slots__ = ("offset", "partition", "data", "image", "image_file", "raw", "when")
+    OFFSET_FIELD_NUMBER: _ClassVar[int]
+    PARTITION_FIELD_NUMBER: _ClassVar[int]
+    DATA_FIELD_NUMBER: _ClassVar[int]
+    IMAGE_FIELD_NUMBER: _ClassVar[int]
+    IMAGE_FILE_FIELD_NUMBER: _ClassVar[int]
+    RAW_FIELD_NUMBER: _ClassVar[int]
+    WHEN_FIELD_NUMBER: _ClassVar[int]
+    offset: int
+    partition: PartitionOffset
+    data: bytes
+    image: str
+    image_file: str
+    raw: bool
+    when: When
+    def __init__(self, offset: _Optional[int] = ..., partition: _Optional[_Union[PartitionOffset, _Mapping]] = ..., data: _Optional[bytes] = ..., image: _Optional[str] = ..., image_file: _Optional[str] = ..., raw: _Optional[bool] = ..., when: _Optional[_Union[When, _Mapping]] = ...) -> None: ...
+
+class PartitionOffset(_message.Message):
+    __slots__ = ("name", "offset")
+    NAME_FIELD_NUMBER: _ClassVar[int]
+    OFFSET_FIELD_NUMBER: _ClassVar[int]
+    name: str
+    offset: int
+    def __init__(self, name: _Optional[str] = ..., offset: _Optional[int] = ...) -> None: ...
+
+class FlashErase(_message.Message):
+    __slots__ = ("whole", "partition", "sector", "when")
+    WHOLE_FIELD_NUMBER: _ClassVar[int]
+    PARTITION_FIELD_NUMBER: _ClassVar[int]
+    SECTOR_FIELD_NUMBER: _ClassVar[int]
+    WHEN_FIELD_NUMBER: _ClassVar[int]
+    whole: Empty
+    partition: str
+    sector: int
+    when: When
+    def __init__(self, whole: _Optional[_Union[Empty, _Mapping]] = ..., partition: _Optional[str] = ..., sector: _Optional[int] = ..., when: _Optional[_Union[When, _Mapping]] = ...) -> None: ...
+
+class FlashContent(_message.Message):
+    __slots__ = ("content",)
+    CONTENT_FIELD_NUMBER: _ClassVar[int]
+    content: bytes
+    def __init__(self, content: _Optional[bytes] = ...) -> None: ...
+
+class LifeDumpView(_message.Message):
+    __slots__ = ("life", "memory", "profile", "note")
+    LIFE_FIELD_NUMBER: _ClassVar[int]
+    MEMORY_FIELD_NUMBER: _ClassVar[int]
+    PROFILE_FIELD_NUMBER: _ClassVar[int]
+    NOTE_FIELD_NUMBER: _ClassVar[int]
+    life: LifeView
+    memory: MemoryView
+    profile: ProfileView
+    note: str
+    def __init__(self, life: _Optional[_Union[LifeView, _Mapping]] = ..., memory: _Optional[_Union[MemoryView, _Mapping]] = ..., profile: _Optional[_Union[ProfileView, _Mapping]] = ..., note: _Optional[str] = ...) -> None: ...
 
 class PinView(_message.Message):
     __slots__ = ("pin_id", "name", "direction", "level", "is_active", "is_drivable", "polarity", "drive_text")
@@ -1915,7 +2235,7 @@ class ProfileGroupView(_message.Message):
     def __init__(self, label: _Optional[str] = ..., calls: _Optional[int] = ..., self_nanoseconds: _Optional[int] = ..., self_text: _Optional[str] = ..., share: _Optional[float] = ..., share_text: _Optional[str] = ..., children: _Optional[_Iterable[_Union[ProfileGroupView, _Mapping]]] = ..., entry: _Optional[_Union[ProfileEntryView, _Mapping]] = ...) -> None: ...
 
 class ProfileView(_message.Message):
-    __slots__ = ("groups", "heaviest", "measured_nanoseconds", "measured_text", "lost_functions", "is_profiling", "note")
+    __slots__ = ("groups", "heaviest", "measured_nanoseconds", "measured_text", "lost_functions", "is_profiling", "note", "life")
     GROUPS_FIELD_NUMBER: _ClassVar[int]
     HEAVIEST_FIELD_NUMBER: _ClassVar[int]
     MEASURED_NANOSECONDS_FIELD_NUMBER: _ClassVar[int]
@@ -1923,6 +2243,7 @@ class ProfileView(_message.Message):
     LOST_FUNCTIONS_FIELD_NUMBER: _ClassVar[int]
     IS_PROFILING_FIELD_NUMBER: _ClassVar[int]
     NOTE_FIELD_NUMBER: _ClassVar[int]
+    LIFE_FIELD_NUMBER: _ClassVar[int]
     groups: _containers.RepeatedCompositeFieldContainer[ProfileGroupView]
     heaviest: _containers.RepeatedCompositeFieldContainer[ProfileEntryView]
     measured_nanoseconds: int
@@ -1930,7 +2251,8 @@ class ProfileView(_message.Message):
     lost_functions: int
     is_profiling: bool
     note: str
-    def __init__(self, groups: _Optional[_Iterable[_Union[ProfileGroupView, _Mapping]]] = ..., heaviest: _Optional[_Iterable[_Union[ProfileEntryView, _Mapping]]] = ..., measured_nanoseconds: _Optional[int] = ..., measured_text: _Optional[str] = ..., lost_functions: _Optional[int] = ..., is_profiling: _Optional[bool] = ..., note: _Optional[str] = ...) -> None: ...
+    life: int
+    def __init__(self, groups: _Optional[_Iterable[_Union[ProfileGroupView, _Mapping]]] = ..., heaviest: _Optional[_Iterable[_Union[ProfileEntryView, _Mapping]]] = ..., measured_nanoseconds: _Optional[int] = ..., measured_text: _Optional[str] = ..., lost_functions: _Optional[int] = ..., is_profiling: _Optional[bool] = ..., note: _Optional[str] = ..., life: _Optional[int] = ...) -> None: ...
 
 class FrameView(_message.Message):
     __slots__ = ("name", "origin", "depth", "start", "width", "calls", "total", "own", "share", "caption")
@@ -2105,14 +2427,18 @@ class HeapUsageView(_message.Message):
     def __init__(self, outstanding: _Optional[_Iterable[_Union[AllocationSiteView, _Mapping]]] = ..., allocations: _Optional[int] = ..., frees: _Optional[int] = ..., failures: _Optional[int] = ..., live_text: _Optional[str] = ..., peak_text: _Optional[str] = ..., firmware_text: _Optional[str] = ..., untracked_blocks: _Optional[int] = ..., never_allocated: _Optional[bool] = ..., is_watched: _Optional[bool] = ..., summary: _Optional[str] = ..., live_bytes: _Optional[int] = ..., peak_bytes: _Optional[int] = ...) -> None: ...
 
 class MemoryView(_message.Message):
-    __slots__ = ("static_memory", "stack", "heap")
+    __slots__ = ("static_memory", "stack", "heap", "life", "life_text")
     STATIC_MEMORY_FIELD_NUMBER: _ClassVar[int]
     STACK_FIELD_NUMBER: _ClassVar[int]
     HEAP_FIELD_NUMBER: _ClassVar[int]
+    LIFE_FIELD_NUMBER: _ClassVar[int]
+    LIFE_TEXT_FIELD_NUMBER: _ClassVar[int]
     static_memory: StaticMemoryView
     stack: StackUsageView
     heap: HeapUsageView
-    def __init__(self, static_memory: _Optional[_Union[StaticMemoryView, _Mapping]] = ..., stack: _Optional[_Union[StackUsageView, _Mapping]] = ..., heap: _Optional[_Union[HeapUsageView, _Mapping]] = ...) -> None: ...
+    life: int
+    life_text: str
+    def __init__(self, static_memory: _Optional[_Union[StaticMemoryView, _Mapping]] = ..., stack: _Optional[_Union[StackUsageView, _Mapping]] = ..., heap: _Optional[_Union[HeapUsageView, _Mapping]] = ..., life: _Optional[int] = ..., life_text: _Optional[str] = ...) -> None: ...
 
 class BusView(_message.Message):
     __slots__ = ("bus_id", "kind", "name", "bitrate_bps", "display_bitrate", "accepts_messages", "takes_address", "address_label", "takes_extended", "max_payload_bytes", "max_address", "max_extended_address", "takes_line_ending", "supports_fd", "supports_remote", "exchange_unit", "has_time_model", "controller_latency_us", "queue_depth", "queue_unit")

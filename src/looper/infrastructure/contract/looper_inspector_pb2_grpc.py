@@ -279,6 +279,56 @@ class InspectorStub:
                 request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
                 response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.RestartView.FromString,
                 _registered_method=True)
+        self.ResetFirmware = channel.unary_unary(
+                '/looper.inspector.v3.Inspector/ResetFirmware',
+                request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ResetRequest.SerializeToString,
+                response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Ack.FromString,
+                _registered_method=True)
+        self.ObserveLives = channel.unary_unary(
+                '/looper.inspector.v3.Inspector/ObserveLives',
+                request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
+                response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.LifeList.FromString,
+                _registered_method=True)
+        self.ReadLifeDump = channel.unary_unary(
+                '/looper.inspector.v3.Inspector/ReadLifeDump',
+                request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.LifeChoice.SerializeToString,
+                response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.LifeDumpView.FromString,
+                _registered_method=True)
+        self.ObserveRetained = channel.unary_unary(
+                '/looper.inspector.v3.Inspector/ObserveRetained',
+                request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
+                response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.RetainedView.FromString,
+                _registered_method=True)
+        self.WriteRetained = channel.unary_unary(
+                '/looper.inspector.v3.Inspector/WriteRetained',
+                request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.RetainedWrite.SerializeToString,
+                response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Ack.FromString,
+                _registered_method=True)
+        self.ObserveFlash = channel.unary_unary(
+                '/looper.inspector.v3.Inspector/ObserveFlash',
+                request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.FlashRequest.SerializeToString,
+                response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.FlashView.FromString,
+                _registered_method=True)
+        self.WriteFlash = channel.unary_unary(
+                '/looper.inspector.v3.Inspector/WriteFlash',
+                request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.FlashWrite.SerializeToString,
+                response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Ack.FromString,
+                _registered_method=True)
+        self.EraseFlash = channel.unary_unary(
+                '/looper.inspector.v3.Inspector/EraseFlash',
+                request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.FlashErase.SerializeToString,
+                response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Ack.FromString,
+                _registered_method=True)
+        self.SaveFlash = channel.unary_unary(
+                '/looper.inspector.v3.Inspector/SaveFlash',
+                request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
+                response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.FlashContent.FromString,
+                _registered_method=True)
+        self.LoadFlash = channel.unary_unary(
+                '/looper.inspector.v3.Inspector/LoadFlash',
+                request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.FlashContent.SerializeToString,
+                response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Ack.FromString,
+                _registered_method=True)
         self.ObserveFunctionMetrics = channel.unary_unary(
                 '/looper.inspector.v3.Inspector/ObserveFunctionMetrics',
                 request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ArchitectureRequest.SerializeToString,
@@ -697,6 +747,78 @@ class InspectorServicer:
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def ResetFirmware(self, request, context):
+        """---- Reset and lives (CAPABILITY_RESET) ----
+        A reset is not a restart: the firmware begins a new life, simulated time
+        and the recording go on, clients stay connected, and watches, triggers,
+        signals and held inputs are set again. A held simulation resets at its
+        next run.
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def ObserveLives(self, request, context):
+        """Every life of this run, the number of resets, and a reset loop.
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def ReadLifeDump(self, request, context):
+        """What a life that has ended left behind: its heap book and its profile.
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def ObserveRetained(self, request, context):
+        """The retained memory, which survives a reset; and writing it by hand.
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def WriteRetained(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def ObserveFlash(self, request, context):
+        """---- Flash (CAPABILITY_FLASH) ----
+        Bits only go from 1 to 0 without an erase; erasing is by sector. A raw
+        write lays bytes down past that rule (a broken header on purpose), but
+        never into a read-only partition. Save and load move the whole flash.
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def WriteFlash(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def EraseFlash(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def SaveFlash(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def LoadFlash(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
     def ObserveFunctionMetrics(self, request, context):
         """---- Architecture (CAPABILITY_ARCHITECTURE) ----
         Read from the project's code index, which the server builds in the
@@ -1049,6 +1171,56 @@ def add_InspectorServicer_to_server(servicer, server):
                     servicer.ObserveRestart,
                     request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.FromString,
                     response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.RestartView.SerializeToString,
+            ),
+            'ResetFirmware': grpc.unary_unary_rpc_method_handler(
+                    servicer.ResetFirmware,
+                    request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ResetRequest.FromString,
+                    response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Ack.SerializeToString,
+            ),
+            'ObserveLives': grpc.unary_unary_rpc_method_handler(
+                    servicer.ObserveLives,
+                    request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.FromString,
+                    response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.LifeList.SerializeToString,
+            ),
+            'ReadLifeDump': grpc.unary_unary_rpc_method_handler(
+                    servicer.ReadLifeDump,
+                    request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.LifeChoice.FromString,
+                    response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.LifeDumpView.SerializeToString,
+            ),
+            'ObserveRetained': grpc.unary_unary_rpc_method_handler(
+                    servicer.ObserveRetained,
+                    request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.FromString,
+                    response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.RetainedView.SerializeToString,
+            ),
+            'WriteRetained': grpc.unary_unary_rpc_method_handler(
+                    servicer.WriteRetained,
+                    request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.RetainedWrite.FromString,
+                    response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Ack.SerializeToString,
+            ),
+            'ObserveFlash': grpc.unary_unary_rpc_method_handler(
+                    servicer.ObserveFlash,
+                    request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.FlashRequest.FromString,
+                    response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.FlashView.SerializeToString,
+            ),
+            'WriteFlash': grpc.unary_unary_rpc_method_handler(
+                    servicer.WriteFlash,
+                    request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.FlashWrite.FromString,
+                    response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Ack.SerializeToString,
+            ),
+            'EraseFlash': grpc.unary_unary_rpc_method_handler(
+                    servicer.EraseFlash,
+                    request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.FlashErase.FromString,
+                    response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Ack.SerializeToString,
+            ),
+            'SaveFlash': grpc.unary_unary_rpc_method_handler(
+                    servicer.SaveFlash,
+                    request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.FromString,
+                    response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.FlashContent.SerializeToString,
+            ),
+            'LoadFlash': grpc.unary_unary_rpc_method_handler(
+                    servicer.LoadFlash,
+                    request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.FlashContent.FromString,
+                    response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Ack.SerializeToString,
             ),
             'ObserveFunctionMetrics': grpc.unary_unary_rpc_method_handler(
                     servicer.ObserveFunctionMetrics,
@@ -2444,6 +2616,276 @@ class Inspector:
             '/looper.inspector.v3.Inspector/ObserveRestart',
             looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
             looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.RestartView.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def ResetFirmware(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/looper.inspector.v3.Inspector/ResetFirmware',
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ResetRequest.SerializeToString,
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Ack.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def ObserveLives(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/looper.inspector.v3.Inspector/ObserveLives',
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.LifeList.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def ReadLifeDump(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/looper.inspector.v3.Inspector/ReadLifeDump',
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.LifeChoice.SerializeToString,
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.LifeDumpView.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def ObserveRetained(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/looper.inspector.v3.Inspector/ObserveRetained',
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.RetainedView.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def WriteRetained(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/looper.inspector.v3.Inspector/WriteRetained',
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.RetainedWrite.SerializeToString,
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Ack.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def ObserveFlash(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/looper.inspector.v3.Inspector/ObserveFlash',
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.FlashRequest.SerializeToString,
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.FlashView.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def WriteFlash(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/looper.inspector.v3.Inspector/WriteFlash',
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.FlashWrite.SerializeToString,
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Ack.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def EraseFlash(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/looper.inspector.v3.Inspector/EraseFlash',
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.FlashErase.SerializeToString,
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Ack.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def SaveFlash(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/looper.inspector.v3.Inspector/SaveFlash',
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.FlashContent.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def LoadFlash(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/looper.inspector.v3.Inspector/LoadFlash',
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.FlashContent.SerializeToString,
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Ack.FromString,
             options,
             channel_credentials,
             insecure,

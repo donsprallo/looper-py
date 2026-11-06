@@ -10,6 +10,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
+from looper.domain.model.marks import FlashMark, ResetMark
 from looper.domain.model.profile import Profile
 from looper.domain.model.readings import CallTiming, Exchange, MemoryUsage, Sample
 
@@ -36,6 +37,9 @@ class Observation:
             build that is not watching them.
         profile: Where the time went over the window; read only when an
             expectation is about it, since ranking it costs the server a while.
+        resets: The resets of the window.
+        flash_marks: The flash operations of the window.
+        loop_finding: The server's reset loop finding at the window's end, or empty.
     """
 
     samples: tuple[Sample, ...]
@@ -45,6 +49,9 @@ class Observation:
     lost_events: int = 0
     memory: MemoryUsage = field(default_factory=MemoryUsage)
     profile: Profile = field(default_factory=Profile)
+    resets: tuple[ResetMark, ...] = ()
+    flash_marks: tuple[FlashMark, ...] = ()
+    loop_finding: str = ""
 
     @property
     def sample_loss_note(self) -> str:

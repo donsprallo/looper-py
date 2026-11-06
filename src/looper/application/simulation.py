@@ -14,6 +14,7 @@ from types import TracebackType
 from looper.application.event_stream import EventStream
 from looper.application.expectations import MICROSECONDS_PER_SECOND, Expectations
 from looper.application.findings_reading import complete_findings
+from looper.application.memories import Flash, Retained
 from looper.application.ports import Inspector, SimulationRefusedError
 from looper.application.triggers import Triggers
 from looper.domain.model import (
@@ -26,6 +27,8 @@ from looper.domain.model import (
     EventPage,
     Exchange,
     Findings,
+    Life,
+    LifeDump,
     MemoryUsage,
     Pin,
     Profile,
@@ -361,6 +364,39 @@ class Simulation:
     def watches(self) -> tuple[Watch, ...]:
         """Every variable being sampled, with its value now."""
         return self._inspector.read_watches()
+
+    def reset(self, cause: str = "pin") -> None:
+        """Reset the firmware from outside, as its reset pin does (or ``power-on``).
+
+        A reset is not a restart: the firmware begins a new life, simulated
+        time and the recording go on, and watches and triggers are set
+        again. A held clock resets at its next run.
+
+        Raises:
+            SimulationRefusedError: If the cause is not one from outside.
+        """
+        self._inspector.reset_firmware(cause)
+
+    def lives(self) -> tuple[Life, ...]:
+        """Every life of the firmware in this run, the one running now last."""
+        return self._inspector.read_lives().lives
+
+    def life(self, number: int) -> LifeDump:
+        """What a life that ended left behind: its heap book and its profile.
+
+        Raises:
+            SimulationRefusedError: If there is no such life, it runs now, or
+                it is no longer kept.
+        """
+        return self._inspector.read_life_dump(number)
+
+    def retained(self) -> Retained:
+        """The retained memory, which survives a reset."""
+        return Retained(self._inspector)
+
+    def flash(self) -> Flash:
+        """The simulated flash."""
+        return Flash(self._inspector)
 
     def close(self) -> None:
         """Let go of the simulation. Closing twice is allowed."""

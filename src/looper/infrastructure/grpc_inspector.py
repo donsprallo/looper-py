@@ -32,6 +32,8 @@ from looper.domain.model import (
     Description,
     EventPage,
     Findings,
+    LifeDump,
+    Lives,
     MemoryUsage,
     Pin,
     Profile,
@@ -46,6 +48,7 @@ from looper.domain.model import (
 )
 from looper.infrastructure import (
     analysis_translation,
+    life_translation,
     signal_graph_translation,
     translation,
     trigger_translation,
@@ -70,7 +73,12 @@ EMPTY = contract.Empty()
 
 #: The kinds of event a test looks at; the stream also carries pin changes,
 #: calls, applied commands and more.
-EVENT_KINDS = [contract.EVENT_KIND_SAMPLE, contract.EVENT_KIND_EXCHANGE]
+EVENT_KINDS = [
+    contract.EVENT_KIND_SAMPLE,
+    contract.EVENT_KIND_EXCHANGE,
+    contract.EVENT_KIND_RESET,
+    contract.EVENT_KIND_FLASH,
+]
 
 
 class GrpcInspector(Inspector):
@@ -241,6 +249,68 @@ class GrpcInspector(Inspector):
         listing = self._call(self._stub.ObserveTriggers, EMPTY)
         return tuple(trigger_translation.trigger_of(view) for view in listing.triggers)
 
+    def reset_firmware(self, cause: str) -> None:
+        """Reset the firmware from outside: ``pin`` or ``power-on``."""
+        wanted = life_translation.OUTSIDE_CAUSES.get(cause)
+        if wanted is None:
+            raise SimulationRefusedError("a reset from outside is a pin reset or a power-on")
+        request = contract.ResetRequest(cause=wanted)
+        _acknowledged(self._call(self._stub.ResetFirmware, request))
+
+    def read_lives(self) -> Lives:
+        """Every life of the run."""
+        return life_translation.lives_of(self._call(self._stub.ObserveLives, EMPTY))
+
+    def read_life_dump(self, life: int) -> LifeDump:
+        """What a life that ended left behind."""
+        view = self._call(self._stub.ReadLifeDump, contract.LifeChoice(life=life))
+        return life_translation.dump_of(view)
+
+    def read_retained(self) -> bytes:
+        """The whole retained memory."""
+        return bytes(self._call(self._stub.ObserveRetained, EMPTY).content)
+
+    def write_retained(self, offset: int, data: bytes) -> None:
+        """Write bytes into the retained memory."""
+        request = contract.RetainedWrite(offset=offset, data=data)
+        _acknowledged(self._call(self._stub.WriteRetained, request))
+
+    def read_flash(self, offset: int, length: int) -> bytes:
+        """Bytes of the flash from its beginning; length 0 reads to its end."""
+        if length == 0:
+            return self.save_flash()[offset:]
+        request = contract.FlashRequest(offset=offset, length=length)
+        return bytes(self._call(self._stub.ObserveFlash, request).content)
+
+    def flash_partitions(self) -> dict[str, tuple[int, int]]:
+        """Every partition: its offset and size, by name."""
+        view = self._call(self._stub.ObserveFlash, contract.FlashRequest())
+        return {one.name: (one.offset, one.size) for one in view.partitions}
+
+    def write_flash(self, offset: int, data: bytes, raw: bool) -> None:
+        """Write bytes into the flash."""
+        request = contract.FlashWrite(offset=offset, data=data, raw=raw)
+        _acknowledged(self._call(self._stub.WriteFlash, request))
+
+    def erase_flash(self, partition: str = "", sector: int | None = None) -> None:
+        """Erase a partition, a sector, or the whole flash."""
+        if partition:
+            request = contract.FlashErase(partition=partition)
+        elif sector is not None:
+            request = contract.FlashErase(sector=sector)
+        else:
+            request = contract.FlashErase(whole=EMPTY)
+        _acknowledged(self._call(self._stub.EraseFlash, request))
+
+    def save_flash(self) -> bytes:
+        """The whole flash."""
+        return bytes(self._call(self._stub.SaveFlash, EMPTY).content)
+
+    def load_flash(self, content: bytes) -> None:
+        """Lay a saved flash down."""
+        request = contract.FlashContent(content=content)
+        _acknowledged(self._call(self._stub.LoadFlash, request))
+
     def close(self) -> None:
         """Let go of the connection. Closing twice is allowed."""
         self._channel.close()
@@ -253,7 +323,7 @@ class GrpcInspector(Inspector):
         except grpc.RpcError as error:
             if error.code() == grpc.StatusCode.PERMISSION_DENIED:
                 raise ProFeatureLockedError(error.details()) from error
-            if error.code() == grpc.StatusCode.FAILED_PRECONDITION:
+            if error.code() in (grpc.StatusCode.FAILED_PRECONDITION, grpc.StatusCode.NOT_FOUND):
                 raise SimulationRefusedError(error.details()) from error
             if error.code() == grpc.StatusCode.UNIMPLEMENTED:
                 raise ContractNotServedError(error.details() or "method not found") from error

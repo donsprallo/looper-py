@@ -16,7 +16,7 @@ from looper.application.ports import (
     SimulationRefusedError,
     SimulationUnreachableError,
 )
-from looper.domain.model import EventPage, Exchange, RunStatus, Sample
+from looper.domain.model import EventPage, Exchange, FlashMark, ResetMark, RunStatus, Sample
 
 #: How long to wait between two asks while the log is behind the clock.
 POLL_SECONDS = 0.02
@@ -33,6 +33,8 @@ class WindowEvents:
     samples: tuple[Sample, ...]
     exchanges: tuple[Exchange, ...]
     lost_events: int
+    resets: tuple[ResetMark, ...] = ()
+    flash_marks: tuple[FlashMark, ...] = ()
 
 
 class WindowReader:
@@ -45,6 +47,8 @@ class WindowReader:
         self._next_event_seq = start.next_event_seq
         self._samples: list[Sample] = []
         self._exchanges: list[Exchange] = []
+        self._resets: list[ResetMark] = []
+        self._flash_marks: list[FlashMark] = []
         self._lost_events = 0
 
     def read(self) -> WindowEvents:
@@ -61,7 +65,13 @@ class WindowReader:
                 break
             if self._next_event_seq == reached:
                 self._wait_for_the_log(give_up_at)
-        return WindowEvents(tuple(self._samples), tuple(self._exchanges), self._lost_events)
+        return WindowEvents(
+            tuple(self._samples),
+            tuple(self._exchanges),
+            self._lost_events,
+            tuple(self._resets),
+            tuple(self._flash_marks),
+        )
 
     @staticmethod
     def _wait_for_the_log(give_up_at: float) -> None:
@@ -89,6 +99,8 @@ class WindowReader:
         """Keep the events that happened at or before the window's end."""
         self._samples.extend(one for one in page.samples if one.sim_us <= self._end_us)
         self._exchanges.extend(one for one in page.exchanges if one.sim_us <= self._end_us)
+        self._resets.extend(one for one in page.resets if one.sim_us <= self._end_us)
+        self._flash_marks.extend(one for one in page.flash_marks if one.sim_us <= self._end_us)
 
     def _has_events_beyond_the_window(self, page: EventPage) -> bool:
         """Whether the stream has gone past the window, so nothing more belongs to it."""

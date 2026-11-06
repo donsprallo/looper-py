@@ -26,7 +26,10 @@ from looper.domain.checks import (
     MessageFilter,
     MessageRate,
     NeverAllocates,
+    NoFlashViolation,
+    NoResetLoop,
     NothingLeaked,
+    ResetHappened,
     StackNoDeeperThan,
     StackStaysBelow,
 )
@@ -184,3 +187,34 @@ class ProfileExpectation:
     def heaviest_is(self, function: str, origin: str = FIRMWARE_ORIGIN) -> Expectations:
         """Expect one function to spend more time in itself than any other of its origin."""
         return self._expectations.add(HeaviestFunctionIs(function, origin))
+
+
+class ResetExpectation:
+    """What is expected of the firmware's resets, of one cause or of any."""
+
+    def __init__(self, expectations: Expectations, cause: str) -> None:
+        self._expectations = expectations
+        self._cause = cause
+
+    def happened(self, times: int = 0) -> Expectations:
+        """Expect such a reset in the window: exactly so many times, or with 0 at least once."""
+        return self._expectations.add(ResetHappened(self._cause, times))
+
+    def happened_once(self) -> Expectations:
+        """Expect exactly one such reset in the window."""
+        return self.happened(times=1)
+
+    def no_loop(self) -> Expectations:
+        """Expect no reset loop: the server finds none at the window's end."""
+        return self._expectations.add(NoResetLoop())
+
+
+class FlashExpectation:
+    """What is expected of the flash."""
+
+    def __init__(self, expectations: Expectations) -> None:
+        self._expectations = expectations
+
+    def no_violation(self) -> Expectations:
+        """Expect every write in the window to keep the flash's rules."""
+        return self._expectations.add(NoFlashViolation())

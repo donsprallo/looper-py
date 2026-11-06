@@ -25,8 +25,10 @@ from looper.application.subjects import (
     BusExpectation,
     CallExpectation,
     ChannelExpectation,
+    FlashExpectation,
     MemoryExpectation,
     ProfileExpectation,
+    ResetExpectation,
     StackExpectation,
 )
 from looper.domain.checks import Check, FirmwareIsAlive
@@ -94,6 +96,14 @@ class Expectations:
         self._reads_profile = True
         return ProfileExpectation(self)
 
+    def reset(self, cause: str = "") -> ResetExpectation:
+        """Expect something of the firmware's resets: ``watchdog``, ``software``, ... or any."""
+        return ResetExpectation(self, cause)
+
+    def flash(self) -> FlashExpectation:
+        """Expect something of the flash."""
+        return FlashExpectation(self)
+
     def firmware_is_alive(self) -> Expectations:
         """Expect the firmware to still be reaching the adapter at all."""
         return self.add(FirmwareIsAlive())
@@ -155,6 +165,9 @@ class Expectations:
             lost_events=events.lost_events,
             memory=self._memory(),
             profile=self._profile(),
+            resets=events.resets,
+            flash_marks=events.flash_marks,
+            loop_finding=self._inspector.read_lives().loop_finding,
         )
 
     def _profile(self) -> Profile:

@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 from looper.domain.model.findings import Dependency, Finding, Findings
+from looper.domain.model.lives import Life, LifeDump, Lives
+from looper.domain.model.marks import FlashMark, ResetMark
 from looper.domain.model.observation import Observation
 from looper.domain.model.outcome import ExpectationReport, Outcome
 from looper.domain.model.profile import FIRMWARE_ORIGIN, Profile, ProfileEntry
@@ -63,6 +65,11 @@ __all__ = [
     "EventPage",
     "Exchange",
     "ExpectationReport",
+    "FlashMark",
+    "Life",
+    "LifeDump",
+    "Lives",
+    "ResetMark",
     "FIRMWARE_ORIGIN",
     "Finding",
     "Findings",

@@ -12,6 +12,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from enum import StrEnum
 
+from looper.domain.model.marks import FlashMark, ResetMark
+
 
 class ClockMode(StrEnum):
     """How a simulation's clock goes.
@@ -95,7 +97,7 @@ class Exchange:
 
 @dataclass(frozen=True)
 class EventPage:
-    """One page of the event stream, samples and exchanges only.
+    """One page of the event stream: samples, exchanges, resets and flash operations.
 
     Attributes:
         samples: The analog samples on the page.
@@ -107,6 +109,8 @@ class EventPage:
         lost_events: How many events this reader will not get.
         epoch_changed: Whether another client cleared the recording since
             the reader's last page.
+        resets: The resets on the page.
+        flash_marks: The flash operations on the page.
     """
 
     samples: tuple[Sample, ...] = ()
@@ -115,6 +119,8 @@ class EventPage:
     sim_now_us: int = 0
     lost_events: int = 0
     epoch_changed: bool = False
+    resets: tuple[ResetMark, ...] = ()
+    flash_marks: tuple[FlashMark, ...] = ()
 
 
 @dataclass(frozen=True)

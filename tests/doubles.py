@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from dataclasses import replace
 
+from life_doubles import ScriptedLives
 from looper.application.ports import Inspector, SimulationRefusedError
 from looper.domain.model import (
     Bus,
@@ -39,10 +40,11 @@ from looper.domain.model import (
 PAGE_SIZE = 2
 
 
-class ScriptedInspector(Inspector):
+class ScriptedInspector(ScriptedLives, Inspector):
     """Answers from fixed state and writes down every request."""
 
     def __init__(self, clock_mode: ClockMode = ClockMode.HELD) -> None:
+        ScriptedLives.__init__(self)
         self.description = Description(contract_version=3, firmware_name="blinky")
         self.run = RunStatus(now_us=0, clock_mode=clock_mode, epoch=1, next_event_seq=0)
         self.samples: tuple[Sample, ...] = ()

@@ -22,6 +22,7 @@ simulation together.
 from __future__ import annotations
 
 from looper.application.expectations import Expectations
+from looper.application.memories import Flash, FlashPartition, Retained
 from looper.application.ports import (
     ProFeatureLockedError,
     SimulationRefusedError,
@@ -44,7 +45,11 @@ from looper.domain.model import (
     ExpectationReport,
     Finding,
     Findings,
+    FlashMark,
     HeapUsage,
+    Life,
+    LifeDump,
+    Lives,
     MemoryUsage,
     ModelParameter,
     NodeOutput,
@@ -56,6 +61,7 @@ from looper.domain.model import (
     Profile,
     ProfileEntry,
     Quiet,
+    ResetMark,
     RunStatus,
     Signal,
     SignalGraph,
@@ -75,6 +81,14 @@ from looper.starting import ContractMismatchError, connect, run
 __version__ = "0.2.0"
 
 __all__ = [
+    "Flash",
+    "FlashMark",
+    "FlashPartition",
+    "Life",
+    "LifeDump",
+    "Lives",
+    "ResetMark",
+    "Retained",
     "Bus",
     "BusMessage",
     "CallTiming",

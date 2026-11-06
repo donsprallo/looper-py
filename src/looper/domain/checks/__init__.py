@@ -25,6 +25,7 @@ from looper.domain.checks.memory_checks import (
     StackStaysBelow,
 )
 from looper.domain.checks.profile_checks import HeaviestFunctionIs
+from looper.domain.checks.reset_checks import NoFlashViolation, NoResetLoop, ResetHappened
 
 __all__ = [
     "BusCarriedAtLeast",
@@ -42,6 +43,9 @@ __all__ = [
     "MessageFilter",
     "MessageRate",
     "NeverAllocates",
+    "NoFlashViolation",
+    "NoResetLoop",
+    "ResetHappened",
     "NothingLeaked",
     "StackNoDeeperThan",
     "StackStaysBelow",

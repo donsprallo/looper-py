@@ -25,6 +25,7 @@ from looper.domain.model import (
     Variable,
     Watch,
 )
+from looper.infrastructure import mark_translation
 from looper.infrastructure.contract import looper_inspector_pb2 as contract
 
 #: The origin the server gives a function measured at the adapter boundary.
@@ -77,6 +78,12 @@ def event_page_of(message: contract.EventBatch) -> EventPage:
         sim_now_us=message.sim_now_us,
         lost_events=sum(one.to_event_seq - one.from_event_seq + 1 for one in message.lost),
         epoch_changed=message.epoch_changed,
+        resets=tuple(
+            mark_translation.reset_of(one) for one in message.events if one.HasField("reset")
+        ),
+        flash_marks=tuple(
+            mark_translation.flash_mark_of(one) for one in message.events if one.HasField("flash")
+        ),
     )
 
 

@@ -94,6 +94,7 @@ enum Refusal {
   REFUSAL_INVALID = 6;         // a value out of range; `refusal_text` says which
   REFUSAL_WRONG_MODE = 7;      // run_for while PACED, and the like
   REFUSAL_OTHER = 8;
+  REFUSAL_RESETTING = 9;       // the firmware is between two lives and did not take over in time
 }
 
 // When a change is to take effect. Absent: at the next boundary.
@@ -171,6 +172,8 @@ enum Capability {
   CAPABILITY_READ_BY_TIME = 10;    // ReadEventsRequest.from_us / to_us; EventFilter.pin_ids, call_functions
   CAPABILITY_TRIGGERS = 11;        // ArmTrigger, DisarmTrigger, ObserveTriggers
   CAPABILITY_ARCHITECTURE = 12;    // the project's code index: metrics, dependencies, findings
+  CAPABILITY_RESET = 13;           // ResetFirmware, ObserveLives, ReadLifeDump, ObserveRetained, WriteRetained
+  CAPABILITY_FLASH = 14;           // ObserveFlash, WriteFlash, EraseFlash, SaveFlash, LoadFlash
 }
 
 enum ServerMode {
@@ -216,8 +219,16 @@ message RunState {
   uint32 queued_commands = 10;
   // Why the simulation answers nothing right now: a debugger stopped the
   // firmware at a line. Simulated time stands still meanwhile; `now_us` is
-  // where it stands. Empty while it runs.
+  // where it stands. Empty while it runs. Also a firmware that hangs without
+  // a role call and no watchdog to reset it: "The firmware hangs ...".
   string hold_reason = 11;
+  // The firmware's life: 1 until its first reset, then one more per reset
+  // (a reset is not a restart: time and the recording go on). resets is how
+  // many there were in this run; life_text says it for the status bar, empty
+  // before the first reset ("RST 3 · watchdog").
+  uint32 life = 12;
+  uint32 resets = 13;
+  string life_text = 14;
 }
 
 message Subscription {
@@ -274,6 +285,8 @@ enum EventKind {
   EVENT_KIND_FAULT = 7;      // a model stopped, a wait failed
   EVENT_KIND_RUN = 8;        // a run reached its target; held; slipped (PACED)
   EVENT_KIND_TRIGGER = 9;    // a trigger fired, or was disarmed
+  EVENT_KIND_RESET = 10;     // a reset (ResetMark) and the life it began (LifeMark)
+  EVENT_KIND_FLASH = 11;     // a flash write, erase, or a write against its rules (FlashMark)
 }
 
 message EventBatch {
@@ -321,7 +334,78 @@ message Event {
     RunEvent run = 10;
     TriggerFired trigger_fired = 11;
     TriggerDisarmed trigger_disarmed = 12;
+    ResetMark reset = 14;
+    LifeMark life = 15;
+    FlashMark flash = 16;
   }
+  // 13 is the simulation's record of a call between lifelines, which the
+  // server keeps for ObserveSequence and does not serve as a body.
+  reserved 13;
+}
+
+// The firmware's life ended by a reset at Event.sim_us. Its outputs went to
+// their reset levels at that moment; the next life begins at the same time.
+message ResetMark {
+  ResetCause cause = 1;
+  string cause_text = 2;       // "watchdog", "software", "pin", "power-on", "brown-out"
+  uint32 life = 3;             // the life that ended
+  LifeEndReason reason = 4;
+  uint64 jump_target = 5;      // a jump (Pro): the address the firmware gave
+}
+
+// A life began, at Event.sim_us.
+message LifeMark {
+  uint32 life = 1;
+  string image = 2;            // with several images (Pro); empty otherwise
+  string partition = 3;
+  EnteredBy entered_by = 4;
+  string text = 5;             // "life 3 · after watchdog"
+}
+
+// A flash operation, at Event.sim_us. offset from the flash's beginning.
+message FlashMark {
+  FlashMarkKind kind = 1;
+  uint64 offset = 2;
+  uint32 length = 3;
+  string partition = 4;        // empty outside every partition
+  ChangeSource source = 5;
+}
+
+enum FlashMarkKind {
+  FLASH_MARK_UNSPECIFIED = 0;
+  FLASH_MARK_WRITE = 1;
+  FLASH_MARK_ERASE = 2;
+  FLASH_MARK_VIOLATION = 3;    // a write or erase against the rules; a Fault says which
+  FLASH_MARK_CUT = 4;          // a power cut while programming (Pro)
+}
+
+enum ChangeSource {
+  CHANGE_SOURCE_UNSPECIFIED = 0;
+  CHANGE_SOURCE_FIRMWARE = 1;
+  CHANGE_SOURCE_CLIENT = 2;
+}
+
+enum ResetCause {
+  RESET_CAUSE_UNSPECIFIED = 0;
+  RESET_CAUSE_POWER_ON = 1;
+  RESET_CAUSE_SOFTWARE = 2;
+  RESET_CAUSE_WATCHDOG = 3;
+  RESET_CAUSE_PIN = 4;
+  RESET_CAUSE_BROWN_OUT = 5;
+}
+
+enum LifeEndReason {
+  LIFE_END_REASON_UNSPECIFIED = 0;
+  LIFE_END_REASON_RESET = 1;
+  LIFE_END_REASON_JUMP = 2;
+  LIFE_END_REASON_POWER_CUT = 3;
+}
+
+enum EnteredBy {
+  ENTERED_BY_UNSPECIFIED = 0;
+  ENTERED_BY_RESET = 1;
+  ENTERED_BY_JUMP = 2;
+  ENTERED_BY_POWER_ON = 3;
 }
 
 message Lost {
@@ -764,6 +848,30 @@ service Inspector {
   rpc RestartSimulation(RestartRequest) returns (RestartView);
   rpc ObserveRestart(Empty) returns (RestartView);
 
+  // ---- Reset and lives (CAPABILITY_RESET) ----
+  // A reset is not a restart: the firmware begins a new life, simulated time
+  // and the recording go on, clients stay connected, and watches, triggers,
+  // signals and held inputs are set again. A held simulation resets at its
+  // next run.
+  rpc ResetFirmware(ResetRequest) returns (Ack);
+  // Every life of this run, the number of resets, and a reset loop.
+  rpc ObserveLives(Empty) returns (LifeList);
+  // What a life that has ended left behind: its heap book and its profile.
+  rpc ReadLifeDump(LifeChoice) returns (LifeDumpView);
+  // The retained memory, which survives a reset; and writing it by hand.
+  rpc ObserveRetained(Empty) returns (RetainedView);
+  rpc WriteRetained(RetainedWrite) returns (Ack);
+
+  // ---- Flash (CAPABILITY_FLASH) ----
+  // Bits only go from 1 to 0 without an erase; erasing is by sector. A raw
+  // write lays bytes down past that rule (a broken header on purpose), but
+  // never into a read-only partition. Save and load move the whole flash.
+  rpc ObserveFlash(FlashRequest) returns (FlashView);
+  rpc WriteFlash(FlashWrite) returns (Ack);
+  rpc EraseFlash(FlashErase) returns (Ack);
+  rpc SaveFlash(Empty) returns (FlashContent);
+  rpc LoadFlash(FlashContent) returns (Ack);
+
   // ---- Architecture (CAPABILITY_ARCHITECTURE) ----
   // Read from the project's code index, which the server builds in the
   // background; every answer says how far it got. A request naming the
@@ -799,6 +907,103 @@ service Inspector {
   rpc FollowSequence(SequenceFollowRequest) returns (Ack);
   // The recorded calls of a stretch of the run, pass by pass (Pro).
   rpc ObserveSequence(SequenceRequest) returns (RecordedSequence);
+}
+
+// A reset from outside: PIN (the reset pin) or POWER_ON. Absent: PIN.
+message ResetRequest {
+  ResetCause cause = 1;
+  When when = 2;
+}
+
+message LifeView {
+  uint32 life = 1;
+  string image = 2;
+  string partition = 3;
+  EnteredBy entered_by = 4;
+  uint64 started_at_us = 5;
+  uint64 ended_at_us = 6;          // 0: it runs now
+  LifeEndReason ended_by = 7;
+  ResetCause cause = 8;            // why it ended
+  string text = 9;                 // "life 3 · 12.300 s – 14.020 s · watchdog"
+  bool has_dump = 10;              // ReadLifeDump answers for it
+}
+
+message LifeList {
+  repeated LifeView lives = 1;     // oldest first, the life that runs now last
+  uint32 resets = 2;
+  string last_cause_text = 3;      // "watchdog"; empty before the first reset
+  string running_text = 4;         // "life 4"
+  string loop_finding = 5;         // empty, or "Reset loop: 10 resets within 1 s (watchdog each time)."
+  uint32 lives_forgotten = 6;      // lives whose dumps are no longer kept
+}
+
+message LifeChoice { uint32 life = 1; }
+
+message RetainedView {
+  uint32 size = 1;                 // 0: the simulation has none
+  bytes content = 2;
+  bool battery = 3;
+  string note = 4;                 // "survives resets, lost on power cut", or how to have one
+}
+
+message RetainedWrite { uint32 offset = 1; bytes data = 2; When when = 3; }
+
+// A stretch of the flash to read; length 0 reads none, only the layout.
+message FlashRequest { uint64 offset = 1; uint32 length = 2; }
+
+message PartitionView {
+  string name = 1;
+  uint64 offset = 2;
+  uint64 size = 3;
+  bool read_only = 4;
+  HeaderState header = 5;          // Pro; without a licence UNSPECIFIED
+  string header_text = 6;
+}
+
+enum HeaderState {
+  HEADER_STATE_UNSPECIFIED = 0;
+  HEADER_STATE_EMPTY = 1;
+  HEADER_STATE_VALID = 2;
+  HEADER_STATE_BROKEN = 3;
+  HEADER_STATE_UNKNOWN_IMAGE = 4;
+}
+
+message FlashView {
+  uint64 base = 1;                 // where the firmware sees it
+  uint64 size = 2;                 // 0: the simulation has no flash
+  uint32 sector_size = 3;
+  uint32 word_size = 4;
+  repeated PartitionView partitions = 5;
+  uint64 offset = 6;               // the stretch asked for
+  bytes content = 7;
+  bool persist = 8;                // kept in build/flash.bin between runs
+  string note = 9;                 // "not kept between runs", or how to have a flash
+  repeated uint32 written_sectors = 10;   // sectors that are not erased, for the map
+  uint32 erased_value = 11;
+  string persist_text = 12;        // "kept in build/flash.bin" / "not kept between runs"
+}
+
+message FlashWrite {
+  oneof target { uint64 offset = 1; PartitionOffset partition = 2; }
+  oneof content { bytes data = 3; string image = 4; string image_file = 5; }   // 4, 5: Pro
+  bool raw = 6;                    // past the rules: bytes as they are
+  When when = 7;
+}
+
+message PartitionOffset { string name = 1; uint64 offset = 2; }
+
+message FlashErase {
+  oneof what { Empty whole = 1; string partition = 2; uint32 sector = 3; }
+  When when = 4;
+}
+
+message FlashContent { bytes content = 1; }
+
+message LifeDumpView {
+  LifeView life = 1;
+  MemoryView memory = 2;
+  ProfileView profile = 3;
+  string note = 4;                 // why something is missing ("killed in a hang: no dump")
 }
 
 message PinView {
@@ -1377,6 +1582,8 @@ message ProfileView {
   bool is_profiling = 6;
   // What to say above the chart, including when there is nothing.
   string note = 7;
+  // The life the profile was measured in.
+  uint32 life = 8;
 }
 
 message FrameView {
@@ -1481,6 +1688,10 @@ message MemoryView {
   StaticMemoryView static_memory = 1;
   StackUsageView stack = 2;
   HeapUsageView heap = 3;
+  // The life the heap and the stack were counted in, and the sentence for it
+  // ("since the last reset · life 3"); empty before the first reset.
+  uint32 life = 4;
+  string life_text = 5;
 }
 
 message BusView {
