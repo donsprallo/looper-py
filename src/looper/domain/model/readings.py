@@ -12,6 +12,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from enum import StrEnum
 
+from looper.domain.model.interrupt_facts import InterruptMark
 from looper.domain.model.marks import FlashMark, ResetMark
 
 
@@ -121,6 +122,7 @@ class EventPage:
     epoch_changed: bool = False
     resets: tuple[ResetMark, ...] = ()
     flash_marks: tuple[FlashMark, ...] = ()
+    interrupt_marks: tuple[InterruptMark, ...] = ()
 
 
 @dataclass(frozen=True)

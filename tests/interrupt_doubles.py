@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from looper.application.ports import SimulationRefusedError
+from looper.application.ports import ProFeatureLockedError, SimulationRefusedError
+from looper.domain.model.interrupt_facts import RunFindingReading
 from looper.domain.model.interrupts import Interrupts, InterruptSource
 
 #: The sources a scripted firmware has: a button and a timer.
@@ -16,9 +17,16 @@ class ScriptedInterrupts:
     def __init__(self) -> None:
         self.interrupt_report = Interrupts(sources=(BUTTON, TICK), installed=True)
         self.raised: list[tuple[int, int]] = []
+        self.run_findings: tuple[RunFindingReading, ...] = ()
+        self.findings_locked = False
 
     def read_interrupts(self) -> Interrupts:
         return self.interrupt_report
+
+    def read_run_findings(self) -> tuple[RunFindingReading, ...]:
+        if self.findings_locked:
+            raise ProFeatureLockedError("Run findings is part of looper Pro - no licence found.")
+        return self.run_findings
 
     def raise_interrupt(self, source_id: int, after_us: int = 0) -> None:
         if all(source.source_id != source_id for source in self.interrupt_report.sources):

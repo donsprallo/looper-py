@@ -25,7 +25,7 @@ from looper.domain.model import (
     Variable,
     Watch,
 )
-from looper.infrastructure import mark_translation
+from looper.infrastructure import interrupt_translation, mark_translation
 from looper.infrastructure.contract import looper_inspector_pb2 as contract
 
 #: The origin the server gives a function measured at the adapter boundary.
@@ -84,6 +84,7 @@ def event_page_of(message: contract.EventBatch) -> EventPage:
         flash_marks=tuple(
             mark_translation.flash_mark_of(one) for one in message.events if one.HasField("flash")
         ),
+        interrupt_marks=interrupt_translation.marks_of(message),
     )
 
 

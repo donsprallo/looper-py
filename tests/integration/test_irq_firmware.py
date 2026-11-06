@@ -26,8 +26,10 @@ CLI_MODULE = "looper_core.presentation.cli.main"
 
 
 @pytest.fixture
-def simulation() -> Iterator[looper.Simulation]:
-    """The interrupt firmware, built, started on a held clock and attached to."""
+def simulation(monkeypatch: pytest.MonkeyPatch) -> Iterator[looper.Simulation]:
+    """The interrupt firmware, built, started on a held clock and attached to, without Pro."""
+    monkeypatch.setenv("LOOPER_DEV_EDITION", "free")
+    monkeypatch.setenv("LOOPER_LICENSE", "no licence here")
     if not DEFINITION.is_file():
         pytest.skip(f"no looper-core checkout at {CORE}")
     if shutil.which("gcc") is None and shutil.which("clang") is None:
@@ -55,3 +57,43 @@ def test_a_raised_source_runs_its_isr(simulation: looper.Simulation) -> None:
 
     button = simulation.interrupts().source("EXTI0")
     assert (button.raised, button.handled, button.latency_max_us) == (1, 1, 0)
+
+
+LOCK = 2
+
+
+@pytest.fixture
+def pro_simulation(monkeypatch: pytest.MonkeyPatch) -> Iterator[looper.Simulation]:
+    """The interrupt firmware with run findings unlocked, as a checkout unlocks them."""
+    monkeypatch.setenv("LOOPER_DEV_EDITION", "pro")
+    if not DEFINITION.is_file():
+        pytest.skip(f"no looper-core checkout at {CORE}")
+    with looper.run(DEFINITION, virtual=True, looper_cli=(*LOOPER_CLI, CLI_MODULE)) as started:
+        yield started
+
+
+def test_a_lock_past_the_project_s_limit_fails_its_check_and_ticks_pass_theirs(
+    pro_simulation: looper.Simulation,
+) -> None:
+    pro_simulation.advance(0.005)
+    check = pro_simulation.expect()
+    check.interrupts().locked_at_most()
+    check.interrupt("TIM2").handled_at_least(5)
+    pro_simulation.toggle_pin(LOCK)
+
+    report = check.evaluate(for_seconds=0.01)
+
+    locked, ticks = report.outcomes
+    assert not locked.met
+    assert locked.observed == "Interrupts disabled for 2 ms (limit 1 ms)"
+    assert ticks.met
+
+
+def test_without_the_licence_an_interrupt_check_says_it_is_pro(
+    simulation: looper.Simulation,
+) -> None:
+    check = simulation.expect()
+    check.interrupt("TIM2").never_lost()
+
+    with pytest.raises(looper.ProFeatureLockedError, match="part of looper Pro"):
+        check.evaluate(for_seconds=0.005)

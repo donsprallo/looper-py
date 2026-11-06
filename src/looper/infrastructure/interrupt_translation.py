@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from looper.domain.model.interrupt_facts import InterruptMark, RunFindingReading
 from looper.domain.model.interrupts import InterruptLock, Interrupts, InterruptSource
 from looper.infrastructure.contract import looper_inspector_pb2 as contract
 
@@ -40,6 +41,48 @@ def _source(source: contract.InterruptSourceView) -> InterruptSource:
         period_us=source.period_us,
         is_raisable=source.is_raisable,
         state_text=source.state_text,
+    )
+
+
+#: The contract's words for the kinds of interrupt event.
+EVENT_KINDS = {
+    contract.INTERRUPT_EVENT_PENDING: "pending",
+    contract.INTERRUPT_EVENT_ENTERED: "entered",
+    contract.INTERRUPT_EVENT_LEFT: "left",
+    contract.INTERRUPT_EVENT_LOST: "lost",
+    contract.INTERRUPT_EVENT_LOCKED: "locked",
+    contract.INTERRUPT_EVENT_STORM: "storm",
+}
+SEVERITIES = {contract.TIER_NOTICEABLE: "noticeable", contract.TIER_CRITICAL: "critical"}
+
+
+def marks_of(message: contract.EventBatch) -> tuple[InterruptMark, ...]:
+    """The interrupt events of a page."""
+    return tuple(
+        InterruptMark(
+            sim_us=one.sim_us,
+            source_id=one.interrupt.source_id,
+            kind=EVENT_KINDS.get(one.interrupt.kind, "pending"),
+            latency_us=one.interrupt.latency_us,
+            duration_us=one.interrupt.duration_us,
+            by_race=one.interrupt.by_race,
+        )
+        for one in message.events
+        if one.HasField("interrupt")
+    )
+
+
+def findings_of(message: contract.RunFindingList) -> tuple[RunFindingReading, ...]:
+    """The run's findings, in the server's words."""
+    return tuple(
+        RunFindingReading(
+            kind=one.kind,
+            title=one.title,
+            severity=SEVERITIES.get(one.severity, "critical"),
+            occurrences=one.occurrences,
+            check_text=one.check_text,
+        )
+        for one in message.findings
     )
 
 

@@ -11,6 +11,8 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 
 from looper.domain.model.boot import BootChain, PartitionHeader
+from looper.domain.model.interrupt_facts import InterruptMark, RunFindingReading
+from looper.domain.model.interrupts import Interrupts
 from looper.domain.model.marks import FlashMark, ResetMark
 from looper.domain.model.profile import Profile
 from looper.domain.model.readings import CallTiming, Exchange, MemoryUsage, Sample
@@ -45,6 +47,10 @@ class Observation:
             only when an expectation is about it.
         boot_chains: The run's boot chains at the window's end (Pro); read
             only when an expectation is about them.
+        interrupt_marks: The interrupt events of the window.
+        interrupts: The sources by name, at the window's end; read with the findings.
+        run_findings: The server's findings of the run at the window's end
+            (Pro); read only when an expectation is about interrupts.
     """
 
     samples: tuple[Sample, ...]
@@ -59,6 +65,9 @@ class Observation:
     loop_finding: str = ""
     headers: dict[str, PartitionHeader] = field(default_factory=dict)
     boot_chains: tuple[BootChain, ...] = ()
+    interrupt_marks: tuple[InterruptMark, ...] = ()
+    interrupts: Interrupts = field(default_factory=Interrupts)
+    run_findings: tuple[RunFindingReading, ...] = ()
 
     @property
     def sample_loss_note(self) -> str:

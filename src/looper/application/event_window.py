@@ -17,6 +17,7 @@ from looper.application.ports import (
     SimulationUnreachableError,
 )
 from looper.domain.model import EventPage, Exchange, FlashMark, ResetMark, RunStatus, Sample
+from looper.domain.model.interrupt_facts import InterruptMark
 
 #: How long to wait between two asks while the log is behind the clock.
 POLL_SECONDS = 0.02
@@ -35,6 +36,7 @@ class WindowEvents:
     lost_events: int
     resets: tuple[ResetMark, ...] = ()
     flash_marks: tuple[FlashMark, ...] = ()
+    interrupt_marks: tuple[InterruptMark, ...] = ()
 
 
 class WindowReader:
@@ -49,6 +51,7 @@ class WindowReader:
         self._exchanges: list[Exchange] = []
         self._resets: list[ResetMark] = []
         self._flash_marks: list[FlashMark] = []
+        self._interrupt_marks: list[InterruptMark] = []
         self._lost_events = 0
 
     def read(self) -> WindowEvents:
@@ -71,6 +74,7 @@ class WindowReader:
             self._lost_events,
             tuple(self._resets),
             tuple(self._flash_marks),
+            tuple(self._interrupt_marks),
         )
 
     @staticmethod
@@ -101,6 +105,9 @@ class WindowReader:
         self._exchanges.extend(one for one in page.exchanges if one.sim_us <= self._end_us)
         self._resets.extend(one for one in page.resets if one.sim_us <= self._end_us)
         self._flash_marks.extend(one for one in page.flash_marks if one.sim_us <= self._end_us)
+        self._interrupt_marks.extend(
+            one for one in page.interrupt_marks if one.sim_us <= self._end_us
+        )
 
     def _has_events_beyond_the_window(self, page: EventPage) -> bool:
         """Whether the stream has gone past the window, so nothing more belongs to it."""

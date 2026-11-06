@@ -80,6 +80,7 @@ EVENT_KINDS = [
     contract.EVENT_KIND_EXCHANGE,
     contract.EVENT_KIND_RESET,
     contract.EVENT_KIND_FLASH,
+    contract.EVENT_KIND_INTERRUPT,
 ]
 
 

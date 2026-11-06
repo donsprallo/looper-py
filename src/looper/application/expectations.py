@@ -18,8 +18,14 @@ out on the host and cut by simulated time.
 from __future__ import annotations
 
 import time
+from typing import Any
 
 from looper.application.event_window import WindowReader
+from looper.application.interrupt_subjects import (
+    InterruptExpectation,
+    InterruptsExpectation,
+    RunFindingsExpectation,
+)
 from looper.application.ports import Inspector, SimulationRefusedError
 from looper.application.subjects import (
     BootChainExpectation,
@@ -63,6 +69,7 @@ class Expectations:
         self._checks: list[Check] = []
         self._reads_profile = False
         self._reads_headers = False
+        self._reads_run_findings = False
         self._reads_chains = False
 
     def add(self, check: Check) -> Expectations:
@@ -118,6 +125,22 @@ class Expectations:
     def reads_headers(self) -> None:
         """Have the window read the partitions' headers at its end, which only some checks need."""
         self._reads_headers = True
+
+    def reads_run_findings(self) -> None:
+        """Have the window read the run's findings and sources at its end (Pro)."""
+        self._reads_run_findings = True
+
+    def interrupt(self, source: str) -> InterruptExpectation:
+        """Expect something of one interrupt source, by its name (Pro)."""
+        return InterruptExpectation(self, source)
+
+    def interrupts(self) -> InterruptsExpectation:
+        """Expect something of the interrupts as a whole: how long they were masked (Pro)."""
+        return InterruptsExpectation(self)
+
+    def run_findings(self) -> RunFindingsExpectation:
+        """Expect something of the server's findings of the run (Pro)."""
+        return RunFindingsExpectation(self)
 
     def firmware_is_alive(self) -> Expectations:
         """Expect the firmware to still be reaching the adapter at all."""
@@ -185,7 +208,18 @@ class Expectations:
             loop_finding=self._inspector.read_lives().loop_finding,
             headers=self._inspector.read_headers() if self._reads_headers else {},
             boot_chains=self._inspector.read_boot_chains() if self._reads_chains else (),
+            interrupt_marks=events.interrupt_marks,
+            **self._judged(),
         )
+
+    def _judged(self) -> dict[str, Any]:
+        """The run's findings and the sources by name, when an expectation is about them (Pro)."""
+        if not self._reads_run_findings:
+            return {}
+        return {
+            "run_findings": self._inspector.read_run_findings(),
+            "interrupts": self._inspector.read_interrupts(),
+        }
 
     def _profile(self) -> Profile:
         """The window's profile, when an expectation is about it; nothing measured otherwise."""

@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 
+from looper.domain.model.interrupt_facts import RunFindingReading
 from looper.domain.model.interrupts import Interrupts
 
 
@@ -17,6 +18,14 @@ class InterruptInspector(ABC):
     @abstractmethod
     def read_interrupts(self) -> Interrupts:
         """Every source with what it did in this life, and the lock."""
+
+    @abstractmethod
+    def read_run_findings(self) -> tuple[RunFindingReading, ...]:
+        """The server's findings of the run.
+
+        Raises:
+            ProFeatureLockedError: Without a licence for run findings.
+        """
 
     @abstractmethod
     def raise_interrupt(self, source_id: int, after_us: int = 0) -> None:

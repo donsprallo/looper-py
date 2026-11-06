@@ -11,6 +11,7 @@ from collections.abc import Callable
 from typing import Any
 
 from looper.application.interrupt_port import InterruptInspector
+from looper.domain.model.interrupt_facts import RunFindingReading
 from looper.domain.model.interrupts import Interrupts
 from looper.infrastructure import interrupt_translation
 from looper.infrastructure.contract import looper_inspector_pb2 as contract
@@ -36,6 +37,11 @@ class GrpcInterruptCalls(InterruptInspector):
         """Every source and the lock."""
         report = self._call(self._stub.ObserveInterrupts, EMPTY)
         return interrupt_translation.interrupts_of(report)
+
+    def read_run_findings(self) -> tuple[RunFindingReading, ...]:
+        """The server's findings of the run."""
+        listed = self._call(self._stub.ObserveRunFindings, contract.RunFindingFilter())
+        return interrupt_translation.findings_of(listed)
 
     def raise_interrupt(self, source_id: int, after_us: int = 0) -> None:
         """Make a source due, now or later."""

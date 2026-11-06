@@ -5,7 +5,9 @@ from __future__ import annotations
 import pytest
 
 from doubles import ScriptedInspector
+from looper.application.ports import ProFeatureLockedError
 from looper.application.simulation import Simulation
+from looper.domain.model.interrupt_facts import RunFindingReading
 
 
 def _simulation() -> tuple[Simulation, ScriptedInspector]:
@@ -36,3 +38,25 @@ def test_a_source_that_is_not_there_is_named() -> None:
 
     with pytest.raises(KeyError, match="EXTI9"):
         simulation.raise_interrupt("EXTI9")
+
+
+def test_an_interrupt_check_reads_the_server_s_findings_and_is_pro() -> None:
+    simulation, inspector = _simulation()
+    check = simulation.expect()
+    check.interrupt("TIM2").never_lost()
+    inspector.findings_locked = True
+
+    with pytest.raises(ProFeatureLockedError, match="part of looper Pro"):
+        check.evaluate(for_seconds=0.01)
+
+
+def test_with_the_licence_the_run_findings_are_checked() -> None:
+    simulation, inspector = _simulation()
+    inspector.run_findings = (RunFindingReading("IRQ_LOST", "TIM2 was lost"),)
+    check = simulation.expect()
+    check.run_findings().none()
+
+    report = check.evaluate(for_seconds=0.01)
+
+    assert not report.outcomes[0].met
+    assert report.outcomes[0].observed == "TIM2 was lost"
