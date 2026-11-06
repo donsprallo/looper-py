@@ -100,8 +100,9 @@ def test_a_broken_configuration_is_found_and_made_again(simulation):
 - Ten watchdog resets within a second are a **reset loop**, which `no_loop()`
   reports with the server's sentence. Use it as the guard of every test that
   provokes a reset: it fails when a fix makes things worse.
-- A test reset (`simulation.reset()`) is the cause `pin`; the causes `software` and
-  `watchdog` come from the firmware itself.
+- A test reset (`simulation.reset()`) is the cause `pin`; from outside it may also be
+  `power-on` or `brown-out`. The causes `software` and `watchdog` come from the
+  firmware itself.
 
 The complete guide, including a firmware that hangs and the flash expectations,
 is [Resets, lives and the memories](../guides/resets-and-memories.md).

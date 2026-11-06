@@ -33,13 +33,20 @@ An expectation looks at the resets inside its window.
 ```python
 simulation.reset()               # the reset pin
 simulation.reset("power-on")     # a power-on from outside
+simulation.reset("brown-out")    # the supply fell and came back
 ```
 
-A reset from outside has the cause `pin` (the default) or `power-on`. A
-`power-on` here keeps the retained memory and the flash: only the cause, and the
-flags, differ. The causes `software` and `watchdog` are the firmware's and the
-watchdog's own; asking for one -- or any other word -- raises
-`SimulationRefusedError`.
+From outside, a reset is `pin` (the default), `power-on` or `brown-out`. A
+`power-on` or a `brown-out` from outside clears the retained memory unless
+`[retained] battery = true`, and leaves only its own reset flag; the flash keeps
+what it holds. A `pin` reset keeps both. The causes `software` and `watchdog`
+are the firmware's and the watchdog's own: asking for one raises
+`SimulationRefusedError` with the server's sentence. A word that is no cause at
+all -- `reset("reboot")` -- raises `ValueError` and sends nothing.
+
+Keys in `looper.toml` are written with underscores (`power_on`, `brown_out`),
+like every key there; the cause as a word -- in texts, in `Life.cause`, in
+`simulation.reset("power-on")` -- is written with a hyphen.
 
 It takes effect at the next point of the simulation, as every change does: on a
 **held** clock the firmware is reset when the test next lets time pass.
@@ -48,6 +55,16 @@ It takes effect at the next point of the simulation, as every change does: on a
 simulation.reset()
 simulation.advance(0.01)         # now the firmware has begun its next life
 ```
+
+After a reset the jobs the simulation sends on a bus go on in the next life,
+with the first round that begins at or after the reset (the rest of a round
+already started is not sent, and the counters start over). A value set on the
+signal graph stays. The debugger is detached. If the next life does not start,
+the simulation is held with *The next life did not start: ...*.
+
+A firmware that **hangs** with no watchdog to reset it holds the simulation; the
+reason names the way out. `simulation.reset()` (the pin) or
+`simulation.reset("power-on")` ends the hang at once and the next life begins.
 
 ## The lives
 
@@ -102,7 +119,9 @@ A write is a change like any other: it takes effect at the next point, so let a
 held clock run a little before you read it back. A write outside the memory, or
 with none, raises `SimulationRefusedError`.
 
-The retained memory begins at zero with every run; a reset keeps it.
+The retained memory begins at zero with every run; a reset keeps it. A
+`power-on` or a `brown-out` from outside clears it, unless `[retained] battery =
+true` says the memory has a battery.
 
 ## The flash
 
@@ -131,7 +150,7 @@ config.erase()                          # every sector of the partition
 
 | Call | Does |
 | --- | --- |
-| `write(offset, data, raw=False)` | by the flash's rules: where a bit is already 0 it stays 0, and one that wants to go from 0 to 1 is a **violation**. With `raw=True` the bytes are laid down as they are |
+| `write(offset, data, raw=False)` | by the flash's rules: where a bit is already 0 it stays 0, and one that wants to go from 0 to 1 is a **violation**. It must start on a flash word and cover whole words (`[flash] word_size`); anything else is refused and recorded as a violation, whatever `on_violation` says. With `raw=True` the bytes are laid down as they are, and not checked |
 | `erase(sector=None)` | one sector, or with none the whole flash but its read-only partitions |
 | `erase_partition(name)` | a partition |
 | `save()`, `save_file(path)` | the whole flash, as bytes or into a file |
@@ -146,8 +165,8 @@ looper.toml.* Writes, erases and loads take effect at the next point of the
 simulation.
 
 ```{note}
-The server takes a message of up to 4 MiB, so `load` of a flash larger than that
-fails, while `save` works. The firmware's own access to the flash is by its role
+The server takes and gives messages of up to 64 MiB, so a saved flash of 16 MiB
+loads. The firmware's own access to the flash is by its role
 calls only; see {core}`the limits <resets.html#limits>`.
 ```
 
@@ -185,8 +204,11 @@ saw:
 FAIL  the resets: expected no reset loop, saw Reset loop: 10 resets within 1 s (watchdog each time).
 ```
 
-`no_loop` asks the server's finding at the end of the window, not only the
-resets of the window. See {core}`A reset loop <resets.html#a-reset-loop>`.
+`no_loop()` asks the server's finding at the end of the window, so it also
+fails for a loop that began before the window and is still going. A reset loop
+holds a free-running simulation at once; a run with a target -- `advance`,
+`evaluate`, RunFor -- still reaches its target and is held when it gets there.
+See {core}`A reset loop <resets.html#a-reset-loop>`.
 
 The resets are also in the event stream: `simulation.read_events(since)`
 returns a page whose `resets` are `ResetMark`s -- `sim_us`, `cause` and the
@@ -227,8 +249,12 @@ violations = [one for one in marks if one.kind == "violation"]
   `persist = true` keeps `build/flash.bin`.
 - It does not take the signals you applied, the watches or the triggers: they
   are set again in the next life.
-- A job on a bus is **not** set again, and the number of times a trigger fired
-  is not summed over the lives.
+- It does not stop the jobs on a bus: they go on in the next life, but their
+  counters start over, and the rest of a round already started is not sent. The
+  number of times a trigger fired is not summed over the lives.
 
-A hang -- a firmware that sits in a loop that calls nothing -- takes more than 2
-seconds of *real* time to be found; `advance` waits for it.
+A hang is noticed after about 2 s of real time in which simulated time stood
+still while a request waited, so a test that makes the firmware hang waits that
+long once. The time is fixed on purpose: a shorter one would let a slow machine
+mistake a busy host for a hung firmware and reset it where the real board would
+not.
