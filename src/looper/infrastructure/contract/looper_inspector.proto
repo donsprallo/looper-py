@@ -178,6 +178,7 @@ enum Capability {
   CAPABILITY_RESET = 13;           // ResetFirmware, ObserveLives, ReadLifeDump, ObserveRetained, WriteRetained
   CAPABILITY_FLASH = 14;           // ObserveFlash, WriteFlash, EraseFlash, SaveFlash, LoadFlash
   CAPABILITY_BOOT = 15;            // several [[images]], and Pro: ObserveImages, ObserveBootChain, CutPower, ObserveOtp, BurnOtp
+  CAPABILITY_INTERRUPTS = 16;      // ObserveInterrupts, RaiseInterrupt, InterruptEvent in the stream
 }
 
 enum ServerMode {
@@ -306,6 +307,7 @@ message EventFilter {
   uint32 sample_stride = 4;
   repeated uint32 pin_ids = 5;          // for pin changes; empty: every pin
   repeated string call_functions = 6;   // for calls; empty: every function
+  repeated uint32 interrupt_ids = 7;    // for interrupt events; empty: every source and the lock
 }
 
 enum EventKind {
@@ -321,6 +323,7 @@ enum EventKind {
   EVENT_KIND_TRIGGER = 9;    // a trigger fired, or was disarmed
   EVENT_KIND_RESET = 10;     // a reset (ResetMark) and the life it began (LifeMark)
   EVENT_KIND_FLASH = 11;     // a flash write, erase, or a write against its rules (FlashMark)
+  EVENT_KIND_INTERRUPT = 12; // an interrupt source pending, an ISR entered and left, lost, a lock (InterruptEvent)
 }
 
 message EventBatch {
@@ -371,6 +374,7 @@ message Event {
     ResetMark reset = 14;
     LifeMark life = 15;
     FlashMark flash = 16;
+    InterruptEvent interrupt = 17;
   }
   // 13 is the simulation's record of a call between lifelines, which the
   // server keeps for ObserveSequence and does not serve as a body.
@@ -406,6 +410,33 @@ message FlashMark {
   uint32 length = 3;
   string partition = 4;        // empty outside every partition
   ChangeSource source = 5;
+}
+
+// What an interrupt source or the lock did, at Event.sim_us. Facts in
+// simulated time: latency from due to the ISR's start, the ISR's own
+// duration (it is longer than nothing only when it waits), the lock's
+// section. host_ns is the host's time inside the ISR, information only.
+message InterruptEvent {
+  uint32 source_id = 1;        // the source's number; 0 with LOCKED is the global lock
+  InterruptEventKind kind = 2;
+  uint64 latency_us = 3;       // ENTERED
+  uint64 duration_us = 4;      // LEFT; LOCKED, whose event stands at the section's end
+  uint64 host_ns = 5;          // LEFT
+  uint64 lost = 6;             // LOST: how many so far
+  Source cause = 7;            // PENDING: who made it due
+  uint64 point = 8;            // ENTERED: the firmware's address it interrupted; LOCKED: where the lock was taken
+  uint32 line = 9;             // STORM: the line that was shut
+  bool by_race = 10;           // raised by the race mode (Pro)
+  CodePlace place = 11;        // the point as a place in the code, where the server resolves it; not in the stream
+}
+
+enum InterruptEventKind {
+  INTERRUPT_EVENT_PENDING = 0;
+  INTERRUPT_EVENT_ENTERED = 1;
+  INTERRUPT_EVENT_LEFT = 2;
+  INTERRUPT_EVENT_LOST = 3;    // due again while its pending bit was set
+  INTERRUPT_EVENT_LOCKED = 4;  // a section of the global lock ended, from 1 us
+  INTERRUPT_EVENT_STORM = 5;   // entered too often at one time: its line is shut
 }
 
 enum FlashMarkKind {
@@ -923,6 +954,18 @@ service Inspector {
   // The one-time-programmable memory; burning sets bits, nothing clears them.
   rpc ObserveOtp(Empty) returns (OtpView);
   rpc BurnOtp(OtpBurn) returns (Ack);
+
+  // ---- Interrupts (CAPABILITY_INTERRUPTS; free) ----
+  // An ISR runs at the firmware's interruption points: an adapter call, a
+  // wait, the end of a pass. Times are simulated; computing costs none.
+  // The sources from contract.toml, with what they did in this life; before
+  // the firmware called its first interrupt role every count is 0 and
+  // `note` says why.
+  rpc ObserveInterrupts(Empty) returns (InterruptReport);
+  // Make a source due, now or at a time, as its pin or timer would. A source
+  // that is not `is_raisable`, or one before the table is installed, is
+  // refused with REFUSAL_NOT_ACCEPTED and a sentence.
+  rpc RaiseInterrupt(InterruptRaise) returns (Ack);
 
   // ---- Architecture (CAPABILITY_ARCHITECTURE) ----
   // Read from the project's code index, which the server builds in the
@@ -2653,4 +2696,62 @@ message RecordedSequence {
   string state_text = 10;       // why there is nothing to draw, or empty
   string banner_text = 11;      // lost or cut, or empty
   uint32 message_count = 12;
+}
+
+// ---- Interrupts ----------------------------------------------------------------
+
+message InterruptRaise {
+  uint32 source_id = 1;
+  When when = 2;
+}
+
+// One interrupt source and what it did in this life. Every text is the
+// server's; times are simulated.
+message InterruptSourceView {
+  uint32 source_id = 1;
+  string name = 2;
+  string kind_text = 3;        // "pin 3, falling edge", "timer, every 1 ms"
+  uint32 line = 4;
+  uint32 priority = 5;
+  bool enabled = 6;
+  bool pending = 7;
+  string handler = 8;          // "HAL_GPIO_EXTI_Callback", "" without one
+  uint64 raised = 9;
+  uint64 handled = 10;
+  uint64 lost = 11;
+  uint64 latency_max_us = 12;
+  string latency_text = 13;    // "mean 3 µs · max 48 µs", "–" before the first
+  uint64 duration_max_us = 14;
+  string duration_text = 15;
+  string host_text = 16;       // "mean 0.8 µs on the host"
+  uint64 period_us = 17;       // a timer's, 0 otherwise
+  bool is_raisable = 18;       // a client may raise it
+  uint64 raised_by_race = 19;
+  string state_text = 20;      // "idle", "pending", "running", "disabled"
+  uint64 latency_mean_us = 21;
+  uint64 duration_mean_us = 22;
+}
+
+// The global lock (PRIMASK) in this life.
+message InterruptLockView {
+  bool disabled_now = 1;
+  uint64 sections = 2;
+  uint64 longest_us = 3;
+  string longest_text = 4;     // "38 µs at 12.3011 s"
+  uint64 longest_at_us = 5;
+  CodePlace longest_place = 6; // where the longest section was locked
+  uint64 total_us = 7;
+  string share_text = 8;       // "disabled 0.4 % of the time"
+  uint64 limit_us = 9;         // [interrupts] max_disabled from looper.toml, 0 without
+  string limit_text = 10;
+  string state_text = 11;      // "enabled", "disabled since 12.3010 s"
+  uint64 held_back = 12;       // interruption points at which the lock held a ready source back
+}
+
+message InterruptReport {
+  repeated InterruptSourceView sources = 1;
+  InterruptLockView lock = 2;
+  string points_text = 3;      // "Interruption points: adapter calls, waits, the end of a pass"
+  string note = 4;             // the time model, or why nothing is there
+  bool installed = 5;          // the firmware called an interrupt role, so the counts are live
 }

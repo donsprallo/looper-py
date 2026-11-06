@@ -354,6 +354,16 @@ class InspectorStub:
                 request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.OtpBurn.SerializeToString,
                 response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Ack.FromString,
                 _registered_method=True)
+        self.ObserveInterrupts = channel.unary_unary(
+                '/looper.inspector.v3.Inspector/ObserveInterrupts',
+                request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
+                response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.InterruptReport.FromString,
+                _registered_method=True)
+        self.RaiseInterrupt = channel.unary_unary(
+                '/looper.inspector.v3.Inspector/RaiseInterrupt',
+                request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.InterruptRaise.SerializeToString,
+                response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Ack.FromString,
+                _registered_method=True)
         self.ObserveFunctionMetrics = channel.unary_unary(
                 '/looper.inspector.v3.Inspector/ObserveFunctionMetrics',
                 request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ArchitectureRequest.SerializeToString,
@@ -883,6 +893,27 @@ class InspectorServicer:
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def ObserveInterrupts(self, request, context):
+        """---- Interrupts (CAPABILITY_INTERRUPTS; free) ----
+        An ISR runs at the firmware's interruption points: an adapter call, a
+        wait, the end of a pass. Times are simulated; computing costs none.
+        The sources from contract.toml, with what they did in this life; before
+        the firmware called its first interrupt role every count is 0 and
+        `note` says why.
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def RaiseInterrupt(self, request, context):
+        """Make a source due, now or at a time, as its pin or timer would. A source
+        that is not `is_raisable`, or one before the table is installed, is
+        refused with REFUSAL_NOT_ACCEPTED and a sentence.
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
     def ObserveFunctionMetrics(self, request, context):
         """---- Architecture (CAPABILITY_ARCHITECTURE) ----
         Read from the project's code index, which the server builds in the
@@ -1309,6 +1340,16 @@ def add_InspectorServicer_to_server(servicer, server):
             'BurnOtp': grpc.unary_unary_rpc_method_handler(
                     servicer.BurnOtp,
                     request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.OtpBurn.FromString,
+                    response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Ack.SerializeToString,
+            ),
+            'ObserveInterrupts': grpc.unary_unary_rpc_method_handler(
+                    servicer.ObserveInterrupts,
+                    request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.FromString,
+                    response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.InterruptReport.SerializeToString,
+            ),
+            'RaiseInterrupt': grpc.unary_unary_rpc_method_handler(
+                    servicer.RaiseInterrupt,
+                    request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.InterruptRaise.FromString,
                     response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Ack.SerializeToString,
             ),
             'ObserveFunctionMetrics': grpc.unary_unary_rpc_method_handler(
@@ -3109,6 +3150,60 @@ class Inspector:
             target,
             '/looper.inspector.v3.Inspector/BurnOtp',
             looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.OtpBurn.SerializeToString,
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Ack.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def ObserveInterrupts(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/looper.inspector.v3.Inspector/ObserveInterrupts',
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.InterruptReport.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def RaiseInterrupt(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/looper.inspector.v3.Inspector/RaiseInterrupt',
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.InterruptRaise.SerializeToString,
             looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Ack.FromString,
             options,
             channel_credentials,

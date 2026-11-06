@@ -54,6 +54,7 @@ class Capability(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     CAPABILITY_RESET: _ClassVar[Capability]
     CAPABILITY_FLASH: _ClassVar[Capability]
     CAPABILITY_BOOT: _ClassVar[Capability]
+    CAPABILITY_INTERRUPTS: _ClassVar[Capability]
 
 class ServerMode(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     __slots__ = ()
@@ -80,6 +81,16 @@ class EventKind(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     EVENT_KIND_TRIGGER: _ClassVar[EventKind]
     EVENT_KIND_RESET: _ClassVar[EventKind]
     EVENT_KIND_FLASH: _ClassVar[EventKind]
+    EVENT_KIND_INTERRUPT: _ClassVar[EventKind]
+
+class InterruptEventKind(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+    __slots__ = ()
+    INTERRUPT_EVENT_PENDING: _ClassVar[InterruptEventKind]
+    INTERRUPT_EVENT_ENTERED: _ClassVar[InterruptEventKind]
+    INTERRUPT_EVENT_LEFT: _ClassVar[InterruptEventKind]
+    INTERRUPT_EVENT_LOST: _ClassVar[InterruptEventKind]
+    INTERRUPT_EVENT_LOCKED: _ClassVar[InterruptEventKind]
+    INTERRUPT_EVENT_STORM: _ClassVar[InterruptEventKind]
 
 class FlashMarkKind(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     __slots__ = ()
@@ -297,6 +308,7 @@ CAPABILITY_ARCHITECTURE: Capability
 CAPABILITY_RESET: Capability
 CAPABILITY_FLASH: Capability
 CAPABILITY_BOOT: Capability
+CAPABILITY_INTERRUPTS: Capability
 SERVER_MODE_SIMULATION: ServerMode
 SERVER_MODE_STATIC: ServerMode
 CLOCK_MODE_HELD: ClockMode
@@ -314,6 +326,13 @@ EVENT_KIND_RUN: EventKind
 EVENT_KIND_TRIGGER: EventKind
 EVENT_KIND_RESET: EventKind
 EVENT_KIND_FLASH: EventKind
+EVENT_KIND_INTERRUPT: EventKind
+INTERRUPT_EVENT_PENDING: InterruptEventKind
+INTERRUPT_EVENT_ENTERED: InterruptEventKind
+INTERRUPT_EVENT_LEFT: InterruptEventKind
+INTERRUPT_EVENT_LOST: InterruptEventKind
+INTERRUPT_EVENT_LOCKED: InterruptEventKind
+INTERRUPT_EVENT_STORM: InterruptEventKind
 FLASH_MARK_UNSPECIFIED: FlashMarkKind
 FLASH_MARK_WRITE: FlashMarkKind
 FLASH_MARK_ERASE: FlashMarkKind
@@ -617,20 +636,22 @@ class ReadEventsRequest(_message.Message):
     def __init__(self, epoch: _Optional[int] = ..., from_event_seq: _Optional[int] = ..., max_events: _Optional[int] = ..., filter: _Optional[_Union[EventFilter, _Mapping]] = ..., with_levels: _Optional[bool] = ..., from_us: _Optional[int] = ..., to_us: _Optional[int] = ...) -> None: ...
 
 class EventFilter(_message.Message):
-    __slots__ = ("kinds", "channel_ids", "bus_ids", "sample_stride", "pin_ids", "call_functions")
+    __slots__ = ("kinds", "channel_ids", "bus_ids", "sample_stride", "pin_ids", "call_functions", "interrupt_ids")
     KINDS_FIELD_NUMBER: _ClassVar[int]
     CHANNEL_IDS_FIELD_NUMBER: _ClassVar[int]
     BUS_IDS_FIELD_NUMBER: _ClassVar[int]
     SAMPLE_STRIDE_FIELD_NUMBER: _ClassVar[int]
     PIN_IDS_FIELD_NUMBER: _ClassVar[int]
     CALL_FUNCTIONS_FIELD_NUMBER: _ClassVar[int]
+    INTERRUPT_IDS_FIELD_NUMBER: _ClassVar[int]
     kinds: _containers.RepeatedScalarFieldContainer[EventKind]
     channel_ids: _containers.RepeatedScalarFieldContainer[int]
     bus_ids: _containers.RepeatedScalarFieldContainer[int]
     sample_stride: int
     pin_ids: _containers.RepeatedScalarFieldContainer[int]
     call_functions: _containers.RepeatedScalarFieldContainer[str]
-    def __init__(self, kinds: _Optional[_Iterable[_Union[EventKind, str]]] = ..., channel_ids: _Optional[_Iterable[int]] = ..., bus_ids: _Optional[_Iterable[int]] = ..., sample_stride: _Optional[int] = ..., pin_ids: _Optional[_Iterable[int]] = ..., call_functions: _Optional[_Iterable[str]] = ...) -> None: ...
+    interrupt_ids: _containers.RepeatedScalarFieldContainer[int]
+    def __init__(self, kinds: _Optional[_Iterable[_Union[EventKind, str]]] = ..., channel_ids: _Optional[_Iterable[int]] = ..., bus_ids: _Optional[_Iterable[int]] = ..., sample_stride: _Optional[int] = ..., pin_ids: _Optional[_Iterable[int]] = ..., call_functions: _Optional[_Iterable[str]] = ..., interrupt_ids: _Optional[_Iterable[int]] = ...) -> None: ...
 
 class EventBatch(_message.Message):
     __slots__ = ("epoch", "events", "lost", "next_event_seq", "sim_now_us", "epoch_changed", "levels")
@@ -681,7 +702,7 @@ class ChannelValueSince(_message.Message):
     def __init__(self, channel_id: _Optional[int] = ..., value: _Optional[float] = ..., since_us: _Optional[int] = ...) -> None: ...
 
 class Event(_message.Message):
-    __slots__ = ("event_seq", "sim_us", "sample", "pin", "exchange", "call", "command", "job", "fault", "run", "trigger_fired", "trigger_disarmed", "reset", "life", "flash")
+    __slots__ = ("event_seq", "sim_us", "sample", "pin", "exchange", "call", "command", "job", "fault", "run", "trigger_fired", "trigger_disarmed", "reset", "life", "flash", "interrupt")
     EVENT_SEQ_FIELD_NUMBER: _ClassVar[int]
     SIM_US_FIELD_NUMBER: _ClassVar[int]
     SAMPLE_FIELD_NUMBER: _ClassVar[int]
@@ -697,6 +718,7 @@ class Event(_message.Message):
     RESET_FIELD_NUMBER: _ClassVar[int]
     LIFE_FIELD_NUMBER: _ClassVar[int]
     FLASH_FIELD_NUMBER: _ClassVar[int]
+    INTERRUPT_FIELD_NUMBER: _ClassVar[int]
     event_seq: int
     sim_us: int
     sample: Sample
@@ -712,7 +734,8 @@ class Event(_message.Message):
     reset: ResetMark
     life: LifeMark
     flash: FlashMark
-    def __init__(self, event_seq: _Optional[int] = ..., sim_us: _Optional[int] = ..., sample: _Optional[_Union[Sample, _Mapping]] = ..., pin: _Optional[_Union[PinChange, _Mapping]] = ..., exchange: _Optional[_Union[Exchange, _Mapping]] = ..., call: _Optional[_Union[Call, _Mapping]] = ..., command: _Optional[_Union[CommandApplied, _Mapping]] = ..., job: _Optional[_Union[JobEvent, _Mapping]] = ..., fault: _Optional[_Union[Fault, _Mapping]] = ..., run: _Optional[_Union[RunEvent, _Mapping]] = ..., trigger_fired: _Optional[_Union[TriggerFired, _Mapping]] = ..., trigger_disarmed: _Optional[_Union[TriggerDisarmed, _Mapping]] = ..., reset: _Optional[_Union[ResetMark, _Mapping]] = ..., life: _Optional[_Union[LifeMark, _Mapping]] = ..., flash: _Optional[_Union[FlashMark, _Mapping]] = ...) -> None: ...
+    interrupt: InterruptEvent
+    def __init__(self, event_seq: _Optional[int] = ..., sim_us: _Optional[int] = ..., sample: _Optional[_Union[Sample, _Mapping]] = ..., pin: _Optional[_Union[PinChange, _Mapping]] = ..., exchange: _Optional[_Union[Exchange, _Mapping]] = ..., call: _Optional[_Union[Call, _Mapping]] = ..., command: _Optional[_Union[CommandApplied, _Mapping]] = ..., job: _Optional[_Union[JobEvent, _Mapping]] = ..., fault: _Optional[_Union[Fault, _Mapping]] = ..., run: _Optional[_Union[RunEvent, _Mapping]] = ..., trigger_fired: _Optional[_Union[TriggerFired, _Mapping]] = ..., trigger_disarmed: _Optional[_Union[TriggerDisarmed, _Mapping]] = ..., reset: _Optional[_Union[ResetMark, _Mapping]] = ..., life: _Optional[_Union[LifeMark, _Mapping]] = ..., flash: _Optional[_Union[FlashMark, _Mapping]] = ..., interrupt: _Optional[_Union[InterruptEvent, _Mapping]] = ...) -> None: ...
 
 class ResetMark(_message.Message):
     __slots__ = ("cause", "cause_text", "life", "reason", "jump_target", "text")
@@ -757,6 +780,32 @@ class FlashMark(_message.Message):
     partition: str
     source: ChangeSource
     def __init__(self, kind: _Optional[_Union[FlashMarkKind, str]] = ..., offset: _Optional[int] = ..., length: _Optional[int] = ..., partition: _Optional[str] = ..., source: _Optional[_Union[ChangeSource, str]] = ...) -> None: ...
+
+class InterruptEvent(_message.Message):
+    __slots__ = ("source_id", "kind", "latency_us", "duration_us", "host_ns", "lost", "cause", "point", "line", "by_race", "place")
+    SOURCE_ID_FIELD_NUMBER: _ClassVar[int]
+    KIND_FIELD_NUMBER: _ClassVar[int]
+    LATENCY_US_FIELD_NUMBER: _ClassVar[int]
+    DURATION_US_FIELD_NUMBER: _ClassVar[int]
+    HOST_NS_FIELD_NUMBER: _ClassVar[int]
+    LOST_FIELD_NUMBER: _ClassVar[int]
+    CAUSE_FIELD_NUMBER: _ClassVar[int]
+    POINT_FIELD_NUMBER: _ClassVar[int]
+    LINE_FIELD_NUMBER: _ClassVar[int]
+    BY_RACE_FIELD_NUMBER: _ClassVar[int]
+    PLACE_FIELD_NUMBER: _ClassVar[int]
+    source_id: int
+    kind: InterruptEventKind
+    latency_us: int
+    duration_us: int
+    host_ns: int
+    lost: int
+    cause: Source
+    point: int
+    line: int
+    by_race: bool
+    place: CodePlace
+    def __init__(self, source_id: _Optional[int] = ..., kind: _Optional[_Union[InterruptEventKind, str]] = ..., latency_us: _Optional[int] = ..., duration_us: _Optional[int] = ..., host_ns: _Optional[int] = ..., lost: _Optional[int] = ..., cause: _Optional[_Union[Source, str]] = ..., point: _Optional[int] = ..., line: _Optional[int] = ..., by_race: _Optional[bool] = ..., place: _Optional[_Union[CodePlace, _Mapping]] = ...) -> None: ...
 
 class Lost(_message.Message):
     __slots__ = ("from_event_seq", "to_event_seq", "from_us", "to_us", "reason")
@@ -3866,3 +3915,101 @@ class RecordedSequence(_message.Message):
     banner_text: str
     message_count: int
     def __init__(self, recording: _Optional[bool] = ..., recorded: _Optional[_Iterable[str]] = ..., choices: _Optional[_Iterable[_Union[SequenceLifeline, _Mapping]]] = ..., lifelines: _Optional[_Iterable[_Union[SequenceLifeline, _Mapping]]] = ..., passes: _Optional[_Iterable[_Union[SequencePass, _Mapping]]] = ..., from_us: _Optional[int] = ..., to_us: _Optional[int] = ..., range_text: _Optional[str] = ..., recording_text: _Optional[str] = ..., state_text: _Optional[str] = ..., banner_text: _Optional[str] = ..., message_count: _Optional[int] = ...) -> None: ...
+
+class InterruptRaise(_message.Message):
+    __slots__ = ("source_id", "when")
+    SOURCE_ID_FIELD_NUMBER: _ClassVar[int]
+    WHEN_FIELD_NUMBER: _ClassVar[int]
+    source_id: int
+    when: When
+    def __init__(self, source_id: _Optional[int] = ..., when: _Optional[_Union[When, _Mapping]] = ...) -> None: ...
+
+class InterruptSourceView(_message.Message):
+    __slots__ = ("source_id", "name", "kind_text", "line", "priority", "enabled", "pending", "handler", "raised", "handled", "lost", "latency_max_us", "latency_text", "duration_max_us", "duration_text", "host_text", "period_us", "is_raisable", "raised_by_race", "state_text", "latency_mean_us", "duration_mean_us")
+    SOURCE_ID_FIELD_NUMBER: _ClassVar[int]
+    NAME_FIELD_NUMBER: _ClassVar[int]
+    KIND_TEXT_FIELD_NUMBER: _ClassVar[int]
+    LINE_FIELD_NUMBER: _ClassVar[int]
+    PRIORITY_FIELD_NUMBER: _ClassVar[int]
+    ENABLED_FIELD_NUMBER: _ClassVar[int]
+    PENDING_FIELD_NUMBER: _ClassVar[int]
+    HANDLER_FIELD_NUMBER: _ClassVar[int]
+    RAISED_FIELD_NUMBER: _ClassVar[int]
+    HANDLED_FIELD_NUMBER: _ClassVar[int]
+    LOST_FIELD_NUMBER: _ClassVar[int]
+    LATENCY_MAX_US_FIELD_NUMBER: _ClassVar[int]
+    LATENCY_TEXT_FIELD_NUMBER: _ClassVar[int]
+    DURATION_MAX_US_FIELD_NUMBER: _ClassVar[int]
+    DURATION_TEXT_FIELD_NUMBER: _ClassVar[int]
+    HOST_TEXT_FIELD_NUMBER: _ClassVar[int]
+    PERIOD_US_FIELD_NUMBER: _ClassVar[int]
+    IS_RAISABLE_FIELD_NUMBER: _ClassVar[int]
+    RAISED_BY_RACE_FIELD_NUMBER: _ClassVar[int]
+    STATE_TEXT_FIELD_NUMBER: _ClassVar[int]
+    LATENCY_MEAN_US_FIELD_NUMBER: _ClassVar[int]
+    DURATION_MEAN_US_FIELD_NUMBER: _ClassVar[int]
+    source_id: int
+    name: str
+    kind_text: str
+    line: int
+    priority: int
+    enabled: bool
+    pending: bool
+    handler: str
+    raised: int
+    handled: int
+    lost: int
+    latency_max_us: int
+    latency_text: str
+    duration_max_us: int
+    duration_text: str
+    host_text: str
+    period_us: int
+    is_raisable: bool
+    raised_by_race: int
+    state_text: str
+    latency_mean_us: int
+    duration_mean_us: int
+    def __init__(self, source_id: _Optional[int] = ..., name: _Optional[str] = ..., kind_text: _Optional[str] = ..., line: _Optional[int] = ..., priority: _Optional[int] = ..., enabled: _Optional[bool] = ..., pending: _Optional[bool] = ..., handler: _Optional[str] = ..., raised: _Optional[int] = ..., handled: _Optional[int] = ..., lost: _Optional[int] = ..., latency_max_us: _Optional[int] = ..., latency_text: _Optional[str] = ..., duration_max_us: _Optional[int] = ..., duration_text: _Optional[str] = ..., host_text: _Optional[str] = ..., period_us: _Optional[int] = ..., is_raisable: _Optional[bool] = ..., raised_by_race: _Optional[int] = ..., state_text: _Optional[str] = ..., latency_mean_us: _Optional[int] = ..., duration_mean_us: _Optional[int] = ...) -> None: ...
+
+class InterruptLockView(_message.Message):
+    __slots__ = ("disabled_now", "sections", "longest_us", "longest_text", "longest_at_us", "longest_place", "total_us", "share_text", "limit_us", "limit_text", "state_text", "held_back")
+    DISABLED_NOW_FIELD_NUMBER: _ClassVar[int]
+    SECTIONS_FIELD_NUMBER: _ClassVar[int]
+    LONGEST_US_FIELD_NUMBER: _ClassVar[int]
+    LONGEST_TEXT_FIELD_NUMBER: _ClassVar[int]
+    LONGEST_AT_US_FIELD_NUMBER: _ClassVar[int]
+    LONGEST_PLACE_FIELD_NUMBER: _ClassVar[int]
+    TOTAL_US_FIELD_NUMBER: _ClassVar[int]
+    SHARE_TEXT_FIELD_NUMBER: _ClassVar[int]
+    LIMIT_US_FIELD_NUMBER: _ClassVar[int]
+    LIMIT_TEXT_FIELD_NUMBER: _ClassVar[int]
+    STATE_TEXT_FIELD_NUMBER: _ClassVar[int]
+    HELD_BACK_FIELD_NUMBER: _ClassVar[int]
+    disabled_now: bool
+    sections: int
+    longest_us: int
+    longest_text: str
+    longest_at_us: int
+    longest_place: CodePlace
+    total_us: int
+    share_text: str
+    limit_us: int
+    limit_text: str
+    state_text: str
+    held_back: int
+    def __init__(self, disabled_now: _Optional[bool] = ..., sections: _Optional[int] = ..., longest_us: _Optional[int] = ..., longest_text: _Optional[str] = ..., longest_at_us: _Optional[int] = ..., longest_place: _Optional[_Union[CodePlace, _Mapping]] = ..., total_us: _Optional[int] = ..., share_text: _Optional[str] = ..., limit_us: _Optional[int] = ..., limit_text: _Optional[str] = ..., state_text: _Optional[str] = ..., held_back: _Optional[int] = ...) -> None: ...
+
+class InterruptReport(_message.Message):
+    __slots__ = ("sources", "lock", "points_text", "note", "installed")
+    SOURCES_FIELD_NUMBER: _ClassVar[int]
+    LOCK_FIELD_NUMBER: _ClassVar[int]
+    POINTS_TEXT_FIELD_NUMBER: _ClassVar[int]
+    NOTE_FIELD_NUMBER: _ClassVar[int]
+    INSTALLED_FIELD_NUMBER: _ClassVar[int]
+    sources: _containers.RepeatedCompositeFieldContainer[InterruptSourceView]
+    lock: InterruptLockView
+    points_text: str
+    note: str
+    installed: bool
+    def __init__(self, sources: _Optional[_Iterable[_Union[InterruptSourceView, _Mapping]]] = ..., lock: _Optional[_Union[InterruptLockView, _Mapping]] = ..., points_text: _Optional[str] = ..., note: _Optional[str] = ..., installed: _Optional[bool] = ...) -> None: ...
