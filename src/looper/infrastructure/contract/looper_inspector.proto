@@ -972,7 +972,7 @@ message RetainedView {
   uint32 size = 1;                 // 0: the simulation has none
   bytes content = 2;
   bool battery = 3;
-  string note = 4;                 // "survives resets, lost on power cut", or how to have one
+  string note = 4;                 // "survives resets, lost when the power goes (power-on, brown-out)", or how to have one
 }
 
 message RetainedWrite { uint32 offset = 1; bytes data = 2; When when = 3; }
