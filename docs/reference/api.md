@@ -139,13 +139,14 @@ findings](../guides/profile-and-findings.md) explains how they are used.
 
 ## Signal graphs
 
-`simulation.apply_signal_graph(graph)` drives analog inputs from a graph;
+`simulation.apply_signal_graph(graph)` drives analog inputs from a graph and
+`simulation.set_graph_value(node, value)` changes a value node of it;
 `simulation.models()` and `simulation.model(name)` say which models the project
 offers. See [Setting the scene](../guides/scene.md#a-graph-of-signals).
 
 ```{eval-rst}
 .. autoclass:: looper.SignalGraph
-   :members: generator, channel, pin, watch, operation, model, drive, probe
+   :members: generator, channel, pin, watch, value, operation, model, drive, probe
 
 .. autoclass:: looper.SignalNodeKind
    :members:

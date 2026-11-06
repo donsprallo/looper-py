@@ -183,7 +183,8 @@ def test_the_room_closes_the_loop(simulation):
 | `pin(key, pin_id)` | a node that reads a pin as 0 or 1 |
 | `watch(key, channel_id)` | a node that reads a watched variable, by its watch channel |
 | `operation(key, kind, first, second)` | `looper.SignalNodeKind.ADD`, `SUBTRACT`, `MULTIPLY` or `DIVIDE` of two other nodes |
-| `model(key, name, inputs, parameters=None)` | a model the simulation steps; `inputs` in the order the model declares them, `parameters` by name |
+| `value(key, value)` | a node that gives a number a test sets later with `simulation.set_graph_value`; to an input or to a model's parameter |
+| `model(key, name, inputs, parameters=None, parameter_sources=None)` | a model the simulation steps; `inputs` in the order the model declares them, `parameters` by name, `parameter_sources` the parameters a value node gives, by name |
 | `drive(channel_id, node, output=0)` | the analog **input** that reads one output of a node |
 | `probe(name, node, output=0)` | records an output as a trace of its own, without driving anything |
 
@@ -202,7 +203,8 @@ not an input.
 
 `simulation.models()` lists the models the project offers, read afresh from its
 files, and `simulation.model("Room")` gets one by name -- with its `inputs`,
-`outputs`, `parameters` (each with a `default_value` and a `unit`), its `kind`
+`outputs`, `parameters` (each with a `default_value`, a `unit` and, where the model
+declares them, `lowest` and `highest`), its `kind`
 (`linear` or `state`), its `origin` (`project` or `built_in`) and, when it cannot
 be used, a `problem`. `model.output("temperature")` is the position of an output,
 for `drive(..., output=...)`:
@@ -217,6 +219,46 @@ room.output("temperature")           # 0
 How to write a model is described in {core}`Models of your own
 <signals.html#models-of-your-own>`; the window builds the same graph in its
 {rs}`signal editor <gui/signals.html>`.
+
+(a-value-that-moves-a-parameter)=
+### A value that moves a parameter
+
+A parameter is a constant the model is made with, so a graph that wants to
+change one while the simulation runs gives it a **value node**: a number the
+test sets, wired to the parameter by name.
+
+```python
+def test_a_warmer_room_needs_more_cooling(simulation):
+    graph = (
+        looper.SignalGraph()
+        .generator("heat", looper.Signal(offset=40.0))
+        .channel("duty", simulation.channel("FAN_DUTY").channel_id)
+        .value("ambient", 20.0)                                 # what the room's surroundings are
+        .model("room", "Room", inputs=("heat", "duty"),
+               parameter_sources={"ambient": "ambient"})        # parameter "ambient" <- node "ambient"
+        .drive(simulation.channel("TEMP_SENSOR").channel_id, "room")
+    )
+    simulation.apply_signal_graph(graph)
+    simulation.advance(90.0)
+
+    simulation.set_graph_value("ambient", 30.0)                 # no graph sent again
+    simulation.advance(90.0)
+```
+
+`simulation.set_graph_value(node, value)` changes the number without applying
+the graph again. The model it feeds is made again with the value and **keeps its
+state**, so a motor does not stop and a filter does not jump. It raises
+`SimulationRefusedError` if the applied graph has no value node of that key, or
+if the value lies outside the `lowest` and `highest` the model declares for a
+parameter it feeds; the graph then runs on as it was. Only a value node can be
+set; a constant generator that feeds a parameter is read when the graph is
+applied. `parameter_sources` overrides the same name in `parameters`.
+
+The window does the same when a slider on a {rs}`panel <gui/panel.html#a-panel-value>`
+moves a panel value; see {rs}`Panel values <gui/signals.html#panel-values>`. Setting the value
+replaces the graph in the runtime, so a loop that sets one many times a second
+costs more than a test needs: set it when the test needs it, and let the
+simulation run in between.
 
 ## Bus messages
 
