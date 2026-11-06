@@ -6,7 +6,7 @@ The memories are byte arrays a test reads and writes; lives are a script.
 from __future__ import annotations
 
 from looper.application.ports import SimulationRefusedError
-from looper.domain.model import Life, LifeDump, Lives
+from looper.domain.model import Image, Life, LifeDump, Lives, PartitionHeader
 
 FLASH_SIZE = 4096
 
@@ -23,6 +23,9 @@ class ScriptedLives:
         self.partitions: dict[str, tuple[int, int]] = {"config": (1024, 1024)}
         self.flash_writes: list[tuple[int, bytes, bool]] = []
         self.erased: list[tuple[str, int | None]] = []
+        self.images: tuple[Image, ...] = ()
+        self.headers: dict[str, PartitionHeader] = {}
+        self.images_written: list[tuple[str, str]] = []
 
     def reset_firmware(self, cause: str) -> None:
         if cause not in ("pin", "power-on", "brown-out", "software", "watchdog"):
@@ -63,3 +66,15 @@ class ScriptedLives:
 
     def load_flash(self, content: bytes) -> None:
         self.flash[:] = content
+
+    def read_images(self) -> tuple[Image, ...]:
+        return self.images
+
+    def read_headers(self) -> dict[str, PartitionHeader]:
+        return self.headers
+
+    def write_image(self, partition: str, image: str) -> None:
+        self.images_written.append((partition, image))
+
+    def write_image_file(self, partition: str, path: str) -> None:
+        self.images_written.append((partition, path))

@@ -26,6 +26,9 @@ class Life:
         cause: The cause of the reset that ended it; empty while it runs.
         text: The line the server shows for it.
         has_dump: Whether what it left behind can be read.
+        image: The image it ran, ``app@2.1``, with several images (Pro).
+        partition: The partition that image was started from.
+        entered_by: ``reset``, ``jump`` or ``power-on``.
     """
 
     number: int
@@ -34,6 +37,9 @@ class Life:
     cause: str = ""
     text: str = ""
     has_dump: bool = False
+    image: str = ""
+    partition: str = ""
+    entered_by: str = ""
 
     @property
     def is_running(self) -> bool:

@@ -17,6 +17,14 @@ CAUSES = {
 }
 
 
+#: How a life began, in the server's words.
+ENTERED_BY = {
+    contract.ENTERED_BY_RESET: "reset",
+    contract.ENTERED_BY_JUMP: "jump",
+    contract.ENTERED_BY_POWER_ON: "power-on",
+}
+
+
 def life_of(view: contract.LifeView) -> Life:
     """One life."""
     cause = contract.ResetCause.Name(view.cause) if view.cause else ""
@@ -27,6 +35,9 @@ def life_of(view: contract.LifeView) -> Life:
         cause=cause.removeprefix("RESET_CAUSE_").lower().replace("_", "-"),
         text=view.text,
         has_dump=view.has_dump,
+        image=view.image,
+        partition=view.partition,
+        entered_by=ENTERED_BY.get(view.entered_by, ""),
     )
 
 

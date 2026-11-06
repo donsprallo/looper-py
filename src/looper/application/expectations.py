@@ -61,6 +61,7 @@ class Expectations:
         self._inspector = inspector
         self._checks: list[Check] = []
         self._reads_profile = False
+        self._reads_headers = False
 
     def add(self, check: Check) -> Expectations:
         """Take one more expectation, and allow another to be chained."""
@@ -103,6 +104,10 @@ class Expectations:
     def flash(self) -> FlashExpectation:
         """Expect something of the flash."""
         return FlashExpectation(self)
+
+    def reads_headers(self) -> None:
+        """Have the window read the partitions' headers at its end, which only some checks need."""
+        self._reads_headers = True
 
     def firmware_is_alive(self) -> Expectations:
         """Expect the firmware to still be reaching the adapter at all."""
@@ -168,6 +173,7 @@ class Expectations:
             resets=events.resets,
             flash_marks=events.flash_marks,
             loop_finding=self._inspector.read_lives().loop_finding,
+            headers=self._inspector.read_headers() if self._reads_headers else {},
         )
 
     def _profile(self) -> Profile:

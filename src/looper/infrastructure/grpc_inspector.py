@@ -55,6 +55,7 @@ from looper.infrastructure import (
 )
 from looper.infrastructure.contract import looper_inspector_pb2 as contract
 from looper.infrastructure.contract import looper_inspector_pb2_grpc as service
+from looper.infrastructure.grpc_boot import GrpcBootCalls
 
 #: How long reaching a server may take before it counts as absent.
 CONNECT_TIMEOUT_SECONDS = 5.0
@@ -81,7 +82,7 @@ EVENT_KINDS = [
 ]
 
 
-class GrpcInspector(Inspector):
+class GrpcInspector(GrpcBootCalls, Inspector):
     """The inspector contract, spoken to a server at one address."""
 
     def __init__(self, address: str, timeout_seconds: float = CONNECT_TIMEOUT_SECONDS) -> None:
@@ -320,6 +321,11 @@ class GrpcInspector(Inspector):
     def close(self) -> None:
         """Let go of the connection. Closing twice is allowed."""
         self._channel.close()
+
+    @staticmethod
+    def _taken(ack: contract.Ack) -> None:
+        """Pass a change the server took; refuse one it declined."""
+        _acknowledged(ack)
 
     @staticmethod
     def _call(method: Callable[[Any], Any], request: Any) -> Any:

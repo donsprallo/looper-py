@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from looper.domain.checks.boot_checks import PartitionHolds
 from looper.domain.checks.bus_checks import (
     BusCarriedAtLeast,
     BusNothingRefused,
@@ -45,6 +46,7 @@ __all__ = [
     "NeverAllocates",
     "NoFlashViolation",
     "NoResetLoop",
+    "PartitionHolds",
     "ResetHappened",
     "NothingLeaked",
     "StackNoDeeperThan",

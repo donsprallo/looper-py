@@ -34,6 +34,7 @@ class ProFeature(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     __slots__ = ()
     PRO_FEATURE_UNSPECIFIED: _ClassVar[ProFeature]
     PRO_FEATURE_ARCHITECTURE: _ClassVar[ProFeature]
+    PRO_FEATURE_BOOTLOADER: _ClassVar[ProFeature]
 
 class Capability(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     __slots__ = ()
@@ -52,6 +53,7 @@ class Capability(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     CAPABILITY_ARCHITECTURE: _ClassVar[Capability]
     CAPABILITY_RESET: _ClassVar[Capability]
     CAPABILITY_FLASH: _ClassVar[Capability]
+    CAPABILITY_BOOT: _ClassVar[Capability]
 
 class ServerMode(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     __slots__ = ()
@@ -174,6 +176,12 @@ class HeaderState(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     HEADER_STATE_BROKEN: _ClassVar[HeaderState]
     HEADER_STATE_UNKNOWN_IMAGE: _ClassVar[HeaderState]
 
+class FlashActivity(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+    __slots__ = ()
+    FLASH_ACTIVITY_ANY: _ClassVar[FlashActivity]
+    FLASH_ACTIVITY_WRITE: _ClassVar[FlashActivity]
+    FLASH_ACTIVITY_ERASE: _ClassVar[FlashActivity]
+
 class SourceState(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     __slots__ = ()
     SOURCE_STATE_AS_BUILT: _ClassVar[SourceState]
@@ -272,6 +280,7 @@ EDITION_FREE: Edition
 EDITION_PRO: Edition
 PRO_FEATURE_UNSPECIFIED: ProFeature
 PRO_FEATURE_ARCHITECTURE: ProFeature
+PRO_FEATURE_BOOTLOADER: ProFeature
 CAPABILITY_UNSPECIFIED: Capability
 CAPABILITY_PACED: Capability
 CAPABILITY_JOBS: Capability
@@ -287,6 +296,7 @@ CAPABILITY_TRIGGERS: Capability
 CAPABILITY_ARCHITECTURE: Capability
 CAPABILITY_RESET: Capability
 CAPABILITY_FLASH: Capability
+CAPABILITY_BOOT: Capability
 SERVER_MODE_SIMULATION: ServerMode
 SERVER_MODE_STATIC: ServerMode
 CLOCK_MODE_HELD: ClockMode
@@ -360,6 +370,9 @@ HEADER_STATE_EMPTY: HeaderState
 HEADER_STATE_VALID: HeaderState
 HEADER_STATE_BROKEN: HeaderState
 HEADER_STATE_UNKNOWN_IMAGE: HeaderState
+FLASH_ACTIVITY_ANY: FlashActivity
+FLASH_ACTIVITY_WRITE: FlashActivity
+FLASH_ACTIVITY_ERASE: FlashActivity
 SOURCE_STATE_AS_BUILT: SourceState
 SOURCE_STATE_CHANGED: SourceState
 SOURCE_STATE_MISSING: SourceState
@@ -512,7 +525,7 @@ class RunReply(_message.Message):
     def __init__(self, ack: _Optional[_Union[Ack, _Mapping]] = ..., state: _Optional[_Union[RunState, _Mapping]] = ...) -> None: ...
 
 class RunState(_message.Message):
-    __slots__ = ("now_us", "mode", "pace_ratio", "behind_us", "slipped_us", "epoch", "next_event_seq", "pass_cost_us", "target_us", "queued_commands", "hold_reason", "life", "resets", "life_text", "watchdog", "reset_loop_text")
+    __slots__ = ("now_us", "mode", "pace_ratio", "behind_us", "slipped_us", "epoch", "next_event_seq", "pass_cost_us", "target_us", "queued_commands", "hold_reason", "life", "resets", "life_text", "watchdog", "reset_loop_text", "power_cut_text")
     NOW_US_FIELD_NUMBER: _ClassVar[int]
     MODE_FIELD_NUMBER: _ClassVar[int]
     PACE_RATIO_FIELD_NUMBER: _ClassVar[int]
@@ -529,6 +542,7 @@ class RunState(_message.Message):
     LIFE_TEXT_FIELD_NUMBER: _ClassVar[int]
     WATCHDOG_FIELD_NUMBER: _ClassVar[int]
     RESET_LOOP_TEXT_FIELD_NUMBER: _ClassVar[int]
+    POWER_CUT_TEXT_FIELD_NUMBER: _ClassVar[int]
     now_us: int
     mode: ClockMode
     pace_ratio: float
@@ -545,7 +559,8 @@ class RunState(_message.Message):
     life_text: str
     watchdog: WatchdogState
     reset_loop_text: str
-    def __init__(self, now_us: _Optional[int] = ..., mode: _Optional[_Union[ClockMode, str]] = ..., pace_ratio: _Optional[float] = ..., behind_us: _Optional[int] = ..., slipped_us: _Optional[int] = ..., epoch: _Optional[int] = ..., next_event_seq: _Optional[int] = ..., pass_cost_us: _Optional[int] = ..., target_us: _Optional[int] = ..., queued_commands: _Optional[int] = ..., hold_reason: _Optional[str] = ..., life: _Optional[int] = ..., resets: _Optional[int] = ..., life_text: _Optional[str] = ..., watchdog: _Optional[_Union[WatchdogState, _Mapping]] = ..., reset_loop_text: _Optional[str] = ...) -> None: ...
+    power_cut_text: str
+    def __init__(self, now_us: _Optional[int] = ..., mode: _Optional[_Union[ClockMode, str]] = ..., pace_ratio: _Optional[float] = ..., behind_us: _Optional[int] = ..., slipped_us: _Optional[int] = ..., epoch: _Optional[int] = ..., next_event_seq: _Optional[int] = ..., pass_cost_us: _Optional[int] = ..., target_us: _Optional[int] = ..., queued_commands: _Optional[int] = ..., hold_reason: _Optional[str] = ..., life: _Optional[int] = ..., resets: _Optional[int] = ..., life_text: _Optional[str] = ..., watchdog: _Optional[_Union[WatchdogState, _Mapping]] = ..., reset_loop_text: _Optional[str] = ..., power_cut_text: _Optional[str] = ...) -> None: ...
 
 class WatchdogState(_message.Message):
     __slots__ = ("running", "timeout_us", "last_kick_us", "deadline_us", "remaining_us", "kicks", "is_close", "remaining_text", "last_kick_text", "text")
@@ -1530,6 +1545,110 @@ class FlashContent(_message.Message):
     CONTENT_FIELD_NUMBER: _ClassVar[int]
     content: bytes
     def __init__(self, content: _Optional[bytes] = ...) -> None: ...
+
+class ImageView(_message.Message):
+    __slots__ = ("name", "variant", "identity_hex", "version_text", "payload_size", "built", "text", "ref", "origin_text")
+    NAME_FIELD_NUMBER: _ClassVar[int]
+    VARIANT_FIELD_NUMBER: _ClassVar[int]
+    IDENTITY_HEX_FIELD_NUMBER: _ClassVar[int]
+    VERSION_TEXT_FIELD_NUMBER: _ClassVar[int]
+    PAYLOAD_SIZE_FIELD_NUMBER: _ClassVar[int]
+    BUILT_FIELD_NUMBER: _ClassVar[int]
+    TEXT_FIELD_NUMBER: _ClassVar[int]
+    REF_FIELD_NUMBER: _ClassVar[int]
+    ORIGIN_TEXT_FIELD_NUMBER: _ClassVar[int]
+    name: str
+    variant: str
+    identity_hex: str
+    version_text: str
+    payload_size: int
+    built: bool
+    text: str
+    ref: str
+    origin_text: str
+    def __init__(self, name: _Optional[str] = ..., variant: _Optional[str] = ..., identity_hex: _Optional[str] = ..., version_text: _Optional[str] = ..., payload_size: _Optional[int] = ..., built: _Optional[bool] = ..., text: _Optional[str] = ..., ref: _Optional[str] = ..., origin_text: _Optional[str] = ...) -> None: ...
+
+class ImageList(_message.Message):
+    __slots__ = ("images", "note")
+    IMAGES_FIELD_NUMBER: _ClassVar[int]
+    NOTE_FIELD_NUMBER: _ClassVar[int]
+    images: _containers.RepeatedCompositeFieldContainer[ImageView]
+    note: str
+    def __init__(self, images: _Optional[_Iterable[_Union[ImageView, _Mapping]]] = ..., note: _Optional[str] = ...) -> None: ...
+
+class PowerCutRequest(_message.Message):
+    __slots__ = ("after_bytes", "at", "during", "off_for_us", "seed", "disarm")
+    AFTER_BYTES_FIELD_NUMBER: _ClassVar[int]
+    AT_FIELD_NUMBER: _ClassVar[int]
+    DURING_FIELD_NUMBER: _ClassVar[int]
+    OFF_FOR_US_FIELD_NUMBER: _ClassVar[int]
+    SEED_FIELD_NUMBER: _ClassVar[int]
+    DISARM_FIELD_NUMBER: _ClassVar[int]
+    after_bytes: int
+    at: When
+    during: FlashActivity
+    off_for_us: int
+    seed: int
+    disarm: bool
+    def __init__(self, after_bytes: _Optional[int] = ..., at: _Optional[_Union[When, _Mapping]] = ..., during: _Optional[_Union[FlashActivity, str]] = ..., off_for_us: _Optional[int] = ..., seed: _Optional[int] = ..., disarm: _Optional[bool] = ...) -> None: ...
+
+class BootStep(_message.Message):
+    __slots__ = ("life", "image", "partition", "entered_by", "at_us", "ended_by", "text")
+    LIFE_FIELD_NUMBER: _ClassVar[int]
+    IMAGE_FIELD_NUMBER: _ClassVar[int]
+    PARTITION_FIELD_NUMBER: _ClassVar[int]
+    ENTERED_BY_FIELD_NUMBER: _ClassVar[int]
+    AT_US_FIELD_NUMBER: _ClassVar[int]
+    ENDED_BY_FIELD_NUMBER: _ClassVar[int]
+    TEXT_FIELD_NUMBER: _ClassVar[int]
+    life: int
+    image: str
+    partition: str
+    entered_by: EnteredBy
+    at_us: int
+    ended_by: LifeEndReason
+    text: str
+    def __init__(self, life: _Optional[int] = ..., image: _Optional[str] = ..., partition: _Optional[str] = ..., entered_by: _Optional[_Union[EnteredBy, str]] = ..., at_us: _Optional[int] = ..., ended_by: _Optional[_Union[LifeEndReason, str]] = ..., text: _Optional[str] = ...) -> None: ...
+
+class BootChain(_message.Message):
+    __slots__ = ("steps", "started_by", "text", "went")
+    STEPS_FIELD_NUMBER: _ClassVar[int]
+    STARTED_BY_FIELD_NUMBER: _ClassVar[int]
+    TEXT_FIELD_NUMBER: _ClassVar[int]
+    WENT_FIELD_NUMBER: _ClassVar[int]
+    steps: _containers.RepeatedCompositeFieldContainer[BootStep]
+    started_by: ResetCause
+    text: str
+    went: str
+    def __init__(self, steps: _Optional[_Iterable[_Union[BootStep, _Mapping]]] = ..., started_by: _Optional[_Union[ResetCause, str]] = ..., text: _Optional[str] = ..., went: _Optional[str] = ...) -> None: ...
+
+class BootChainView(_message.Message):
+    __slots__ = ("chains", "note")
+    CHAINS_FIELD_NUMBER: _ClassVar[int]
+    NOTE_FIELD_NUMBER: _ClassVar[int]
+    chains: _containers.RepeatedCompositeFieldContainer[BootChain]
+    note: str
+    def __init__(self, chains: _Optional[_Iterable[_Union[BootChain, _Mapping]]] = ..., note: _Optional[str] = ...) -> None: ...
+
+class OtpView(_message.Message):
+    __slots__ = ("size", "content", "note")
+    SIZE_FIELD_NUMBER: _ClassVar[int]
+    CONTENT_FIELD_NUMBER: _ClassVar[int]
+    NOTE_FIELD_NUMBER: _ClassVar[int]
+    size: int
+    content: bytes
+    note: str
+    def __init__(self, size: _Optional[int] = ..., content: _Optional[bytes] = ..., note: _Optional[str] = ...) -> None: ...
+
+class OtpBurn(_message.Message):
+    __slots__ = ("offset", "data", "when")
+    OFFSET_FIELD_NUMBER: _ClassVar[int]
+    DATA_FIELD_NUMBER: _ClassVar[int]
+    WHEN_FIELD_NUMBER: _ClassVar[int]
+    offset: int
+    data: bytes
+    when: When
+    def __init__(self, offset: _Optional[int] = ..., data: _Optional[bytes] = ..., when: _Optional[_Union[When, _Mapping]] = ...) -> None: ...
 
 class LifeDumpView(_message.Message):
     __slots__ = ("life", "memory", "profile", "note")

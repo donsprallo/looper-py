@@ -16,6 +16,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 
+from looper.application.boot_port import BootInspector
 from looper.application.life_port import LifeInspector
 from looper.domain.model import (
     Bus,
@@ -60,7 +61,7 @@ class ContractNotServedError(SimulationUnreachableError):
     """The server answers, but does not offer the inspector contract this library speaks."""
 
 
-class Inspector(LifeInspector, ABC):
+class Inspector(LifeInspector, BootInspector, ABC):
     """Everything this library asks of a running simulation."""
 
     @abstractmethod

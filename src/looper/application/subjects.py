@@ -29,6 +29,7 @@ from looper.domain.checks import (
     NoFlashViolation,
     NoResetLoop,
     NothingLeaked,
+    PartitionHolds,
     ResetHappened,
     StackNoDeeperThan,
     StackStaysBelow,
@@ -218,3 +219,31 @@ class FlashExpectation:
     def no_violation(self) -> Expectations:
         """Expect every write in the window to keep the flash's rules."""
         return self._expectations.add(NoFlashViolation())
+
+    def partition(self, name: str) -> PartitionExpectation:
+        """Expect something of what a partition holds at the window's end (Pro)."""
+        return PartitionExpectation(self._expectations, name)
+
+
+class PartitionExpectation:
+    """What is expected of one partition's header, as the server reads it (Pro)."""
+
+    def __init__(self, expectations: Expectations, name: str) -> None:
+        self._expectations = expectations
+        self._name = name
+
+    def is_valid(self, image: str = "") -> Expectations:
+        """Expect a whole image of a built variant; of this one when it is named."""
+        return self._add(PartitionHolds(self._name, ("valid",), image))
+
+    def is_invalid(self) -> Expectations:
+        """Expect no image a bootloader would start: broken, unknown or erased."""
+        return self._add(PartitionHolds(self._name, ("broken", "unknown image", "empty")))
+
+    def is_empty(self) -> Expectations:
+        """Expect the partition erased."""
+        return self._add(PartitionHolds(self._name, ("empty",)))
+
+    def _add(self, check: PartitionHolds) -> Expectations:
+        self._expectations.reads_headers()
+        return self._expectations.add(check)

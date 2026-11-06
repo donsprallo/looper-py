@@ -65,3 +65,20 @@ def test_a_saved_flash_is_loaded_back_from_a_file(tmp_path: Path) -> None:
     flash.load_file(saved)
 
     assert inspector.flash[0] == 0xFF
+
+
+def test_a_built_image_is_written_into_a_partition_by_its_name() -> None:
+    inspector = ScriptedInspector()
+
+    Simulation(inspector).flash().partition("config").write_image("app@2.1")
+
+    assert inspector.images_written == [("config", "app@2.1")]
+
+
+def test_an_image_file_is_named_to_the_server_by_its_whole_path(tmp_path: Path) -> None:
+    inspector = ScriptedInspector()
+    image = tmp_path / "app.limg"
+
+    Simulation(inspector).flash().partition("config").write_image_file(image)
+
+    assert inspector.images_written == [("config", str(image.resolve()))]

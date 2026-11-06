@@ -146,6 +146,9 @@ enum Edition {
 enum ProFeature {
   PRO_FEATURE_UNSPECIFIED = 0;
   PRO_FEATURE_ARCHITECTURE = 1;   // graph, findings, rules, baseline, machines, call tree, sequences
+  // Images and their variants, partition headers, boot.jump, boot chains,
+  // the OTP and the power cut. Partition names stay free.
+  PRO_FEATURE_BOOTLOADER = 2;
 }
 
 message LicenseView {
@@ -174,6 +177,7 @@ enum Capability {
   CAPABILITY_ARCHITECTURE = 12;    // the project's code index: metrics, dependencies, findings
   CAPABILITY_RESET = 13;           // ResetFirmware, ObserveLives, ReadLifeDump, ObserveRetained, WriteRetained
   CAPABILITY_FLASH = 14;           // ObserveFlash, WriteFlash, EraseFlash, SaveFlash, LoadFlash
+  CAPABILITY_BOOT = 15;            // several [[images]], and Pro: ObserveImages, ObserveBootChain, CutPower, ObserveOtp, BurnOtp
 }
 
 enum ServerMode {
@@ -238,6 +242,10 @@ message RunState {
   // when there is none. Its presence is the state: a client marks the
   // life chip as a warning and shows the sentence as its tooltip.
   string reset_loop_text = 16;
+  // A power cut that is armed (Pro), in the server's words: "power cut armed:
+  // after 4096 bytes of a flash write". Empty when none is; its presence is
+  // the state, as with hold_reason.
+  string power_cut_text = 17;
 }
 
 // The watchdog of the running life, as the runtime last noted it. Every
@@ -901,6 +909,21 @@ service Inspector {
   rpc SaveFlash(Empty) returns (FlashContent);
   rpc LoadFlash(FlashContent) returns (Ack);
 
+  // ---- Bootloader (CAPABILITY_BOOT; Pro) ----
+  // Code cannot run from the simulated flash: a boot.jump ends the image's
+  // process, and the server starts the built image the header at the target
+  // names. Without the licence these are refused with PERMISSION_DENIED and
+  // a sentence; FlashView then carries no header state.
+  // The images and their variants, built or not.
+  rpc ObserveImages(Empty) returns (ImageList);
+  // Arm a power cut while the firmware programs or erases, or cut it at a time.
+  rpc CutPower(PowerCutRequest) returns (Ack);
+  // The lives between two resets, each the images it went through.
+  rpc ObserveBootChain(Empty) returns (BootChainView);
+  // The one-time-programmable memory; burning sets bits, nothing clears them.
+  rpc ObserveOtp(Empty) returns (OtpView);
+  rpc BurnOtp(OtpBurn) returns (Ack);
+
   // ---- Architecture (CAPABILITY_ARCHITECTURE) ----
   // Read from the project's code index, which the server builds in the
   // background; every answer says how far it got. A request naming the
@@ -1027,6 +1050,74 @@ message FlashErase {
 }
 
 message FlashContent { bytes content = 1; }
+
+// One image of [[images]], in one of its variants.
+message ImageView {
+  string name = 1;
+  string variant = 2;              // empty for an image without variants
+  string identity_hex = 3;         // empty until built
+  string version_text = 4;         // "0x0201", from the define VERSION
+  uint64 payload_size = 5;         // the payload a header carries: the image's size on the target
+  bool built = 6;
+  string text = 7;                 // "app@2.1 · built · 96 KiB · 7f3a…e1"
+  string ref = 8;                  // "app@2.1", as FlashWrite.image names it
+  string origin_text = 9;          // "stand-in" or "target build (build/arm/app.bin)"
+}
+
+message ImageList {
+  repeated ImageView images = 1;
+  string note = 2;                 // why there are none, or that one image is no chain
+}
+
+message PowerCutRequest {
+  oneof trigger {
+    uint64 after_bytes = 1;        // of the firmware's flash writes and erases from now
+    When at = 2;                   // at a time; now when When is empty
+  }
+  FlashActivity during = 3;
+  uint64 off_for_us = 4;           // how long the board is without power
+  uint64 seed = 5;                 // which bits of the word in flight changed
+  bool disarm = 6;                 // take an armed cut back; the rest is ignored
+}
+
+enum FlashActivity {
+  FLASH_ACTIVITY_ANY = 0;
+  FLASH_ACTIVITY_WRITE = 1;
+  FLASH_ACTIVITY_ERASE = 2;
+}
+
+// One life of a boot chain: one image, from the partition it was started from.
+message BootStep {
+  uint32 life = 1;
+  string image = 2;                // "stage1@1.0"
+  string partition = 3;
+  EnteredBy entered_by = 4;
+  uint64 at_us = 5;
+  LifeEndReason ended_by = 6;      // UNSPECIFIED while it runs
+  string text = 7;                 // "stage1_a 1.0"
+}
+
+// The lives between two resets: the boot chain one start went through.
+message BootChain {
+  repeated BootStep steps = 1;
+  ResetCause started_by = 2;       // what reset the board: power-on for the first
+  string text = 3;                 // "stage0 → stage1_a 1.0 → app_b 2.1"
+  string went = 4;                 // the partitions, as expect().boot_chain().went() takes them: "stage0 stage1_a app_b"
+}
+
+message BootChainView {
+  repeated BootChain chains = 1;   // oldest first
+  string note = 2;
+}
+
+message OtpView {
+  uint32 size = 1;                 // 0: the simulation has none
+  bytes content = 2;
+  string note = 3;                 // "bits only go from 0 to 1, for every run while the flash is kept"
+}
+
+// Burn the bits that are 1 in data, from offset.
+message OtpBurn { uint32 offset = 1; bytes data = 2; When when = 3; }
 
 message LifeDumpView {
   LifeView life = 1;

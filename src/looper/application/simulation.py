@@ -27,6 +27,7 @@ from looper.domain.model import (
     EventPage,
     Exchange,
     Findings,
+    Image,
     Life,
     LifeDump,
     MemoryUsage,
@@ -399,6 +400,14 @@ class Simulation:
     def flash(self) -> Flash:
         """The simulated flash."""
         return Flash(self._inspector)
+
+    def images(self) -> tuple[Image, ...]:
+        """Every image of the project in every variant (Pro).
+
+        Raises:
+            ProFeatureLockedError: Without a licence for the bootloader.
+        """
+        return self._inspector.read_images()
 
     def close(self) -> None:
         """Let go of the simulation. Closing twice is allowed."""

@@ -12,7 +12,8 @@ from __future__ import annotations
 from pathlib import Path
 
 from looper.application.life_port import LifeInspector
-from looper.application.ports import SimulationRefusedError
+from looper.application.ports import Inspector, SimulationRefusedError
+from looper.domain.model import PartitionHeader
 
 
 class Retained:
@@ -58,12 +59,40 @@ class FlashPartition:
         """Erase every sector of the partition."""
         self._flash.erase_partition(self.name)
 
+    def write_image(self, image: str) -> None:
+        """Erase the partition and write a built image into it: ``app@2.1`` (Pro).
+
+        The server builds the variant first when it is not built yet.
+        """
+        self._flash.inspector.write_image(self.name, image)
+
+    def write_image_file(self, path: Path | str) -> None:
+        """Erase the partition and write an image file into it, whatever its header names (Pro).
+
+        The server reads the file; a header that names no built image is
+        what a jump into it then finds.
+        """
+        self._flash.inspector.write_image_file(self.name, str(Path(path).resolve()))
+
+    def header(self) -> PartitionHeader:
+        """What the partition holds, as the server reads its header (Pro)."""
+        return self._flash.inspector.read_headers()[self.name]
+
 
 class Flash:
     """The simulated flash: bits go 1 to 0, erasing is by sector."""
 
-    def __init__(self, inspector: LifeInspector) -> None:
+    def __init__(self, inspector: Inspector) -> None:
         self._inspector = inspector
+
+    @property
+    def inspector(self) -> Inspector:
+        """The port the flash is reached through."""
+        return self._inspector
+
+    def headers(self) -> dict[str, PartitionHeader]:
+        """What each partition holds, by name; without the licence no state (Pro)."""
+        return self._inspector.read_headers()
 
     def read(self, offset: int = 0, length: int = 0) -> bytes:
         """Bytes from the flash's beginning; length 0 reads to its end."""
