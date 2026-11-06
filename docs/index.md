@@ -133,6 +133,7 @@ environment -- only the `looper-cli` command. See [How it works](concepts.md).
 | want the simulation to tell you when a pin changed or a value was reached | [Triggers](guides/triggers.md) |
 | want to know every expectation there is | [Expecting things](guides/expectations.md) and the [reference](reference/expectations.md) |
 | want to close a loop with a model, or drive an input from a graph of signals | [Setting the scene](guides/scene.md#a-graph-of-signals) |
+| want to reset the firmware, test its watchdog, or reach the retained memory and the flash | [Resets, lives and the memories](guides/resets-and-memories.md) and the recipe [Reset](recipes/reset.md) |
 | want to know where the time goes, or what the architecture analysis found | [The profile and the findings](guides/profile-and-findings.md) |
 | are setting up a test suite and CI | [Tests in pytest and CI](guides/pytest.md) |
 | see an error you do not understand | [Troubleshooting](troubleshooting.md) |
@@ -155,6 +156,7 @@ guides/variables
 guides/triggers
 guides/expectations
 guides/profile-and-findings
+guides/resets-and-memories
 guides/pytest
 ```
 
@@ -170,6 +172,7 @@ recipes/memory
 recipes/stack
 recipes/periodic-task
 recipes/trigger-reaction
+recipes/reset
 recipes/bus
 recipes/sweeps
 ```

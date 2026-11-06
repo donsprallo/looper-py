@@ -55,6 +55,26 @@ starts_with=b"")`:
 `direction` is `"outbound"` (what the firmware sent) or `"inbound"`; the address is
 the CAN identifier, I2C address or chip select.
 
+## Resets -- `check.reset(cause="")`
+
+| Expectation | Met when | Outcome when met |
+| --- | --- | --- |
+| `happened_once()` | exactly one reset of the cause was in the window | `saw watchdog at 0.118750 s` |
+| `happened(times=0)` | exactly `times` resets of the cause were in the window; with 0, at least one | `saw watchdog at 0.100000 s, ...` |
+| `no_loop()` | the server found no reset loop: 10 resets within 1 s | `saw 1 resets, no loop` |
+
+`cause` is `watchdog`, `software`, `pin`, `power-on` or `brown-out`; empty counts
+every cause. Fails with `saw no reset` when there was none. `no_loop` fails with
+the server's sentence, `Reset loop: 10 resets within 1 s (watchdog each time).`
+
+## The flash -- `check.flash()`
+
+| Expectation | Met when | Outcome when met |
+| --- | --- | --- |
+| `no_violation()` | every write in the window kept the flash's rules | `saw none` |
+
+When it fails it names the offsets and the partitions: `saw at 0x3000 (config)`.
+
 ## The profile -- `check.profile()`
 
 | Expectation | Met when | Needs in `looper.toml` |

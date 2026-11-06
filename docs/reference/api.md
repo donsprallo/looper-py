@@ -23,6 +23,9 @@ looper.ProFeatureLockedError                        # a looper Pro part without 
 looper.Profile, looper.ProfileEntry               # where the time went
 looper.Findings, looper.Finding, looper.Dependency  # what the architecture analysis found (Pro)
 looper.SignalGraph, looper.SignalNodeKind         # a graph of signals and models
+looper.Life, looper.LifeDump, looper.Lives        # the firmware's lives
+looper.ResetMark, looper.FlashMark                # resets and flash operations in the stream
+looper.Retained, looper.Flash, looper.FlashPartition  # what survives a reset
 looper.NodeOutput, looper.SignalModel, looper.ModelParameter
 ```
 
@@ -46,7 +49,7 @@ looper.NodeOutput, looper.SignalModel, looper.ModelParameter
 
 ```{eval-rst}
 .. autoclass:: looper.Expectations
-   :members: channel, bus, call, memory, stack, firmware_is_alive, add, evaluate
+   :members: channel, bus, call, memory, stack, reset, flash, firmware_is_alive, add, evaluate
 
 .. autoclass:: looper.application.subjects.ChannelExpectation
    :members:
@@ -67,6 +70,12 @@ looper.NodeOutput, looper.SignalModel, looper.ModelParameter
    :members:
 
 .. autoclass:: looper.application.subjects.ProfileExpectation
+   :members:
+
+.. autoclass:: looper.application.subjects.ResetExpectation
+   :members:
+
+.. autoclass:: looper.application.subjects.FlashExpectation
    :members:
 ```
 
@@ -135,6 +144,34 @@ findings](../guides/profile-and-findings.md) explains how they are used.
    :members: is_new, is_accepted
 
 .. autoclass:: looper.Dependency
+```
+
+## Resets, lives and memories
+
+`simulation.reset()` resets the firmware, `simulation.lives()` and
+`simulation.life(n)` read its lives, `simulation.retained()` and
+`simulation.flash()` reach what survives a reset; the guide [Resets, lives and the
+memories](../guides/resets-and-memories.md) explains how they are used.
+
+```{eval-rst}
+.. autoclass:: looper.Life
+
+.. autoclass:: looper.LifeDump
+
+.. autoclass:: looper.Lives
+
+.. autoclass:: looper.Retained
+   :members:
+
+.. autoclass:: looper.Flash
+   :members:
+
+.. autoclass:: looper.FlashPartition
+   :members:
+
+.. autoclass:: looper.ResetMark
+
+.. autoclass:: looper.FlashMark
 ```
 
 ## Signal graphs

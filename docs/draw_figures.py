@@ -392,10 +392,39 @@ def trigger_hold():
     svg.save("trigger-hold.svg")
 
 
+def reset_window():
+    svg = Svg(940, 300, "An expectation counts the resets inside its window")
+    left, right = 70, 880
+
+    def at(milliseconds):
+        return left + milliseconds / 170.0 * (right - left)
+
+    svg.text(left, 30, "evaluate(for_seconds=0.15) at 20 ms, with STOP_KICKING set: the window is 20 ms to 170 ms", size=12.5, weight="bold")
+    svg.rect(at(20), 46, right - at(20), 26, fill=BLUE_SOFT, stroke=ACCENT, rx=6)
+    svg.text(at(20) + 10, 64, "the window: resets of this span are counted", size=12, fill=ACCENT)
+    axis = 150
+    svg.line(left, axis, right, axis, stroke=MUTED, width=1)
+    for tick in (0, 50, 100, 150):
+        svg.line(at(tick), axis - 4, at(tick), axis + 4, stroke=MUTED, width=1)
+        svg.text(at(tick), axis + 20, f"{tick} ms", size=10.5, fill=MUTED, anchor="middle")
+    svg.rect(left, axis - 36, at(118.75) - left - 3, 28, fill=GREEN_SOFT, stroke=GOOD, rx=5)
+    svg.text(left + 10, axis - 17, "life 1", size=12.5, weight="bold")
+    svg.rect(at(118.75) + 3, axis - 36, right - at(118.75) - 3, 28, fill=GREEN_SOFT, stroke=GOOD, rx=5)
+    svg.text(at(118.75) + 12, axis - 17, "life 2", size=12.5, weight="bold")
+    svg.line(at(118.75) - 1, axis - 52, at(118.75) - 1, axis + 8, stroke=BAD, width=1.5)
+    svg.line(at(118.75) + 1, axis - 52, at(118.75) + 1, axis + 8, stroke=BAD, width=1.5)
+    svg.text(at(118.75), axis - 58, "reset, cause watchdog", size=11.5, fill=BAD, anchor="middle", weight="bold")
+    svg.text(left, 214, 'check.reset(cause="watchdog").happened_once()', size=12.5, mono=True)
+    svg.text(left, 234, "ok    watchdog reset: expected once, saw watchdog at 0.118750 s", size=12, mono=True, fill=GOOD)
+    svg.text(left, 262, "A reset before the window or after it is not counted; the lives of the run are "
+             "simulation.lives().", size=11.5, fill=MUTED)
+    svg.save("reset-window.svg")
+
+
 def main() -> int:
     OUT.mkdir(parents=True, exist_ok=True)
     figures = [system_overview, lockstep, evaluate_steps, waveforms, channel_checks, window_edges,
-               report_anatomy, trigger_hold]
+               report_anatomy, trigger_hold, reset_window]
     for figure in figures:
         figure()
     print(f"wrote {len(figures)} figures to {OUT}")
