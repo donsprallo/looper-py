@@ -938,7 +938,7 @@ service Inspector {
   rpc ObserveSequence(SequenceRequest) returns (RecordedSequence);
 }
 
-// A reset from outside: PIN (the reset pin) or POWER_ON. Absent: PIN.
+// A reset from outside: PIN (the reset pin), POWER_ON or BROWN_OUT (the power goes and comes back; without [retained] battery the retained memory is lost). Absent: PIN. SOFTWARE and WATCHDOG are refused.
 message ResetRequest {
   ResetCause cause = 1;
   When when = 2;
@@ -1717,10 +1717,11 @@ message MemoryView {
   StaticMemoryView static_memory = 1;
   StackUsageView stack = 2;
   HeapUsageView heap = 3;
-  // The life the heap and the stack were counted in, and the sentence for it
-  // ("since the last reset · life 3"); empty before the first reset.
+  // The life the heap and the stack were counted in.
   uint32 life = 4;
-  string life_text = 5;
+  // Since when heap and stack were counted: "since the last reset · life 3";
+  // empty before the first reset.
+  string counted_since_text = 5;
 }
 
 message BusView {

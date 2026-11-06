@@ -84,6 +84,11 @@ class ScriptedServicer(service.InspectorServicer):  # type: ignore[misc]
             accepted=False,
         )
         self.lost = [contract.Lost(from_event_seq=3, to_event_seq=5)]
+        self.reset_causes: list[int] = []
+
+    def ResetFirmware(self, request: Any, context: Any) -> contract.Ack:
+        self.reset_causes.append(request.cause)
+        return contract.Ack()
 
     def Describe(self, request: Any, context: Any) -> contract.Description:
         return contract.Description(
@@ -450,3 +455,21 @@ def test_a_bus_says_how_many_bytes_one_message_on_it_carries() -> None:
     )
 
     assert buses_of(listed)[0].max_payload_bytes == 64
+
+
+def test_every_cause_is_sent_for_the_server_to_judge(
+    inspector: GrpcInspector, servicer: ScriptedServicer
+) -> None:
+    inspector.reset_firmware("brown-out")
+    inspector.reset_firmware("software")
+
+    assert servicer.reset_causes == [contract.RESET_CAUSE_BROWN_OUT, contract.RESET_CAUSE_SOFTWARE]
+
+
+def test_a_word_that_is_no_cause_is_refused_without_a_call(
+    inspector: GrpcInspector, servicer: ScriptedServicer
+) -> None:
+    with pytest.raises(ValueError, match="not a reset cause: reboot; one of power-on"):
+        inspector.reset_firmware("reboot")
+
+    assert servicer.reset_causes == []

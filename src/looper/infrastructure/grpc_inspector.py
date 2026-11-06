@@ -250,10 +250,16 @@ class GrpcInspector(Inspector):
         return tuple(trigger_translation.trigger_of(view) for view in listing.triggers)
 
     def reset_firmware(self, cause: str) -> None:
-        """Reset the firmware from outside: ``pin`` or ``power-on``."""
-        wanted = life_translation.OUTSIDE_CAUSES.get(cause)
+        """Reset the firmware from outside: ``pin``, ``power-on`` or ``brown-out``.
+
+        Raises:
+            ValueError: If the word is no cause of a reset at all; nothing is sent.
+            SimulationRefusedError: If the server refuses the cause.
+        """
+        wanted = life_translation.CAUSES.get(cause)
         if wanted is None:
-            raise SimulationRefusedError("a reset from outside is a pin reset or a power-on")
+            words = ", ".join(life_translation.CAUSES)
+            raise ValueError(f"not a reset cause: {cause}; one of {words}")
         request = contract.ResetRequest(cause=wanted)
         _acknowledged(self._call(self._stub.ResetFirmware, request))
 

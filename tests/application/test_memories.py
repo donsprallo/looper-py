@@ -15,8 +15,9 @@ def test_a_reset_from_the_test_is_a_pin_reset_unless_it_says_otherwise() -> None
 
     Simulation(inspector).reset()
     Simulation(inspector).reset("power-on")
+    Simulation(inspector).reset("brown-out")
 
-    assert inspector.reset_causes == ["pin", "power-on"]
+    assert inspector.reset_causes == ["pin", "power-on", "brown-out"]
 
 
 def test_a_reset_cannot_claim_to_be_the_firmware_s_own() -> None:

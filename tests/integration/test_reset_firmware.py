@@ -73,6 +73,31 @@ def test_a_pin_reset_from_the_test_begins_a_new_life(simulation: looper.Simulati
     assert simulation.retained().word(STARTS) == 2
 
 
+def test_a_brown_out_from_the_test_begins_a_new_life(simulation: looper.Simulation) -> None:
+    simulation.advance(0.005)
+
+    simulation.reset("brown-out")
+    simulation.advance(0.005)
+
+    assert [life.cause for life in simulation.lives()[:1]] == ["brown-out"]
+
+
+def test_the_server_refuses_a_reset_that_claims_to_be_the_firmware_s_own(
+    simulation: looper.Simulation,
+) -> None:
+    with pytest.raises(looper.SimulationRefusedError, match="software"):
+        simulation.reset("software")
+
+
+def test_a_word_that_is_no_cause_is_refused_before_anything_is_sent(
+    simulation: looper.Simulation,
+) -> None:
+    with pytest.raises(ValueError, match="not a reset cause"):
+        simulation.reset("reboot")
+
+    assert len(simulation.lives()) == 1
+
+
 def test_what_a_life_left_behind_can_be_read_back(simulation: looper.Simulation) -> None:
     _press_reset(simulation)
 

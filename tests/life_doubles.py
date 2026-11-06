@@ -25,8 +25,10 @@ class ScriptedLives:
         self.erased: list[tuple[str, int | None]] = []
 
     def reset_firmware(self, cause: str) -> None:
-        if cause not in ("pin", "power-on"):
-            raise SimulationRefusedError("a reset from outside is a pin reset or a power-on")
+        if cause not in ("pin", "power-on", "brown-out", "software", "watchdog"):
+            raise ValueError(f"not a reset cause: {cause}")
+        if cause in ("software", "watchdog"):
+            raise SimulationRefusedError(f"a reset from outside cannot be a {cause} reset")
         self.reset_causes.append(cause)
 
     def read_lives(self) -> Lives:

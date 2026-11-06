@@ -2457,18 +2457,18 @@ class HeapUsageView(_message.Message):
     def __init__(self, outstanding: _Optional[_Iterable[_Union[AllocationSiteView, _Mapping]]] = ..., allocations: _Optional[int] = ..., frees: _Optional[int] = ..., failures: _Optional[int] = ..., live_text: _Optional[str] = ..., peak_text: _Optional[str] = ..., firmware_text: _Optional[str] = ..., untracked_blocks: _Optional[int] = ..., never_allocated: _Optional[bool] = ..., is_watched: _Optional[bool] = ..., summary: _Optional[str] = ..., live_bytes: _Optional[int] = ..., peak_bytes: _Optional[int] = ...) -> None: ...
 
 class MemoryView(_message.Message):
-    __slots__ = ("static_memory", "stack", "heap", "life", "life_text")
+    __slots__ = ("static_memory", "stack", "heap", "life", "counted_since_text")
     STATIC_MEMORY_FIELD_NUMBER: _ClassVar[int]
     STACK_FIELD_NUMBER: _ClassVar[int]
     HEAP_FIELD_NUMBER: _ClassVar[int]
     LIFE_FIELD_NUMBER: _ClassVar[int]
-    LIFE_TEXT_FIELD_NUMBER: _ClassVar[int]
+    COUNTED_SINCE_TEXT_FIELD_NUMBER: _ClassVar[int]
     static_memory: StaticMemoryView
     stack: StackUsageView
     heap: HeapUsageView
     life: int
-    life_text: str
-    def __init__(self, static_memory: _Optional[_Union[StaticMemoryView, _Mapping]] = ..., stack: _Optional[_Union[StackUsageView, _Mapping]] = ..., heap: _Optional[_Union[HeapUsageView, _Mapping]] = ..., life: _Optional[int] = ..., life_text: _Optional[str] = ...) -> None: ...
+    counted_since_text: str
+    def __init__(self, static_memory: _Optional[_Union[StaticMemoryView, _Mapping]] = ..., stack: _Optional[_Union[StackUsageView, _Mapping]] = ..., heap: _Optional[_Union[HeapUsageView, _Mapping]] = ..., life: _Optional[int] = ..., counted_since_text: _Optional[str] = ...) -> None: ...
 
 class BusView(_message.Message):
     __slots__ = ("bus_id", "kind", "name", "bitrate_bps", "display_bitrate", "accepts_messages", "takes_address", "address_label", "takes_extended", "max_payload_bytes", "max_address", "max_extended_address", "takes_line_ending", "supports_fd", "supports_remote", "exchange_unit", "has_time_model", "controller_latency_us", "queue_depth", "queue_unit")

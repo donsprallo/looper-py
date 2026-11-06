@@ -16,10 +16,12 @@ class LifeInspector(ABC):
 
     @abstractmethod
     def reset_firmware(self, cause: str) -> None:
-        """Reset the firmware from outside: ``pin`` or ``power-on``.
+        """Reset the firmware from outside: ``pin``, ``power-on`` or ``brown-out``.
 
         Raises:
-            SimulationRefusedError: If the cause is not one from outside.
+            ValueError: If the word is no cause of a reset at all.
+            SimulationRefusedError: If the server refuses the cause, as it
+                does ``software`` and ``watchdog``.
         """
 
     @abstractmethod

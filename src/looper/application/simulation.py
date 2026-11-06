@@ -366,14 +366,16 @@ class Simulation:
         return self._inspector.read_watches()
 
     def reset(self, cause: str = "pin") -> None:
-        """Reset the firmware from outside, as its reset pin does (or ``power-on``).
+        """Reset the firmware from outside: ``pin``, ``power-on`` or ``brown-out``.
 
         A reset is not a restart: the firmware begins a new life, simulated
         time and the recording go on, and watches and triggers are set
         again. A held clock resets at its next run.
 
         Raises:
-            SimulationRefusedError: If the cause is not one from outside.
+            ValueError: If the word is no cause of a reset at all.
+            SimulationRefusedError: If the server refuses the cause, as it
+                does ``software`` and ``watchdog``.
         """
         self._inspector.reset_firmware(cause)
 

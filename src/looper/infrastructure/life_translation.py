@@ -6,8 +6,15 @@ from looper.domain.model import Life, LifeDump, Lives
 from looper.infrastructure import analysis_translation, translation
 from looper.infrastructure.contract import looper_inspector_pb2 as contract
 
-#: The causes a reset from outside may have, in the contract's numbers.
-OUTSIDE_CAUSES = {"pin": contract.RESET_CAUSE_PIN, "power-on": contract.RESET_CAUSE_POWER_ON}
+#: Every cause of a reset, by its word, in the contract's numbers. Which of
+#: them a reset from outside may have is the server's to say.
+CAUSES = {
+    "power-on": contract.RESET_CAUSE_POWER_ON,
+    "software": contract.RESET_CAUSE_SOFTWARE,
+    "watchdog": contract.RESET_CAUSE_WATCHDOG,
+    "pin": contract.RESET_CAUSE_PIN,
+    "brown-out": contract.RESET_CAUSE_BROWN_OUT,
+}
 
 
 def life_of(view: contract.LifeView) -> Life:
