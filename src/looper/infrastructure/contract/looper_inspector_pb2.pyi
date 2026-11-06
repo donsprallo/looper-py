@@ -512,7 +512,7 @@ class RunReply(_message.Message):
     def __init__(self, ack: _Optional[_Union[Ack, _Mapping]] = ..., state: _Optional[_Union[RunState, _Mapping]] = ...) -> None: ...
 
 class RunState(_message.Message):
-    __slots__ = ("now_us", "mode", "pace_ratio", "behind_us", "slipped_us", "epoch", "next_event_seq", "pass_cost_us", "target_us", "queued_commands", "hold_reason", "life", "resets", "life_text")
+    __slots__ = ("now_us", "mode", "pace_ratio", "behind_us", "slipped_us", "epoch", "next_event_seq", "pass_cost_us", "target_us", "queued_commands", "hold_reason", "life", "resets", "life_text", "watchdog", "reset_loop_text")
     NOW_US_FIELD_NUMBER: _ClassVar[int]
     MODE_FIELD_NUMBER: _ClassVar[int]
     PACE_RATIO_FIELD_NUMBER: _ClassVar[int]
@@ -527,6 +527,8 @@ class RunState(_message.Message):
     LIFE_FIELD_NUMBER: _ClassVar[int]
     RESETS_FIELD_NUMBER: _ClassVar[int]
     LIFE_TEXT_FIELD_NUMBER: _ClassVar[int]
+    WATCHDOG_FIELD_NUMBER: _ClassVar[int]
+    RESET_LOOP_TEXT_FIELD_NUMBER: _ClassVar[int]
     now_us: int
     mode: ClockMode
     pace_ratio: float
@@ -541,7 +543,33 @@ class RunState(_message.Message):
     life: int
     resets: int
     life_text: str
-    def __init__(self, now_us: _Optional[int] = ..., mode: _Optional[_Union[ClockMode, str]] = ..., pace_ratio: _Optional[float] = ..., behind_us: _Optional[int] = ..., slipped_us: _Optional[int] = ..., epoch: _Optional[int] = ..., next_event_seq: _Optional[int] = ..., pass_cost_us: _Optional[int] = ..., target_us: _Optional[int] = ..., queued_commands: _Optional[int] = ..., hold_reason: _Optional[str] = ..., life: _Optional[int] = ..., resets: _Optional[int] = ..., life_text: _Optional[str] = ...) -> None: ...
+    watchdog: WatchdogState
+    reset_loop_text: str
+    def __init__(self, now_us: _Optional[int] = ..., mode: _Optional[_Union[ClockMode, str]] = ..., pace_ratio: _Optional[float] = ..., behind_us: _Optional[int] = ..., slipped_us: _Optional[int] = ..., epoch: _Optional[int] = ..., next_event_seq: _Optional[int] = ..., pass_cost_us: _Optional[int] = ..., target_us: _Optional[int] = ..., queued_commands: _Optional[int] = ..., hold_reason: _Optional[str] = ..., life: _Optional[int] = ..., resets: _Optional[int] = ..., life_text: _Optional[str] = ..., watchdog: _Optional[_Union[WatchdogState, _Mapping]] = ..., reset_loop_text: _Optional[str] = ...) -> None: ...
+
+class WatchdogState(_message.Message):
+    __slots__ = ("running", "timeout_us", "last_kick_us", "deadline_us", "remaining_us", "kicks", "is_close", "remaining_text", "last_kick_text", "text")
+    RUNNING_FIELD_NUMBER: _ClassVar[int]
+    TIMEOUT_US_FIELD_NUMBER: _ClassVar[int]
+    LAST_KICK_US_FIELD_NUMBER: _ClassVar[int]
+    DEADLINE_US_FIELD_NUMBER: _ClassVar[int]
+    REMAINING_US_FIELD_NUMBER: _ClassVar[int]
+    KICKS_FIELD_NUMBER: _ClassVar[int]
+    IS_CLOSE_FIELD_NUMBER: _ClassVar[int]
+    REMAINING_TEXT_FIELD_NUMBER: _ClassVar[int]
+    LAST_KICK_TEXT_FIELD_NUMBER: _ClassVar[int]
+    TEXT_FIELD_NUMBER: _ClassVar[int]
+    running: bool
+    timeout_us: int
+    last_kick_us: int
+    deadline_us: int
+    remaining_us: int
+    kicks: int
+    is_close: bool
+    remaining_text: str
+    last_kick_text: str
+    text: str
+    def __init__(self, running: _Optional[bool] = ..., timeout_us: _Optional[int] = ..., last_kick_us: _Optional[int] = ..., deadline_us: _Optional[int] = ..., remaining_us: _Optional[int] = ..., kicks: _Optional[int] = ..., is_close: _Optional[bool] = ..., remaining_text: _Optional[str] = ..., last_kick_text: _Optional[str] = ..., text: _Optional[str] = ...) -> None: ...
 
 class Subscription(_message.Message):
     __slots__ = ("epoch", "from_event_seq", "filter", "with_levels")
@@ -672,18 +700,20 @@ class Event(_message.Message):
     def __init__(self, event_seq: _Optional[int] = ..., sim_us: _Optional[int] = ..., sample: _Optional[_Union[Sample, _Mapping]] = ..., pin: _Optional[_Union[PinChange, _Mapping]] = ..., exchange: _Optional[_Union[Exchange, _Mapping]] = ..., call: _Optional[_Union[Call, _Mapping]] = ..., command: _Optional[_Union[CommandApplied, _Mapping]] = ..., job: _Optional[_Union[JobEvent, _Mapping]] = ..., fault: _Optional[_Union[Fault, _Mapping]] = ..., run: _Optional[_Union[RunEvent, _Mapping]] = ..., trigger_fired: _Optional[_Union[TriggerFired, _Mapping]] = ..., trigger_disarmed: _Optional[_Union[TriggerDisarmed, _Mapping]] = ..., reset: _Optional[_Union[ResetMark, _Mapping]] = ..., life: _Optional[_Union[LifeMark, _Mapping]] = ..., flash: _Optional[_Union[FlashMark, _Mapping]] = ...) -> None: ...
 
 class ResetMark(_message.Message):
-    __slots__ = ("cause", "cause_text", "life", "reason", "jump_target")
+    __slots__ = ("cause", "cause_text", "life", "reason", "jump_target", "text")
     CAUSE_FIELD_NUMBER: _ClassVar[int]
     CAUSE_TEXT_FIELD_NUMBER: _ClassVar[int]
     LIFE_FIELD_NUMBER: _ClassVar[int]
     REASON_FIELD_NUMBER: _ClassVar[int]
     JUMP_TARGET_FIELD_NUMBER: _ClassVar[int]
+    TEXT_FIELD_NUMBER: _ClassVar[int]
     cause: ResetCause
     cause_text: str
     life: int
     reason: LifeEndReason
     jump_target: int
-    def __init__(self, cause: _Optional[_Union[ResetCause, str]] = ..., cause_text: _Optional[str] = ..., life: _Optional[int] = ..., reason: _Optional[_Union[LifeEndReason, str]] = ..., jump_target: _Optional[int] = ...) -> None: ...
+    text: str
+    def __init__(self, cause: _Optional[_Union[ResetCause, str]] = ..., cause_text: _Optional[str] = ..., life: _Optional[int] = ..., reason: _Optional[_Union[LifeEndReason, str]] = ..., jump_target: _Optional[int] = ..., text: _Optional[str] = ...) -> None: ...
 
 class LifeMark(_message.Message):
     __slots__ = ("life", "image", "partition", "entered_by", "text")

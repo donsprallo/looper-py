@@ -94,7 +94,7 @@ enum Refusal {
   REFUSAL_INVALID = 6;         // a value out of range; `refusal_text` says which
   REFUSAL_WRONG_MODE = 7;      // run_for while PACED, and the like
   REFUSAL_OTHER = 8;
-  REFUSAL_RESETTING = 9;       // the firmware is between two lives and did not take over in time
+  REFUSAL_RESETTING = 9;       // not sent at present: calls wait for the next life
 }
 
 // When a change is to take effect. Absent: at the next boundary.
@@ -228,7 +228,33 @@ message RunState {
   // before the first reset ("RST 3 · watchdog").
   uint32 life = 12;
   uint32 resets = 13;
+  // During a reset loop "RST 23 · reset loop", in the server's words.
   string life_text = 14;
+  // Unset: no watchdog was started in this run (a client shows no watchdog
+  // at all). Set with running false: started in an earlier life, not in
+  // this one ("Not started in this life.").
+  WatchdogState watchdog = 15;
+  // The reset loop finding as a sentence, as LifeList.loop_finding; empty
+  // when there is none. Its presence is the state: a client marks the
+  // life chip as a warning and shows the sentence as its tooltip.
+  string reset_loop_text = 16;
+}
+
+// The watchdog of the running life, as the runtime last noted it. Every
+// time is simulated time; the texts and the stage are the server's.
+message WatchdogState {
+  bool running = 1;            // started in this life
+  uint64 timeout_us = 2;
+  uint64 last_kick_us = 3;     // the start, while no kick came
+  uint64 deadline_us = 4;      // last_kick_us + timeout_us
+  uint64 remaining_us = 5;     // deadline_us - now_us, never below 0
+  uint32 kicks = 6;            // in this life
+  bool is_close = 7;           // little time is left, by the server's rule
+  string remaining_text = 8;   // "1.62 s"; a chip puts "WDT" in front
+  string last_kick_text = 9;   // "29.861 s (0.38 s ago)"
+  // "Watchdog: timeout 2.000 s, last kicked at 29.861 s. Resets the
+  // firmware if not kicked within 1.62 s."
+  string text = 10;
 }
 
 message Subscription {
@@ -351,6 +377,9 @@ message ResetMark {
   uint32 life = 3;             // the life that ended
   LifeEndReason reason = 4;
   uint64 jump_target = 5;      // a jump (Pro): the address the firmware gave
+  // The life that ended, said with how long it lasted, in the words of
+  // LifeView.text: "Life 3 ended after 2.104 s · watchdog".
+  string text = 6;
 }
 
 // A life began, at Event.sim_us.
