@@ -27,6 +27,8 @@ from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, replace
 from enum import StrEnum
 
+from looper.domain.model.chain_blocks import ChainGroup, EventBlock, EventLink
+from looper.domain.model.chain_building import ChainBuilding
 from looper.domain.model.requests import Signal
 
 
@@ -136,16 +138,20 @@ InputSpec = str | NodeOutput
 
 
 @dataclass(frozen=True)
-class SignalGraph:
-    """The nodes, the inputs they drive and the probes on them.
+class SignalGraph(ChainBuilding):
+    """The nodes, the inputs they drive and the probes on them, and its chains.
 
     Each method returns a new graph with one more part, so that a graph is
-    written as one chain and a half-built one can be reused.
+    written as one chain of calls and a half-built one can be reused. The
+    event blocks, links and groups are the graph's chains (`chain_blocks`).
     """
 
     nodes: tuple[SignalNode, ...] = ()
     targets: tuple[SignalTarget, ...] = ()
     probes: tuple[SignalProbe, ...] = ()
+    event_blocks: tuple[EventBlock, ...] = ()
+    event_links: tuple[EventLink, ...] = ()
+    groups: tuple[ChainGroup, ...] = ()
 
     def generator(self, key: str, signal: Signal) -> SignalGraph:
         """Add a node that produces a generated waveform."""

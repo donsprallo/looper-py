@@ -56,6 +56,7 @@ from looper.infrastructure import (
 from looper.infrastructure.contract import looper_inspector_pb2 as contract
 from looper.infrastructure.contract import looper_inspector_pb2_grpc as service
 from looper.infrastructure.grpc_boot import GrpcBootCalls
+from looper.infrastructure.grpc_chains import GrpcChainCalls
 from looper.infrastructure.grpc_interrupts import GrpcInterruptCalls
 
 #: How long reaching a server may take before it counts as absent.
@@ -84,7 +85,7 @@ EVENT_KINDS = [
 ]
 
 
-class GrpcInspector(GrpcBootCalls, GrpcInterruptCalls, Inspector):
+class GrpcInspector(GrpcBootCalls, GrpcInterruptCalls, GrpcChainCalls, Inspector):
     """The inspector contract, spoken to a server at one address."""
 
     def __init__(self, address: str, timeout_seconds: float = CONNECT_TIMEOUT_SECONDS) -> None:

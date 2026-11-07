@@ -16,13 +16,30 @@ from looper.domain.model import (
     SignalNode,
     SignalNodeKind,
 )
+from looper.infrastructure.chain_translation import block_request_of
 from looper.infrastructure.contract import looper_inspector_pb2 as contract
 
 
 def signal_graph_request_of(graph: SignalGraph) -> contract.SignalGraphRequest:
     """A whole graph, as the contract carries it."""
     return contract.SignalGraphRequest(
-        nodes=[_node_request_of(one) for one in graph.nodes],
+        nodes=[
+            *(_node_request_of(one) for one in graph.nodes),
+            *(block_request_of(one) for one in graph.event_blocks),
+        ],
+        event_links=[
+            contract.EventLinkRequest(
+                from_node=one.from_node,
+                from_port=one.from_port,
+                to_node=one.to_node,
+                to_port=one.to_port,
+            )
+            for one in graph.event_links
+        ],
+        groups=[
+            contract.ChainGroupRequest(group_key=one.key, name=one.name, enabled=one.enabled)
+            for one in graph.groups
+        ],
         targets=[
             contract.SignalTargetRequest(
                 channel_id=one.channel_id, node=one.node, output=one.output

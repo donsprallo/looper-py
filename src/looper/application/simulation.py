@@ -43,6 +43,7 @@ from looper.domain.model import (
     Variable,
     Watch,
 )
+from looper.domain.model.chain_blocks import ChainBlockState
 from looper.domain.model.dma import DmaChannels
 from looper.domain.model.interrupts import Interrupts
 
@@ -100,6 +101,22 @@ class Simulation:
         held, when it is.
         """
         return self._inspector.run_state()
+
+    def chains(self) -> tuple[ChainBlockState, ...]:
+        """Every event block of the graph and of the Logic triggers, in the server's words.
+
+        A block that does not run -- switched off, stopped by a problem --
+        is listed too, with `ChainBlockState.problem` saying why.
+        """
+        return self._inspector.read_chains()
+
+    def switch_chain(self, group: str, on: bool) -> None:  # noqa: FBT001
+        """Switch one chain group on or off; switching on starts it afresh.
+
+        Raises:
+            SimulationRefusedError: If there is no such group, or no room for it.
+        """
+        self._inspector.switch_chain(group, on)
 
     @property
     def triggers(self) -> Triggers:

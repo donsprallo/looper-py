@@ -3,6 +3,17 @@
 from __future__ import annotations
 
 from looper.domain.model.boot import BootChain, BootStep, Image, PartitionHeader
+from looper.domain.model.chain_blocks import (
+    BusSend,
+    ChainBlockState,
+    ChainGroup,
+    EventBlock,
+    EventLink,
+    Hold,
+    Mark,
+    PinDo,
+    SetPin,
+)
 from looper.domain.model.dma import DmaChannel, DmaChannels
 from looper.domain.model.findings import Dependency, Finding, Findings
 from looper.domain.model.interrupts import InterruptLock, Interrupts, InterruptSource
@@ -56,6 +67,15 @@ from looper.domain.model.triggers import (
 from looper.domain.model.variables import Variable, Watch
 
 __all__ = [
+    "BusSend",
+    "ChainBlockState",
+    "ChainGroup",
+    "EventBlock",
+    "EventLink",
+    "Hold",
+    "Mark",
+    "PinDo",
+    "SetPin",
     "DmaChannel",
     "DmaChannels",
     "InterruptLock",

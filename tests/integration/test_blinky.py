@@ -164,3 +164,25 @@ def test_a_motor_model_closes_the_loop_around_the_speed_controller(
         simulation.apply_signal_graph(looper.SignalGraph())
 
     assert speed > 1.0
+
+
+def test_a_chain_marks_every_rise_of_the_led_inside_the_simulation(
+    simulation: looper.Simulation,
+) -> None:
+    led = simulation.pin("LED_STATUS")
+    graph = (
+        looper.SignalGraph()
+        .when("rises", looper.Edge(led.pin_id, looper.Polarity.RISE), group="echo")
+        .mark("noted", "LED on", after="rises", group="echo")
+        .group("echo", "Echo")
+    )
+    simulation.apply_signal_graph(graph)
+    try:
+        simulation.advance(2.0)
+        states = {state.key: state for state in simulation.chains()}
+    finally:
+        simulation.apply_signal_graph(looper.SignalGraph())
+
+    assert states["rises"].fires >= 2
+    assert states["noted"].fires == states["rises"].fires
+    assert states["rises"].summary_text == "LED_STATUS rises"
