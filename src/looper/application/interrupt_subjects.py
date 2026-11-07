@@ -1,4 +1,4 @@
-"""What a test can expect of the firmware's interrupts and of the run's findings (Pro).
+"""What a test can expect of the firmware's interrupts, DMA and the run's findings (Pro).
 
 Every expectation here has the window read the server's run findings at
 its end, which only a licence for run findings allows: without one the
@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from looper.domain.checks.dma_checks import LengthFits, NoOverrun, NotAccessedWhileRunning
 from looper.domain.checks.interrupt_checks import (
     HandledAtLeast,
     LatencyBelow,
@@ -79,3 +80,25 @@ class RunFindingsExpectation:
     def none(self, kinds: tuple[str, ...] | list[str] = ()) -> Expectations:
         """Expect no finding, of the kinds given or of any."""
         return self._expectations.add(NoRunFindings(tuple(kinds)))
+
+
+class DmaExpectation:
+    """What is expected of one DMA channel, by its name in contract.toml."""
+
+    def __init__(self, expectations: Expectations, channel: str) -> None:
+        self._expectations = expectations
+        self._channel = channel
+        expectations.reads_run_findings()
+        expectations.reads_dma()
+
+    def no_overrun(self) -> Expectations:
+        """Expect the channel never to write into a half whose ISR had not ended."""
+        return self._expectations.add(NoOverrun(self._channel))
+
+    def not_accessed_while_running(self) -> Expectations:
+        """Expect the firmware never to touch the buffer where the channel still works."""
+        return self._expectations.add(NotAccessedWhileRunning(self._channel))
+
+    def length_fits(self) -> Expectations:
+        """Expect every transfer to fit the variable it was given."""
+        return self._expectations.add(LengthFits(self._channel))

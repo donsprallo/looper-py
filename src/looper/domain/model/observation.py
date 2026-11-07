@@ -11,6 +11,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 
 from looper.domain.model.boot import BootChain, PartitionHeader
+from looper.domain.model.dma import DmaChannels
 from looper.domain.model.interrupt_facts import InterruptMark, RunFindingReading
 from looper.domain.model.interrupts import Interrupts
 from looper.domain.model.marks import FlashMark, ResetMark
@@ -51,6 +52,8 @@ class Observation:
         interrupts: The sources by name, at the window's end; read with the findings.
         run_findings: The server's findings of the run at the window's end
             (Pro); read only when an expectation is about interrupts.
+        dma: The DMA channels by name, at the window's end; read with the
+            findings when an expectation is about a channel.
     """
 
     samples: tuple[Sample, ...]
@@ -68,6 +71,7 @@ class Observation:
     interrupt_marks: tuple[InterruptMark, ...] = ()
     interrupts: Interrupts = field(default_factory=Interrupts)
     run_findings: tuple[RunFindingReading, ...] = ()
+    dma: DmaChannels = field(default_factory=DmaChannels)
 
     @property
     def sample_loss_note(self) -> str:

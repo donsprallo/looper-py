@@ -369,6 +369,11 @@ class InspectorStub:
                 request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.RunFindingFilter.SerializeToString,
                 response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.RunFindingList.FromString,
                 _registered_method=True)
+        self.ObserveDma = channel.unary_unary(
+                '/looper.inspector.v3.Inspector/ObserveDma',
+                request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
+                response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.DmaReport.FromString,
+                _registered_method=True)
         self.ObserveFunctionMetrics = channel.unary_unary(
                 '/looper.inspector.v3.Inspector/ObserveFunctionMetrics',
                 request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ArchitectureRequest.SerializeToString,
@@ -929,6 +934,16 @@ class InspectorServicer:
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def ObserveDma(self, request, context):
+        """---- DMA (CAPABILITY_DMA; free) ----
+        The channels from contract.toml, where they stand and what they moved.
+        The guard over a running receive buffer is on only with the licence
+        (RUN_FINDINGS) and CAPABILITY_DMA_GUARD; without it `guard` is LOCKED.
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
     def ObserveFunctionMetrics(self, request, context):
         """---- Architecture (CAPABILITY_ARCHITECTURE) ----
         Read from the project's code index, which the server builds in the
@@ -1371,6 +1386,11 @@ def add_InspectorServicer_to_server(servicer, server):
                     servicer.ObserveRunFindings,
                     request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.RunFindingFilter.FromString,
                     response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.RunFindingList.SerializeToString,
+            ),
+            'ObserveDma': grpc.unary_unary_rpc_method_handler(
+                    servicer.ObserveDma,
+                    request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.FromString,
+                    response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.DmaReport.SerializeToString,
             ),
             'ObserveFunctionMetrics': grpc.unary_unary_rpc_method_handler(
                     servicer.ObserveFunctionMetrics,
@@ -3252,6 +3272,33 @@ class Inspector:
             '/looper.inspector.v3.Inspector/ObserveRunFindings',
             looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.RunFindingFilter.SerializeToString,
             looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.RunFindingList.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def ObserveDma(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/looper.inspector.v3.Inspector/ObserveDma',
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.DmaReport.FromString,
             options,
             channel_credentials,
             insecure,

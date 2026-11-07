@@ -11,6 +11,7 @@ from collections.abc import Callable
 from typing import Any
 
 from looper.application.interrupt_port import InterruptInspector
+from looper.domain.model.dma import DmaChannels
 from looper.domain.model.interrupt_facts import RunFindingReading
 from looper.domain.model.interrupts import Interrupts
 from looper.infrastructure import interrupt_translation
@@ -42,6 +43,10 @@ class GrpcInterruptCalls(InterruptInspector):
         """The server's findings of the run."""
         listed = self._call(self._stub.ObserveRunFindings, contract.RunFindingFilter())
         return interrupt_translation.findings_of(listed)
+
+    def read_dma(self) -> DmaChannels:
+        """Every DMA channel."""
+        return interrupt_translation.dma_of(self._call(self._stub.ObserveDma, EMPTY))
 
     def raise_interrupt(self, source_id: int, after_us: int = 0) -> None:
         """Make a source due, now or later."""

@@ -1,7 +1,8 @@
-"""The contract's interrupt messages, as the library's readings."""
+"""The contract's interrupt and DMA messages, as the library's readings."""
 
 from __future__ import annotations
 
+from looper.domain.model.dma import DmaChannel, DmaChannels
 from looper.domain.model.interrupt_facts import InterruptMark, RunFindingReading
 from looper.domain.model.interrupts import InterruptLock, Interrupts, InterruptSource
 from looper.infrastructure.contract import looper_inspector_pb2 as contract
@@ -53,7 +54,11 @@ EVENT_KINDS = {
     contract.INTERRUPT_EVENT_LOCKED: "locked",
     contract.INTERRUPT_EVENT_STORM: "storm",
 }
-SEVERITIES = {contract.TIER_NOTICEABLE: "noticeable", contract.TIER_CRITICAL: "critical"}
+SEVERITIES = {
+    contract.TIER_GOOD: "note",
+    contract.TIER_NOTICEABLE: "noticeable",
+    contract.TIER_CRITICAL: "critical",
+}
 
 
 def marks_of(message: contract.EventBatch) -> tuple[InterruptMark, ...]:
@@ -81,6 +86,8 @@ def findings_of(message: contract.RunFindingList) -> tuple[RunFindingReading, ..
             severity=SEVERITIES.get(one.severity, "critical"),
             occurrences=one.occurrences,
             check_text=one.check_text,
+            source_id=one.source_id,
+            dma_id=one.dma_id,
         )
         for one in message.findings
     )
@@ -91,3 +98,50 @@ def raise_request(source_id: int, after_us: int) -> contract.InterruptRaise:
     if after_us <= 0:
         return contract.InterruptRaise(source_id=source_id)
     return contract.InterruptRaise(source_id=source_id, when=contract.When(after_us=after_us))
+
+
+#: The contract's words for the guard over a channel's buffer.
+GUARDS = {
+    contract.DMA_GUARD_OFF: "off",
+    contract.DMA_GUARD_PRECISE: "precise",
+    contract.DMA_GUARD_COARSE: "coarse",
+    contract.DMA_GUARD_DOWNGRADED: "downgraded",
+    contract.DMA_GUARD_UNAVAILABLE: "unavailable",
+    contract.DMA_GUARD_DEBUGGER: "debugger",
+    contract.DMA_GUARD_STACK: "stack",
+    contract.DMA_GUARD_LOCKED: "locked",
+}
+
+
+def dma_of(report: contract.DmaReport) -> DmaChannels:
+    """The channels as readings."""
+    return DmaChannels(
+        channels=tuple(_channel(one) for one in report.channels),
+        installed=report.installed,
+        note=report.note,
+    )
+
+
+def _channel(channel: contract.DmaChannelView) -> DmaChannel:
+    return DmaChannel(
+        dma_id=channel.dma_id,
+        name=channel.name,
+        peripheral_text=channel.peripheral_text,
+        direction=channel.direction,
+        mode=channel.mode,
+        running=channel.running,
+        buffer_name=channel.buffer_name,
+        buffer_bytes=channel.buffer_bytes,
+        length=channel.length,
+        width=channel.width,
+        position=channel.position,
+        announced=channel.announced,
+        laps=channel.laps,
+        elements=channel.elements,
+        overruns=channel.overruns,
+        unclaimed=channel.unclaimed,
+        guard=GUARDS.get(channel.guard, "off"),
+        guard_text=channel.guard_text,
+        neighbours=tuple(channel.neighbours),
+        state_text=channel.state_text,
+    )

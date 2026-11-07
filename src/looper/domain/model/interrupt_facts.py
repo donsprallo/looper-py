@@ -36,6 +36,8 @@ class RunFindingReading:
         severity: noticeable or critical.
         occurrences: How often it happened.
         check_text: The check that expects it away.
+        source_id: The interrupt source it is about; 0 without.
+        dma_id: The DMA channel it is about; 0 without.
     """
 
     kind: str
@@ -43,3 +45,5 @@ class RunFindingReading:
     severity: str = "critical"
     occurrences: int = 1
     check_text: str = ""
+    source_id: int = 0
+    dma_id: int = 0

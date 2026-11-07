@@ -22,6 +22,7 @@ from typing import Any
 
 from looper.application.event_window import WindowReader
 from looper.application.interrupt_subjects import (
+    DmaExpectation,
     InterruptExpectation,
     InterruptsExpectation,
     RunFindingsExpectation,
@@ -70,6 +71,7 @@ class Expectations:
         self._reads_profile = False
         self._reads_headers = False
         self._reads_run_findings = False
+        self._reads_dma = False
         self._reads_chains = False
 
     def add(self, check: Check) -> Expectations:
@@ -129,6 +131,14 @@ class Expectations:
     def reads_run_findings(self) -> None:
         """Have the window read the run's findings and sources at its end (Pro)."""
         self._reads_run_findings = True
+
+    def reads_dma(self) -> None:
+        """Have the window read the DMA channels at its end, with the findings."""
+        self._reads_dma = True
+
+    def dma(self, channel: str) -> DmaExpectation:
+        """Expect something of one DMA channel, by its name (Pro)."""
+        return DmaExpectation(self, channel)
 
     def interrupt(self, source: str) -> InterruptExpectation:
         """Expect something of one interrupt source, by its name (Pro)."""
@@ -216,10 +226,13 @@ class Expectations:
         """The run's findings and the sources by name, when an expectation is about them (Pro)."""
         if not self._reads_run_findings:
             return {}
-        return {
+        judged: dict[str, Any] = {
             "run_findings": self._inspector.read_run_findings(),
             "interrupts": self._inspector.read_interrupts(),
         }
+        if self._reads_dma:
+            judged["dma"] = self._inspector.read_dma()
+        return judged
 
     def _profile(self) -> Profile:
         """The window's profile, when an expectation is about it; nothing measured otherwise."""

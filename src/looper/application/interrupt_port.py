@@ -1,4 +1,4 @@
-"""What the port answers about the firmware's interrupts (free).
+"""What the port answers about the firmware's interrupts and DMA channels (free).
 
 Apart from the rest of the port so that both stay readable; `Inspector`
 inherits it.
@@ -8,12 +8,13 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 
+from looper.domain.model.dma import DmaChannels
 from looper.domain.model.interrupt_facts import RunFindingReading
 from looper.domain.model.interrupts import Interrupts
 
 
 class InterruptInspector(ABC):
-    """The interrupt sources and the lock."""
+    """The interrupt sources, the lock, and the DMA channels."""
 
     @abstractmethod
     def read_interrupts(self) -> Interrupts:
@@ -35,3 +36,7 @@ class InterruptInspector(ABC):
             SimulationRefusedError: If the server refuses it: no such source,
                 the end of a transfer, or no table in the firmware yet.
         """
+
+    @abstractmethod
+    def read_dma(self) -> DmaChannels:
+        """Every DMA channel with where it stands and what it moved in this life."""

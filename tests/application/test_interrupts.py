@@ -60,3 +60,24 @@ def test_with_the_licence_the_run_findings_are_checked() -> None:
 
     assert not report.outcomes[0].met
     assert report.outcomes[0].observed == "TIM2 was lost"
+
+
+def test_the_dma_channels_are_read_with_the_server_s_texts() -> None:
+    simulation, _ = _simulation()
+
+    channel = simulation.dma().channel("USART2_RX")
+
+    assert (channel.peripheral_text, channel.buffer_name) == ("UART 2 -> rx_buf", "rx_buf")
+
+
+def test_a_dma_check_reads_the_channels_and_the_findings() -> None:
+    simulation, inspector = _simulation()
+    inspector.run_findings = (RunFindingReading("DMA_OVERRUN", "USART2_RX overran", dma_id=1),)
+    check = simulation.expect()
+    check.dma("USART2_RX").no_overrun()
+    check.dma("USART2_RX").length_fits()
+
+    overrun, length = check.evaluate(for_seconds=0.01).outcomes
+
+    assert (overrun.met, overrun.observed) == (False, "USART2_RX overran")
+    assert length.met

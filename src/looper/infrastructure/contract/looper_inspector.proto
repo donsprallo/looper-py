@@ -183,6 +183,8 @@ enum Capability {
   CAPABILITY_FLASH = 14;           // ObserveFlash, WriteFlash, EraseFlash, SaveFlash, LoadFlash
   CAPABILITY_BOOT = 15;            // several [[images]], and Pro: ObserveImages, ObserveBootChain, CutPower, ObserveOtp, BurnOtp
   CAPABILITY_INTERRUPTS = 16;      // ObserveInterrupts, RaiseInterrupt, InterruptEvent in the stream
+  CAPABILITY_DMA = 17;             // ObserveDma, DmaEvent in the stream
+  CAPABILITY_DMA_GUARD = 18;       // this platform can tell a read of a buffer a DMA channel still writes
 }
 
 enum ServerMode {
@@ -312,6 +314,7 @@ message EventFilter {
   repeated uint32 pin_ids = 5;          // for pin changes; empty: every pin
   repeated string call_functions = 6;   // for calls; empty: every function
   repeated uint32 interrupt_ids = 7;    // for interrupt events; empty: every source and the lock
+  repeated uint32 dma_ids = 8;          // for DMA events; empty: every channel
 }
 
 enum EventKind {
@@ -328,6 +331,7 @@ enum EventKind {
   EVENT_KIND_RESET = 10;     // a reset (ResetMark) and the life it began (LifeMark)
   EVENT_KIND_FLASH = 11;     // a flash write, erase, or a write against its rules (FlashMark)
   EVENT_KIND_INTERRUPT = 12; // an interrupt source pending, an ISR entered and left, lost, a lock (InterruptEvent)
+  EVENT_KIND_DMA = 13;       // a DMA transfer started, reached its half or end, overran, was touched (DmaEvent)
 }
 
 message EventBatch {
@@ -379,6 +383,7 @@ message Event {
     LifeMark life = 15;
     FlashMark flash = 16;
     InterruptEvent interrupt = 17;
+    DmaEvent dma = 18;
   }
   // 13 is the simulation's record of a call between lifelines, which the
   // server keeps for ObserveSequence and does not serve as a body.
@@ -441,6 +446,58 @@ enum InterruptEventKind {
   INTERRUPT_EVENT_LOST = 3;    // due again while its pending bit was set
   INTERRUPT_EVENT_LOCKED = 4;  // a section of the global lock ended, from 1 us
   INTERRUPT_EVENT_STORM = 5;   // entered too often at one time: its line is shut
+}
+
+// A DMA channel did something, at Event.sim_us. The numbers are the
+// simulation's own, so the server passes the events through: position and
+// lap where the channel stood, the access the guard caught with the
+// instruction (pc) and what it touched. A read of the buffer is caught only
+// with the licence (RUN_FINDINGS) and CAPABILITY_DMA_GUARD.
+message DmaEvent {
+  uint32 dma_id = 1;           // the channel's number, its place in contract.toml plus one
+  DmaEventKind kind = 2;
+  uint64 address = 3;          // START: the buffer
+  uint32 length = 4;           // START: elements
+  uint32 width = 5;            // START: bytes per element
+  uint32 position = 6;         // the element the channel writes next
+  uint64 lap = 7;              // a circular channel's laps so far
+  DmaAccess access = 8;        // ACCESS
+  bool write = 9;              // ACCESS: a write, not a read
+  uint64 pc = 10;              // ACCESS: the firmware's instruction
+  uint64 access_address = 11;  // ACCESS: what it touched
+  uint64 count = 12;           // UNCLAIMED: bytes nobody took; IDLE: the count the ISR is given
+  bool on_stack = 13;          // START: the buffer is on the stack
+  DmaGuardOff reason = 14;     // GUARD_OFF
+  CodePlace place = 15;        // ACCESS: pc as a place in the code, where the server resolves it; not in the stream
+  string text = 16;            // the sentence, where the server writes one; not in the stream
+}
+
+enum DmaEventKind {
+  DMA_EVENT_START = 0;
+  DMA_EVENT_HALF = 1;
+  DMA_EVENT_COMPLETE = 2;
+  DMA_EVENT_IDLE = 3;          // the line went idle: the transfer ends with what it has
+  DMA_EVENT_STOPPED = 4;
+  DMA_EVENT_OVERRUN = 5;       // a half came while the ISR of the one before had not ended
+  DMA_EVENT_ACCESS = 6;        // the firmware touched the buffer while the channel ran
+  DMA_EVENT_UNCLAIMED = 7;     // bytes arrived and no transfer took them
+  DMA_EVENT_GUARD_OFF = 8;     // the guard over the buffer stopped; reason says why
+}
+
+enum DmaAccess {
+  DMA_ACCESS_UNSPECIFIED = 0;
+  DMA_ACCESS_UNWRITTEN = 1;    // read an element the channel has not written yet
+  DMA_ACCESS_UNANNOUNCED = 2;  // read an element written but not yet announced by half, end or idle
+  DMA_ACCESS_CONFLICT = 3;     // wrote what the channel still writes
+  DMA_ACCESS_OVERWRITE = 4;    // the channel wrote over what the firmware had not read
+}
+
+enum DmaGuardOff {
+  DMA_GUARD_OFF_UNSPECIFIED = 0;
+  DMA_GUARD_OFF_BUDGET = 1;      // the neighbours trapped too often: the guard went coarse
+  DMA_GUARD_OFF_DEBUGGER = 2;    // a debugger is attached
+  DMA_GUARD_OFF_STACK = 3;       // the buffer is on the stack
+  DMA_GUARD_OFF_UNAVAILABLE = 4; // the platform cannot guard pages
 }
 
 enum FlashMarkKind {
@@ -975,6 +1032,11 @@ service Inspector {
   // PERMISSION_DENIED with the sentence. A request naming the revision the
   // client has is answered with `unchanged` and nothing else.
   rpc ObserveRunFindings(RunFindingFilter) returns (RunFindingList);
+  // ---- DMA (CAPABILITY_DMA; free) ----
+  // The channels from contract.toml, where they stand and what they moved.
+  // The guard over a running receive buffer is on only with the licence
+  // (RUN_FINDINGS) and CAPABILITY_DMA_GUARD; without it `guard` is LOCKED.
+  rpc ObserveDma(Empty) returns (DmaReport);
 
   // ---- Architecture (CAPABILITY_ARCHITECTURE) ----
   // Read from the project's code index, which the server builds in the
@@ -2763,6 +2825,52 @@ message InterruptReport {
   string points_text = 3;      // "Interruption points: adapter calls, waits, the end of a pass"
   string note = 4;             // the time model, or why nothing is there
   bool installed = 5;          // the firmware called an interrupt role, so the counts are live
+}
+
+// ---- DMA (free; the guard is Pro) ----------------------------------------------
+
+// One DMA channel: from contract.toml before the firmware starts it, with
+// its counts in this life. The buffer is named from DWARF where it can be.
+message DmaChannelView {
+  uint32 dma_id = 1;
+  string name = 2;
+  string peripheral_text = 3;  // "UART 2 -> rx_buf"
+  string direction = 4;        // "receive", "transmit"
+  string mode = 5;             // "normal", "circular"
+  bool running = 6;
+  string buffer_name = 7;      // "rx_buf", "" where DWARF does not say
+  uint64 buffer_address = 8;
+  uint32 buffer_bytes = 9;     // the variable's size from DWARF, 0 unknown
+  uint32 length = 10;          // elements of the transfer
+  uint32 width = 11;           // bytes per element
+  uint32 position = 12;        // the element written next
+  uint32 announced = 13;       // elements the firmware was told of by half, end or idle
+  uint64 laps = 14;
+  uint64 elements = 15;
+  uint64 overruns = 16;
+  uint64 unclaimed = 17;
+  DmaGuard guard = 18;
+  string guard_text = 19;      // "precise", "coarse: the neighbours trapped too often", "Pro"
+  uint64 neighbour_traps = 20;
+  repeated string neighbours = 21;  // variables sharing the buffer's pages, from DWARF
+  string state_text = 22;      // "running, lap 3, at 12 of 64", "stopped", "not started"
+}
+
+enum DmaGuard {
+  DMA_GUARD_OFF = 0;
+  DMA_GUARD_PRECISE = 1;
+  DMA_GUARD_COARSE = 2;
+  DMA_GUARD_DOWNGRADED = 3;
+  DMA_GUARD_UNAVAILABLE = 4;
+  DMA_GUARD_DEBUGGER = 5;
+  DMA_GUARD_STACK = 6;
+  DMA_GUARD_LOCKED = 7;        // the platform could, the licence does not cover it (RUN_FINDINGS)
+}
+
+message DmaReport {
+  repeated DmaChannelView channels = 1;
+  string note = 2;             // why nothing is there, or what the guard does
+  bool installed = 3;          // the firmware called a DMA or interrupt role, so the counts are live
 }
 
 // ---- Run findings (Pro) --------------------------------------------------------

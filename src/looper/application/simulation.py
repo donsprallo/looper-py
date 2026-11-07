@@ -42,6 +42,7 @@ from looper.domain.model import (
     Variable,
     Watch,
 )
+from looper.domain.model.dma import DmaChannels
 from looper.domain.model.interrupts import Interrupts
 
 
@@ -399,6 +400,10 @@ class Simulation:
     def interrupts(self) -> Interrupts:
         """The firmware's interrupt sources with what they did in this life, and the lock."""
         return self._inspector.read_interrupts()
+
+    def dma(self) -> DmaChannels:
+        """The firmware's DMA channels: where each transfer stands and what it moved."""
+        return self._inspector.read_dma()
 
     def raise_interrupt(self, source: str, after_us: int = 0) -> None:
         """Make an interrupt source due, as its pin or timer would: now, or so long from now.

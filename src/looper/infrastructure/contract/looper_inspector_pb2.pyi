@@ -56,6 +56,8 @@ class Capability(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     CAPABILITY_FLASH: _ClassVar[Capability]
     CAPABILITY_BOOT: _ClassVar[Capability]
     CAPABILITY_INTERRUPTS: _ClassVar[Capability]
+    CAPABILITY_DMA: _ClassVar[Capability]
+    CAPABILITY_DMA_GUARD: _ClassVar[Capability]
 
 class ServerMode(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     __slots__ = ()
@@ -83,6 +85,7 @@ class EventKind(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     EVENT_KIND_RESET: _ClassVar[EventKind]
     EVENT_KIND_FLASH: _ClassVar[EventKind]
     EVENT_KIND_INTERRUPT: _ClassVar[EventKind]
+    EVENT_KIND_DMA: _ClassVar[EventKind]
 
 class InterruptEventKind(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     __slots__ = ()
@@ -92,6 +95,34 @@ class InterruptEventKind(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     INTERRUPT_EVENT_LOST: _ClassVar[InterruptEventKind]
     INTERRUPT_EVENT_LOCKED: _ClassVar[InterruptEventKind]
     INTERRUPT_EVENT_STORM: _ClassVar[InterruptEventKind]
+
+class DmaEventKind(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+    __slots__ = ()
+    DMA_EVENT_START: _ClassVar[DmaEventKind]
+    DMA_EVENT_HALF: _ClassVar[DmaEventKind]
+    DMA_EVENT_COMPLETE: _ClassVar[DmaEventKind]
+    DMA_EVENT_IDLE: _ClassVar[DmaEventKind]
+    DMA_EVENT_STOPPED: _ClassVar[DmaEventKind]
+    DMA_EVENT_OVERRUN: _ClassVar[DmaEventKind]
+    DMA_EVENT_ACCESS: _ClassVar[DmaEventKind]
+    DMA_EVENT_UNCLAIMED: _ClassVar[DmaEventKind]
+    DMA_EVENT_GUARD_OFF: _ClassVar[DmaEventKind]
+
+class DmaAccess(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+    __slots__ = ()
+    DMA_ACCESS_UNSPECIFIED: _ClassVar[DmaAccess]
+    DMA_ACCESS_UNWRITTEN: _ClassVar[DmaAccess]
+    DMA_ACCESS_UNANNOUNCED: _ClassVar[DmaAccess]
+    DMA_ACCESS_CONFLICT: _ClassVar[DmaAccess]
+    DMA_ACCESS_OVERWRITE: _ClassVar[DmaAccess]
+
+class DmaGuardOff(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+    __slots__ = ()
+    DMA_GUARD_OFF_UNSPECIFIED: _ClassVar[DmaGuardOff]
+    DMA_GUARD_OFF_BUDGET: _ClassVar[DmaGuardOff]
+    DMA_GUARD_OFF_DEBUGGER: _ClassVar[DmaGuardOff]
+    DMA_GUARD_OFF_STACK: _ClassVar[DmaGuardOff]
+    DMA_GUARD_OFF_UNAVAILABLE: _ClassVar[DmaGuardOff]
 
 class FlashMarkKind(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     __slots__ = ()
@@ -276,6 +307,17 @@ class MessageKind(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     MESSAGE_KIND_FOUND: _ClassVar[MessageKind]
     MESSAGE_KIND_HAL: _ClassVar[MessageKind]
     MESSAGE_KIND_BUS: _ClassVar[MessageKind]
+
+class DmaGuard(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+    __slots__ = ()
+    DMA_GUARD_OFF: _ClassVar[DmaGuard]
+    DMA_GUARD_PRECISE: _ClassVar[DmaGuard]
+    DMA_GUARD_COARSE: _ClassVar[DmaGuard]
+    DMA_GUARD_DOWNGRADED: _ClassVar[DmaGuard]
+    DMA_GUARD_UNAVAILABLE: _ClassVar[DmaGuard]
+    DMA_GUARD_DEBUGGER: _ClassVar[DmaGuard]
+    DMA_GUARD_STACK: _ClassVar[DmaGuard]
+    DMA_GUARD_LOCKED: _ClassVar[DmaGuard]
 CONTRACT_VERSION_UNSPECIFIED: ContractVersion
 CONTRACT_VERSION_CURRENT: ContractVersion
 REFUSAL_NONE: Refusal
@@ -311,6 +353,8 @@ CAPABILITY_RESET: Capability
 CAPABILITY_FLASH: Capability
 CAPABILITY_BOOT: Capability
 CAPABILITY_INTERRUPTS: Capability
+CAPABILITY_DMA: Capability
+CAPABILITY_DMA_GUARD: Capability
 SERVER_MODE_SIMULATION: ServerMode
 SERVER_MODE_STATIC: ServerMode
 CLOCK_MODE_HELD: ClockMode
@@ -329,12 +373,32 @@ EVENT_KIND_TRIGGER: EventKind
 EVENT_KIND_RESET: EventKind
 EVENT_KIND_FLASH: EventKind
 EVENT_KIND_INTERRUPT: EventKind
+EVENT_KIND_DMA: EventKind
 INTERRUPT_EVENT_PENDING: InterruptEventKind
 INTERRUPT_EVENT_ENTERED: InterruptEventKind
 INTERRUPT_EVENT_LEFT: InterruptEventKind
 INTERRUPT_EVENT_LOST: InterruptEventKind
 INTERRUPT_EVENT_LOCKED: InterruptEventKind
 INTERRUPT_EVENT_STORM: InterruptEventKind
+DMA_EVENT_START: DmaEventKind
+DMA_EVENT_HALF: DmaEventKind
+DMA_EVENT_COMPLETE: DmaEventKind
+DMA_EVENT_IDLE: DmaEventKind
+DMA_EVENT_STOPPED: DmaEventKind
+DMA_EVENT_OVERRUN: DmaEventKind
+DMA_EVENT_ACCESS: DmaEventKind
+DMA_EVENT_UNCLAIMED: DmaEventKind
+DMA_EVENT_GUARD_OFF: DmaEventKind
+DMA_ACCESS_UNSPECIFIED: DmaAccess
+DMA_ACCESS_UNWRITTEN: DmaAccess
+DMA_ACCESS_UNANNOUNCED: DmaAccess
+DMA_ACCESS_CONFLICT: DmaAccess
+DMA_ACCESS_OVERWRITE: DmaAccess
+DMA_GUARD_OFF_UNSPECIFIED: DmaGuardOff
+DMA_GUARD_OFF_BUDGET: DmaGuardOff
+DMA_GUARD_OFF_DEBUGGER: DmaGuardOff
+DMA_GUARD_OFF_STACK: DmaGuardOff
+DMA_GUARD_OFF_UNAVAILABLE: DmaGuardOff
 FLASH_MARK_UNSPECIFIED: FlashMarkKind
 FLASH_MARK_WRITE: FlashMarkKind
 FLASH_MARK_ERASE: FlashMarkKind
@@ -444,6 +508,14 @@ MESSAGE_KIND_RETURN: MessageKind
 MESSAGE_KIND_FOUND: MessageKind
 MESSAGE_KIND_HAL: MessageKind
 MESSAGE_KIND_BUS: MessageKind
+DMA_GUARD_OFF: DmaGuard
+DMA_GUARD_PRECISE: DmaGuard
+DMA_GUARD_COARSE: DmaGuard
+DMA_GUARD_DOWNGRADED: DmaGuard
+DMA_GUARD_UNAVAILABLE: DmaGuard
+DMA_GUARD_DEBUGGER: DmaGuard
+DMA_GUARD_STACK: DmaGuard
+DMA_GUARD_LOCKED: DmaGuard
 
 class Empty(_message.Message):
     __slots__ = ()
@@ -638,7 +710,7 @@ class ReadEventsRequest(_message.Message):
     def __init__(self, epoch: _Optional[int] = ..., from_event_seq: _Optional[int] = ..., max_events: _Optional[int] = ..., filter: _Optional[_Union[EventFilter, _Mapping]] = ..., with_levels: _Optional[bool] = ..., from_us: _Optional[int] = ..., to_us: _Optional[int] = ...) -> None: ...
 
 class EventFilter(_message.Message):
-    __slots__ = ("kinds", "channel_ids", "bus_ids", "sample_stride", "pin_ids", "call_functions", "interrupt_ids")
+    __slots__ = ("kinds", "channel_ids", "bus_ids", "sample_stride", "pin_ids", "call_functions", "interrupt_ids", "dma_ids")
     KINDS_FIELD_NUMBER: _ClassVar[int]
     CHANNEL_IDS_FIELD_NUMBER: _ClassVar[int]
     BUS_IDS_FIELD_NUMBER: _ClassVar[int]
@@ -646,6 +718,7 @@ class EventFilter(_message.Message):
     PIN_IDS_FIELD_NUMBER: _ClassVar[int]
     CALL_FUNCTIONS_FIELD_NUMBER: _ClassVar[int]
     INTERRUPT_IDS_FIELD_NUMBER: _ClassVar[int]
+    DMA_IDS_FIELD_NUMBER: _ClassVar[int]
     kinds: _containers.RepeatedScalarFieldContainer[EventKind]
     channel_ids: _containers.RepeatedScalarFieldContainer[int]
     bus_ids: _containers.RepeatedScalarFieldContainer[int]
@@ -653,7 +726,8 @@ class EventFilter(_message.Message):
     pin_ids: _containers.RepeatedScalarFieldContainer[int]
     call_functions: _containers.RepeatedScalarFieldContainer[str]
     interrupt_ids: _containers.RepeatedScalarFieldContainer[int]
-    def __init__(self, kinds: _Optional[_Iterable[_Union[EventKind, str]]] = ..., channel_ids: _Optional[_Iterable[int]] = ..., bus_ids: _Optional[_Iterable[int]] = ..., sample_stride: _Optional[int] = ..., pin_ids: _Optional[_Iterable[int]] = ..., call_functions: _Optional[_Iterable[str]] = ..., interrupt_ids: _Optional[_Iterable[int]] = ...) -> None: ...
+    dma_ids: _containers.RepeatedScalarFieldContainer[int]
+    def __init__(self, kinds: _Optional[_Iterable[_Union[EventKind, str]]] = ..., channel_ids: _Optional[_Iterable[int]] = ..., bus_ids: _Optional[_Iterable[int]] = ..., sample_stride: _Optional[int] = ..., pin_ids: _Optional[_Iterable[int]] = ..., call_functions: _Optional[_Iterable[str]] = ..., interrupt_ids: _Optional[_Iterable[int]] = ..., dma_ids: _Optional[_Iterable[int]] = ...) -> None: ...
 
 class EventBatch(_message.Message):
     __slots__ = ("epoch", "events", "lost", "next_event_seq", "sim_now_us", "epoch_changed", "levels")
@@ -704,7 +778,7 @@ class ChannelValueSince(_message.Message):
     def __init__(self, channel_id: _Optional[int] = ..., value: _Optional[float] = ..., since_us: _Optional[int] = ...) -> None: ...
 
 class Event(_message.Message):
-    __slots__ = ("event_seq", "sim_us", "sample", "pin", "exchange", "call", "command", "job", "fault", "run", "trigger_fired", "trigger_disarmed", "reset", "life", "flash", "interrupt")
+    __slots__ = ("event_seq", "sim_us", "sample", "pin", "exchange", "call", "command", "job", "fault", "run", "trigger_fired", "trigger_disarmed", "reset", "life", "flash", "interrupt", "dma")
     EVENT_SEQ_FIELD_NUMBER: _ClassVar[int]
     SIM_US_FIELD_NUMBER: _ClassVar[int]
     SAMPLE_FIELD_NUMBER: _ClassVar[int]
@@ -721,6 +795,7 @@ class Event(_message.Message):
     LIFE_FIELD_NUMBER: _ClassVar[int]
     FLASH_FIELD_NUMBER: _ClassVar[int]
     INTERRUPT_FIELD_NUMBER: _ClassVar[int]
+    DMA_FIELD_NUMBER: _ClassVar[int]
     event_seq: int
     sim_us: int
     sample: Sample
@@ -737,7 +812,8 @@ class Event(_message.Message):
     life: LifeMark
     flash: FlashMark
     interrupt: InterruptEvent
-    def __init__(self, event_seq: _Optional[int] = ..., sim_us: _Optional[int] = ..., sample: _Optional[_Union[Sample, _Mapping]] = ..., pin: _Optional[_Union[PinChange, _Mapping]] = ..., exchange: _Optional[_Union[Exchange, _Mapping]] = ..., call: _Optional[_Union[Call, _Mapping]] = ..., command: _Optional[_Union[CommandApplied, _Mapping]] = ..., job: _Optional[_Union[JobEvent, _Mapping]] = ..., fault: _Optional[_Union[Fault, _Mapping]] = ..., run: _Optional[_Union[RunEvent, _Mapping]] = ..., trigger_fired: _Optional[_Union[TriggerFired, _Mapping]] = ..., trigger_disarmed: _Optional[_Union[TriggerDisarmed, _Mapping]] = ..., reset: _Optional[_Union[ResetMark, _Mapping]] = ..., life: _Optional[_Union[LifeMark, _Mapping]] = ..., flash: _Optional[_Union[FlashMark, _Mapping]] = ..., interrupt: _Optional[_Union[InterruptEvent, _Mapping]] = ...) -> None: ...
+    dma: DmaEvent
+    def __init__(self, event_seq: _Optional[int] = ..., sim_us: _Optional[int] = ..., sample: _Optional[_Union[Sample, _Mapping]] = ..., pin: _Optional[_Union[PinChange, _Mapping]] = ..., exchange: _Optional[_Union[Exchange, _Mapping]] = ..., call: _Optional[_Union[Call, _Mapping]] = ..., command: _Optional[_Union[CommandApplied, _Mapping]] = ..., job: _Optional[_Union[JobEvent, _Mapping]] = ..., fault: _Optional[_Union[Fault, _Mapping]] = ..., run: _Optional[_Union[RunEvent, _Mapping]] = ..., trigger_fired: _Optional[_Union[TriggerFired, _Mapping]] = ..., trigger_disarmed: _Optional[_Union[TriggerDisarmed, _Mapping]] = ..., reset: _Optional[_Union[ResetMark, _Mapping]] = ..., life: _Optional[_Union[LifeMark, _Mapping]] = ..., flash: _Optional[_Union[FlashMark, _Mapping]] = ..., interrupt: _Optional[_Union[InterruptEvent, _Mapping]] = ..., dma: _Optional[_Union[DmaEvent, _Mapping]] = ...) -> None: ...
 
 class ResetMark(_message.Message):
     __slots__ = ("cause", "cause_text", "life", "reason", "jump_target", "text")
@@ -808,6 +884,42 @@ class InterruptEvent(_message.Message):
     by_race: bool
     place: CodePlace
     def __init__(self, source_id: _Optional[int] = ..., kind: _Optional[_Union[InterruptEventKind, str]] = ..., latency_us: _Optional[int] = ..., duration_us: _Optional[int] = ..., host_ns: _Optional[int] = ..., lost: _Optional[int] = ..., cause: _Optional[_Union[Source, str]] = ..., point: _Optional[int] = ..., line: _Optional[int] = ..., by_race: _Optional[bool] = ..., place: _Optional[_Union[CodePlace, _Mapping]] = ...) -> None: ...
+
+class DmaEvent(_message.Message):
+    __slots__ = ("dma_id", "kind", "address", "length", "width", "position", "lap", "access", "write", "pc", "access_address", "count", "on_stack", "reason", "place", "text")
+    DMA_ID_FIELD_NUMBER: _ClassVar[int]
+    KIND_FIELD_NUMBER: _ClassVar[int]
+    ADDRESS_FIELD_NUMBER: _ClassVar[int]
+    LENGTH_FIELD_NUMBER: _ClassVar[int]
+    WIDTH_FIELD_NUMBER: _ClassVar[int]
+    POSITION_FIELD_NUMBER: _ClassVar[int]
+    LAP_FIELD_NUMBER: _ClassVar[int]
+    ACCESS_FIELD_NUMBER: _ClassVar[int]
+    WRITE_FIELD_NUMBER: _ClassVar[int]
+    PC_FIELD_NUMBER: _ClassVar[int]
+    ACCESS_ADDRESS_FIELD_NUMBER: _ClassVar[int]
+    COUNT_FIELD_NUMBER: _ClassVar[int]
+    ON_STACK_FIELD_NUMBER: _ClassVar[int]
+    REASON_FIELD_NUMBER: _ClassVar[int]
+    PLACE_FIELD_NUMBER: _ClassVar[int]
+    TEXT_FIELD_NUMBER: _ClassVar[int]
+    dma_id: int
+    kind: DmaEventKind
+    address: int
+    length: int
+    width: int
+    position: int
+    lap: int
+    access: DmaAccess
+    write: bool
+    pc: int
+    access_address: int
+    count: int
+    on_stack: bool
+    reason: DmaGuardOff
+    place: CodePlace
+    text: str
+    def __init__(self, dma_id: _Optional[int] = ..., kind: _Optional[_Union[DmaEventKind, str]] = ..., address: _Optional[int] = ..., length: _Optional[int] = ..., width: _Optional[int] = ..., position: _Optional[int] = ..., lap: _Optional[int] = ..., access: _Optional[_Union[DmaAccess, str]] = ..., write: _Optional[bool] = ..., pc: _Optional[int] = ..., access_address: _Optional[int] = ..., count: _Optional[int] = ..., on_stack: _Optional[bool] = ..., reason: _Optional[_Union[DmaGuardOff, str]] = ..., place: _Optional[_Union[CodePlace, _Mapping]] = ..., text: _Optional[str] = ...) -> None: ...
 
 class Lost(_message.Message):
     __slots__ = ("from_event_seq", "to_event_seq", "from_us", "to_us", "reason")
@@ -4015,6 +4127,64 @@ class InterruptReport(_message.Message):
     note: str
     installed: bool
     def __init__(self, sources: _Optional[_Iterable[_Union[InterruptSourceView, _Mapping]]] = ..., lock: _Optional[_Union[InterruptLockView, _Mapping]] = ..., points_text: _Optional[str] = ..., note: _Optional[str] = ..., installed: _Optional[bool] = ...) -> None: ...
+
+class DmaChannelView(_message.Message):
+    __slots__ = ("dma_id", "name", "peripheral_text", "direction", "mode", "running", "buffer_name", "buffer_address", "buffer_bytes", "length", "width", "position", "announced", "laps", "elements", "overruns", "unclaimed", "guard", "guard_text", "neighbour_traps", "neighbours", "state_text")
+    DMA_ID_FIELD_NUMBER: _ClassVar[int]
+    NAME_FIELD_NUMBER: _ClassVar[int]
+    PERIPHERAL_TEXT_FIELD_NUMBER: _ClassVar[int]
+    DIRECTION_FIELD_NUMBER: _ClassVar[int]
+    MODE_FIELD_NUMBER: _ClassVar[int]
+    RUNNING_FIELD_NUMBER: _ClassVar[int]
+    BUFFER_NAME_FIELD_NUMBER: _ClassVar[int]
+    BUFFER_ADDRESS_FIELD_NUMBER: _ClassVar[int]
+    BUFFER_BYTES_FIELD_NUMBER: _ClassVar[int]
+    LENGTH_FIELD_NUMBER: _ClassVar[int]
+    WIDTH_FIELD_NUMBER: _ClassVar[int]
+    POSITION_FIELD_NUMBER: _ClassVar[int]
+    ANNOUNCED_FIELD_NUMBER: _ClassVar[int]
+    LAPS_FIELD_NUMBER: _ClassVar[int]
+    ELEMENTS_FIELD_NUMBER: _ClassVar[int]
+    OVERRUNS_FIELD_NUMBER: _ClassVar[int]
+    UNCLAIMED_FIELD_NUMBER: _ClassVar[int]
+    GUARD_FIELD_NUMBER: _ClassVar[int]
+    GUARD_TEXT_FIELD_NUMBER: _ClassVar[int]
+    NEIGHBOUR_TRAPS_FIELD_NUMBER: _ClassVar[int]
+    NEIGHBOURS_FIELD_NUMBER: _ClassVar[int]
+    STATE_TEXT_FIELD_NUMBER: _ClassVar[int]
+    dma_id: int
+    name: str
+    peripheral_text: str
+    direction: str
+    mode: str
+    running: bool
+    buffer_name: str
+    buffer_address: int
+    buffer_bytes: int
+    length: int
+    width: int
+    position: int
+    announced: int
+    laps: int
+    elements: int
+    overruns: int
+    unclaimed: int
+    guard: DmaGuard
+    guard_text: str
+    neighbour_traps: int
+    neighbours: _containers.RepeatedScalarFieldContainer[str]
+    state_text: str
+    def __init__(self, dma_id: _Optional[int] = ..., name: _Optional[str] = ..., peripheral_text: _Optional[str] = ..., direction: _Optional[str] = ..., mode: _Optional[str] = ..., running: _Optional[bool] = ..., buffer_name: _Optional[str] = ..., buffer_address: _Optional[int] = ..., buffer_bytes: _Optional[int] = ..., length: _Optional[int] = ..., width: _Optional[int] = ..., position: _Optional[int] = ..., announced: _Optional[int] = ..., laps: _Optional[int] = ..., elements: _Optional[int] = ..., overruns: _Optional[int] = ..., unclaimed: _Optional[int] = ..., guard: _Optional[_Union[DmaGuard, str]] = ..., guard_text: _Optional[str] = ..., neighbour_traps: _Optional[int] = ..., neighbours: _Optional[_Iterable[str]] = ..., state_text: _Optional[str] = ...) -> None: ...
+
+class DmaReport(_message.Message):
+    __slots__ = ("channels", "note", "installed")
+    CHANNELS_FIELD_NUMBER: _ClassVar[int]
+    NOTE_FIELD_NUMBER: _ClassVar[int]
+    INSTALLED_FIELD_NUMBER: _ClassVar[int]
+    channels: _containers.RepeatedCompositeFieldContainer[DmaChannelView]
+    note: str
+    installed: bool
+    def __init__(self, channels: _Optional[_Iterable[_Union[DmaChannelView, _Mapping]]] = ..., note: _Optional[str] = ..., installed: _Optional[bool] = ...) -> None: ...
 
 class RunFindingFilter(_message.Message):
     __slots__ = ("kinds", "known_revision")
