@@ -137,6 +137,8 @@ class RunStatus:
         target_us: Where a run under way ends, zero when none is.
         hold_reason: Why the firmware answers nothing right now, such as a
             debugger stopped at a line; empty while it runs.
+        power_cut_text: The power cut armed, in the server's words; empty
+            when none is (Pro).
     """
 
     now_us: int
@@ -145,6 +147,7 @@ class RunStatus:
     next_event_seq: int
     target_us: int = 0
     hold_reason: str = ""
+    power_cut_text: str = ""
 
 
 @dataclass(frozen=True)

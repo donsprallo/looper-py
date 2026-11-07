@@ -151,3 +151,20 @@ def test_power_cuts_in_turn_through_the_update_never_leave_b_bootable(
         points.append(point)
 
     assert points == [0, 4096, 8192]
+
+
+def test_the_run_state_says_the_armed_cut_until_it_is_disarmed(
+    simulation: looper.Simulation,
+) -> None:
+    simulation.advance(0.05)
+    simulation.power_cut(after_bytes=4096, during="flash.write")
+    armed = simulation.run_state().power_cut_text
+    simulation.reset("pin")
+    simulation.advance(0.02)
+    after_the_reset = simulation.run_state().power_cut_text
+    simulation.disarm_power_cut()
+    simulation.advance(0.001)
+
+    assert armed == "power cut armed: after 4096 bytes of a flash write"
+    assert after_the_reset == armed
+    assert simulation.run_state().power_cut_text == ""

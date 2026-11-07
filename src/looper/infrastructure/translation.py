@@ -66,6 +66,7 @@ def run_status_of(message: contract.RunState) -> RunStatus:
         next_event_seq=message.next_event_seq,
         target_us=message.target_us,
         hold_reason=message.hold_reason,
+        power_cut_text=message.power_cut_text,
     )
 
 

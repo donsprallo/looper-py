@@ -26,7 +26,7 @@ from looper.infrastructure import grpc_inspector
 from looper.infrastructure.contract import looper_inspector_pb2 as contract
 from looper.infrastructure.contract import looper_inspector_pb2_grpc as service
 from looper.infrastructure.grpc_inspector import GrpcInspector
-from looper.infrastructure.translation import buses_of
+from looper.infrastructure.translation import buses_of, run_status_of
 from looper.starting import connect
 
 A_VARIABLE = contract.VariableView(
@@ -474,3 +474,10 @@ def test_a_word_that_is_no_cause_is_refused_without_a_call(
         inspector.reset_firmware("reboot")
 
     assert servicer.reset_causes == []
+
+
+def test_the_run_state_says_which_power_cut_is_armed() -> None:
+    armed = contract.RunState(power_cut_text="power cut armed: after 4096 bytes of a flash write")
+
+    assert run_status_of(armed).power_cut_text.startswith("power cut armed")
+    assert run_status_of(contract.RunState()).power_cut_text == ""
