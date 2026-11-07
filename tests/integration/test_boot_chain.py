@@ -119,3 +119,35 @@ def test_a_power_cut_in_the_middle_of_an_update_leaves_b_invalid_and_a_runs(
     report = check.evaluate(for_seconds=0.1)
 
     assert report, report.summary
+
+
+def _copy_update(sim: looper.Simulation) -> None:
+    """Hold the update button long enough for A to copy itself into B."""
+    sim.toggle_pin(COPY_UPDATE)
+    sim.advance(0.012)
+    sim.toggle_pin(COPY_UPDATE)
+
+
+#: The bytes of app@2.0 that A copies first: its 64-byte header and 8 KiB payload.
+#: A cut past them leaves B whole, but never put on trial.
+IMAGE_BYTES = 64 + 8192
+
+
+def test_power_cuts_in_turn_through_the_update_never_leave_b_bootable(
+    simulation: looper.Simulation,
+) -> None:
+    simulation.advance(0.05)
+    points = []
+
+    points_in_turn = looper.sweep_power_cuts(
+        simulation, _copy_update, total_bytes=IMAGE_BYTES, every=4096, off_for_us=5000
+    )
+    for point in points_in_turn:
+        check = simulation.expect()
+        check.flash().partition("app_b").is_invalid()
+        check.boot_chain().went("stage0", "stage1_a", "app_a")
+        report = check.evaluate(for_seconds=0.1)
+        assert report, f"after {point} bytes: {report.summary}"
+        points.append(point)
+
+    assert points == [0, 4096, 8192]

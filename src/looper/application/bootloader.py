@@ -41,13 +41,16 @@ def sweep_power_cuts(
     total_bytes: int,
     every: int = 4096,
     during: str = "flash.write",
+    off_for_us: int = 0,
 ) -> Iterator[int]:
     """Run a scenario once for every point a power cut can come at, every so many bytes.
 
     Yields the number of bytes after which the power went, once the scenario
     ran for it, so that the test checks the outcome before the next point.
     The flash is laid down as it was before the first run each time, and
-    the firmware reset with a power-on before the cut is armed.
+    the firmware reset with a power-on before the cut is armed. An armed
+    cut outlives that reset (the bench's switch is not the firmware's), so
+    it comes in the life the scenario runs in.
 
     Args:
         simulation: The simulation to cut the power of.
@@ -55,6 +58,9 @@ def sweep_power_cuts(
         total_bytes: How many bytes the scenario programs at most.
         every: The step between two points; a sector is a good one.
         during: ``flash.write``, ``flash.erase`` or ``any``.
+        off_for_us: How long the board stays without power after each cut:
+            long enough for a button the scenario lets go of to be up when
+            the power comes back.
     """
     if every <= 0:
         raise ValueError("power cuts come every one byte or more")
@@ -63,6 +69,6 @@ def sweep_power_cuts(
     for after in range(0, total_bytes, every):
         flash.load(saved)
         simulation.reset("power-on")
-        simulation.power_cut(after_bytes=after, during=during)
+        simulation.power_cut(after_bytes=after, during=during, off_for_us=off_for_us)
         scenario(simulation)
         yield after

@@ -58,11 +58,13 @@ def test_power_cuts_in_turn_lay_the_flash_down_again_and_reset_before_each() -> 
         sim.flash().write(0, b"\x00", raw=True)
         ran.append(len(ran))
 
-    points = list(sweep_power_cuts(simulation, scenario, total_bytes=12_000, every=4096))
+    points = list(
+        sweep_power_cuts(simulation, scenario, total_bytes=12_000, every=4096, off_for_us=5000)
+    )
 
     assert points == [0, 4096, 8192]
     assert inspector.reset_causes == ["power-on"] * 3
-    assert [cut[0] for cut in inspector.power_cuts] == points
+    assert [(cut[0], cut[2]) for cut in inspector.power_cuts] == [(point, 5000) for point in points]
     assert inspector.flash_writes[-1] == (0, b"\x00", True)
     assert ran == [0, 1, 2]
 
