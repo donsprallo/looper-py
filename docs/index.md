@@ -134,6 +134,7 @@ environment -- only the `looper-cli` command. See [How it works](concepts.md).
 | want to know every expectation there is | [Expecting things](guides/expectations.md) and the [reference](reference/expectations.md) |
 | want to close a loop with a model, or drive an input from a graph of signals | [Setting the scene](guides/scene.md#a-graph-of-signals) |
 | want to reset the firmware, test its watchdog, or reach the retained memory and the flash | [Resets, lives and the memories](guides/resets-and-memories.md) and the recipe [Reset](recipes/reset.md) |
+| want to test a firmware with interrupts and DMA: raise a source, read the lock and a channel, the race mode, and the checks of the findings (a part is looper Pro) | [Interrupts and DMA from a test](guides/interrupts-and-dma.md) |
 | want to test a bootloader: an image written into a slot, a boot chain, an update cut off by the power, the OTP (looper Pro) | [The bootloader from a test](guides/bootloader.md) and the recipe [Update](recipes/update.md) |
 | want to know where the time goes, or what the architecture analysis found | [The profile and the findings](guides/profile-and-findings.md) |
 | are setting up a test suite and CI | [Tests in pytest and CI](guides/pytest.md) |
@@ -159,6 +160,7 @@ guides/expectations
 guides/profile-and-findings
 guides/resets-and-memories
 guides/bootloader
+guides/interrupts-and-dma
 guides/pytest
 ```
 

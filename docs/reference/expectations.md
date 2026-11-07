@@ -96,6 +96,39 @@ A partition with no image header at all (data, a boot state) has no state, so
 `is_invalid()` is not met by it. Without the licence the server gives no state and
 the outcome says so.
 
+## Interrupts -- `check.interrupt(name)` and `check.interrupts()` (Pro)
+
+| Expectation | Met when | Outcome when met |
+| --- | --- | --- |
+| `check.interrupt(name).latency_below(amount, unit="us")` | every ISR of the source in the window started less than `amount` after it fell due | `saw at most 0 us over 3 ISRs` |
+| `check.interrupt(name).never_lost()` | no interrupt of the source was lost in the window | `saw 0 lost` |
+| `check.interrupt(name).handled_at_least(times)` | its ISR ran at least `times` in the window | `saw 20 times` |
+| `check.interrupt(name).shorter_than_period()` | a timer's ISR always ended within its period | `saw always within it` |
+| `check.interrupts().locked_at_most(amount=0, unit="us")` | interrupts were never masked longer than `amount`; without one, than `[interrupts] max_disabled` | `saw within the limit`, or the longest section |
+
+A source that does not exist fails with `no such interrupt source`. What the race
+mode raised is left out of the counts. Without a licence for the run findings
+`evaluate()` raises `looper.ProFeatureLockedError`.
+
+## DMA -- `check.dma(channel)` (Pro)
+
+| Expectation | Met when | Outcome when met |
+| --- | --- | --- |
+| `no_overrun()` | the channel never wrote into a half whose ISR had not ended | `saw none found` |
+| `not_accessed_while_running()` | the firmware never read or wrote the buffer where the channel still worked | `saw none found` |
+| `length_fits()` | every transfer of the channel fit the variable it was given | `saw none found` |
+
+A failed one names the server's finding: `saw The firmware read USART2_RX's buffer
+while the channel ran`. A channel that does not exist fails with `no such DMA channel`.
+
+## The findings of a run -- `check.run_findings()` (Pro)
+
+| Expectation | Met when | Outcome when met |
+| --- | --- | --- |
+| `none(kinds=())` | the server found no finding in the run, of the kinds given or of any | `saw none` |
+
+`kinds` are the names of the findings: `none(["IRQ_STORM", "DMA_UNCLAIMED"])`.
+
 ## The profile -- `check.profile()`
 
 | Expectation | Met when | Needs in `looper.toml` |

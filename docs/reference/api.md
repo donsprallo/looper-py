@@ -180,6 +180,16 @@ memories](../guides/resets-and-memories.md) explains how they are used.
 .. autoclass:: looper.FlashMark
 ```
 
+## Interrupts and DMA
+
+`simulation.interrupts()` reads the interrupt sources and the lock,
+`simulation.dma()` the DMA channels, `simulation.raise_interrupt(name, after_us)`
+makes a source due, and `simulation.race(name)` is a `with` block that runs the
+race mode (looper Pro). They return dataclasses (`Interrupts`, `InterruptSource`,
+`InterruptLock`, `DmaChannels`, `DmaChannel`, `RaceCoverage`) whose fields the guide
+[Interrupts and DMA from a test](../guides/interrupts-and-dma.md) lists. The checks
+are in the [reference of expectations](expectations.md); every one is looper Pro.
+
 ## The bootloader (Pro)
 
 `simulation.images()`, `simulation.boot_chains()`, `simulation.power_cut()`,
