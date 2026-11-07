@@ -1863,7 +1863,7 @@ class LifeDumpView(_message.Message):
     def __init__(self, life: _Optional[_Union[LifeView, _Mapping]] = ..., memory: _Optional[_Union[MemoryView, _Mapping]] = ..., profile: _Optional[_Union[ProfileView, _Mapping]] = ..., note: _Optional[str] = ...) -> None: ...
 
 class PinView(_message.Message):
-    __slots__ = ("pin_id", "name", "direction", "level", "is_active", "is_drivable", "polarity", "drive_text")
+    __slots__ = ("pin_id", "name", "direction", "level", "is_active", "is_drivable", "polarity", "drive_text", "last_writer_text", "last_written_us")
     PIN_ID_FIELD_NUMBER: _ClassVar[int]
     NAME_FIELD_NUMBER: _ClassVar[int]
     DIRECTION_FIELD_NUMBER: _ClassVar[int]
@@ -1872,6 +1872,8 @@ class PinView(_message.Message):
     IS_DRIVABLE_FIELD_NUMBER: _ClassVar[int]
     POLARITY_FIELD_NUMBER: _ClassVar[int]
     DRIVE_TEXT_FIELD_NUMBER: _ClassVar[int]
+    LAST_WRITER_TEXT_FIELD_NUMBER: _ClassVar[int]
+    LAST_WRITTEN_US_FIELD_NUMBER: _ClassVar[int]
     pin_id: int
     name: str
     direction: str
@@ -1880,7 +1882,9 @@ class PinView(_message.Message):
     is_drivable: bool
     polarity: str
     drive_text: str
-    def __init__(self, pin_id: _Optional[int] = ..., name: _Optional[str] = ..., direction: _Optional[str] = ..., level: _Optional[str] = ..., is_active: _Optional[bool] = ..., is_drivable: _Optional[bool] = ..., polarity: _Optional[str] = ..., drive_text: _Optional[str] = ...) -> None: ...
+    last_writer_text: str
+    last_written_us: int
+    def __init__(self, pin_id: _Optional[int] = ..., name: _Optional[str] = ..., direction: _Optional[str] = ..., level: _Optional[str] = ..., is_active: _Optional[bool] = ..., is_drivable: _Optional[bool] = ..., polarity: _Optional[str] = ..., drive_text: _Optional[str] = ..., last_writer_text: _Optional[str] = ..., last_written_us: _Optional[int] = ...) -> None: ...
 
 class SimulationView(_message.Message):
     __slots__ = ("sim_us", "pins")

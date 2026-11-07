@@ -1292,6 +1292,10 @@ message PinView {
   // Why a client cannot drive the pin, in words a person is shown, for
   // example "the firmware drives this output". Empty when it can.
   string drive_text = 8;
+  // A chain set the pin last: who and when, as a person reads it --
+  // "chain \"Boost test\" at 2.500000 s". Empty when a chain did not.
+  string last_writer_text = 9;
+  uint64 last_written_us = 10;
 }
 
 message SimulationView {
