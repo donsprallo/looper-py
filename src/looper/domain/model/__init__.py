@@ -21,7 +21,19 @@ from looper.domain.model.chain_blocks import (
     Threshold,
     WhileWaiting,
 )
+from looper.domain.model.chain_runs import ChainRun, SequenceProgress, SequenceState
+from looper.domain.model.chain_scenarios import (
+    Fault,
+    FaultKind,
+    Sequence,
+    SignalDo,
+    Step,
+    StepKind,
+    SwitchSignal,
+    step_port,
+)
 from looper.domain.model.dma import DmaChannel, DmaChannels
+from looper.domain.model.event_conditions import Interrupt, ResetSeen
 from looper.domain.model.findings import Dependency, Finding, Findings
 from looper.domain.model.interrupts import InterruptLock, Interrupts, InterruptSource
 from looper.domain.model.lives import Life, LifeDump, Lives
@@ -162,4 +174,17 @@ __all__ = [
     "Logic",
     "WhileWaiting",
     "Field",
+    "ChainRun",
+    "Fault",
+    "FaultKind",
+    "Interrupt",
+    "ResetSeen",
+    "SequenceProgress",
+    "SequenceState",
+    "Sequence",
+    "SignalDo",
+    "Step",
+    "StepKind",
+    "SwitchSignal",
+    "step_port",
 ]

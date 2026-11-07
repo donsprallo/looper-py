@@ -27,6 +27,7 @@ from looper.domain.model import (
     Value,
     Width,
 )
+from looper.domain.model.event_conditions import Interrupt, ResetSeen
 from looper.infrastructure.contract import looper_inspector_pb2 as contract
 
 POLARITIES = {
@@ -119,6 +120,12 @@ def condition_of(condition: TriggerCondition) -> contract.TriggerCondition:
         case Start(first_life_only):
             start = contract.StartCondition(first_life_only=first_life_only)
             return contract.TriggerCondition(start=start)
+        case Interrupt(source_id, on_entry):
+            heard = contract.InterruptCondition(source_id=source_id, on_entry=on_entry)
+            return contract.TriggerCondition(interrupt=heard)
+        case ResetSeen(cause):
+            seen = contract.ResetCondition(cause=cause)  # type: ignore[arg-type]
+            return contract.TriggerCondition(reset=seen)
 
 
 def trigger_of(view: contract.TriggerView) -> Trigger:

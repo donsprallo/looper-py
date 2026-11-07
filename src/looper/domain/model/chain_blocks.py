@@ -22,6 +22,13 @@ from __future__ import annotations
 from dataclasses import dataclass
 from enum import IntEnum
 
+from looper.domain.model.chain_scenarios import (
+    Fault,
+    RaiseInterrupt,
+    ResetFirmware,
+    Sequence,
+    SwitchSignal,
+)
 from looper.domain.model.triggers import Polarity, TriggerCondition
 
 
@@ -160,8 +167,18 @@ class Hold:
     after_us: int = 0
 
 
-ChainAction = SetPin | BusSend | BusReply | Mark | Hold
-ChainLogic = Delay | Counter | Logic
+ChainAction = (
+    SetPin
+    | BusSend
+    | BusReply
+    | Mark
+    | Hold
+    | SwitchSignal
+    | Fault
+    | RaiseInterrupt
+    | ResetFirmware
+)
+ChainLogic = Delay | Counter | Logic | Sequence
 BlockSettings = TriggerCondition | Threshold | ChainLogic | ChainAction
 
 

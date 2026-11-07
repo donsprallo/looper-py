@@ -7,7 +7,6 @@ from looper.domain.model.chain_blocks import (
     BusSend,
     ChainAction,
     ChainBlockState,
-    ChainLogic,
     Counter,
     Delay,
     EventBlock,
@@ -18,8 +17,16 @@ from looper.domain.model.chain_blocks import (
     SetPin,
     Threshold,
 )
+from looper.domain.model.chain_scenarios import (
+    Fault,
+    RaiseInterrupt,
+    ResetFirmware,
+    Sequence,
+    SwitchSignal,
+)
 from looper.domain.model.triggers import Polarity
 from looper.infrastructure.contract import looper_inspector_pb2 as contract
+from looper.infrastructure.scenario_translation import scenario_action_of, sequence_of
 from looper.infrastructure.trigger_translation import condition_of
 
 
@@ -28,7 +35,11 @@ def block_request_of(block: EventBlock) -> contract.SignalNodeRequest:
     request = contract.SignalNodeRequest(key=block.key, kind=block.kind, group_key=block.group)
     request.block.min_gap_us = block.min_gap_us
     settings = block.settings
-    if isinstance(settings, SetPin | BusSend | BusReply | Mark | Hold):
+    if isinstance(settings, SwitchSignal | Fault | RaiseInterrupt | ResetFirmware):
+        request.block.action.CopyFrom(scenario_action_of(settings))
+    elif isinstance(settings, Sequence):
+        request.block.logic.CopyFrom(sequence_of(settings))
+    elif isinstance(settings, SetPin | BusSend | BusReply | Mark | Hold):
         request.block.action.CopyFrom(_action_of(settings))
         request.inputs.extend(_field_inputs(settings))
     elif isinstance(settings, Threshold):
@@ -57,7 +68,7 @@ def _threshold_of(threshold: Threshold) -> contract.ThresholdSettings:
     )
 
 
-def _logic_of(logic: ChainLogic) -> contract.ChainLogic:
+def _logic_of(logic: Delay | Counter | Logic) -> contract.ChainLogic:
     match logic:
         case Delay(delay_us, while_waiting):
             delay = contract.DelayLogic(delay_us=delay_us, while_waiting=int(while_waiting))  # type: ignore[arg-type]
@@ -111,7 +122,7 @@ def _message_of(
     )
 
 
-def _action_of(action: ChainAction) -> contract.ChainAction:
+def _action_of(action: SetPin | BusSend | BusReply | Mark | Hold) -> contract.ChainAction:
     match action:
         case SetPin(pin_id, do, press_us):
             return contract.ChainAction(

@@ -14,6 +14,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from enum import IntEnum, StrEnum
 
+from looper.domain.model.event_conditions import Interrupt, ResetSeen
+
 
 class Polarity(StrEnum):
     """Which edges of a pin count."""
@@ -188,7 +190,18 @@ class Start:
 
 #: Everything the simulation can watch for today.
 TriggerCondition = (
-    Edge | Pattern | EdgeWhile | Width | Quiet | Value | BusReceived | BusTimeout | Clock | Start
+    Edge
+    | Pattern
+    | EdgeWhile
+    | Width
+    | Quiet
+    | Value
+    | BusReceived
+    | BusTimeout
+    | Clock
+    | Start
+    | Interrupt
+    | ResetSeen
 )
 
 

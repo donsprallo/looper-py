@@ -12,6 +12,7 @@ from collections.abc import Callable, Iterator
 from types import TracebackType
 
 from looper.application.bootloader import Otp
+from looper.application.chain_runs import run_until_chain
 from looper.application.event_stream import EventStream
 from looper.application.expectations import MICROSECONDS_PER_SECOND, Expectations
 from looper.application.findings_reading import complete_findings
@@ -44,6 +45,7 @@ from looper.domain.model import (
     Watch,
 )
 from looper.domain.model.chain_blocks import ChainBlockState
+from looper.domain.model.chain_runs import ChainExport, ChainRun
 from looper.domain.model.dma import DmaChannels
 from looper.domain.model.interrupts import Interrupts
 
@@ -117,6 +119,30 @@ class Simulation:
             SimulationRefusedError: If there is no such group, or no room for it.
         """
         self._inspector.switch_chain(group, on)
+
+    def run_until_chain(self, name: str, timeout_s: float = 10.0) -> ChainRun:
+        """Run until the Sequence of a chain passes or fails, at most `timeout_s` simulated.
+
+        `name` is the chain's (its group's) name or key. The result is true
+        when the Sequence came to its end; `ChainRun.failure_text` says why
+        not, in the server's words, or that time ran out.
+
+        Raises:
+            ValueError: If no chain of that name has a Sequence.
+        """
+        timeout_us = round(timeout_s * MICROSECONDS_PER_SECOND)
+        return run_until_chain(self._inspector, name, timeout_us)
+
+    def export_chain(self, group: str, run_for_s: float = 0.0) -> ChainExport:
+        """One chain group as a pytest against this library, written by the server (looper Pro).
+
+        A chain without a Sequence runs `run_for_s` in the test (0: the server's 10 s).
+
+        Raises:
+            ProFeatureLockedError: Without the licence.
+            SimulationRefusedError: If there is no such group.
+        """
+        return self._inspector.export_chain(group, round(run_for_s * MICROSECONDS_PER_SECOND))
 
     @property
     def triggers(self) -> Triggers:

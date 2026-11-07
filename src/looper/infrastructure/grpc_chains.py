@@ -7,9 +7,11 @@ from typing import Any
 
 from looper.application.chain_port import ChainInspector
 from looper.domain.model.chain_blocks import ChainBlockState
+from looper.domain.model.chain_runs import ChainExport, SequenceState
 from looper.infrastructure import chain_translation
 from looper.infrastructure.contract import looper_inspector_pb2 as contract
 from looper.infrastructure.contract import looper_inspector_pb2_grpc as service
+from looper.infrastructure.scenario_translation import sequence_states_of
 
 EMPTY = contract.Empty()
 
@@ -35,3 +37,13 @@ class GrpcChainCalls(ChainInspector):
         """Switch one group on or off."""
         request = contract.ChainGroupSwitch(group_key=group, enabled=enabled)
         self._taken(self._call(self._stub.SwitchChainGroup, request))
+
+    def read_sequences(self) -> tuple[SequenceState, ...]:
+        """Every Sequence, in the server's words."""
+        return sequence_states_of(self._call(self._stub.ObserveChains, EMPTY))
+
+    def export_chain(self, group: str, run_for_us: int) -> ChainExport:
+        """One group's chain as a pytest (looper Pro)."""
+        request = contract.PytestExportRequest(group_key=group, run_for_us=run_for_us)
+        written = self._call(self._stub.ExportChainAsPytest, request)
+        return ChainExport(written.file_name, written.text, tuple(written.warnings))

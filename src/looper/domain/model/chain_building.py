@@ -25,6 +25,14 @@ from looper.domain.model.chain_blocks import (
     Threshold,
     WhileWaiting,
 )
+from looper.domain.model.chain_scenarios import (
+    Fault,
+    RaiseInterrupt,
+    ResetFirmware,
+    Sequence,
+    SwitchSignal,
+)
+from looper.domain.model.event_conditions import Interrupt, ResetSeen
 from looper.domain.model.triggers import (
     BusReceived,
     BusTimeout,
@@ -51,7 +59,12 @@ CONDITION_KINDS: dict[type, str] = {
     BusTimeout: "bus_timeout",
     Clock: "clock",
     Start: "start",
+    Interrupt: "interrupt",
+    ResetSeen: "reset_seen",
 }
+
+#: The logic blocks without settings, by the contract's name.
+PLAIN_LOGIC = frozenset({"once", "and", "or", "gate"})
 
 #: The output a condition or an And says its state on.
 HOLDS = 1
@@ -96,7 +109,7 @@ class ChainBuilding:
 
     def once(self, key: str, after: str = "", group: str = "") -> Self:
         """Add a once: the first event goes on, no more until the chain is switched on again."""
-        return self._with_block(EventBlock(key, "once", Logic("once"), group), after)
+        return self.logic(key, "once", after, group)
 
     def any_of(self, key: str, *sources: str, group: str = "") -> Self:
         """Add an Or: an event from any of the sources goes on."""
@@ -116,6 +129,40 @@ class ChainBuilding:
         """Add a gate: events of `after` go on only while the state of `open_while` holds."""
         graph = self._with_block(EventBlock(key, "gate", Logic("gate"), group), after)
         return graph.link(open_while, key, from_port=HOLDS, to_port=1)
+
+    def logic(self, key: str, kind: str, after: str = "", group: str = "") -> Self:
+        """Add a logic block without settings by its kind: ``once``, ``and``, ``or``, ``gate``.
+
+        Raises:
+            ValueError: For any other kind.
+        """
+        if kind not in PLAIN_LOGIC:
+            raise ValueError(f"{kind!r} is not a logic block without settings")
+        return self._with_block(EventBlock(key, kind, Logic(kind), group), after)
+
+    def sequence(self, key: str, sequence: Sequence, after: str = "", group: str = "") -> Self:
+        """Add a Sequence (looper Pro): its steps one after the other, from its start input."""
+        return self._with_block(EventBlock(key, "sequence", sequence, group), after)
+
+    def switch_signal(
+        self, key: str, switch: SwitchSignal, after: str = "", group: str = ""
+    ) -> Self:
+        """Add a Switch signal: a generator or value node of the graph, or an input held."""
+        return self._with_block(EventBlock(key, "switch_signal", switch, group), after)
+
+    def inject_fault(self, key: str, fault: Fault, after: str = "", group: str = "") -> Self:
+        """Add an Inject fault (looper Pro): a sensor, CAN messages, or the power."""
+        return self._with_block(EventBlock(key, "inject_fault", fault, group), after)
+
+    def raise_interrupt(self, key: str, source_id: int, after: str = "", group: str = "") -> Self:
+        """Add a Raise interrupt: the source becomes pending, as its peripheral would make it."""
+        raised = RaiseInterrupt(source_id)
+        return self._with_block(EventBlock(key, "raise_interrupt", raised, group), after)
+
+    def reset_firmware(self, key: str, cause: int = 4, after: str = "", group: str = "") -> Self:
+        """Add a Reset: 4 as the reset pin would, 1 a power-on, 5 a brown-out."""
+        reset = ResetFirmware(cause)
+        return self._with_block(EventBlock(key, "reset_firmware", reset, group), after)
 
     def send(self, key: str, message: BusSend, after: str = "", group: str = "") -> Self:
         """Add a bus send: fixed bytes on a CAN or UART bus."""

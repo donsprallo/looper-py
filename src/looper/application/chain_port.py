@@ -9,6 +9,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 
 from looper.domain.model.chain_blocks import ChainBlockState
+from looper.domain.model.chain_runs import ChainExport, SequenceState
 
 
 class ChainInspector(ABC):
@@ -24,4 +25,17 @@ class ChainInspector(ABC):
 
         Raises:
             SimulationRefusedError: If there is no such group, or no room for it.
+        """
+
+    @abstractmethod
+    def read_sequences(self) -> tuple[SequenceState, ...]:
+        """Every Sequence of the graph's chains, in the server's words."""
+
+    @abstractmethod
+    def export_chain(self, group: str, run_for_us: int) -> ChainExport:
+        """One group's chain as a pytest, written by the server (looper Pro).
+
+        Raises:
+            ProFeatureLockedError: Without the licence.
+            SimulationRefusedError: If there is no such group.
         """
