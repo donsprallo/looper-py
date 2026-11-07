@@ -3,12 +3,15 @@
 from __future__ import annotations
 
 from looper.domain.model.boot import BootChain, BootStep, Image, PartitionHeader
+from looper.domain.model.dma import DmaChannel, DmaChannels
 from looper.domain.model.findings import Dependency, Finding, Findings
+from looper.domain.model.interrupts import InterruptLock, Interrupts, InterruptSource
 from looper.domain.model.lives import Life, LifeDump, Lives
 from looper.domain.model.marks import FlashMark, ResetMark
 from looper.domain.model.observation import Observation
 from looper.domain.model.outcome import ExpectationReport, Outcome
 from looper.domain.model.profile import FIRMWARE_ORIGIN, Profile, ProfileEntry
+from looper.domain.model.race import RaceCoverage
 from looper.domain.model.readings import (
     Bus,
     CallTiming,
@@ -53,6 +56,12 @@ from looper.domain.model.triggers import (
 from looper.domain.model.variables import Variable, Watch
 
 __all__ = [
+    "DmaChannel",
+    "DmaChannels",
+    "InterruptLock",
+    "InterruptSource",
+    "Interrupts",
+    "RaceCoverage",
     "BootChain",
     "BootStep",
     "Bus",

@@ -100,3 +100,19 @@ def test_the_race_mode_is_pro() -> None:
 
     with pytest.raises(ProFeatureLockedError), simulation.race("TIM2"):
         pass
+
+
+def test_the_interrupt_dma_and_race_readings_are_part_of_the_package() -> None:
+    import looper
+
+    exported = {
+        "Interrupts",
+        "InterruptSource",
+        "InterruptLock",
+        "DmaChannels",
+        "DmaChannel",
+        "RaceCoverage",
+    }
+
+    assert exported <= set(looper.__all__)
+    assert all(hasattr(looper, name) for name in exported)
