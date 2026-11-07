@@ -224,6 +224,26 @@ class InspectorStub:
                 request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
                 response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.TriggerList.FromString,
                 _registered_method=True)
+        self.CheckSignalGraph = channel.unary_unary(
+                '/looper.inspector.v3.Inspector/CheckSignalGraph',
+                request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.SignalGraphRequest.SerializeToString,
+                response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.GraphCheckView.FromString,
+                _registered_method=True)
+        self.ObserveChains = channel.unary_unary(
+                '/looper.inspector.v3.Inspector/ObserveChains',
+                request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
+                response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ChainList.FromString,
+                _registered_method=True)
+        self.SwitchChainGroup = channel.unary_unary(
+                '/looper.inspector.v3.Inspector/SwitchChainGroup',
+                request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ChainGroupSwitch.SerializeToString,
+                response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Ack.FromString,
+                _registered_method=True)
+        self.ListChainBlocks = channel.unary_unary(
+                '/looper.inspector.v3.Inspector/ListChainBlocks',
+                request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
+                response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ChainBlockCatalogue.FromString,
+                _registered_method=True)
         self.ListSources = channel.unary_unary(
                 '/looper.inspector.v3.Inspector/ListSources',
                 request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
@@ -713,6 +733,34 @@ class InspectorServicer:
     def ObserveTriggers(self, request, context):
         """every trigger, armed or not
         """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def CheckSignalGraph(self, request, context):
+        """Chains in the signal graph: conditions, logic and actions joined by
+        event links, evaluated inside the simulation. ApplySignalGraph installs
+        them; these check a graph without applying it, report the chains, switch
+        one group, and list the blocks this server builds.
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def ObserveChains(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def SwitchChainGroup(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def ListChainBlocks(self, request, context):
+        """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
@@ -1267,6 +1315,26 @@ def add_InspectorServicer_to_server(servicer, server):
                     servicer.ObserveTriggers,
                     request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.FromString,
                     response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.TriggerList.SerializeToString,
+            ),
+            'CheckSignalGraph': grpc.unary_unary_rpc_method_handler(
+                    servicer.CheckSignalGraph,
+                    request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.SignalGraphRequest.FromString,
+                    response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.GraphCheckView.SerializeToString,
+            ),
+            'ObserveChains': grpc.unary_unary_rpc_method_handler(
+                    servicer.ObserveChains,
+                    request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.FromString,
+                    response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ChainList.SerializeToString,
+            ),
+            'SwitchChainGroup': grpc.unary_unary_rpc_method_handler(
+                    servicer.SwitchChainGroup,
+                    request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ChainGroupSwitch.FromString,
+                    response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Ack.SerializeToString,
+            ),
+            'ListChainBlocks': grpc.unary_unary_rpc_method_handler(
+                    servicer.ListChainBlocks,
+                    request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.FromString,
+                    response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ChainBlockCatalogue.SerializeToString,
             ),
             'ListSources': grpc.unary_unary_rpc_method_handler(
                     servicer.ListSources,
@@ -2525,6 +2593,114 @@ class Inspector:
             '/looper.inspector.v3.Inspector/ObserveTriggers',
             looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
             looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.TriggerList.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def CheckSignalGraph(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/looper.inspector.v3.Inspector/CheckSignalGraph',
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.SignalGraphRequest.SerializeToString,
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.GraphCheckView.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def ObserveChains(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/looper.inspector.v3.Inspector/ObserveChains',
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ChainList.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def SwitchChainGroup(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/looper.inspector.v3.Inspector/SwitchChainGroup',
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ChainGroupSwitch.SerializeToString,
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Ack.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def ListChainBlocks(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/looper.inspector.v3.Inspector/ListChainBlocks',
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ChainBlockCatalogue.FromString,
             options,
             channel_credentials,
             insecure,

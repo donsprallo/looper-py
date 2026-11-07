@@ -36,6 +36,7 @@ class ProFeature(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     PRO_FEATURE_ARCHITECTURE: _ClassVar[ProFeature]
     PRO_FEATURE_BOOTLOADER: _ClassVar[ProFeature]
     PRO_FEATURE_RUN_FINDINGS: _ClassVar[ProFeature]
+    PRO_FEATURE_SCENARIOS: _ClassVar[ProFeature]
 
 class Capability(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     __slots__ = ()
@@ -58,6 +59,7 @@ class Capability(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     CAPABILITY_INTERRUPTS: _ClassVar[Capability]
     CAPABILITY_DMA: _ClassVar[Capability]
     CAPABILITY_DMA_GUARD: _ClassVar[Capability]
+    CAPABILITY_CHAINS: _ClassVar[Capability]
 
 class ServerMode(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     __slots__ = ()
@@ -86,6 +88,7 @@ class EventKind(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     EVENT_KIND_FLASH: _ClassVar[EventKind]
     EVENT_KIND_INTERRUPT: _ClassVar[EventKind]
     EVENT_KIND_DMA: _ClassVar[EventKind]
+    EVENT_KIND_CHAIN: _ClassVar[EventKind]
 
 class InterruptEventKind(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     __slots__ = ()
@@ -181,6 +184,7 @@ class Source(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     SOURCE_JOB: _ClassVar[Source]
     SOURCE_RULE: _ClassVar[Source]
     SOURCE_COMPONENT: _ClassVar[Source]
+    SOURCE_CHAIN: _ClassVar[Source]
 
 class TriggerMode(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     __slots__ = ()
@@ -341,6 +345,7 @@ PRO_FEATURE_UNSPECIFIED: ProFeature
 PRO_FEATURE_ARCHITECTURE: ProFeature
 PRO_FEATURE_BOOTLOADER: ProFeature
 PRO_FEATURE_RUN_FINDINGS: ProFeature
+PRO_FEATURE_SCENARIOS: ProFeature
 CAPABILITY_UNSPECIFIED: Capability
 CAPABILITY_PACED: Capability
 CAPABILITY_JOBS: Capability
@@ -360,6 +365,7 @@ CAPABILITY_BOOT: Capability
 CAPABILITY_INTERRUPTS: Capability
 CAPABILITY_DMA: Capability
 CAPABILITY_DMA_GUARD: Capability
+CAPABILITY_CHAINS: Capability
 SERVER_MODE_SIMULATION: ServerMode
 SERVER_MODE_STATIC: ServerMode
 CLOCK_MODE_HELD: ClockMode
@@ -379,6 +385,7 @@ EVENT_KIND_RESET: EventKind
 EVENT_KIND_FLASH: EventKind
 EVENT_KIND_INTERRUPT: EventKind
 EVENT_KIND_DMA: EventKind
+EVENT_KIND_CHAIN: EventKind
 INTERRUPT_EVENT_PENDING: InterruptEventKind
 INTERRUPT_EVENT_ENTERED: InterruptEventKind
 INTERRUPT_EVENT_LEFT: InterruptEventKind
@@ -438,6 +445,7 @@ SOURCE_CLIENT: Source
 SOURCE_JOB: Source
 SOURCE_RULE: Source
 SOURCE_COMPONENT: Source
+SOURCE_CHAIN: Source
 TRIGGER_MODE_SINGLE: TriggerMode
 TRIGGER_MODE_NORMAL: TriggerMode
 EDGE_RISE: EdgePolarity
@@ -717,7 +725,7 @@ class ReadEventsRequest(_message.Message):
     def __init__(self, epoch: _Optional[int] = ..., from_event_seq: _Optional[int] = ..., max_events: _Optional[int] = ..., filter: _Optional[_Union[EventFilter, _Mapping]] = ..., with_levels: _Optional[bool] = ..., from_us: _Optional[int] = ..., to_us: _Optional[int] = ...) -> None: ...
 
 class EventFilter(_message.Message):
-    __slots__ = ("kinds", "channel_ids", "bus_ids", "sample_stride", "pin_ids", "call_functions", "interrupt_ids", "dma_ids")
+    __slots__ = ("kinds", "channel_ids", "bus_ids", "sample_stride", "pin_ids", "call_functions", "interrupt_ids", "dma_ids", "chain_ids")
     KINDS_FIELD_NUMBER: _ClassVar[int]
     CHANNEL_IDS_FIELD_NUMBER: _ClassVar[int]
     BUS_IDS_FIELD_NUMBER: _ClassVar[int]
@@ -726,6 +734,7 @@ class EventFilter(_message.Message):
     CALL_FUNCTIONS_FIELD_NUMBER: _ClassVar[int]
     INTERRUPT_IDS_FIELD_NUMBER: _ClassVar[int]
     DMA_IDS_FIELD_NUMBER: _ClassVar[int]
+    CHAIN_IDS_FIELD_NUMBER: _ClassVar[int]
     kinds: _containers.RepeatedScalarFieldContainer[EventKind]
     channel_ids: _containers.RepeatedScalarFieldContainer[int]
     bus_ids: _containers.RepeatedScalarFieldContainer[int]
@@ -734,7 +743,8 @@ class EventFilter(_message.Message):
     call_functions: _containers.RepeatedScalarFieldContainer[str]
     interrupt_ids: _containers.RepeatedScalarFieldContainer[int]
     dma_ids: _containers.RepeatedScalarFieldContainer[int]
-    def __init__(self, kinds: _Optional[_Iterable[_Union[EventKind, str]]] = ..., channel_ids: _Optional[_Iterable[int]] = ..., bus_ids: _Optional[_Iterable[int]] = ..., sample_stride: _Optional[int] = ..., pin_ids: _Optional[_Iterable[int]] = ..., call_functions: _Optional[_Iterable[str]] = ..., interrupt_ids: _Optional[_Iterable[int]] = ..., dma_ids: _Optional[_Iterable[int]] = ...) -> None: ...
+    chain_ids: _containers.RepeatedScalarFieldContainer[int]
+    def __init__(self, kinds: _Optional[_Iterable[_Union[EventKind, str]]] = ..., channel_ids: _Optional[_Iterable[int]] = ..., bus_ids: _Optional[_Iterable[int]] = ..., sample_stride: _Optional[int] = ..., pin_ids: _Optional[_Iterable[int]] = ..., call_functions: _Optional[_Iterable[str]] = ..., interrupt_ids: _Optional[_Iterable[int]] = ..., dma_ids: _Optional[_Iterable[int]] = ..., chain_ids: _Optional[_Iterable[int]] = ...) -> None: ...
 
 class EventBatch(_message.Message):
     __slots__ = ("epoch", "events", "lost", "next_event_seq", "sim_now_us", "epoch_changed", "levels")
@@ -785,7 +795,7 @@ class ChannelValueSince(_message.Message):
     def __init__(self, channel_id: _Optional[int] = ..., value: _Optional[float] = ..., since_us: _Optional[int] = ...) -> None: ...
 
 class Event(_message.Message):
-    __slots__ = ("event_seq", "sim_us", "sample", "pin", "exchange", "call", "command", "job", "fault", "run", "trigger_fired", "trigger_disarmed", "reset", "life", "flash", "interrupt", "dma")
+    __slots__ = ("event_seq", "sim_us", "sample", "pin", "exchange", "call", "command", "job", "fault", "run", "trigger_fired", "trigger_disarmed", "reset", "life", "flash", "interrupt", "dma", "chain")
     EVENT_SEQ_FIELD_NUMBER: _ClassVar[int]
     SIM_US_FIELD_NUMBER: _ClassVar[int]
     SAMPLE_FIELD_NUMBER: _ClassVar[int]
@@ -803,6 +813,7 @@ class Event(_message.Message):
     FLASH_FIELD_NUMBER: _ClassVar[int]
     INTERRUPT_FIELD_NUMBER: _ClassVar[int]
     DMA_FIELD_NUMBER: _ClassVar[int]
+    CHAIN_FIELD_NUMBER: _ClassVar[int]
     event_seq: int
     sim_us: int
     sample: Sample
@@ -820,7 +831,8 @@ class Event(_message.Message):
     flash: FlashMark
     interrupt: InterruptEvent
     dma: DmaEvent
-    def __init__(self, event_seq: _Optional[int] = ..., sim_us: _Optional[int] = ..., sample: _Optional[_Union[Sample, _Mapping]] = ..., pin: _Optional[_Union[PinChange, _Mapping]] = ..., exchange: _Optional[_Union[Exchange, _Mapping]] = ..., call: _Optional[_Union[Call, _Mapping]] = ..., command: _Optional[_Union[CommandApplied, _Mapping]] = ..., job: _Optional[_Union[JobEvent, _Mapping]] = ..., fault: _Optional[_Union[Fault, _Mapping]] = ..., run: _Optional[_Union[RunEvent, _Mapping]] = ..., trigger_fired: _Optional[_Union[TriggerFired, _Mapping]] = ..., trigger_disarmed: _Optional[_Union[TriggerDisarmed, _Mapping]] = ..., reset: _Optional[_Union[ResetMark, _Mapping]] = ..., life: _Optional[_Union[LifeMark, _Mapping]] = ..., flash: _Optional[_Union[FlashMark, _Mapping]] = ..., interrupt: _Optional[_Union[InterruptEvent, _Mapping]] = ..., dma: _Optional[_Union[DmaEvent, _Mapping]] = ...) -> None: ...
+    chain: ChainFire
+    def __init__(self, event_seq: _Optional[int] = ..., sim_us: _Optional[int] = ..., sample: _Optional[_Union[Sample, _Mapping]] = ..., pin: _Optional[_Union[PinChange, _Mapping]] = ..., exchange: _Optional[_Union[Exchange, _Mapping]] = ..., call: _Optional[_Union[Call, _Mapping]] = ..., command: _Optional[_Union[CommandApplied, _Mapping]] = ..., job: _Optional[_Union[JobEvent, _Mapping]] = ..., fault: _Optional[_Union[Fault, _Mapping]] = ..., run: _Optional[_Union[RunEvent, _Mapping]] = ..., trigger_fired: _Optional[_Union[TriggerFired, _Mapping]] = ..., trigger_disarmed: _Optional[_Union[TriggerDisarmed, _Mapping]] = ..., reset: _Optional[_Union[ResetMark, _Mapping]] = ..., life: _Optional[_Union[LifeMark, _Mapping]] = ..., flash: _Optional[_Union[FlashMark, _Mapping]] = ..., interrupt: _Optional[_Union[InterruptEvent, _Mapping]] = ..., dma: _Optional[_Union[DmaEvent, _Mapping]] = ..., chain: _Optional[_Union[ChainFire, _Mapping]] = ...) -> None: ...
 
 class ResetMark(_message.Message):
     __slots__ = ("cause", "cause_text", "life", "reason", "jump_target", "text")
@@ -951,16 +963,18 @@ class Sample(_message.Message):
     def __init__(self, channel_id: _Optional[int] = ..., value: _Optional[float] = ...) -> None: ...
 
 class PinChange(_message.Message):
-    __slots__ = ("pin_id", "high", "source", "command_seq")
+    __slots__ = ("pin_id", "high", "source", "command_seq", "source_id")
     PIN_ID_FIELD_NUMBER: _ClassVar[int]
     HIGH_FIELD_NUMBER: _ClassVar[int]
     SOURCE_FIELD_NUMBER: _ClassVar[int]
     COMMAND_SEQ_FIELD_NUMBER: _ClassVar[int]
+    SOURCE_ID_FIELD_NUMBER: _ClassVar[int]
     pin_id: int
     high: bool
     source: Source
     command_seq: int
-    def __init__(self, pin_id: _Optional[int] = ..., high: _Optional[bool] = ..., source: _Optional[_Union[Source, str]] = ..., command_seq: _Optional[int] = ...) -> None: ...
+    source_id: int
+    def __init__(self, pin_id: _Optional[int] = ..., high: _Optional[bool] = ..., source: _Optional[_Union[Source, str]] = ..., command_seq: _Optional[int] = ..., source_id: _Optional[int] = ...) -> None: ...
 
 class Call(_message.Message):
     __slots__ = ("function", "peripheral")
@@ -1333,7 +1347,7 @@ class TriggerSpec(_message.Message):
     def __init__(self, label: _Optional[str] = ..., condition: _Optional[_Union[TriggerCondition, _Mapping]] = ..., mode: _Optional[_Union[TriggerMode, str]] = ..., pre_us: _Optional[int] = ..., post_us: _Optional[int] = ..., capture_us: _Optional[int] = ..., armed_by: _Optional[str] = ..., replaces_trigger_id: _Optional[int] = ..., when: _Optional[_Union[When, _Mapping]] = ...) -> None: ...
 
 class TriggerCondition(_message.Message):
-    __slots__ = ("edge", "pattern", "edge_while", "width", "quiet", "value", "analog", "exchange", "sequence")
+    __slots__ = ("edge", "pattern", "edge_while", "width", "quiet", "value", "analog", "exchange", "sequence", "bus_received", "bus_timeout", "clock", "start", "interrupt", "reset")
     EDGE_FIELD_NUMBER: _ClassVar[int]
     PATTERN_FIELD_NUMBER: _ClassVar[int]
     EDGE_WHILE_FIELD_NUMBER: _ClassVar[int]
@@ -1343,6 +1357,12 @@ class TriggerCondition(_message.Message):
     ANALOG_FIELD_NUMBER: _ClassVar[int]
     EXCHANGE_FIELD_NUMBER: _ClassVar[int]
     SEQUENCE_FIELD_NUMBER: _ClassVar[int]
+    BUS_RECEIVED_FIELD_NUMBER: _ClassVar[int]
+    BUS_TIMEOUT_FIELD_NUMBER: _ClassVar[int]
+    CLOCK_FIELD_NUMBER: _ClassVar[int]
+    START_FIELD_NUMBER: _ClassVar[int]
+    INTERRUPT_FIELD_NUMBER: _ClassVar[int]
+    RESET_FIELD_NUMBER: _ClassVar[int]
     edge: EdgeCondition
     pattern: PatternCondition
     edge_while: EdgeWhileCondition
@@ -1352,7 +1372,13 @@ class TriggerCondition(_message.Message):
     analog: AnalogCondition
     exchange: ExchangeCondition
     sequence: SequenceCondition
-    def __init__(self, edge: _Optional[_Union[EdgeCondition, _Mapping]] = ..., pattern: _Optional[_Union[PatternCondition, _Mapping]] = ..., edge_while: _Optional[_Union[EdgeWhileCondition, _Mapping]] = ..., width: _Optional[_Union[WidthCondition, _Mapping]] = ..., quiet: _Optional[_Union[QuietCondition, _Mapping]] = ..., value: _Optional[_Union[ValueCondition, _Mapping]] = ..., analog: _Optional[_Union[AnalogCondition, _Mapping]] = ..., exchange: _Optional[_Union[ExchangeCondition, _Mapping]] = ..., sequence: _Optional[_Union[SequenceCondition, _Mapping]] = ...) -> None: ...
+    bus_received: BusReceivedCondition
+    bus_timeout: BusTimeoutCondition
+    clock: ClockCondition
+    start: StartCondition
+    interrupt: InterruptCondition
+    reset: ResetCondition
+    def __init__(self, edge: _Optional[_Union[EdgeCondition, _Mapping]] = ..., pattern: _Optional[_Union[PatternCondition, _Mapping]] = ..., edge_while: _Optional[_Union[EdgeWhileCondition, _Mapping]] = ..., width: _Optional[_Union[WidthCondition, _Mapping]] = ..., quiet: _Optional[_Union[QuietCondition, _Mapping]] = ..., value: _Optional[_Union[ValueCondition, _Mapping]] = ..., analog: _Optional[_Union[AnalogCondition, _Mapping]] = ..., exchange: _Optional[_Union[ExchangeCondition, _Mapping]] = ..., sequence: _Optional[_Union[SequenceCondition, _Mapping]] = ..., bus_received: _Optional[_Union[BusReceivedCondition, _Mapping]] = ..., bus_timeout: _Optional[_Union[BusTimeoutCondition, _Mapping]] = ..., clock: _Optional[_Union[ClockCondition, _Mapping]] = ..., start: _Optional[_Union[StartCondition, _Mapping]] = ..., interrupt: _Optional[_Union[InterruptCondition, _Mapping]] = ..., reset: _Optional[_Union[ResetCondition, _Mapping]] = ...) -> None: ...
 
 class EdgeCondition(_message.Message):
     __slots__ = ("pin_id", "polarity")
@@ -1459,7 +1485,7 @@ class TriggerChoice(_message.Message):
     def __init__(self, trigger_id: _Optional[int] = ..., by_client: _Optional[str] = ...) -> None: ...
 
 class TriggerView(_message.Message):
-    __slots__ = ("trigger_id", "spec", "state", "armed_at_us", "fires", "last_fired_at_us", "ack", "description", "command_seq", "disarmed_by", "hold_at_us")
+    __slots__ = ("trigger_id", "spec", "state", "armed_at_us", "fires", "last_fired_at_us", "ack", "description", "command_seq", "disarmed_by", "hold_at_us", "group_key")
     class State(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
         __slots__ = ()
         ARMED: _ClassVar[TriggerView.State]
@@ -1483,6 +1509,7 @@ class TriggerView(_message.Message):
     COMMAND_SEQ_FIELD_NUMBER: _ClassVar[int]
     DISARMED_BY_FIELD_NUMBER: _ClassVar[int]
     HOLD_AT_US_FIELD_NUMBER: _ClassVar[int]
+    GROUP_KEY_FIELD_NUMBER: _ClassVar[int]
     trigger_id: int
     spec: TriggerSpec
     state: TriggerView.State
@@ -1494,7 +1521,8 @@ class TriggerView(_message.Message):
     command_seq: int
     disarmed_by: str
     hold_at_us: int
-    def __init__(self, trigger_id: _Optional[int] = ..., spec: _Optional[_Union[TriggerSpec, _Mapping]] = ..., state: _Optional[_Union[TriggerView.State, str]] = ..., armed_at_us: _Optional[int] = ..., fires: _Optional[int] = ..., last_fired_at_us: _Optional[int] = ..., ack: _Optional[_Union[Ack, _Mapping]] = ..., description: _Optional[str] = ..., command_seq: _Optional[int] = ..., disarmed_by: _Optional[str] = ..., hold_at_us: _Optional[int] = ...) -> None: ...
+    group_key: str
+    def __init__(self, trigger_id: _Optional[int] = ..., spec: _Optional[_Union[TriggerSpec, _Mapping]] = ..., state: _Optional[_Union[TriggerView.State, str]] = ..., armed_at_us: _Optional[int] = ..., fires: _Optional[int] = ..., last_fired_at_us: _Optional[int] = ..., ack: _Optional[_Union[Ack, _Mapping]] = ..., description: _Optional[str] = ..., command_seq: _Optional[int] = ..., disarmed_by: _Optional[str] = ..., hold_at_us: _Optional[int] = ..., group_key: _Optional[str] = ...) -> None: ...
 
 class TriggerList(_message.Message):
     __slots__ = ("triggers",)
@@ -1943,7 +1971,7 @@ class SignalInputRequest(_message.Message):
     def __init__(self, node: _Optional[str] = ..., output: _Optional[int] = ...) -> None: ...
 
 class SignalNodeRequest(_message.Message):
-    __slots__ = ("key", "kind", "signal", "source", "inputs", "model", "parameters", "interpreted", "value", "parameter_sources")
+    __slots__ = ("key", "kind", "signal", "source", "inputs", "model", "parameters", "interpreted", "value", "parameter_sources", "block", "group_key")
     class ParametersEntry(_message.Message):
         __slots__ = ("key", "value")
         KEY_FIELD_NUMBER: _ClassVar[int]
@@ -1968,6 +1996,8 @@ class SignalNodeRequest(_message.Message):
     INTERPRETED_FIELD_NUMBER: _ClassVar[int]
     VALUE_FIELD_NUMBER: _ClassVar[int]
     PARAMETER_SOURCES_FIELD_NUMBER: _ClassVar[int]
+    BLOCK_FIELD_NUMBER: _ClassVar[int]
+    GROUP_KEY_FIELD_NUMBER: _ClassVar[int]
     key: str
     kind: str
     signal: SignalView
@@ -1978,7 +2008,9 @@ class SignalNodeRequest(_message.Message):
     interpreted: bool
     value: float
     parameter_sources: _containers.ScalarMap[str, str]
-    def __init__(self, key: _Optional[str] = ..., kind: _Optional[str] = ..., signal: _Optional[_Union[SignalView, _Mapping]] = ..., source: _Optional[int] = ..., inputs: _Optional[_Iterable[_Union[SignalInputRequest, _Mapping]]] = ..., model: _Optional[str] = ..., parameters: _Optional[_Mapping[str, float]] = ..., interpreted: _Optional[bool] = ..., value: _Optional[float] = ..., parameter_sources: _Optional[_Mapping[str, str]] = ...) -> None: ...
+    block: ChainBlockRequest
+    group_key: str
+    def __init__(self, key: _Optional[str] = ..., kind: _Optional[str] = ..., signal: _Optional[_Union[SignalView, _Mapping]] = ..., source: _Optional[int] = ..., inputs: _Optional[_Iterable[_Union[SignalInputRequest, _Mapping]]] = ..., model: _Optional[str] = ..., parameters: _Optional[_Mapping[str, float]] = ..., interpreted: _Optional[bool] = ..., value: _Optional[float] = ..., parameter_sources: _Optional[_Mapping[str, str]] = ..., block: _Optional[_Union[ChainBlockRequest, _Mapping]] = ..., group_key: _Optional[str] = ...) -> None: ...
 
 class ModelParameterView(_message.Message):
     __slots__ = ("name", "default_value", "unit", "lowest", "highest")
@@ -2150,16 +2182,20 @@ class SignalProbeRequest(_message.Message):
     def __init__(self, name: _Optional[str] = ..., node: _Optional[str] = ..., output: _Optional[int] = ...) -> None: ...
 
 class SignalGraphRequest(_message.Message):
-    __slots__ = ("nodes", "targets", "probes", "when")
+    __slots__ = ("nodes", "targets", "probes", "event_links", "groups", "when")
     NODES_FIELD_NUMBER: _ClassVar[int]
     TARGETS_FIELD_NUMBER: _ClassVar[int]
     PROBES_FIELD_NUMBER: _ClassVar[int]
+    EVENT_LINKS_FIELD_NUMBER: _ClassVar[int]
+    GROUPS_FIELD_NUMBER: _ClassVar[int]
     WHEN_FIELD_NUMBER: _ClassVar[int]
     nodes: _containers.RepeatedCompositeFieldContainer[SignalNodeRequest]
     targets: _containers.RepeatedCompositeFieldContainer[SignalTargetRequest]
     probes: _containers.RepeatedCompositeFieldContainer[SignalProbeRequest]
+    event_links: _containers.RepeatedCompositeFieldContainer[EventLinkRequest]
+    groups: _containers.RepeatedCompositeFieldContainer[ChainGroupRequest]
     when: When
-    def __init__(self, nodes: _Optional[_Iterable[_Union[SignalNodeRequest, _Mapping]]] = ..., targets: _Optional[_Iterable[_Union[SignalTargetRequest, _Mapping]]] = ..., probes: _Optional[_Iterable[_Union[SignalProbeRequest, _Mapping]]] = ..., when: _Optional[_Union[When, _Mapping]] = ...) -> None: ...
+    def __init__(self, nodes: _Optional[_Iterable[_Union[SignalNodeRequest, _Mapping]]] = ..., targets: _Optional[_Iterable[_Union[SignalTargetRequest, _Mapping]]] = ..., probes: _Optional[_Iterable[_Union[SignalProbeRequest, _Mapping]]] = ..., event_links: _Optional[_Iterable[_Union[EventLinkRequest, _Mapping]]] = ..., groups: _Optional[_Iterable[_Union[ChainGroupRequest, _Mapping]]] = ..., when: _Optional[_Union[When, _Mapping]] = ...) -> None: ...
 
 class WaveformList(_message.Message):
     __slots__ = ("waveforms",)
@@ -4274,3 +4310,643 @@ class RaceView(_message.Message):
     uncovered: _containers.RepeatedCompositeFieldContainer[CodePlace]
     ack: Ack
     def __init__(self, on: _Optional[bool] = ..., source_id: _Optional[int] = ..., source_name: _Optional[str] = ..., points_seen: _Optional[int] = ..., points_covered: _Optional[int] = ..., cycles: _Optional[int] = ..., coverage_text: _Optional[str] = ..., uncovered: _Optional[_Iterable[_Union[CodePlace, _Mapping]]] = ..., ack: _Optional[_Union[Ack, _Mapping]] = ...) -> None: ...
+
+class EventLinkRequest(_message.Message):
+    __slots__ = ("from_node", "from_port", "to_node", "to_port", "is_state")
+    FROM_NODE_FIELD_NUMBER: _ClassVar[int]
+    FROM_PORT_FIELD_NUMBER: _ClassVar[int]
+    TO_NODE_FIELD_NUMBER: _ClassVar[int]
+    TO_PORT_FIELD_NUMBER: _ClassVar[int]
+    IS_STATE_FIELD_NUMBER: _ClassVar[int]
+    from_node: str
+    from_port: int
+    to_node: str
+    to_port: int
+    is_state: bool
+    def __init__(self, from_node: _Optional[str] = ..., from_port: _Optional[int] = ..., to_node: _Optional[str] = ..., to_port: _Optional[int] = ..., is_state: _Optional[bool] = ...) -> None: ...
+
+class ChainGroupRequest(_message.Message):
+    __slots__ = ("group_key", "name", "enabled")
+    GROUP_KEY_FIELD_NUMBER: _ClassVar[int]
+    NAME_FIELD_NUMBER: _ClassVar[int]
+    ENABLED_FIELD_NUMBER: _ClassVar[int]
+    group_key: str
+    name: str
+    enabled: bool
+    def __init__(self, group_key: _Optional[str] = ..., name: _Optional[str] = ..., enabled: _Optional[bool] = ...) -> None: ...
+
+class ChainBlockRequest(_message.Message):
+    __slots__ = ("condition", "threshold", "logic", "action", "min_gap_us")
+    CONDITION_FIELD_NUMBER: _ClassVar[int]
+    THRESHOLD_FIELD_NUMBER: _ClassVar[int]
+    LOGIC_FIELD_NUMBER: _ClassVar[int]
+    ACTION_FIELD_NUMBER: _ClassVar[int]
+    MIN_GAP_US_FIELD_NUMBER: _ClassVar[int]
+    condition: TriggerCondition
+    threshold: ThresholdSettings
+    logic: ChainLogic
+    action: ChainAction
+    min_gap_us: int
+    def __init__(self, condition: _Optional[_Union[TriggerCondition, _Mapping]] = ..., threshold: _Optional[_Union[ThresholdSettings, _Mapping]] = ..., logic: _Optional[_Union[ChainLogic, _Mapping]] = ..., action: _Optional[_Union[ChainAction, _Mapping]] = ..., min_gap_us: _Optional[int] = ...) -> None: ...
+
+class BusReceivedCondition(_message.Message):
+    __slots__ = ("bus_id", "address", "address_mask", "extended", "direction", "pattern", "pattern_mask")
+    BUS_ID_FIELD_NUMBER: _ClassVar[int]
+    ADDRESS_FIELD_NUMBER: _ClassVar[int]
+    ADDRESS_MASK_FIELD_NUMBER: _ClassVar[int]
+    EXTENDED_FIELD_NUMBER: _ClassVar[int]
+    DIRECTION_FIELD_NUMBER: _ClassVar[int]
+    PATTERN_FIELD_NUMBER: _ClassVar[int]
+    PATTERN_MASK_FIELD_NUMBER: _ClassVar[int]
+    bus_id: int
+    address: int
+    address_mask: int
+    extended: bool
+    direction: Direction
+    pattern: bytes
+    pattern_mask: bytes
+    def __init__(self, bus_id: _Optional[int] = ..., address: _Optional[int] = ..., address_mask: _Optional[int] = ..., extended: _Optional[bool] = ..., direction: _Optional[_Union[Direction, str]] = ..., pattern: _Optional[bytes] = ..., pattern_mask: _Optional[bytes] = ...) -> None: ...
+
+class BusTimeoutCondition(_message.Message):
+    __slots__ = ("bus_id", "address", "address_mask", "extended", "direction", "duration_us", "after_first_message")
+    BUS_ID_FIELD_NUMBER: _ClassVar[int]
+    ADDRESS_FIELD_NUMBER: _ClassVar[int]
+    ADDRESS_MASK_FIELD_NUMBER: _ClassVar[int]
+    EXTENDED_FIELD_NUMBER: _ClassVar[int]
+    DIRECTION_FIELD_NUMBER: _ClassVar[int]
+    DURATION_US_FIELD_NUMBER: _ClassVar[int]
+    AFTER_FIRST_MESSAGE_FIELD_NUMBER: _ClassVar[int]
+    bus_id: int
+    address: int
+    address_mask: int
+    extended: bool
+    direction: Direction
+    duration_us: int
+    after_first_message: bool
+    def __init__(self, bus_id: _Optional[int] = ..., address: _Optional[int] = ..., address_mask: _Optional[int] = ..., extended: _Optional[bool] = ..., direction: _Optional[_Union[Direction, str]] = ..., duration_us: _Optional[int] = ..., after_first_message: _Optional[bool] = ...) -> None: ...
+
+class ClockCondition(_message.Message):
+    __slots__ = ("period_us", "phase_us")
+    PERIOD_US_FIELD_NUMBER: _ClassVar[int]
+    PHASE_US_FIELD_NUMBER: _ClassVar[int]
+    period_us: int
+    phase_us: int
+    def __init__(self, period_us: _Optional[int] = ..., phase_us: _Optional[int] = ...) -> None: ...
+
+class StartCondition(_message.Message):
+    __slots__ = ("first_life_only",)
+    FIRST_LIFE_ONLY_FIELD_NUMBER: _ClassVar[int]
+    first_life_only: bool
+    def __init__(self, first_life_only: _Optional[bool] = ...) -> None: ...
+
+class InterruptCondition(_message.Message):
+    __slots__ = ("source_id", "on_entry")
+    SOURCE_ID_FIELD_NUMBER: _ClassVar[int]
+    ON_ENTRY_FIELD_NUMBER: _ClassVar[int]
+    source_id: int
+    on_entry: bool
+    def __init__(self, source_id: _Optional[int] = ..., on_entry: _Optional[bool] = ...) -> None: ...
+
+class ResetCondition(_message.Message):
+    __slots__ = ("cause",)
+    CAUSE_FIELD_NUMBER: _ClassVar[int]
+    cause: ResetCause
+    def __init__(self, cause: _Optional[_Union[ResetCause, str]] = ...) -> None: ...
+
+class ThresholdSettings(_message.Message):
+    __slots__ = ("level", "hysteresis", "direction", "check_us")
+    LEVEL_FIELD_NUMBER: _ClassVar[int]
+    HYSTERESIS_FIELD_NUMBER: _ClassVar[int]
+    DIRECTION_FIELD_NUMBER: _ClassVar[int]
+    CHECK_US_FIELD_NUMBER: _ClassVar[int]
+    level: float
+    hysteresis: float
+    direction: EdgePolarity
+    check_us: int
+    def __init__(self, level: _Optional[float] = ..., hysteresis: _Optional[float] = ..., direction: _Optional[_Union[EdgePolarity, str]] = ..., check_us: _Optional[int] = ...) -> None: ...
+
+class ChainLogic(_message.Message):
+    __slots__ = ("delay", "counter", "once", "all_of", "any_of", "gate", "sequence")
+    DELAY_FIELD_NUMBER: _ClassVar[int]
+    COUNTER_FIELD_NUMBER: _ClassVar[int]
+    ONCE_FIELD_NUMBER: _ClassVar[int]
+    ALL_OF_FIELD_NUMBER: _ClassVar[int]
+    ANY_OF_FIELD_NUMBER: _ClassVar[int]
+    GATE_FIELD_NUMBER: _ClassVar[int]
+    SEQUENCE_FIELD_NUMBER: _ClassVar[int]
+    delay: DelayLogic
+    counter: CounterLogic
+    once: Empty
+    all_of: Empty
+    any_of: Empty
+    gate: Empty
+    sequence: SequenceLogic
+    def __init__(self, delay: _Optional[_Union[DelayLogic, _Mapping]] = ..., counter: _Optional[_Union[CounterLogic, _Mapping]] = ..., once: _Optional[_Union[Empty, _Mapping]] = ..., all_of: _Optional[_Union[Empty, _Mapping]] = ..., any_of: _Optional[_Union[Empty, _Mapping]] = ..., gate: _Optional[_Union[Empty, _Mapping]] = ..., sequence: _Optional[_Union[SequenceLogic, _Mapping]] = ...) -> None: ...
+
+class DelayLogic(_message.Message):
+    __slots__ = ("delay_us", "while_waiting")
+    class WhileWaiting(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+        __slots__ = ()
+        QUEUED: _ClassVar[DelayLogic.WhileWaiting]
+        RESTART: _ClassVar[DelayLogic.WhileWaiting]
+        DROPPED: _ClassVar[DelayLogic.WhileWaiting]
+    QUEUED: DelayLogic.WhileWaiting
+    RESTART: DelayLogic.WhileWaiting
+    DROPPED: DelayLogic.WhileWaiting
+    DELAY_US_FIELD_NUMBER: _ClassVar[int]
+    WHILE_WAITING_FIELD_NUMBER: _ClassVar[int]
+    delay_us: int
+    while_waiting: DelayLogic.WhileWaiting
+    def __init__(self, delay_us: _Optional[int] = ..., while_waiting: _Optional[_Union[DelayLogic.WhileWaiting, str]] = ...) -> None: ...
+
+class CounterLogic(_message.Message):
+    __slots__ = ("n", "only_nth")
+    N_FIELD_NUMBER: _ClassVar[int]
+    ONLY_NTH_FIELD_NUMBER: _ClassVar[int]
+    n: int
+    only_nth: bool
+    def __init__(self, n: _Optional[int] = ..., only_nth: _Optional[bool] = ...) -> None: ...
+
+class SequenceLogic(_message.Message):
+    __slots__ = ("steps", "restart_on_start")
+    STEPS_FIELD_NUMBER: _ClassVar[int]
+    RESTART_ON_START_FIELD_NUMBER: _ClassVar[int]
+    steps: _containers.RepeatedCompositeFieldContainer[SequenceStepRequest]
+    restart_on_start: bool
+    def __init__(self, steps: _Optional[_Iterable[_Union[SequenceStepRequest, _Mapping]]] = ..., restart_on_start: _Optional[bool] = ...) -> None: ...
+
+class SequenceStepRequest(_message.Message):
+    __slots__ = ("kind", "label", "duration_us")
+    class Kind(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+        __slots__ = ()
+        DO: _ClassVar[SequenceStepRequest.Kind]
+        WAIT: _ClassVar[SequenceStepRequest.Kind]
+        WAIT_FOR: _ClassVar[SequenceStepRequest.Kind]
+        EXPECT_NONE: _ClassVar[SequenceStepRequest.Kind]
+    DO: SequenceStepRequest.Kind
+    WAIT: SequenceStepRequest.Kind
+    WAIT_FOR: SequenceStepRequest.Kind
+    EXPECT_NONE: SequenceStepRequest.Kind
+    KIND_FIELD_NUMBER: _ClassVar[int]
+    LABEL_FIELD_NUMBER: _ClassVar[int]
+    DURATION_US_FIELD_NUMBER: _ClassVar[int]
+    kind: SequenceStepRequest.Kind
+    label: str
+    duration_us: int
+    def __init__(self, kind: _Optional[_Union[SequenceStepRequest.Kind, str]] = ..., label: _Optional[str] = ..., duration_us: _Optional[int] = ...) -> None: ...
+
+class ChainAction(_message.Message):
+    __slots__ = ("send", "reply", "pin", "mark", "hold", "signal", "fault", "interrupt", "reset")
+    SEND_FIELD_NUMBER: _ClassVar[int]
+    REPLY_FIELD_NUMBER: _ClassVar[int]
+    PIN_FIELD_NUMBER: _ClassVar[int]
+    MARK_FIELD_NUMBER: _ClassVar[int]
+    HOLD_FIELD_NUMBER: _ClassVar[int]
+    SIGNAL_FIELD_NUMBER: _ClassVar[int]
+    FAULT_FIELD_NUMBER: _ClassVar[int]
+    INTERRUPT_FIELD_NUMBER: _ClassVar[int]
+    RESET_FIELD_NUMBER: _ClassVar[int]
+    send: BusMessageAction
+    reply: BusMessageAction
+    pin: PinAction
+    mark: MarkAction
+    hold: HoldAction
+    signal: SignalSwitchAction
+    fault: FaultAction
+    interrupt: InterruptRaiseAction
+    reset: ResetAction
+    def __init__(self, send: _Optional[_Union[BusMessageAction, _Mapping]] = ..., reply: _Optional[_Union[BusMessageAction, _Mapping]] = ..., pin: _Optional[_Union[PinAction, _Mapping]] = ..., mark: _Optional[_Union[MarkAction, _Mapping]] = ..., hold: _Optional[_Union[HoldAction, _Mapping]] = ..., signal: _Optional[_Union[SignalSwitchAction, _Mapping]] = ..., fault: _Optional[_Union[FaultAction, _Mapping]] = ..., interrupt: _Optional[_Union[InterruptRaiseAction, _Mapping]] = ..., reset: _Optional[_Union[ResetAction, _Mapping]] = ...) -> None: ...
+
+class BusMessageAction(_message.Message):
+    __slots__ = ("message", "fields", "answer_after_us", "text", "length")
+    MESSAGE_FIELD_NUMBER: _ClassVar[int]
+    FIELDS_FIELD_NUMBER: _ClassVar[int]
+    ANSWER_AFTER_US_FIELD_NUMBER: _ClassVar[int]
+    TEXT_FIELD_NUMBER: _ClassVar[int]
+    LENGTH_FIELD_NUMBER: _ClassVar[int]
+    message: BusMessage
+    fields: _containers.RepeatedCompositeFieldContainer[MessageField]
+    answer_after_us: int
+    text: str
+    length: int
+    def __init__(self, message: _Optional[_Union[BusMessage, _Mapping]] = ..., fields: _Optional[_Iterable[_Union[MessageField, _Mapping]]] = ..., answer_after_us: _Optional[int] = ..., text: _Optional[str] = ..., length: _Optional[int] = ...) -> None: ...
+
+class MessageField(_message.Message):
+    __slots__ = ("name", "constant", "signal_input", "request_bit", "count", "start_bit", "length", "big_endian", "is_signed", "scale", "offset", "dbc_message")
+    NAME_FIELD_NUMBER: _ClassVar[int]
+    CONSTANT_FIELD_NUMBER: _ClassVar[int]
+    SIGNAL_INPUT_FIELD_NUMBER: _ClassVar[int]
+    REQUEST_BIT_FIELD_NUMBER: _ClassVar[int]
+    COUNT_FIELD_NUMBER: _ClassVar[int]
+    START_BIT_FIELD_NUMBER: _ClassVar[int]
+    LENGTH_FIELD_NUMBER: _ClassVar[int]
+    BIG_ENDIAN_FIELD_NUMBER: _ClassVar[int]
+    IS_SIGNED_FIELD_NUMBER: _ClassVar[int]
+    SCALE_FIELD_NUMBER: _ClassVar[int]
+    OFFSET_FIELD_NUMBER: _ClassVar[int]
+    DBC_MESSAGE_FIELD_NUMBER: _ClassVar[int]
+    name: str
+    constant: int
+    signal_input: int
+    request_bit: int
+    count: Empty
+    start_bit: int
+    length: int
+    big_endian: bool
+    is_signed: bool
+    scale: float
+    offset: float
+    dbc_message: str
+    def __init__(self, name: _Optional[str] = ..., constant: _Optional[int] = ..., signal_input: _Optional[int] = ..., request_bit: _Optional[int] = ..., count: _Optional[_Union[Empty, _Mapping]] = ..., start_bit: _Optional[int] = ..., length: _Optional[int] = ..., big_endian: _Optional[bool] = ..., is_signed: _Optional[bool] = ..., scale: _Optional[float] = ..., offset: _Optional[float] = ..., dbc_message: _Optional[str] = ...) -> None: ...
+
+class PinAction(_message.Message):
+    __slots__ = ("pin_id", "action", "press_level", "press_us")
+    class Do(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+        __slots__ = ()
+        HIGH: _ClassVar[PinAction.Do]
+        LOW: _ClassVar[PinAction.Do]
+        PRESS: _ClassVar[PinAction.Do]
+    HIGH: PinAction.Do
+    LOW: PinAction.Do
+    PRESS: PinAction.Do
+    class PressLevel(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+        __slots__ = ()
+        ACTIVE: _ClassVar[PinAction.PressLevel]
+        PRESS_HIGH: _ClassVar[PinAction.PressLevel]
+        PRESS_LOW: _ClassVar[PinAction.PressLevel]
+    ACTIVE: PinAction.PressLevel
+    PRESS_HIGH: PinAction.PressLevel
+    PRESS_LOW: PinAction.PressLevel
+    PIN_ID_FIELD_NUMBER: _ClassVar[int]
+    ACTION_FIELD_NUMBER: _ClassVar[int]
+    PRESS_LEVEL_FIELD_NUMBER: _ClassVar[int]
+    PRESS_US_FIELD_NUMBER: _ClassVar[int]
+    pin_id: int
+    action: PinAction.Do
+    press_level: PinAction.PressLevel
+    press_us: int
+    def __init__(self, pin_id: _Optional[int] = ..., action: _Optional[_Union[PinAction.Do, str]] = ..., press_level: _Optional[_Union[PinAction.PressLevel, str]] = ..., press_us: _Optional[int] = ...) -> None: ...
+
+class MarkAction(_message.Message):
+    __slots__ = ("text",)
+    TEXT_FIELD_NUMBER: _ClassVar[int]
+    text: str
+    def __init__(self, text: _Optional[str] = ...) -> None: ...
+
+class HoldAction(_message.Message):
+    __slots__ = ("after_us",)
+    AFTER_US_FIELD_NUMBER: _ClassVar[int]
+    after_us: int
+    def __init__(self, after_us: _Optional[int] = ...) -> None: ...
+
+class SignalSwitchAction(_message.Message):
+    __slots__ = ("node", "channel_id", "action", "to", "over_us")
+    class Do(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+        __slots__ = ()
+        START: _ClassVar[SignalSwitchAction.Do]
+        STOP: _ClassVar[SignalSwitchAction.Do]
+        STEP: _ClassVar[SignalSwitchAction.Do]
+        RAMP: _ClassVar[SignalSwitchAction.Do]
+        SET: _ClassVar[SignalSwitchAction.Do]
+        HOLD_AT: _ClassVar[SignalSwitchAction.Do]
+    START: SignalSwitchAction.Do
+    STOP: SignalSwitchAction.Do
+    STEP: SignalSwitchAction.Do
+    RAMP: SignalSwitchAction.Do
+    SET: SignalSwitchAction.Do
+    HOLD_AT: SignalSwitchAction.Do
+    NODE_FIELD_NUMBER: _ClassVar[int]
+    CHANNEL_ID_FIELD_NUMBER: _ClassVar[int]
+    ACTION_FIELD_NUMBER: _ClassVar[int]
+    TO_FIELD_NUMBER: _ClassVar[int]
+    OVER_US_FIELD_NUMBER: _ClassVar[int]
+    node: str
+    channel_id: int
+    action: SignalSwitchAction.Do
+    to: float
+    over_us: int
+    def __init__(self, node: _Optional[str] = ..., channel_id: _Optional[int] = ..., action: _Optional[_Union[SignalSwitchAction.Do, str]] = ..., to: _Optional[float] = ..., over_us: _Optional[int] = ...) -> None: ...
+
+class FaultAction(_message.Message):
+    __slots__ = ("kind", "channel_id", "for_us", "amplitude", "bus_id", "address", "address_mask", "next", "byte_index", "bit")
+    class Kind(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+        __slots__ = ()
+        STICK: _ClassVar[FaultAction.Kind]
+        NOISE_ON: _ClassVar[FaultAction.Kind]
+        NOISE_OFF: _ClassVar[FaultAction.Kind]
+        DROP: _ClassVar[FaultAction.Kind]
+        ERROR_FRAME: _ClassVar[FaultAction.Kind]
+        FLIP: _ClassVar[FaultAction.Kind]
+    STICK: FaultAction.Kind
+    NOISE_ON: FaultAction.Kind
+    NOISE_OFF: FaultAction.Kind
+    DROP: FaultAction.Kind
+    ERROR_FRAME: FaultAction.Kind
+    FLIP: FaultAction.Kind
+    KIND_FIELD_NUMBER: _ClassVar[int]
+    CHANNEL_ID_FIELD_NUMBER: _ClassVar[int]
+    FOR_US_FIELD_NUMBER: _ClassVar[int]
+    AMPLITUDE_FIELD_NUMBER: _ClassVar[int]
+    BUS_ID_FIELD_NUMBER: _ClassVar[int]
+    ADDRESS_FIELD_NUMBER: _ClassVar[int]
+    ADDRESS_MASK_FIELD_NUMBER: _ClassVar[int]
+    NEXT_FIELD_NUMBER: _ClassVar[int]
+    BYTE_INDEX_FIELD_NUMBER: _ClassVar[int]
+    BIT_FIELD_NUMBER: _ClassVar[int]
+    kind: FaultAction.Kind
+    channel_id: int
+    for_us: int
+    amplitude: float
+    bus_id: int
+    address: int
+    address_mask: int
+    next: int
+    byte_index: int
+    bit: int
+    def __init__(self, kind: _Optional[_Union[FaultAction.Kind, str]] = ..., channel_id: _Optional[int] = ..., for_us: _Optional[int] = ..., amplitude: _Optional[float] = ..., bus_id: _Optional[int] = ..., address: _Optional[int] = ..., address_mask: _Optional[int] = ..., next: _Optional[int] = ..., byte_index: _Optional[int] = ..., bit: _Optional[int] = ...) -> None: ...
+
+class InterruptRaiseAction(_message.Message):
+    __slots__ = ("source_id",)
+    SOURCE_ID_FIELD_NUMBER: _ClassVar[int]
+    source_id: int
+    def __init__(self, source_id: _Optional[int] = ...) -> None: ...
+
+class ResetAction(_message.Message):
+    __slots__ = ("cause",)
+    CAUSE_FIELD_NUMBER: _ClassVar[int]
+    cause: ResetCause
+    def __init__(self, cause: _Optional[_Union[ResetCause, str]] = ...) -> None: ...
+
+class ChainFire(_message.Message):
+    __slots__ = ("chain_id", "block", "kind", "fire_n", "hold_at_us", "step", "text", "cause_block")
+    class Kind(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+        __slots__ = ()
+        FIRED: _ClassVar[ChainFire.Kind]
+        ACTED: _ClassVar[ChainFire.Kind]
+        STEP: _ClassVar[ChainFire.Kind]
+        DONE: _ClassVar[ChainFire.Kind]
+        FAILED: _ClassVar[ChainFire.Kind]
+        DROPPED: _ClassVar[ChainFire.Kind]
+        LOOPED: _ClassVar[ChainFire.Kind]
+    FIRED: ChainFire.Kind
+    ACTED: ChainFire.Kind
+    STEP: ChainFire.Kind
+    DONE: ChainFire.Kind
+    FAILED: ChainFire.Kind
+    DROPPED: ChainFire.Kind
+    LOOPED: ChainFire.Kind
+    CHAIN_ID_FIELD_NUMBER: _ClassVar[int]
+    BLOCK_FIELD_NUMBER: _ClassVar[int]
+    KIND_FIELD_NUMBER: _ClassVar[int]
+    FIRE_N_FIELD_NUMBER: _ClassVar[int]
+    HOLD_AT_US_FIELD_NUMBER: _ClassVar[int]
+    STEP_FIELD_NUMBER: _ClassVar[int]
+    TEXT_FIELD_NUMBER: _ClassVar[int]
+    CAUSE_BLOCK_FIELD_NUMBER: _ClassVar[int]
+    chain_id: int
+    block: int
+    kind: ChainFire.Kind
+    fire_n: int
+    hold_at_us: int
+    step: int
+    text: str
+    cause_block: int
+    def __init__(self, chain_id: _Optional[int] = ..., block: _Optional[int] = ..., kind: _Optional[_Union[ChainFire.Kind, str]] = ..., fire_n: _Optional[int] = ..., hold_at_us: _Optional[int] = ..., step: _Optional[int] = ..., text: _Optional[str] = ..., cause_block: _Optional[int] = ...) -> None: ...
+
+class GraphCheckView(_message.Message):
+    __slots__ = ("problems", "capacity")
+    PROBLEMS_FIELD_NUMBER: _ClassVar[int]
+    CAPACITY_FIELD_NUMBER: _ClassVar[int]
+    problems: _containers.RepeatedCompositeFieldContainer[GraphProblem]
+    capacity: ChainCapacityView
+    def __init__(self, problems: _Optional[_Iterable[_Union[GraphProblem, _Mapping]]] = ..., capacity: _Optional[_Union[ChainCapacityView, _Mapping]] = ...) -> None: ...
+
+class GraphProblem(_message.Message):
+    __slots__ = ("kind", "node_key", "group_key", "link", "text")
+    class Kind(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+        __slots__ = ()
+        OPEN: _ClassVar[GraphProblem.Kind]
+        WRONG_PORT: _ClassVar[GraphProblem.Kind]
+        CYCLE: _ClassVar[GraphProblem.Kind]
+        UNKNOWN_TARGET: _ClassVar[GraphProblem.Kind]
+        INVALID: _ClassVar[GraphProblem.Kind]
+        CAPACITY: _ClassVar[GraphProblem.Kind]
+        NEEDS_PRO: _ClassVar[GraphProblem.Kind]
+    OPEN: GraphProblem.Kind
+    WRONG_PORT: GraphProblem.Kind
+    CYCLE: GraphProblem.Kind
+    UNKNOWN_TARGET: GraphProblem.Kind
+    INVALID: GraphProblem.Kind
+    CAPACITY: GraphProblem.Kind
+    NEEDS_PRO: GraphProblem.Kind
+    KIND_FIELD_NUMBER: _ClassVar[int]
+    NODE_KEY_FIELD_NUMBER: _ClassVar[int]
+    GROUP_KEY_FIELD_NUMBER: _ClassVar[int]
+    LINK_FIELD_NUMBER: _ClassVar[int]
+    TEXT_FIELD_NUMBER: _ClassVar[int]
+    kind: GraphProblem.Kind
+    node_key: str
+    group_key: str
+    link: str
+    text: str
+    def __init__(self, kind: _Optional[_Union[GraphProblem.Kind, str]] = ..., node_key: _Optional[str] = ..., group_key: _Optional[str] = ..., link: _Optional[str] = ..., text: _Optional[str] = ...) -> None: ...
+
+class ChainCapacityView(_message.Message):
+    __slots__ = ("conditions_used", "conditions_max", "actions_used", "actions_max", "logic_used", "logic_max", "text")
+    CONDITIONS_USED_FIELD_NUMBER: _ClassVar[int]
+    CONDITIONS_MAX_FIELD_NUMBER: _ClassVar[int]
+    ACTIONS_USED_FIELD_NUMBER: _ClassVar[int]
+    ACTIONS_MAX_FIELD_NUMBER: _ClassVar[int]
+    LOGIC_USED_FIELD_NUMBER: _ClassVar[int]
+    LOGIC_MAX_FIELD_NUMBER: _ClassVar[int]
+    TEXT_FIELD_NUMBER: _ClassVar[int]
+    conditions_used: int
+    conditions_max: int
+    actions_used: int
+    actions_max: int
+    logic_used: int
+    logic_max: int
+    text: str
+    def __init__(self, conditions_used: _Optional[int] = ..., conditions_max: _Optional[int] = ..., actions_used: _Optional[int] = ..., actions_max: _Optional[int] = ..., logic_used: _Optional[int] = ..., logic_max: _Optional[int] = ..., text: _Optional[str] = ...) -> None: ...
+
+class ChainList(_message.Message):
+    __slots__ = ("nodes", "groups", "sequences", "capacity", "position")
+    NODES_FIELD_NUMBER: _ClassVar[int]
+    GROUPS_FIELD_NUMBER: _ClassVar[int]
+    SEQUENCES_FIELD_NUMBER: _ClassVar[int]
+    CAPACITY_FIELD_NUMBER: _ClassVar[int]
+    POSITION_FIELD_NUMBER: _ClassVar[int]
+    nodes: _containers.RepeatedCompositeFieldContainer[ChainNodeView]
+    groups: _containers.RepeatedCompositeFieldContainer[ChainGroupView]
+    sequences: _containers.RepeatedCompositeFieldContainer[SequenceStateView]
+    capacity: ChainCapacityView
+    position: ViewPosition
+    def __init__(self, nodes: _Optional[_Iterable[_Union[ChainNodeView, _Mapping]]] = ..., groups: _Optional[_Iterable[_Union[ChainGroupView, _Mapping]]] = ..., sequences: _Optional[_Iterable[_Union[SequenceStateView, _Mapping]]] = ..., capacity: _Optional[_Union[ChainCapacityView, _Mapping]] = ..., position: _Optional[_Union[ViewPosition, _Mapping]] = ...) -> None: ...
+
+class ChainNodeView(_message.Message):
+    __slots__ = ("node_key", "group_key", "chain_id", "block", "installed", "state", "state_text", "summary_text", "refusal_text", "fire_count", "last_fire_us", "detail_text", "interval_text", "is_locked", "kind", "settings", "writes_also")
+    class State(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+        __slots__ = ()
+        OFF: _ClassVar[ChainNodeView.State]
+        ARMED: _ClassVar[ChainNodeView.State]
+        FIRED: _ClassVar[ChainNodeView.State]
+        DONE: _ClassVar[ChainNodeView.State]
+        RUNNING: _ClassVar[ChainNodeView.State]
+        FAILED: _ClassVar[ChainNodeView.State]
+        HOLDING: _ClassVar[ChainNodeView.State]
+        INCOMPLETE: _ClassVar[ChainNodeView.State]
+        REFUSED: _ClassVar[ChainNodeView.State]
+        NEEDS_PRO: _ClassVar[ChainNodeView.State]
+    OFF: ChainNodeView.State
+    ARMED: ChainNodeView.State
+    FIRED: ChainNodeView.State
+    DONE: ChainNodeView.State
+    RUNNING: ChainNodeView.State
+    FAILED: ChainNodeView.State
+    HOLDING: ChainNodeView.State
+    INCOMPLETE: ChainNodeView.State
+    REFUSED: ChainNodeView.State
+    NEEDS_PRO: ChainNodeView.State
+    NODE_KEY_FIELD_NUMBER: _ClassVar[int]
+    GROUP_KEY_FIELD_NUMBER: _ClassVar[int]
+    CHAIN_ID_FIELD_NUMBER: _ClassVar[int]
+    BLOCK_FIELD_NUMBER: _ClassVar[int]
+    INSTALLED_FIELD_NUMBER: _ClassVar[int]
+    STATE_FIELD_NUMBER: _ClassVar[int]
+    STATE_TEXT_FIELD_NUMBER: _ClassVar[int]
+    SUMMARY_TEXT_FIELD_NUMBER: _ClassVar[int]
+    REFUSAL_TEXT_FIELD_NUMBER: _ClassVar[int]
+    FIRE_COUNT_FIELD_NUMBER: _ClassVar[int]
+    LAST_FIRE_US_FIELD_NUMBER: _ClassVar[int]
+    DETAIL_TEXT_FIELD_NUMBER: _ClassVar[int]
+    INTERVAL_TEXT_FIELD_NUMBER: _ClassVar[int]
+    IS_LOCKED_FIELD_NUMBER: _ClassVar[int]
+    KIND_FIELD_NUMBER: _ClassVar[int]
+    SETTINGS_FIELD_NUMBER: _ClassVar[int]
+    WRITES_ALSO_FIELD_NUMBER: _ClassVar[int]
+    node_key: str
+    group_key: str
+    chain_id: int
+    block: int
+    installed: bool
+    state: ChainNodeView.State
+    state_text: str
+    summary_text: str
+    refusal_text: str
+    fire_count: int
+    last_fire_us: int
+    detail_text: str
+    interval_text: str
+    is_locked: bool
+    kind: str
+    settings: ChainBlockRequest
+    writes_also: _containers.RepeatedScalarFieldContainer[str]
+    def __init__(self, node_key: _Optional[str] = ..., group_key: _Optional[str] = ..., chain_id: _Optional[int] = ..., block: _Optional[int] = ..., installed: _Optional[bool] = ..., state: _Optional[_Union[ChainNodeView.State, str]] = ..., state_text: _Optional[str] = ..., summary_text: _Optional[str] = ..., refusal_text: _Optional[str] = ..., fire_count: _Optional[int] = ..., last_fire_us: _Optional[int] = ..., detail_text: _Optional[str] = ..., interval_text: _Optional[str] = ..., is_locked: _Optional[bool] = ..., kind: _Optional[str] = ..., settings: _Optional[_Union[ChainBlockRequest, _Mapping]] = ..., writes_also: _Optional[_Iterable[str]] = ...) -> None: ...
+
+class ChainGroupView(_message.Message):
+    __slots__ = ("group_key", "name", "enabled", "state_text", "event_blocks", "signal_blocks", "needs_pro", "problem_text", "trigger_id")
+    GROUP_KEY_FIELD_NUMBER: _ClassVar[int]
+    NAME_FIELD_NUMBER: _ClassVar[int]
+    ENABLED_FIELD_NUMBER: _ClassVar[int]
+    STATE_TEXT_FIELD_NUMBER: _ClassVar[int]
+    EVENT_BLOCKS_FIELD_NUMBER: _ClassVar[int]
+    SIGNAL_BLOCKS_FIELD_NUMBER: _ClassVar[int]
+    NEEDS_PRO_FIELD_NUMBER: _ClassVar[int]
+    PROBLEM_TEXT_FIELD_NUMBER: _ClassVar[int]
+    TRIGGER_ID_FIELD_NUMBER: _ClassVar[int]
+    group_key: str
+    name: str
+    enabled: bool
+    state_text: str
+    event_blocks: int
+    signal_blocks: int
+    needs_pro: bool
+    problem_text: str
+    trigger_id: int
+    def __init__(self, group_key: _Optional[str] = ..., name: _Optional[str] = ..., enabled: _Optional[bool] = ..., state_text: _Optional[str] = ..., event_blocks: _Optional[int] = ..., signal_blocks: _Optional[int] = ..., needs_pro: _Optional[bool] = ..., problem_text: _Optional[str] = ..., trigger_id: _Optional[int] = ...) -> None: ...
+
+class SequenceStateView(_message.Message):
+    __slots__ = ("node_key", "step_index", "step_count", "state", "step_text", "failure_text", "step_times_us")
+    class State(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+        __slots__ = ()
+        WAITING: _ClassVar[SequenceStateView.State]
+        RUNNING: _ClassVar[SequenceStateView.State]
+        DONE: _ClassVar[SequenceStateView.State]
+        FAILED: _ClassVar[SequenceStateView.State]
+    WAITING: SequenceStateView.State
+    RUNNING: SequenceStateView.State
+    DONE: SequenceStateView.State
+    FAILED: SequenceStateView.State
+    NODE_KEY_FIELD_NUMBER: _ClassVar[int]
+    STEP_INDEX_FIELD_NUMBER: _ClassVar[int]
+    STEP_COUNT_FIELD_NUMBER: _ClassVar[int]
+    STATE_FIELD_NUMBER: _ClassVar[int]
+    STEP_TEXT_FIELD_NUMBER: _ClassVar[int]
+    FAILURE_TEXT_FIELD_NUMBER: _ClassVar[int]
+    STEP_TIMES_US_FIELD_NUMBER: _ClassVar[int]
+    node_key: str
+    step_index: int
+    step_count: int
+    state: SequenceStateView.State
+    step_text: str
+    failure_text: str
+    step_times_us: _containers.RepeatedScalarFieldContainer[int]
+    def __init__(self, node_key: _Optional[str] = ..., step_index: _Optional[int] = ..., step_count: _Optional[int] = ..., state: _Optional[_Union[SequenceStateView.State, str]] = ..., step_text: _Optional[str] = ..., failure_text: _Optional[str] = ..., step_times_us: _Optional[_Iterable[int]] = ...) -> None: ...
+
+class ChainGroupSwitch(_message.Message):
+    __slots__ = ("group_key", "enabled", "when")
+    GROUP_KEY_FIELD_NUMBER: _ClassVar[int]
+    ENABLED_FIELD_NUMBER: _ClassVar[int]
+    WHEN_FIELD_NUMBER: _ClassVar[int]
+    group_key: str
+    enabled: bool
+    when: When
+    def __init__(self, group_key: _Optional[str] = ..., enabled: _Optional[bool] = ..., when: _Optional[_Union[When, _Mapping]] = ...) -> None: ...
+
+class ChainBlockCatalogue(_message.Message):
+    __slots__ = ("kinds",)
+    KINDS_FIELD_NUMBER: _ClassVar[int]
+    kinds: _containers.RepeatedCompositeFieldContainer[ChainBlockKind]
+    def __init__(self, kinds: _Optional[_Iterable[_Union[ChainBlockKind, _Mapping]]] = ...) -> None: ...
+
+class ChainBlockKind(_message.Message):
+    __slots__ = ("kind", "category", "display_name", "description", "inputs", "outputs", "is_pro", "is_locked", "locked_text", "step")
+    KIND_FIELD_NUMBER: _ClassVar[int]
+    CATEGORY_FIELD_NUMBER: _ClassVar[int]
+    DISPLAY_NAME_FIELD_NUMBER: _ClassVar[int]
+    DESCRIPTION_FIELD_NUMBER: _ClassVar[int]
+    INPUTS_FIELD_NUMBER: _ClassVar[int]
+    OUTPUTS_FIELD_NUMBER: _ClassVar[int]
+    IS_PRO_FIELD_NUMBER: _ClassVar[int]
+    IS_LOCKED_FIELD_NUMBER: _ClassVar[int]
+    LOCKED_TEXT_FIELD_NUMBER: _ClassVar[int]
+    STEP_FIELD_NUMBER: _ClassVar[int]
+    kind: str
+    category: str
+    display_name: str
+    description: str
+    inputs: _containers.RepeatedCompositeFieldContainer[ChainPortView]
+    outputs: _containers.RepeatedCompositeFieldContainer[ChainPortView]
+    is_pro: bool
+    is_locked: bool
+    locked_text: str
+    step: int
+    def __init__(self, kind: _Optional[str] = ..., category: _Optional[str] = ..., display_name: _Optional[str] = ..., description: _Optional[str] = ..., inputs: _Optional[_Iterable[_Union[ChainPortView, _Mapping]]] = ..., outputs: _Optional[_Iterable[_Union[ChainPortView, _Mapping]]] = ..., is_pro: _Optional[bool] = ..., is_locked: _Optional[bool] = ..., locked_text: _Optional[str] = ..., step: _Optional[int] = ...) -> None: ...
+
+class ChainPortView(_message.Message):
+    __slots__ = ("name", "kind", "grows")
+    class Kind(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+        __slots__ = ()
+        EVENT: _ClassVar[ChainPortView.Kind]
+        STATE: _ClassVar[ChainPortView.Kind]
+        SIGNAL: _ClassVar[ChainPortView.Kind]
+    EVENT: ChainPortView.Kind
+    STATE: ChainPortView.Kind
+    SIGNAL: ChainPortView.Kind
+    NAME_FIELD_NUMBER: _ClassVar[int]
+    KIND_FIELD_NUMBER: _ClassVar[int]
+    GROWS_FIELD_NUMBER: _ClassVar[int]
+    name: str
+    kind: ChainPortView.Kind
+    grows: bool
+    def __init__(self, name: _Optional[str] = ..., kind: _Optional[_Union[ChainPortView.Kind, str]] = ..., grows: _Optional[bool] = ...) -> None: ...

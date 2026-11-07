@@ -153,6 +153,9 @@ enum ProFeature {
   // than its period, DMA overruns and length errors, reading while DMA
   // writes; the race mode and the checks of looper-py on them.
   PRO_FEATURE_RUN_FINDINGS = 3;
+  // Chains that answer or test: Bus reply, a Bus send behind a Bus received,
+  // message fields, injected faults, sequences, the pytest export.
+  PRO_FEATURE_SCENARIOS = 4;
 }
 
 message LicenseView {
@@ -185,6 +188,7 @@ enum Capability {
   CAPABILITY_INTERRUPTS = 16;      // ObserveInterrupts, RaiseInterrupt, InterruptEvent in the stream
   CAPABILITY_DMA = 17;             // ObserveDma, DmaEvent in the stream
   CAPABILITY_DMA_GUARD = 18;       // this platform can tell a read of a buffer a DMA channel still writes
+  CAPABILITY_CHAINS = 19;          // chains in ApplySignalGraph, CheckSignalGraph, ObserveChains, SwitchChainGroup, ListChainBlocks, ChainFire
 }
 
 enum ServerMode {
@@ -315,6 +319,7 @@ message EventFilter {
   repeated string call_functions = 6;   // for calls; empty: every function
   repeated uint32 interrupt_ids = 7;    // for interrupt events; empty: every source and the lock
   repeated uint32 dma_ids = 8;          // for DMA events; empty: every channel
+  repeated uint32 chain_ids = 9;        // for chain fires; empty: every chain
 }
 
 enum EventKind {
@@ -332,6 +337,8 @@ enum EventKind {
   EVENT_KIND_FLASH = 11;     // a flash write, erase, or a write against its rules (FlashMark)
   EVENT_KIND_INTERRUPT = 12; // an interrupt source pending, an ISR entered and left, lost, a lock (InterruptEvent)
   EVENT_KIND_DMA = 13;       // a DMA transfer started, reached its half or end, overran, was touched (DmaEvent)
+  // 14 is kept for the watchdog's history (WatchdogMark), not served yet.
+  EVENT_KIND_CHAIN = 15;     // a block of a chain fired, acted, stepped, ended, failed (ChainFire)
 }
 
 message EventBatch {
@@ -384,6 +391,8 @@ message Event {
     FlashMark flash = 16;
     InterruptEvent interrupt = 17;
     DmaEvent dma = 18;
+    // 19 is kept for the watchdog's history (WatchdogMark).
+    ChainFire chain = 20;
   }
   // 13 is the simulation's record of a call between lifelines, which the
   // server keeps for ObserveSequence and does not serve as a body.
@@ -557,8 +566,9 @@ message Sample { uint32 channel_id = 1; double value = 2; }
 message PinChange {
   uint32 pin_id = 1;
   bool high = 2;                 // the electrical level
-  Source source = 3;             // FIRMWARE, or CLIENT for a driven input
+  Source source = 3;             // FIRMWARE, or CLIENT for a driven input, or CHAIN
   uint64 command_seq = 4;        // for CLIENT
+  uint32 source_id = 5;          // for CHAIN: the chain_id, as ChainNodeView.chain_id
 }
 
 message Call { string function = 1; string peripheral = 2; }
@@ -601,6 +611,7 @@ enum Source {
   SOURCE_JOB = 2;
   SOURCE_RULE = 3;
   SOURCE_COMPONENT = 4;
+  SOURCE_CHAIN = 5;      // an action of a chain: a frame, a pin level, an interrupt
 }
 
 message CanDetail { bool extended = 1; bool remote = 2; uint32 dlc = 3; bool fd = 4; bool brs = 5; bool esi = 6; bool error_frame = 7; }
@@ -795,6 +806,14 @@ message TriggerCondition {
     AnalogCondition analog = 7;         // second cut: refused for now
     ExchangeCondition exchange = 8;     // second cut: refused for now
     SequenceCondition sequence = 9;     // second cut: refused for now
+    // Shared with the chains of the signal graph; each is refused until the
+    // step that builds it (ListChainBlocks names the ones served).
+    BusReceivedCondition bus_received = 10;
+    BusTimeoutCondition bus_timeout = 11;
+    ClockCondition clock = 12;
+    StartCondition start = 13;
+    InterruptCondition interrupt = 14;
+    ResetCondition reset = 15;
   }
 }
 
@@ -841,6 +860,7 @@ message TriggerView {
   uint64 command_seq = 9;          // of the arming
   string disarmed_by = 10;
   uint64 hold_at_us = 11;          // SINGLE, fired: when the simulation holds
+  string group_key = 12;           // "logic:<trigger_id>": its group in ObserveChains
 }
 
 message TriggerList { repeated TriggerView triggers = 1; }
@@ -943,6 +963,15 @@ service Inspector {
   rpc ArmTrigger(TriggerSpec) returns (TriggerView);
   rpc DisarmTrigger(TriggerChoice) returns (TriggerView);   // any client, any trigger
   rpc ObserveTriggers(Empty) returns (TriggerList);         // every trigger, armed or not
+
+  // Chains in the signal graph: conditions, logic and actions joined by
+  // event links, evaluated inside the simulation. ApplySignalGraph installs
+  // them; these check a graph without applying it, report the chains, switch
+  // one group, and list the blocks this server builds.
+  rpc CheckSignalGraph(SignalGraphRequest) returns (GraphCheckView);
+  rpc ObserveChains(Empty) returns (ChainList);
+  rpc SwitchChainGroup(ChainGroupSwitch) returns (Ack);
+  rpc ListChainBlocks(Empty) returns (ChainBlockCatalogue);
 
   // ---- Source code: the files the build was made of ----
   // Every file worth showing, with whether it changed since the build.
@@ -1369,6 +1398,12 @@ message SignalNodeRequest {
   // with, so it follows a value someone sets, never a signal. A parameter
   // supplied here overrides the same name in `parameters`.
   map<string, string> parameter_sources = 10;
+  // An event block of a chain: its kind is one of ChainBlockKind.kind, its
+  // settings are here, and its signal inputs (a threshold's signal, the
+  // signals of message fields) are `inputs`.
+  ChainBlockRequest block = 11;
+  // The ChainGroupRequest it belongs to; empty: none.
+  string group_key = 12;
 }
 
 message ModelParameterView {
@@ -1529,6 +1564,9 @@ message SignalGraphRequest {
   repeated SignalNodeRequest nodes = 1;
   repeated SignalTargetRequest targets = 2;
   repeated SignalProbeRequest probes = 3;
+  // The links between event blocks, and the chains they are grouped into.
+  repeated EventLinkRequest event_links = 4;
+  repeated ChainGroupRequest groups = 5;
   When when = 15;
 }
 
@@ -2937,4 +2975,401 @@ message RaceView {
   string coverage_text = 7;          // "37 of 41 points, 2 cycles"
   repeated CodePlace uncovered = 8;  // functions with points not raised at yet
   Ack ack = 9;                       // SetRaceMode: refused, with the sentence
+}
+
+// ---- Chains -------------------------------------------------------------------
+//
+// A chain is a part of the signal graph that acts at a moment: conditions
+// fire where the simulation records their facts, logic passes an event on,
+// actions send, set, mark or hold at the same simulated time. A group is a
+// chain with a name and a switch. The server checks the graph, says which
+// parts are Pro, and words every text; the runtime evaluates the chains. A
+// Logic trigger is a chain too: ObserveChains lists it as a locked group
+// "logic:<trigger_id>".
+
+// An event or state link between two event blocks, by node key and port
+// index (the index into ChainBlockKind.inputs and .outputs).
+message EventLinkRequest {
+  string from_node = 1;
+  uint32 from_port = 2;
+  string to_node = 3;
+  uint32 to_port = 4;
+  bool is_state = 5;         // a state link (a level that holds); otherwise an event link
+}
+
+// A named chain round some blocks. `enabled` is the saved state; a click
+// switches it with SwitchChainGroup without sending the graph again.
+message ChainGroupRequest {
+  string group_key = 1;
+  string name = 2;           // unique among groups; the chain's name in Logic
+  bool enabled = 3;
+}
+
+// What an event block does. One of the settings, by its category.
+message ChainBlockRequest {
+  oneof settings {
+    TriggerCondition condition = 1;     // the conditions Logic and chains share
+    ThresholdSettings threshold = 2;
+    ChainLogic logic = 3;
+    ChainAction action = 4;
+  }
+  uint64 min_gap_us = 5;     // a condition: the least time between two fires; 0 none
+}
+
+message BusReceivedCondition {
+  uint32 bus_id = 1;
+  uint32 address = 2;
+  uint32 address_mask = 3;   // 0: every bit
+  bool extended = 4;
+  Direction direction = 5;   // OUTBOUND from the firmware, INBOUND to it, UNSPECIFIED either
+  bytes pattern = 6;         // the bytes the message starts with; UART: the text as bytes
+  bytes pattern_mask = 7;    // which bits of `pattern` count; empty: all
+}
+
+message BusTimeoutCondition {
+  uint32 bus_id = 1;
+  uint32 address = 2;
+  uint32 address_mask = 3;
+  bool extended = 4;
+  Direction direction = 5;
+  uint64 duration_us = 6;
+  bool after_first_message = 7;   // false: counts from switching on
+}
+
+message ClockCondition {
+  uint64 period_us = 1;
+  uint64 phase_us = 2;       // the first fire, then every period
+}
+
+message StartCondition {
+  bool first_life_only = 1;  // false: at 0 s and after every reset
+}
+
+message InterruptCondition {
+  uint32 source_id = 1;
+  bool on_entry = 2;         // false: when it becomes pending
+}
+
+message ResetCondition {
+  ResetCause cause = 1;      // UNSPECIFIED: any
+}
+
+// Reads the node's signal input 0.
+message ThresholdSettings {
+  double level = 1;
+  double hysteresis = 2;
+  EdgePolarity direction = 3;     // RISE: rises above, FALL: falls below, ANY: either
+  uint64 check_us = 4;            // 0: the server's default
+}
+
+message ChainLogic {
+  oneof kind {
+    DelayLogic delay = 1;
+    CounterLogic counter = 2;
+    Empty once = 3;
+    Empty all_of = 4;        // And
+    Empty any_of = 5;        // Or
+    Empty gate = 6;
+    SequenceLogic sequence = 7;   // Pro
+  }
+}
+
+message DelayLogic {
+  uint64 delay_us = 1;
+  enum WhileWaiting {
+    QUEUED = 0;
+    RESTART = 1;
+    DROPPED = 2;
+  }
+  WhileWaiting while_waiting = 2;
+}
+
+message CounterLogic {
+  uint32 n = 1;
+  bool only_nth = 2;         // false: every n-th
+}
+
+message SequenceLogic {
+  repeated SequenceStepRequest steps = 1;
+  bool restart_on_start = 2;
+}
+
+message SequenceStepRequest {
+  enum Kind {
+    DO = 0;
+    WAIT = 1;
+    WAIT_FOR = 2;
+    EXPECT_NONE = 3;
+  }
+  Kind kind = 1;
+  string label = 2;
+  uint64 duration_us = 3;    // WAIT: the time; WAIT_FOR: the limit; EXPECT_NONE: the span; 0 none
+}
+
+message ChainAction {
+  oneof kind {
+    BusMessageAction send = 1;
+    BusMessageAction reply = 2;   // Pro
+    PinAction pin = 3;
+    MarkAction mark = 4;
+    HoldAction hold = 5;
+    SignalSwitchAction signal = 6;
+    FaultAction fault = 7;        // Pro
+    InterruptRaiseAction interrupt = 8;
+    ResetAction reset = 9;
+  }
+}
+
+message BusMessageAction {
+  BusMessage message = 1;
+  repeated MessageField fields = 2;   // Pro; empty: the payload as it is
+  uint64 answer_after_us = 3;         // reply only; 0: the same moment
+  string text = 4;                    // UART: the text instead of bytes
+  uint32 length = 5;                  // with fields: the message length in bytes
+}
+
+message MessageField {
+  string name = 1;
+  oneof source {
+    uint64 constant = 2;
+    uint32 signal_input = 3;   // index into the node's `inputs`
+    uint32 request_bit = 4;    // reply: the start bit in the received message
+    Empty count = 5;           // adds 1 per send, wraps at the width
+  }
+  uint32 start_bit = 6;
+  uint32 length = 7;
+  bool big_endian = 8;
+  bool is_signed = 9;
+  double scale = 10;         // 0 is read as 1
+  double offset = 11;
+  string dbc_message = 12;   // taken from a DBC: its message's name
+}
+
+message PinAction {
+  uint32 pin_id = 1;
+  enum Do {
+    HIGH = 0;
+    LOW = 1;
+    PRESS = 2;
+  }
+  Do action = 2;
+  enum PressLevel {
+    ACTIVE = 0;
+    PRESS_HIGH = 1;
+    PRESS_LOW = 2;
+  }
+  PressLevel press_level = 3;
+  uint64 press_us = 4;
+}
+
+message MarkAction {
+  string text = 1;
+}
+
+message HoldAction {
+  uint64 after_us = 1;
+}
+
+message SignalSwitchAction {
+  string node = 1;           // a generator or value node, by key; empty with channel_id
+  uint32 channel_id = 2;     // an input channel (HOLD_AT)
+  enum Do {
+    START = 0;
+    STOP = 1;
+    STEP = 2;
+    RAMP = 3;
+    SET = 4;
+    HOLD_AT = 5;
+  }
+  Do action = 3;
+  double to = 4;
+  uint64 over_us = 5;
+}
+
+message FaultAction {
+  enum Kind {
+    STICK = 0;
+    NOISE_ON = 1;
+    NOISE_OFF = 2;
+    DROP = 3;
+    ERROR_FRAME = 4;
+    FLIP = 5;
+  }
+  Kind kind = 1;
+  uint32 channel_id = 2;
+  uint64 for_us = 3;         // 0: until switched off
+  double amplitude = 4;
+  uint32 bus_id = 5;
+  uint32 address = 6;
+  uint32 address_mask = 7;
+  uint32 next = 8;
+  uint32 byte_index = 9;
+  uint32 bit = 10;
+}
+
+message InterruptRaiseAction {
+  uint32 source_id = 1;
+}
+
+message ResetAction {
+  ResetCause cause = 1;      // PIN, POWER_ON, BROWN_OUT
+}
+
+// Something a block of a chain did, at Event.sim_us. The runtime's record
+// passed on unchanged, so it names the block by its position in the
+// installed table; ChainNodeView.block maps the position to the node.
+message ChainFire {
+  enum Kind {
+    FIRED = 0;     // a condition or a logic block let an event through
+    ACTED = 1;     // an action was carried out
+    STEP = 2;      // a sequence moved to `step`
+    DONE = 3;      // a sequence ended, a once passed
+    FAILED = 4;    // a sequence step timed out, or an expected-none came
+    DROPPED = 5;   // an event found no room (a delay's queue was full)
+    LOOPED = 6;    // too many events at one instant; the chain was taken out
+  }
+  uint32 chain_id = 1;
+  uint32 block = 2;
+  Kind kind = 3;
+  uint32 fire_n = 4;         // the block's count after this fire, from 1
+  uint64 hold_at_us = 5;     // a hold: when the simulation holds
+  uint32 step = 6;           // STEP, FAILED: from 1
+  string text = 7;           // a mark's text; otherwise empty
+  uint32 cause_block = 8;    // the condition that started it, its position plus one; 0 none
+}
+
+// What is wrong with a graph's chains, and how full the table would be.
+message GraphCheckView {
+  repeated GraphProblem problems = 1;
+  ChainCapacityView capacity = 2;
+}
+
+message GraphProblem {
+  enum Kind {
+    OPEN = 0;            // a port that has to be linked is not
+    WRONG_PORT = 1;      // a link joins ports of two kinds
+    CYCLE = 2;           // it would fire itself in the same moment
+    UNKNOWN_TARGET = 3;  // no such pin, bus, channel or node
+    INVALID = 4;         // a setting out of range
+    CAPACITY = 5;        // more blocks than the runtime holds
+    NEEDS_PRO = 6;       // kept, but not run without the licence
+  }
+  Kind kind = 1;
+  string node_key = 2;
+  string group_key = 3;
+  string link = 4;           // "from:port -> to:port", for a link
+  string text = 5;           // the sentence the window shows
+}
+
+message ChainCapacityView {
+  uint32 conditions_used = 1;
+  uint32 conditions_max = 2;
+  uint32 actions_used = 3;
+  uint32 actions_max = 4;
+  uint32 logic_used = 5;
+  uint32 logic_max = 6;
+  string text = 7;           // "conditions 5 of 64 · logic 1 of 64 · actions 4 of 64"
+}
+
+message ChainList {
+  repeated ChainNodeView nodes = 1;
+  repeated ChainGroupView groups = 2;
+  repeated SequenceStateView sequences = 3;
+  ChainCapacityView capacity = 4;
+  ViewPosition position = 5;   // the stream position the counts are up to
+}
+
+message ChainNodeView {
+  string node_key = 1;       // "logic:<trigger_id>:condition" for a Logic trigger's block
+  string group_key = 2;      // "logic:<trigger_id>" for a Logic trigger
+  uint32 chain_id = 3;
+  uint32 block = 4;          // the position in the table, as ChainFire.block; 0 when not installed
+  bool installed = 5;        // false: switched off, refused, or needs Pro
+  enum State {
+    OFF = 0;
+    ARMED = 1;
+    FIRED = 2;
+    DONE = 3;
+    RUNNING = 4;
+    FAILED = 5;
+    HOLDING = 6;
+    INCOMPLETE = 7;
+    REFUSED = 8;
+    NEEDS_PRO = 9;
+  }
+  State state = 6;
+  string state_text = 7;     // Logic's chip words: "✦ fired 14× · last 2.500000 s"
+  string summary_text = 8;   // "CAN1 · 0x7E0 · from firmware"
+  string refusal_text = 9;
+  uint32 fire_count = 10;    // kept while switched off
+  uint64 last_fire_us = 11;
+  string detail_text = 12;   // an action's last deed: "CAN1 0x7E8#02 41 00 at 2.500000 s"
+  string interval_text = 13; // "mean 100.0 ms · shortest 99.8 ms · longest 100.4 ms"
+  bool is_locked = 14;       // a Logic trigger's block: read in the editor, edited in Logic
+  string kind = 15;          // the block kind, as ChainBlockKind.kind
+  ChainBlockRequest settings = 16;   // a Logic trigger's block, so that the editor draws it as it is
+  repeated string writes_also = 17;  // other chains writing its target: "chain \"Boost test\""
+}
+
+message ChainGroupView {
+  string group_key = 1;
+  string name = 2;
+  bool enabled = 3;
+  string state_text = 4;     // the group's chip
+  uint32 event_blocks = 5;
+  uint32 signal_blocks = 6;
+  bool needs_pro = 7;
+  string problem_text = 8;
+  uint32 trigger_id = 9;     // a Logic trigger's group; 0 otherwise
+}
+
+message SequenceStateView {
+  string node_key = 1;
+  uint32 step_index = 2;     // from 1; 0 before the start
+  uint32 step_count = 3;
+  enum State {
+    WAITING = 0;
+    RUNNING = 1;
+    DONE = 2;
+    FAILED = 3;
+  }
+  State state = 4;
+  string step_text = 5;      // "▸ step 3 of 6"
+  string failure_text = 6;   // "Failed at step 3: mode is BOOST did not come within 2 s · 4.200000 s"
+  repeated uint64 step_times_us = 7;   // when each step was reached
+}
+
+message ChainGroupSwitch {
+  string group_key = 1;
+  bool enabled = 2;
+  When when = 15;
+}
+
+// The blocks this server builds, with their ports and edition.
+message ChainBlockCatalogue {
+  repeated ChainBlockKind kinds = 1;
+}
+
+message ChainBlockKind {
+  string kind = 1;           // "pin_edge", "bus_received", "delay", "bus_send", ...; "message_fields" for the Fields mode
+  string category = 2;       // "condition", "logic", "action"
+  string display_name = 3;
+  string description = 4;
+  repeated ChainPortView inputs = 5;
+  repeated ChainPortView outputs = 6;
+  bool is_pro = 7;
+  bool is_locked = 8;        // Pro and no licence: it cannot be added
+  string locked_text = 9;    // the popover's sentence
+  uint32 step = 10;          // the plan step that built it
+}
+
+message ChainPortView {
+  string name = 1;
+  enum Kind {
+    EVENT = 0;
+    STATE = 1;
+    SIGNAL = 2;
+  }
+  Kind kind = 2;
+  bool grows = 3;            // And, Or: another appears when the last is linked, up to 8
 }
