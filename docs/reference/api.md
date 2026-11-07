@@ -190,6 +190,23 @@ race mode (looper Pro). They return dataclasses (`Interrupts`, `InterruptSource`
 [Interrupts and DMA from a test](../guides/interrupts-and-dma.md) lists. The checks
 are in the [reference of expectations](expectations.md); every one is looper Pro.
 
+```{eval-rst}
+.. autoclass:: looper.Interrupts
+   :members: source
+
+.. autoclass:: looper.InterruptSource
+
+.. autoclass:: looper.InterruptLock
+
+.. autoclass:: looper.DmaChannels
+   :members: channel
+
+.. autoclass:: looper.DmaChannel
+
+.. autoclass:: looper.RaceCoverage
+   :members: complete
+```
+
 ## The bootloader (Pro)
 
 `simulation.images()`, `simulation.boot_chains()`, `simulation.power_cut()`,

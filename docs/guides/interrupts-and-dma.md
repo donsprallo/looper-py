@@ -81,6 +81,24 @@ no source; `SimulationRefusedError` for a source that is the end of a DMA
 transfer (`is_raisable` is false). On a held clock the change takes effect at the
 next run, like any change; `after_us` counts from then. It is free.
 
+**How far a held run advances.**
+
+A held simulation stops only where the firmware returns to its loop, at the end of
+a pass. So an `advance`, a `run_for_us` or a `run_until_us` ends at the **first
+pass boundary at or after its target**. A wait *between* two passes is cut exactly
+at the target; a wait *inside* a pass – a `HAL_Delay`, a `__WFI()` that waits for
+the next tick, a timeout inside a HAL call – always runs to its end. A firmware
+that waits for a 1 ms tick in every pass therefore moves in steps of 1 ms, also
+for `advance(0.0001)`.
+
+A change with `after_us`, such as `raise_interrupt("EXTI0", after_us=500)`, is
+still applied **exactly at its time**, also in the middle of such a wait, and the
+ISR runs then. Only the state you read *after* the advance is the state at the
+pass boundary. Read when an interrupt ran from the events (`read_events`, Logic), not
+from the counts after an `advance`, and expect "not yet" only before a pass
+boundary that lies before the time.
+
+
 ## `simulation.dma()`
 
 ```python
@@ -131,6 +149,9 @@ at a different point each pass, so that over a few passes every point has had
 its turn – deterministically, in one run. It **provokes** the failure; **your
 assertions** find it. `race()` raises `KeyError` for a name that is no source,
 and `looper.ProFeatureLockedError` when the block is entered without the licence.
+The race mode counts the points the firmware reaches while it runs: a place that
+is only reached when the chosen source has not come in that pass yet (a
+`while (ticks == seen) __WFI();` while racing the timer) is not seen.
 Leaving the block – also by an exception – switches the mode off, and a reset
 switches it off too.
 
@@ -185,9 +206,10 @@ FAIL TIM2            expected none lost                                         
 FAIL USART2_RX       expected not accessed while the channel ran                saw The firmware read USART2_RX's buffer while the channel ran
 ```
 
-A finding that has no expectation of its own – `IRQ_STORM`, `IRQ_NEVER_HANDLED`,
-`DMA_UNCLAIMED`, `DMA_BUFFER_ON_STACK`, `DMA_GUARD_DOWNGRADED` – is caught by
-`check.run_findings().none()`, or by `none(["IRQ_STORM"])` for one kind. Every
+A finding that has no expectation of its own – `IRQ_STORM`, `DMA_UNCLAIMED`,
+`DMA_BUFFER_ON_STACK`, `DMA_GUARD_DOWNGRADED` – is caught by
+`check.run_findings().none()`, or by `none(["IRQ_STORM"])` for one kind; the
+finding's `check_text` says so. `IRQ_NEVER_HANDLED` is `check.interrupt(name).handled_at_least(1)`. Every
 finding names a function in the window, not a line.
 
 ## Without a licence
