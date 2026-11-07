@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import os
 import shutil
+import zlib
 from collections.abc import Iterator
 from pathlib import Path
 
@@ -170,3 +171,33 @@ def test_the_run_state_says_the_armed_cut_until_it_is_disarmed(
     assert armed == "power cut armed: after 4096 bytes of a flash write"
     assert after_the_reset == armed
     assert simulation.run_state().power_cut_text == ""
+
+
+APP_A = 0x6000
+
+
+def _make_app_a_unknown(simulation: looper.Simulation) -> None:
+    """Give app_a's header an identity no build has and mend its CRC: a valid unknown image."""
+    header = bytearray(simulation.flash().read(APP_A, 64))
+    header[20] ^= 0xFF
+    header[60:64] = zlib.crc32(bytes(header[:60])).to_bytes(4, "little")
+    simulation.flash().write(APP_A, bytes(header), raw=True)
+
+
+def test_a_standing_board_s_flash_is_read_and_an_image_written_before_the_reset(
+    simulation: looper.Simulation,
+) -> None:
+    simulation.advance(0.05)
+    _make_app_a_unknown(simulation)
+    simulation.reset("pin")
+    with pytest.raises(looper.SimulationRefusedError):
+        simulation.advance(0.05)
+
+    stood = simulation.flash().read(APP_A, 4)
+    simulation.flash().partition("app_a").write_image("app@2.0")
+    simulation.reset("pin")
+    simulation.advance(0.05)
+
+    assert stood == b"LIMG"
+    assert simulation.lives()[-1].image == "app@2.0"
+    assert simulation.run_state().hold_reason == ""
