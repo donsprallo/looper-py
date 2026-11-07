@@ -972,6 +972,14 @@ service Inspector {
   rpc ObserveChains(Empty) returns (ChainList);
   rpc SwitchChainGroup(ChainGroupSwitch) returns (Ack);
   rpc ListChainBlocks(Empty) returns (ChainBlockCatalogue);
+  // One group's chain as a pytest against looper-py, written by the server
+  // so that it matches the API; the window only saves it. looper Pro
+  // (PRO_FEATURE_SCENARIOS): PERMISSION_DENIED without the licence.
+  rpc ExportChainAsPytest(PytestExportRequest) returns (PytestExport);
+  // A DBC file's CAN messages and signals, so that a bus block can take its
+  // identifier, length and fields from one message. The server only reads the
+  // file. Free; fields filled from it are looper Pro as every field is.
+  rpc ReadDbc(DbcRequest) returns (DbcView);
 
   // ---- Source code: the files the build was made of ----
   // Every file worth showing, with whether it changed since the build.
@@ -1337,6 +1345,10 @@ message ChannelView {
   // The value as display_value writes it, without the unit; empty for a
   // silent channel.
   string value_text = 13;
+  // Who held this input at a level last, when a chain did:
+  // 'chain "Boost test" at 2.500000 s'; empty otherwise.
+  string last_writer_text = 14;
+  uint64 last_written_us = 15;
 }
 
 message ChannelList {
@@ -1523,6 +1535,10 @@ message GraphValueView {
   // What it feeds, as a person reads it: "DcMotor.inertia, SPEED_SETPOINT";
   // empty when nothing.
   string feeds_text = 6;
+  // Who set it last, when a chain did: 'chain "Boost test" at 2.500000 s';
+  // empty otherwise. `value` is what the simulation gives now.
+  string last_writer_text = 7;
+  uint64 last_written_us = 8;
 }
 
 // A signal inside the applied graph that is recorded like a channel.
@@ -3198,10 +3214,13 @@ message FaultAction {
     DROP = 3;
     ERROR_FRAME = 4;
     FLIP = 5;
+    POWER_CUT = 6;           // also needs PRO_FEATURE_BOOTLOADER
   }
   Kind kind = 1;
   uint32 channel_id = 2;
-  uint64 for_us = 3;         // 0: until switched off
+  // STICK: how long, 0 until switched off. POWER_CUT: how long the board
+  // stays without power before the next life begins.
+  uint64 for_us = 3;
   double amplitude = 4;
   uint32 bus_id = 5;
   uint32 address = 6;
@@ -3376,4 +3395,47 @@ message ChainPortView {
   }
   Kind kind = 2;
   bool grows = 3;            // And, Or: another appears when the last is linked, up to 8
+}
+
+message PytestExportRequest {
+  string group_key = 1;
+  uint64 run_for_us = 2;     // a chain without a Sequence runs this long; 0: 10 s
+}
+
+message PytestExport {
+  string file_name = 1;      // "test_boost_test.py"
+  string text = 2;
+  repeated string warnings = 3;   // what the file could not carry over, one sentence each
+}
+
+message DbcRequest {
+  string path = 1;           // on the server's disk
+}
+
+message DbcView {
+  string path = 1;
+  string problem = 2;        // why it could not be read; empty when it was
+  repeated DbcMessageView messages = 3;
+}
+
+message DbcMessageView {
+  string name = 1;           // "EngineData"
+  uint32 address = 2;        // without the DBC's extended flag
+  bool extended = 3;
+  uint32 length = 4;         // bytes
+  uint64 cycle_us = 5;       // GenMsgCycleTime; 0: not given
+  repeated DbcSignalView signals = 6;
+}
+
+message DbcSignalView {
+  string name = 1;
+  uint32 start_bit = 2;      // as the DBC numbers bits; big endian: the most significant bit
+  uint32 length = 3;
+  bool big_endian = 4;       // Motorola (@0); otherwise Intel (@1)
+  bool is_signed = 5;
+  double scale = 6;          // physical = raw * scale + offset
+  double offset = 7;
+  string unit = 8;
+  optional double minimum = 9;   // absent: the DBC gives no range
+  optional double maximum = 10;
 }

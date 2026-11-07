@@ -1909,7 +1909,7 @@ class SignalView(_message.Message):
     def __init__(self, waveform: _Optional[str] = ..., amplitude: _Optional[float] = ..., offset: _Optional[float] = ..., frequency_hz: _Optional[float] = ..., phase_degrees: _Optional[float] = ...) -> None: ...
 
 class ChannelView(_message.Message):
-    __slots__ = ("channel_id", "name", "unit", "direction", "value", "is_drivable", "signal", "is_silent", "display_value", "is_driven_by_graph", "is_settable", "settable_text", "value_text")
+    __slots__ = ("channel_id", "name", "unit", "direction", "value", "is_drivable", "signal", "is_silent", "display_value", "is_driven_by_graph", "is_settable", "settable_text", "value_text", "last_writer_text", "last_written_us")
     CHANNEL_ID_FIELD_NUMBER: _ClassVar[int]
     NAME_FIELD_NUMBER: _ClassVar[int]
     UNIT_FIELD_NUMBER: _ClassVar[int]
@@ -1923,6 +1923,8 @@ class ChannelView(_message.Message):
     IS_SETTABLE_FIELD_NUMBER: _ClassVar[int]
     SETTABLE_TEXT_FIELD_NUMBER: _ClassVar[int]
     VALUE_TEXT_FIELD_NUMBER: _ClassVar[int]
+    LAST_WRITER_TEXT_FIELD_NUMBER: _ClassVar[int]
+    LAST_WRITTEN_US_FIELD_NUMBER: _ClassVar[int]
     channel_id: int
     name: str
     unit: str
@@ -1936,7 +1938,9 @@ class ChannelView(_message.Message):
     is_settable: bool
     settable_text: str
     value_text: str
-    def __init__(self, channel_id: _Optional[int] = ..., name: _Optional[str] = ..., unit: _Optional[str] = ..., direction: _Optional[str] = ..., value: _Optional[float] = ..., is_drivable: _Optional[bool] = ..., signal: _Optional[_Union[SignalView, _Mapping]] = ..., is_silent: _Optional[bool] = ..., display_value: _Optional[str] = ..., is_driven_by_graph: _Optional[bool] = ..., is_settable: _Optional[bool] = ..., settable_text: _Optional[str] = ..., value_text: _Optional[str] = ...) -> None: ...
+    last_writer_text: str
+    last_written_us: int
+    def __init__(self, channel_id: _Optional[int] = ..., name: _Optional[str] = ..., unit: _Optional[str] = ..., direction: _Optional[str] = ..., value: _Optional[float] = ..., is_drivable: _Optional[bool] = ..., signal: _Optional[_Union[SignalView, _Mapping]] = ..., is_silent: _Optional[bool] = ..., display_value: _Optional[str] = ..., is_driven_by_graph: _Optional[bool] = ..., is_settable: _Optional[bool] = ..., settable_text: _Optional[str] = ..., value_text: _Optional[str] = ..., last_writer_text: _Optional[str] = ..., last_written_us: _Optional[int] = ...) -> None: ...
 
 class ChannelList(_message.Message):
     __slots__ = ("channels",)
@@ -2130,20 +2134,24 @@ class GraphValueRequest(_message.Message):
     def __init__(self, node: _Optional[str] = ..., value: _Optional[float] = ..., when: _Optional[_Union[When, _Mapping]] = ...) -> None: ...
 
 class GraphValueView(_message.Message):
-    __slots__ = ("node", "value", "unit", "lowest", "highest", "feeds_text")
+    __slots__ = ("node", "value", "unit", "lowest", "highest", "feeds_text", "last_writer_text", "last_written_us")
     NODE_FIELD_NUMBER: _ClassVar[int]
     VALUE_FIELD_NUMBER: _ClassVar[int]
     UNIT_FIELD_NUMBER: _ClassVar[int]
     LOWEST_FIELD_NUMBER: _ClassVar[int]
     HIGHEST_FIELD_NUMBER: _ClassVar[int]
     FEEDS_TEXT_FIELD_NUMBER: _ClassVar[int]
+    LAST_WRITER_TEXT_FIELD_NUMBER: _ClassVar[int]
+    LAST_WRITTEN_US_FIELD_NUMBER: _ClassVar[int]
     node: str
     value: float
     unit: str
     lowest: float
     highest: float
     feeds_text: str
-    def __init__(self, node: _Optional[str] = ..., value: _Optional[float] = ..., unit: _Optional[str] = ..., lowest: _Optional[float] = ..., highest: _Optional[float] = ..., feeds_text: _Optional[str] = ...) -> None: ...
+    last_writer_text: str
+    last_written_us: int
+    def __init__(self, node: _Optional[str] = ..., value: _Optional[float] = ..., unit: _Optional[str] = ..., lowest: _Optional[float] = ..., highest: _Optional[float] = ..., feeds_text: _Optional[str] = ..., last_writer_text: _Optional[str] = ..., last_written_us: _Optional[int] = ...) -> None: ...
 
 class ProbeView(_message.Message):
     __slots__ = ("name", "channel_id", "node", "output")
@@ -4641,12 +4649,14 @@ class FaultAction(_message.Message):
         DROP: _ClassVar[FaultAction.Kind]
         ERROR_FRAME: _ClassVar[FaultAction.Kind]
         FLIP: _ClassVar[FaultAction.Kind]
+        POWER_CUT: _ClassVar[FaultAction.Kind]
     STICK: FaultAction.Kind
     NOISE_ON: FaultAction.Kind
     NOISE_OFF: FaultAction.Kind
     DROP: FaultAction.Kind
     ERROR_FRAME: FaultAction.Kind
     FLIP: FaultAction.Kind
+    POWER_CUT: FaultAction.Kind
     KIND_FIELD_NUMBER: _ClassVar[int]
     CHANNEL_ID_FIELD_NUMBER: _ClassVar[int]
     FOR_US_FIELD_NUMBER: _ClassVar[int]
@@ -4954,3 +4964,77 @@ class ChainPortView(_message.Message):
     kind: ChainPortView.Kind
     grows: bool
     def __init__(self, name: _Optional[str] = ..., kind: _Optional[_Union[ChainPortView.Kind, str]] = ..., grows: _Optional[bool] = ...) -> None: ...
+
+class PytestExportRequest(_message.Message):
+    __slots__ = ("group_key", "run_for_us")
+    GROUP_KEY_FIELD_NUMBER: _ClassVar[int]
+    RUN_FOR_US_FIELD_NUMBER: _ClassVar[int]
+    group_key: str
+    run_for_us: int
+    def __init__(self, group_key: _Optional[str] = ..., run_for_us: _Optional[int] = ...) -> None: ...
+
+class PytestExport(_message.Message):
+    __slots__ = ("file_name", "text", "warnings")
+    FILE_NAME_FIELD_NUMBER: _ClassVar[int]
+    TEXT_FIELD_NUMBER: _ClassVar[int]
+    WARNINGS_FIELD_NUMBER: _ClassVar[int]
+    file_name: str
+    text: str
+    warnings: _containers.RepeatedScalarFieldContainer[str]
+    def __init__(self, file_name: _Optional[str] = ..., text: _Optional[str] = ..., warnings: _Optional[_Iterable[str]] = ...) -> None: ...
+
+class DbcRequest(_message.Message):
+    __slots__ = ("path",)
+    PATH_FIELD_NUMBER: _ClassVar[int]
+    path: str
+    def __init__(self, path: _Optional[str] = ...) -> None: ...
+
+class DbcView(_message.Message):
+    __slots__ = ("path", "problem", "messages")
+    PATH_FIELD_NUMBER: _ClassVar[int]
+    PROBLEM_FIELD_NUMBER: _ClassVar[int]
+    MESSAGES_FIELD_NUMBER: _ClassVar[int]
+    path: str
+    problem: str
+    messages: _containers.RepeatedCompositeFieldContainer[DbcMessageView]
+    def __init__(self, path: _Optional[str] = ..., problem: _Optional[str] = ..., messages: _Optional[_Iterable[_Union[DbcMessageView, _Mapping]]] = ...) -> None: ...
+
+class DbcMessageView(_message.Message):
+    __slots__ = ("name", "address", "extended", "length", "cycle_us", "signals")
+    NAME_FIELD_NUMBER: _ClassVar[int]
+    ADDRESS_FIELD_NUMBER: _ClassVar[int]
+    EXTENDED_FIELD_NUMBER: _ClassVar[int]
+    LENGTH_FIELD_NUMBER: _ClassVar[int]
+    CYCLE_US_FIELD_NUMBER: _ClassVar[int]
+    SIGNALS_FIELD_NUMBER: _ClassVar[int]
+    name: str
+    address: int
+    extended: bool
+    length: int
+    cycle_us: int
+    signals: _containers.RepeatedCompositeFieldContainer[DbcSignalView]
+    def __init__(self, name: _Optional[str] = ..., address: _Optional[int] = ..., extended: _Optional[bool] = ..., length: _Optional[int] = ..., cycle_us: _Optional[int] = ..., signals: _Optional[_Iterable[_Union[DbcSignalView, _Mapping]]] = ...) -> None: ...
+
+class DbcSignalView(_message.Message):
+    __slots__ = ("name", "start_bit", "length", "big_endian", "is_signed", "scale", "offset", "unit", "minimum", "maximum")
+    NAME_FIELD_NUMBER: _ClassVar[int]
+    START_BIT_FIELD_NUMBER: _ClassVar[int]
+    LENGTH_FIELD_NUMBER: _ClassVar[int]
+    BIG_ENDIAN_FIELD_NUMBER: _ClassVar[int]
+    IS_SIGNED_FIELD_NUMBER: _ClassVar[int]
+    SCALE_FIELD_NUMBER: _ClassVar[int]
+    OFFSET_FIELD_NUMBER: _ClassVar[int]
+    UNIT_FIELD_NUMBER: _ClassVar[int]
+    MINIMUM_FIELD_NUMBER: _ClassVar[int]
+    MAXIMUM_FIELD_NUMBER: _ClassVar[int]
+    name: str
+    start_bit: int
+    length: int
+    big_endian: bool
+    is_signed: bool
+    scale: float
+    offset: float
+    unit: str
+    minimum: float
+    maximum: float
+    def __init__(self, name: _Optional[str] = ..., start_bit: _Optional[int] = ..., length: _Optional[int] = ..., big_endian: _Optional[bool] = ..., is_signed: _Optional[bool] = ..., scale: _Optional[float] = ..., offset: _Optional[float] = ..., unit: _Optional[str] = ..., minimum: _Optional[float] = ..., maximum: _Optional[float] = ...) -> None: ...

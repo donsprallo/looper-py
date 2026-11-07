@@ -244,6 +244,16 @@ class InspectorStub:
                 request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
                 response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ChainBlockCatalogue.FromString,
                 _registered_method=True)
+        self.ExportChainAsPytest = channel.unary_unary(
+                '/looper.inspector.v3.Inspector/ExportChainAsPytest',
+                request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.PytestExportRequest.SerializeToString,
+                response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.PytestExport.FromString,
+                _registered_method=True)
+        self.ReadDbc = channel.unary_unary(
+                '/looper.inspector.v3.Inspector/ReadDbc',
+                request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.DbcRequest.SerializeToString,
+                response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.DbcView.FromString,
+                _registered_method=True)
         self.ListSources = channel.unary_unary(
                 '/looper.inspector.v3.Inspector/ListSources',
                 request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
@@ -761,6 +771,24 @@ class InspectorServicer:
 
     def ListChainBlocks(self, request, context):
         """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def ExportChainAsPytest(self, request, context):
+        """One group's chain as a pytest against looper-py, written by the server
+        so that it matches the API; the window only saves it. looper Pro
+        (PRO_FEATURE_SCENARIOS): PERMISSION_DENIED without the licence.
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def ReadDbc(self, request, context):
+        """A DBC file's CAN messages and signals, so that a bus block can take its
+        identifier, length and fields from one message. The server only reads the
+        file. Free; fields filled from it are looper Pro as every field is.
+        """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
@@ -1335,6 +1363,16 @@ def add_InspectorServicer_to_server(servicer, server):
                     servicer.ListChainBlocks,
                     request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.FromString,
                     response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ChainBlockCatalogue.SerializeToString,
+            ),
+            'ExportChainAsPytest': grpc.unary_unary_rpc_method_handler(
+                    servicer.ExportChainAsPytest,
+                    request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.PytestExportRequest.FromString,
+                    response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.PytestExport.SerializeToString,
+            ),
+            'ReadDbc': grpc.unary_unary_rpc_method_handler(
+                    servicer.ReadDbc,
+                    request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.DbcRequest.FromString,
+                    response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.DbcView.SerializeToString,
             ),
             'ListSources': grpc.unary_unary_rpc_method_handler(
                     servicer.ListSources,
@@ -2701,6 +2739,60 @@ class Inspector:
             '/looper.inspector.v3.Inspector/ListChainBlocks',
             looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
             looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ChainBlockCatalogue.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def ExportChainAsPytest(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/looper.inspector.v3.Inspector/ExportChainAsPytest',
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.PytestExportRequest.SerializeToString,
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.PytestExport.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def ReadDbc(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/looper.inspector.v3.Inspector/ReadDbc',
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.DbcRequest.SerializeToString,
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.DbcView.FromString,
             options,
             channel_credentials,
             insecure,
