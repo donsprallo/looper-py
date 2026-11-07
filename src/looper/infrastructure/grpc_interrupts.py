@@ -14,6 +14,7 @@ from looper.application.interrupt_port import InterruptInspector
 from looper.domain.model.dma import DmaChannels
 from looper.domain.model.interrupt_facts import RunFindingReading
 from looper.domain.model.interrupts import Interrupts
+from looper.domain.model.race import RaceCoverage
 from looper.infrastructure import interrupt_translation
 from looper.infrastructure.contract import looper_inspector_pb2 as contract
 from looper.infrastructure.contract import looper_inspector_pb2_grpc as service
@@ -47,6 +48,15 @@ class GrpcInterruptCalls(InterruptInspector):
     def read_dma(self) -> DmaChannels:
         """Every DMA channel."""
         return interrupt_translation.dma_of(self._call(self._stub.ObserveDma, EMPTY))
+
+    def set_race(self, on: bool, source_id: int) -> RaceCoverage:  # noqa: FBT001
+        """Switch the race mode."""
+        request = contract.RaceRequest(on=on, source_id=source_id)
+        return interrupt_translation.race_of(self._call(self._stub.SetRaceMode, request))
+
+    def read_race(self) -> RaceCoverage:
+        """What the race mode did."""
+        return interrupt_translation.race_of(self._call(self._stub.ObserveRaceMode, EMPTY))
 
     def raise_interrupt(self, source_id: int, after_us: int = 0) -> None:
         """Make a source due, now or later."""

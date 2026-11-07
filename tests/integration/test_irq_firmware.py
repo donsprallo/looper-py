@@ -97,3 +97,17 @@ def test_without_the_licence_an_interrupt_check_says_it_is_pro(
 
     with pytest.raises(looper.ProFeatureLockedError, match="part of looper Pro"):
         check.evaluate(for_seconds=0.005)
+
+
+def test_the_race_mode_goes_round_every_point_of_the_loop(
+    pro_simulation: looper.Simulation,
+) -> None:
+    pro_simulation.advance(0.002)
+
+    with pro_simulation.race("TIM2") as race:
+        pro_simulation.advance(0.02)
+        coverage = race.coverage()
+
+    assert coverage.complete
+    assert coverage.source == "TIM2"
+    assert coverage.points_covered == coverage.points_seen > 0

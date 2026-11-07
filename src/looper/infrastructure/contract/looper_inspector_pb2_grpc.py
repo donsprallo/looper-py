@@ -369,6 +369,16 @@ class InspectorStub:
                 request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.RunFindingFilter.SerializeToString,
                 response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.RunFindingList.FromString,
                 _registered_method=True)
+        self.SetRaceMode = channel.unary_unary(
+                '/looper.inspector.v3.Inspector/SetRaceMode',
+                request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.RaceRequest.SerializeToString,
+                response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.RaceView.FromString,
+                _registered_method=True)
+        self.ObserveRaceMode = channel.unary_unary(
+                '/looper.inspector.v3.Inspector/ObserveRaceMode',
+                request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
+                response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.RaceView.FromString,
+                _registered_method=True)
         self.ObserveDma = channel.unary_unary(
                 '/looper.inspector.v3.Inspector/ObserveDma',
                 request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
@@ -934,6 +944,22 @@ class InspectorServicer:
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def SetRaceMode(self, request, context):
+        """Pro (RUN_FINDINGS): the race mode raises one source at each interruption
+        point in turn, deterministically, to provoke what an unlucky interrupt
+        breaks. It finds nothing itself: checks, assertions and findings do.
+        Without the licence PERMISSION_DENIED with the sentence.
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def ObserveRaceMode(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
     def ObserveDma(self, request, context):
         """---- DMA (CAPABILITY_DMA; free) ----
         The channels from contract.toml, where they stand and what they moved.
@@ -1386,6 +1412,16 @@ def add_InspectorServicer_to_server(servicer, server):
                     servicer.ObserveRunFindings,
                     request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.RunFindingFilter.FromString,
                     response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.RunFindingList.SerializeToString,
+            ),
+            'SetRaceMode': grpc.unary_unary_rpc_method_handler(
+                    servicer.SetRaceMode,
+                    request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.RaceRequest.FromString,
+                    response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.RaceView.SerializeToString,
+            ),
+            'ObserveRaceMode': grpc.unary_unary_rpc_method_handler(
+                    servicer.ObserveRaceMode,
+                    request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.FromString,
+                    response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.RaceView.SerializeToString,
             ),
             'ObserveDma': grpc.unary_unary_rpc_method_handler(
                     servicer.ObserveDma,
@@ -3272,6 +3308,60 @@ class Inspector:
             '/looper.inspector.v3.Inspector/ObserveRunFindings',
             looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.RunFindingFilter.SerializeToString,
             looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.RunFindingList.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def SetRaceMode(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/looper.inspector.v3.Inspector/SetRaceMode',
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.RaceRequest.SerializeToString,
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.RaceView.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def ObserveRaceMode(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/looper.inspector.v3.Inspector/ObserveRaceMode',
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.RaceView.FromString,
             options,
             channel_credentials,
             insecure,

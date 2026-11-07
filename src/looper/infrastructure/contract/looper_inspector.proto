@@ -1032,6 +1032,12 @@ service Inspector {
   // PERMISSION_DENIED with the sentence. A request naming the revision the
   // client has is answered with `unchanged` and nothing else.
   rpc ObserveRunFindings(RunFindingFilter) returns (RunFindingList);
+  // Pro (RUN_FINDINGS): the race mode raises one source at each interruption
+  // point in turn, deterministically, to provoke what an unlucky interrupt
+  // breaks. It finds nothing itself: checks, assertions and findings do.
+  // Without the licence PERMISSION_DENIED with the sentence.
+  rpc SetRaceMode(RaceRequest) returns (RaceView);
+  rpc ObserveRaceMode(Empty) returns (RaceView);
   // ---- DMA (CAPABILITY_DMA; free) ----
   // The channels from contract.toml, where they stand and what they moved.
   // The guard over a running receive buffer is on only with the licence
@@ -2901,4 +2907,32 @@ message RunFindingList {
   bool unchanged = 2;
   repeated RunFinding findings = 3;
   string note = 4;
+}
+
+// ---- Race mode (Pro) -------------------------------------------------------------
+
+// Raise one source at every interruption point of the loop in turn, or stop.
+message RaceRequest {
+  bool on = 1;
+  uint32 source_id = 2;
+  RaceStrategy strategy = 3;
+}
+
+enum RaceStrategy {
+  RACE_STRATEGY_ROUND_ROBIN = 0;   // in pass p at the point with index p mod N
+}
+
+// What the race mode did since it was switched on. The points are the
+// firmware's interruption points outside ISRs, told apart by address and
+// shown by the function that holds them.
+message RaceView {
+  bool on = 1;
+  uint32 source_id = 2;
+  string source_name = 3;
+  uint32 points_seen = 4;
+  uint32 points_covered = 5;
+  uint64 cycles = 6;
+  string coverage_text = 7;          // "37 of 41 points, 2 cycles"
+  repeated CodePlace uncovered = 8;  // functions with points not raised at yet
+  Ack ack = 9;                       // SetRaceMode: refused, with the sentence
 }

@@ -318,6 +318,10 @@ class DmaGuard(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     DMA_GUARD_DEBUGGER: _ClassVar[DmaGuard]
     DMA_GUARD_STACK: _ClassVar[DmaGuard]
     DMA_GUARD_LOCKED: _ClassVar[DmaGuard]
+
+class RaceStrategy(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+    __slots__ = ()
+    RACE_STRATEGY_ROUND_ROBIN: _ClassVar[RaceStrategy]
 CONTRACT_VERSION_UNSPECIFIED: ContractVersion
 CONTRACT_VERSION_CURRENT: ContractVersion
 REFUSAL_NONE: Refusal
@@ -516,6 +520,7 @@ DMA_GUARD_UNAVAILABLE: DmaGuard
 DMA_GUARD_DEBUGGER: DmaGuard
 DMA_GUARD_STACK: DmaGuard
 DMA_GUARD_LOCKED: DmaGuard
+RACE_STRATEGY_ROUND_ROBIN: RaceStrategy
 
 class Empty(_message.Message):
     __slots__ = ()
@@ -4233,3 +4238,35 @@ class RunFindingList(_message.Message):
     findings: _containers.RepeatedCompositeFieldContainer[RunFinding]
     note: str
     def __init__(self, revision: _Optional[int] = ..., unchanged: _Optional[bool] = ..., findings: _Optional[_Iterable[_Union[RunFinding, _Mapping]]] = ..., note: _Optional[str] = ...) -> None: ...
+
+class RaceRequest(_message.Message):
+    __slots__ = ("on", "source_id", "strategy")
+    ON_FIELD_NUMBER: _ClassVar[int]
+    SOURCE_ID_FIELD_NUMBER: _ClassVar[int]
+    STRATEGY_FIELD_NUMBER: _ClassVar[int]
+    on: bool
+    source_id: int
+    strategy: RaceStrategy
+    def __init__(self, on: _Optional[bool] = ..., source_id: _Optional[int] = ..., strategy: _Optional[_Union[RaceStrategy, str]] = ...) -> None: ...
+
+class RaceView(_message.Message):
+    __slots__ = ("on", "source_id", "source_name", "points_seen", "points_covered", "cycles", "coverage_text", "uncovered", "ack")
+    ON_FIELD_NUMBER: _ClassVar[int]
+    SOURCE_ID_FIELD_NUMBER: _ClassVar[int]
+    SOURCE_NAME_FIELD_NUMBER: _ClassVar[int]
+    POINTS_SEEN_FIELD_NUMBER: _ClassVar[int]
+    POINTS_COVERED_FIELD_NUMBER: _ClassVar[int]
+    CYCLES_FIELD_NUMBER: _ClassVar[int]
+    COVERAGE_TEXT_FIELD_NUMBER: _ClassVar[int]
+    UNCOVERED_FIELD_NUMBER: _ClassVar[int]
+    ACK_FIELD_NUMBER: _ClassVar[int]
+    on: bool
+    source_id: int
+    source_name: str
+    points_seen: int
+    points_covered: int
+    cycles: int
+    coverage_text: str
+    uncovered: _containers.RepeatedCompositeFieldContainer[CodePlace]
+    ack: Ack
+    def __init__(self, on: _Optional[bool] = ..., source_id: _Optional[int] = ..., source_name: _Optional[str] = ..., points_seen: _Optional[int] = ..., points_covered: _Optional[int] = ..., cycles: _Optional[int] = ..., coverage_text: _Optional[str] = ..., uncovered: _Optional[_Iterable[_Union[CodePlace, _Mapping]]] = ..., ack: _Optional[_Union[Ack, _Mapping]] = ...) -> None: ...

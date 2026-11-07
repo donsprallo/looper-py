@@ -81,3 +81,22 @@ def test_a_dma_check_reads_the_channels_and_the_findings() -> None:
 
     assert (overrun.met, overrun.observed) == (False, "USART2_RX overran")
     assert length.met
+
+
+def test_the_race_mode_runs_for_a_block_on_a_source_by_its_name() -> None:
+    simulation, inspector = _simulation()
+
+    with simulation.race("TIM2") as race:
+        coverage = race.coverage()
+
+    assert inspector.races == [(True, 2), (False, 0)]
+    assert coverage.complete
+    assert coverage.text == "3 of 3 points, 1 cycle"
+
+
+def test_the_race_mode_is_pro() -> None:
+    simulation, inspector = _simulation()
+    inspector.findings_locked = True
+
+    with pytest.raises(ProFeatureLockedError), simulation.race("TIM2"):
+        pass

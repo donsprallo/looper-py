@@ -5,6 +5,7 @@ from __future__ import annotations
 from looper.domain.model.dma import DmaChannel, DmaChannels
 from looper.domain.model.interrupt_facts import InterruptMark, RunFindingReading
 from looper.domain.model.interrupts import InterruptLock, Interrupts, InterruptSource
+from looper.domain.model.race import RaceCoverage
 from looper.infrastructure.contract import looper_inspector_pb2 as contract
 
 
@@ -144,4 +145,17 @@ def _channel(channel: contract.DmaChannelView) -> DmaChannel:
         guard_text=channel.guard_text,
         neighbours=tuple(channel.neighbours),
         state_text=channel.state_text,
+    )
+
+
+def race_of(view: contract.RaceView) -> RaceCoverage:
+    """The race mode as a reading."""
+    return RaceCoverage(
+        on=view.on,
+        source=view.source_name,
+        points_seen=view.points_seen,
+        points_covered=view.points_covered,
+        cycles=view.cycles,
+        text=view.coverage_text,
+        uncovered=tuple(place.what for place in view.uncovered),
     )

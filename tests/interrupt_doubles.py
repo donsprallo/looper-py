@@ -6,6 +6,7 @@ from looper.application.ports import ProFeatureLockedError, SimulationRefusedErr
 from looper.domain.model.dma import DmaChannel, DmaChannels
 from looper.domain.model.interrupt_facts import RunFindingReading
 from looper.domain.model.interrupts import Interrupts, InterruptSource
+from looper.domain.model.race import RaceCoverage
 
 #: The sources a scripted firmware has: a button and a timer.
 BUTTON = InterruptSource(1, "EXTI0", kind_text="pin 1, falling edge", is_raisable=True)
@@ -23,9 +24,21 @@ class ScriptedInterrupts:
         self.run_findings: tuple[RunFindingReading, ...] = ()
         self.findings_locked = False
         self.dma_report = DmaChannels(channels=(RX,), installed=True)
+        self.races: list[tuple[bool, int]] = []
 
     def read_interrupts(self) -> Interrupts:
         return self.interrupt_report
+
+    def set_race(self, on: bool, source_id: int) -> RaceCoverage:  # noqa: FBT001
+        if self.findings_locked:
+            raise ProFeatureLockedError("Run findings is part of looper Pro - no licence found.")
+        self.races.append((on, source_id))
+        return self.read_race()
+
+    def read_race(self) -> RaceCoverage:
+        if not self.races or not self.races[-1][0]:
+            return RaceCoverage()
+        return RaceCoverage(True, "TIM2", 3, 3, 1, "3 of 3 points, 1 cycle")
 
     def read_dma(self) -> DmaChannels:
         return self.dma_report

@@ -11,6 +11,7 @@ from abc import ABC, abstractmethod
 from looper.domain.model.dma import DmaChannels
 from looper.domain.model.interrupt_facts import RunFindingReading
 from looper.domain.model.interrupts import Interrupts
+from looper.domain.model.race import RaceCoverage
 
 
 class InterruptInspector(ABC):
@@ -40,3 +41,19 @@ class InterruptInspector(ABC):
     @abstractmethod
     def read_dma(self) -> DmaChannels:
         """Every DMA channel with where it stands and what it moved in this life."""
+
+    @abstractmethod
+    def set_race(self, on: bool, source_id: int) -> RaceCoverage:  # noqa: FBT001
+        """Raise a source at each interruption point in turn, or stop (Pro).
+
+        Raises:
+            ProFeatureLockedError: Without a licence for run findings.
+        """
+
+    @abstractmethod
+    def read_race(self) -> RaceCoverage:
+        """What the race mode did since it was switched on (Pro).
+
+        Raises:
+            ProFeatureLockedError: Without a licence for run findings.
+        """

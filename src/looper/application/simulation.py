@@ -17,6 +17,7 @@ from looper.application.expectations import MICROSECONDS_PER_SECOND, Expectation
 from looper.application.findings_reading import complete_findings
 from looper.application.memories import Flash, Retained
 from looper.application.ports import Inspector, SimulationRefusedError
+from looper.application.race import Race
 from looper.application.triggers import Triggers
 from looper.domain.model import (
     BootChain,
@@ -400,6 +401,14 @@ class Simulation:
     def interrupts(self) -> Interrupts:
         """The firmware's interrupt sources with what they did in this life, and the lock."""
         return self._inspector.read_interrupts()
+
+    def race(self, source: str) -> Race:
+        """The race mode on a source for a with block: raised at each point in turn (Pro).
+
+        Raises:
+            KeyError: If there is no source of that name.
+        """
+        return Race(self._inspector, self._inspector.read_interrupts().source(source).source_id)
 
     def dma(self) -> DmaChannels:
         """The firmware's DMA channels: where each transfer stands and what it moved."""
