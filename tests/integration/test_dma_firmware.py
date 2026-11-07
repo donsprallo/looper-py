@@ -2,7 +2,8 @@
 
 USART2 receives by circular DMA until its line is idle. A test sends it
 bytes and reads where the transfer stands; with the licence it checks that
-the firmware leaves the running buffer alone, which PEEK breaks.
+the firmware leaves the running buffer alone, which PEEK breaks. ADC1 scans
+AIN0 every millisecond into a circular buffer whose halves are averaged.
 
 Needs a looper-core checkout beside this one and a C compiler, and skips
 without them. ``LOOPER_CORE`` points at a checkout elsewhere.
@@ -18,7 +19,7 @@ from pathlib import Path
 import pytest
 
 import looper
-from looper.domain.model.requests import BusMessage
+from looper.domain.model.requests import BusMessage, Signal
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 CORE = Path(os.environ.get("LOOPER_CORE", PROJECT_ROOT.parent / "looper-core"))
@@ -65,3 +66,19 @@ def test_a_read_ahead_in_the_running_buffer_fails_its_check(
     assert not accessed.met
     assert accessed.observed == "The firmware read USART2_RX's buffer while the channel ran"
     assert overrun.met
+
+
+def test_the_adc_scans_its_input_into_the_buffer_lap_after_lap(
+    pro_simulation: looper.Simulation,
+) -> None:
+    pro_simulation.apply_signal(0, Signal(offset=1.65))
+    check = pro_simulation.expect()
+    check.dma("ADC1").no_overrun()
+    check.dma("ADC1").not_accessed_while_running()
+
+    report = check.evaluate(for_seconds=0.07)
+
+    adc = pro_simulation.dma().channel("ADC1")
+    assert (adc.peripheral_text, adc.mode, adc.width) == ("ADC 0 -> adc_buf", "circular", 2)
+    assert adc.laps >= 2
+    assert all(outcome.met for outcome in report.outcomes)
