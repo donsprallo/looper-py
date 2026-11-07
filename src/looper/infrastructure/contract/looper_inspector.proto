@@ -3302,7 +3302,7 @@ message ChainNodeView {
     NEEDS_PRO = 9;
   }
   State state = 6;
-  string state_text = 7;     // Logic's chip words: "✦ fired 14× · last 2.500000 s"
+  string state_text = 7;     // Logic's chip words: "✶ fired 14× · last 2.500000 s"
   string summary_text = 8;   // "CAN1 · 0x7E0 · from firmware"
   string refusal_text = 9;
   uint32 fire_count = 10;    // kept while switched off

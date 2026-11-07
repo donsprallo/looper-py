@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from looper.domain.model.boot import BootChain, BootStep, Image, PartitionHeader
 from looper.domain.model.chain_blocks import (
+    BusReply,
     BusSend,
     ChainBlockState,
     ChainGroup,
@@ -49,7 +50,10 @@ from looper.domain.model.signal_graph import (
     SignalTarget,
 )
 from looper.domain.model.triggers import (
+    BusReceived,
+    BusTimeout,
     Comparison,
+    Crossing,
     Edge,
     EdgeWhile,
     Pattern,
@@ -67,6 +71,10 @@ from looper.domain.model.triggers import (
 from looper.domain.model.variables import Variable, Watch
 
 __all__ = [
+    "BusReceived",
+    "BusTimeout",
+    "BusReply",
+    "Crossing",
     "BusSend",
     "ChainBlockState",
     "ChainGroup",

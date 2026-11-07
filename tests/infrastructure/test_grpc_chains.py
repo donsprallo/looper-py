@@ -9,7 +9,7 @@ from typing import Any
 import grpc
 import pytest
 
-from looper import BusSend, Edge, Polarity, SetPin, SignalGraph
+from looper import BusReceived, BusReply, BusSend, Edge, Polarity, SetPin, SignalGraph
 from looper.domain.model import PinDo
 from looper.infrastructure.contract import looper_inspector_pb2 as contract
 from looper.infrastructure.contract import looper_inspector_pb2_grpc as service
@@ -32,7 +32,7 @@ class ChainServicer(service.InspectorServicer):  # type: ignore[misc]
             installed=True,
             fire_count=3,
             last_fire_us=1_500_000,
-            state_text="✦ fired 3× · last 1.500000 s",
+            state_text="✶ fired 3× · last 1.500000 s",
             summary_text="BUTTON falls",
         )
         return contract.ChainList(nodes=[node])
@@ -98,3 +98,23 @@ def test_a_switch_names_the_group(inspector: GrpcInspector, servicer: ChainServi
 
     assert servicer.switch is not None
     assert (servicer.switch.group_key, servicer.switch.enabled) == ("echo", False)
+
+
+def test_a_reply_answers_what_a_bus_received_fired_on() -> None:
+    graph = (
+        SignalGraph()
+        .when("request", BusReceived(1, 0x7E0, pattern=b"\x02"))
+        .reply("answer", BusReply(1, 0x7E8, b"\x41", answer_after_us=5_000), after="request")
+    )
+
+    request = signal_graph_request_of(graph)
+
+    received = request.nodes[0].block.condition.bus_received
+    assert (request.nodes[0].kind, received.address, received.pattern) == (
+        "bus_received",
+        0x7E0,
+        b"\x02",
+    )
+    assert received.direction == contract.DIRECTION_OUTBOUND
+    assert request.nodes[1].kind == "bus_reply"
+    assert request.nodes[1].block.action.reply.answer_after_us == 5_000

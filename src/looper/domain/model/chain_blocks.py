@@ -54,6 +54,17 @@ class BusSend:
 
 
 @dataclass(frozen=True)
+class BusReply:
+    """Answer the received message, at once or after `answer_after_us` (looper Pro)."""
+
+    bus_id: int
+    address: int = 0
+    payload: bytes = b""
+    extended: bool = False
+    answer_after_us: int = 0
+
+
+@dataclass(frozen=True)
 class Mark:
     """Put a marker with a text on Logic's ruler."""
 
@@ -67,7 +78,7 @@ class Hold:
     after_us: int = 0
 
 
-ChainAction = SetPin | BusSend | Mark | Hold
+ChainAction = SetPin | BusSend | BusReply | Mark | Hold
 BlockSettings = TriggerCondition | ChainAction
 
 
@@ -119,7 +130,7 @@ class ChainBlockState:
         installed: Whether it runs: not switched off, stopped by a problem, or needing Pro.
         fires: How often it fired or acted.
         last_fired_at_us: When it last did.
-        state_text: Its chip, as Logic words it: ``✦ fired 3× · last 1.500000 s``.
+        state_text: Its chip, as Logic words it: ``✶ fired 3× · last 1.500000 s``.
         summary_text: What it watches for or does: ``BUTTON falls``.
         problem: Why it does not run; empty when it does.
     """

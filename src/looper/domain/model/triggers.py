@@ -12,7 +12,7 @@ Times are simulated microseconds, as everywhere in the event stream.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from enum import StrEnum
+from enum import IntEnum, StrEnum
 
 
 class Polarity(StrEnum):
@@ -130,8 +130,49 @@ class Value:
     on_change: bool = False
 
 
+class Crossing(IntEnum):
+    """Which way a message crosses a bus, from the firmware's side."""
+
+    EITHER = 0
+    FROM_FIRMWARE = 1
+    TO_FIRMWARE = 2
+
+
+@dataclass(frozen=True)
+class BusReceived:
+    """A message with an identifier, and if asked a content, crosses a bus.
+
+    Attributes:
+        bus_id: The bus.
+        address: The identifier, or the address on I2C and SPI.
+        address_mask: The identifier's bits that count; 0 for all.
+        direction: From the firmware, to it, or either.
+        pattern: The bytes the message starts with; empty for any.
+        extended: A 29 bit CAN identifier.
+    """
+
+    bus_id: int
+    address: int = 0
+    address_mask: int = 0
+    direction: Crossing = Crossing.FROM_FIRMWARE
+    pattern: bytes = b""
+    extended: bool = False
+
+
+@dataclass(frozen=True)
+class BusTimeout:
+    """A message has not come for `duration_us`; once per gap."""
+
+    bus_id: int
+    address: int = 0
+    duration_us: int = 100_000
+    after_first_message: bool = False
+    address_mask: int = 0
+    extended: bool = False
+
+
 #: Everything the simulation can watch for today.
-TriggerCondition = Edge | Pattern | EdgeWhile | Width | Quiet | Value
+TriggerCondition = Edge | Pattern | EdgeWhile | Width | Quiet | Value | BusReceived | BusTimeout
 
 
 @dataclass(frozen=True)

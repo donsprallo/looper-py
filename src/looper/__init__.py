@@ -36,13 +36,17 @@ from looper.domain.model import (
     BootStep,
     Bus,
     BusMessage,
+    BusReceived,
+    BusReply,
     BusSend,
+    BusTimeout,
     CallTiming,
     ChainBlockState,
     ChainGroup,
     Channel,
     ClockMode,
     Comparison,
+    Crossing,
     Dependency,
     DmaChannel,
     DmaChannels,
@@ -101,6 +105,10 @@ from looper.starting import ContractMismatchError, connect, run
 __version__ = "0.2.0"
 
 __all__ = [
+    "BusReceived",
+    "BusTimeout",
+    "BusReply",
+    "Crossing",
     "BusSend",
     "ChainBlockState",
     "ChainGroup",

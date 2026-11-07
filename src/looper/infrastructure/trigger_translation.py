@@ -8,6 +8,8 @@ place fails loudly instead of meaning something else.
 from __future__ import annotations
 
 from looper.domain.model import (
+    BusReceived,
+    BusTimeout,
     Comparison,
     Edge,
     EdgeWhile,
@@ -89,6 +91,26 @@ def condition_of(condition: TriggerCondition) -> contract.TriggerCondition:
             return contract.TriggerCondition(quiet=quiet)
         case Value():
             return contract.TriggerCondition(value=_value_of(condition))
+        case BusReceived(bus_id, address, mask, direction, pattern, extended):
+            received = contract.BusReceivedCondition(
+                bus_id=bus_id,
+                address=address,
+                address_mask=mask,
+                direction=int(direction),  # type: ignore[arg-type]
+                pattern=pattern,
+                extended=extended,
+            )
+            return contract.TriggerCondition(bus_received=received)
+        case BusTimeout(bus_id, address, duration_us, after_first, mask, extended):
+            timeout = contract.BusTimeoutCondition(
+                bus_id=bus_id,
+                address=address,
+                duration_us=duration_us,
+                after_first_message=after_first,
+                address_mask=mask,
+                extended=extended,
+            )
+            return contract.TriggerCondition(bus_timeout=timeout)
 
 
 def trigger_of(view: contract.TriggerView) -> Trigger:

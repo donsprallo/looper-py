@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from looper.domain.model.chain_blocks import (
+    BusReply,
     BusSend,
     ChainAction,
     ChainBlockState,
@@ -19,7 +20,7 @@ def block_request_of(block: EventBlock) -> contract.SignalNodeRequest:
     """One event block, as a node of the graph request."""
     request = contract.SignalNodeRequest(key=block.key, kind=block.kind, group_key=block.group)
     request.block.min_gap_us = block.min_gap_us
-    if isinstance(block.settings, SetPin | BusSend | Mark | Hold):
+    if isinstance(block.settings, SetPin | BusSend | BusReply | Mark | Hold):
         request.block.action.CopyFrom(_action_of(block.settings))
     else:
         request.block.condition.CopyFrom(condition_of(block.settings))
@@ -37,6 +38,12 @@ def _action_of(action: ChainAction) -> contract.ChainAction:
                 bus_id=bus_id, address=address, payload=payload, extended=extended
             )
             return contract.ChainAction(send=contract.BusMessageAction(message=message, text=text))
+        case BusReply(bus_id, address, payload, extended, after_us):
+            message = contract.BusMessage(
+                bus_id=bus_id, address=address, payload=payload, extended=extended
+            )
+            answer = contract.BusMessageAction(message=message, answer_after_us=after_us)
+            return contract.ChainAction(reply=answer)
         case Mark(text):
             return contract.ChainAction(mark=contract.MarkAction(text=text))
         case Hold(after_us):

@@ -11,6 +11,7 @@ from dataclasses import replace
 from typing import Self
 
 from looper.domain.model.chain_blocks import (
+    BusReply,
     BusSend,
     ChainGroup,
     EventBlock,
@@ -20,6 +21,8 @@ from looper.domain.model.chain_blocks import (
     SetPin,
 )
 from looper.domain.model.triggers import (
+    BusReceived,
+    BusTimeout,
     Edge,
     EdgeWhile,
     Pattern,
@@ -37,6 +40,8 @@ CONDITION_KINDS: dict[type, str] = {
     Width: "pulse_width",
     Quiet: "quiet",
     Value: "variable_value",
+    BusReceived: "bus_received",
+    BusTimeout: "bus_timeout",
 }
 
 
@@ -57,6 +62,10 @@ class ChainBuilding:
     def send(self, key: str, message: BusSend, after: str = "", group: str = "") -> Self:
         """Add a bus send: fixed bytes on a CAN or UART bus."""
         return self._with_block(EventBlock(key, "bus_send", message, group), after)
+
+    def reply(self, key: str, answer: BusReply, after: str = "", group: str = "") -> Self:
+        """Add a bus reply: answers the message a Bus received fired on (looper Pro)."""
+        return self._with_block(EventBlock(key, "bus_reply", answer, group), after)
 
     def set_pin(self, key: str, action: SetPin, after: str = "", group: str = "") -> Self:
         """Add a Set pin: an input set high or low, or pressed for a time."""
