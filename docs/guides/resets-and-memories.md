@@ -74,7 +74,8 @@ reason names the way out. `simulation.reset()` (the pin) or
 | --- | --- |
 | `number` | 1 for the first life |
 | `started_at_us`, `ended_at_us` | simulated microseconds; `ended_at_us` is 0 while it runs |
-| `cause` | why it ended: `power-on`, `software`, `watchdog`, `pin` or `brown-out`; empty while it runs |
+| `cause` | why it ended: `power-on` (also after a power cut), `software`, `watchdog`, `pin` or `brown-out`; empty while it runs, and empty for a life a jump ended |
+| `ended_by` | how it ended: `reset`, `jump` or `power cut`; empty while it runs |
 | `text` | the line the window shows for it |
 | `has_dump` | whether what it left behind can be read |
 | `is_running` | whether it is the life that runs now |

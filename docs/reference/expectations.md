@@ -89,11 +89,12 @@ counts: a window that holds several starts expects the newest.
 | Expectation | Met when | Outcome when met |
 | --- | --- | --- |
 | `is_valid(image="")` | the header at the window's end is `valid`, and names `image` when one is given | `saw valid · app@2.1 · v0x0201` |
-| `is_invalid()` | the header is `broken`, `unknown image` or `empty`: no image a bootloader would start | `saw broken: the payload CRC does not match (…)` |
+| `is_invalid()` | the header is `broken`, `unknown image`, `empty` or `no header`: no image a bootloader would start | `saw broken: the payload CRC does not match (…)` |
 | `is_empty()` | the partition is erased | `saw empty (erased)` |
 
-A partition with no image header at all (data, a boot state) has no state, so
-`is_invalid()` is not met by it. Without the licence the server gives no state and
+A partition with no image header at all (data, a boot state, a magic cut in its
+first word) has the state `no header`, so `is_invalid()` is met by it, with
+`saw holds no image header`; `is_empty()` is not. Without the licence the server gives no state and
 the outcome says so.
 
 ## Interrupts -- `check.interrupt(name)` and `check.interrupts()` (Pro)

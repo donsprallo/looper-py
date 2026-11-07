@@ -71,25 +71,26 @@ bootloader's, and the chains are how a test sees them.
 ## Example: every point, one after the other
 
 ```python
-saved = simulation.flash().save()
-for after in range(0, 24576, 4096):
-    simulation.flash().load(saved)
-    simulation.reset("power-on")
-    simulation.advance(0.05)                      # the power-on is carried out first
-    simulation.power_cut(after_bytes=after, off_for_us=5000)
-    run_the_update(simulation)
+for after in looper.sweep_power_cuts(
+    simulation, run_the_update, total_bytes=24576, every=4096, off_for_us=5000
+):
     assert simulation.boot_chains()[-1].partitions[-1] == "app_a", after
 ```
 
-`looper.sweep_power_cuts` is the shorthand for this loop; see
-[the warning](../guides/bootloader.md#power-cuts-in-turn) for why the loop is
-written out here.
+`looper.sweep_power_cuts` lays the flash down as it was, resets the board with a
+power-on, arms the cut and runs the update, once for each point. The armed cut
+outlives that power-on and comes in the life it begins, so the sweep needs no
+`advance` of its own. `off_for_us` is the time the board stays without power:
+without it the bench still holds the update button when the board comes back, and
+slot A copies itself again. See [Power cuts in turn](../guides/bootloader.md#power-cuts-in-turn).
 
 ## Reading the numbers
 
 `power_cut` counts **the firmware's** flash bytes from the moment it is armed: a
 write from your test is the bench, not the board, and does not count. An image
 takes 64 bytes of header and its payload, so a cut inside the first
-`64 + payload_size` bytes of a copy leaves the target partition broken, and a cut
-after them leaves a whole image that was never put on trial. An armed cut is
-gone when the life ends another way; arm it after the life began.
+`64 + payload_size` bytes of a copy leaves the target partition broken (or without
+a header, when it falls in the first word), and a cut
+after them leaves a whole image that was never put on trial. An armed cut
+outlives every reset and every jump, and comes in the next life with the bytes it
+still waited for.
