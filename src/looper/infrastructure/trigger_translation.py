@@ -10,6 +10,7 @@ from __future__ import annotations
 from looper.domain.model import (
     BusReceived,
     BusTimeout,
+    Clock,
     Comparison,
     Edge,
     EdgeWhile,
@@ -17,6 +18,7 @@ from looper.domain.model import (
     PinLevel,
     Polarity,
     Quiet,
+    Start,
     Trigger,
     TriggerCondition,
     TriggerMode,
@@ -111,6 +113,12 @@ def condition_of(condition: TriggerCondition) -> contract.TriggerCondition:
                 extended=extended,
             )
             return contract.TriggerCondition(bus_timeout=timeout)
+        case Clock(period_us, phase_us):
+            clock = contract.ClockCondition(period_us=period_us, phase_us=phase_us)
+            return contract.TriggerCondition(clock=clock)
+        case Start(first_life_only):
+            start = contract.StartCondition(first_life_only=first_life_only)
+            return contract.TriggerCondition(start=start)
 
 
 def trigger_of(view: contract.TriggerView) -> Trigger:

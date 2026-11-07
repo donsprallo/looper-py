@@ -9,7 +9,21 @@ from typing import Any
 import grpc
 import pytest
 
-from looper import BusReceived, BusReply, BusSend, Edge, Polarity, SetPin, SignalGraph
+from looper import (
+    BusReceived,
+    BusReply,
+    BusSend,
+    Clock,
+    Edge,
+    Field,
+    Pattern,
+    PinLevel,
+    Polarity,
+    SetPin,
+    SignalGraph,
+    Threshold,
+    WhileWaiting,
+)
 from looper.domain.model import PinDo
 from looper.infrastructure.contract import looper_inspector_pb2 as contract
 from looper.infrastructure.contract import looper_inspector_pb2_grpc as service
@@ -118,3 +132,50 @@ def test_a_reply_answers_what_a_bus_received_fired_on() -> None:
     assert received.direction == contract.DIRECTION_OUTBOUND
     assert request.nodes[1].kind == "bus_reply"
     assert request.nodes[1].block.action.reply.answer_after_us == 5_000
+
+
+def test_a_clock_sends_fields_that_read_a_signal_count_and_quote() -> None:
+    fields = (
+        Field("speed", start_bit=0, length=16, signal="speed", scale=0.1),
+        Field("count", start_bit=16, count=True),
+        Field("echo", start_bit=24, request_bit=8),
+    )
+    graph = (
+        SignalGraph()
+        .when("tick", Clock(period_us=100_000, phase_us=50_000))
+        .send("frame", BusSend(1, 0x321, fields=fields, length=4), after="tick")
+    )
+
+    request = signal_graph_request_of(graph)
+
+    assert request.nodes[0].block.condition.clock.phase_us == 50_000
+    send = request.nodes[1].block.action.send
+    assert [one.node for one in request.nodes[1].inputs] == ["speed"]
+    assert [one.WhichOneof("source") for one in send.fields] == [
+        "signal_input",
+        "count",
+        "request_bit",
+    ]
+    assert send.length == 4
+
+
+def test_logic_goes_out_with_its_links_and_a_threshold_with_its_signal() -> None:
+    graph = (
+        SignalGraph()
+        .threshold("fast", Threshold("speed", level=2.5, hysteresis=0.5))
+        .when("pressed", Pattern((PinLevel(BUTTON, True),)))
+        .all_of("both", "fast", "pressed")
+        .delay("later", 10_000, after="both", while_waiting=WhileWaiting.RESTART)
+        .counter("third", 3, after="later", only_nth=True)
+    )
+
+    request = signal_graph_request_of(graph)
+
+    nodes = {node.key: node for node in request.nodes}
+    assert nodes["fast"].block.threshold.level == 2.5
+    assert [one.node for one in nodes["fast"].inputs] == ["speed"]
+    assert nodes["both"].block.logic.WhichOneof("kind") == "all_of"
+    assert nodes["later"].block.logic.delay.while_waiting == contract.DelayLogic.RESTART
+    assert nodes["third"].block.logic.counter.only_nth
+    states = [(link.from_node, link.from_port, link.to_port) for link in request.event_links][:2]
+    assert states == [("fast", 1, 0), ("pressed", 1, 1)]

@@ -7,11 +7,18 @@ from looper.domain.model.chain_blocks import (
     BusSend,
     ChainAction,
     ChainBlockState,
+    ChainLogic,
+    Counter,
+    Delay,
     EventBlock,
+    Field,
     Hold,
+    Logic,
     Mark,
     SetPin,
+    Threshold,
 )
+from looper.domain.model.triggers import Polarity
 from looper.infrastructure.contract import looper_inspector_pb2 as contract
 from looper.infrastructure.trigger_translation import condition_of
 
@@ -20,11 +27,88 @@ def block_request_of(block: EventBlock) -> contract.SignalNodeRequest:
     """One event block, as a node of the graph request."""
     request = contract.SignalNodeRequest(key=block.key, kind=block.kind, group_key=block.group)
     request.block.min_gap_us = block.min_gap_us
-    if isinstance(block.settings, SetPin | BusSend | BusReply | Mark | Hold):
-        request.block.action.CopyFrom(_action_of(block.settings))
+    settings = block.settings
+    if isinstance(settings, SetPin | BusSend | BusReply | Mark | Hold):
+        request.block.action.CopyFrom(_action_of(settings))
+        request.inputs.extend(_field_inputs(settings))
+    elif isinstance(settings, Threshold):
+        request.block.threshold.CopyFrom(_threshold_of(settings))
+        request.inputs.append(contract.SignalInputRequest(node=settings.signal))
+    elif isinstance(settings, Delay | Counter | Logic):
+        request.block.logic.CopyFrom(_logic_of(settings))
     else:
-        request.block.condition.CopyFrom(condition_of(block.settings))
+        request.block.condition.CopyFrom(condition_of(settings))
     return request
+
+
+THRESHOLD_DIRECTIONS = {
+    Polarity.RISE: contract.EDGE_RISE,
+    Polarity.FALL: contract.EDGE_FALL,
+    Polarity.ANY: contract.EDGE_ANY,
+}
+
+
+def _threshold_of(threshold: Threshold) -> contract.ThresholdSettings:
+    return contract.ThresholdSettings(
+        level=threshold.level,
+        hysteresis=threshold.hysteresis,
+        direction=THRESHOLD_DIRECTIONS[threshold.direction],
+        check_us=threshold.check_us,
+    )
+
+
+def _logic_of(logic: ChainLogic) -> contract.ChainLogic:
+    match logic:
+        case Delay(delay_us, while_waiting):
+            delay = contract.DelayLogic(delay_us=delay_us, while_waiting=int(while_waiting))  # type: ignore[arg-type]
+            return contract.ChainLogic(delay=delay)
+        case Counter(n, only_nth):
+            return contract.ChainLogic(counter=contract.CounterLogic(n=n, only_nth=only_nth))
+        case Logic(kind):
+            field = {"once": "once", "and": "all_of", "or": "any_of", "gate": "gate"}[kind]
+            chain_logic = contract.ChainLogic()
+            getattr(chain_logic, field).SetInParent()
+            return chain_logic
+
+
+def _signals_of(fields: tuple[Field, ...]) -> list[str]:
+    """The signal nodes a message's fields read, each once, in order."""
+    return list(dict.fromkeys(one.signal for one in fields if one.signal))
+
+
+def _field_inputs(action: ChainAction) -> list[contract.SignalInputRequest]:
+    fields = action.fields if isinstance(action, BusSend | BusReply) else ()
+    return [contract.SignalInputRequest(node=node) for node in _signals_of(fields)]
+
+
+def _field_of(one: Field, signals: list[str]) -> contract.MessageField:
+    field = contract.MessageField(
+        name=one.name,
+        start_bit=one.start_bit,
+        length=one.length,
+        big_endian=one.big_endian,
+        is_signed=one.is_signed,
+        scale=one.scale,
+        offset=one.offset,
+    )
+    if one.signal:
+        field.signal_input = signals.index(one.signal)
+    elif one.count:
+        field.count.SetInParent()
+    elif one.request_bit is not None:
+        field.request_bit = one.request_bit
+    else:
+        field.constant = one.constant
+    return field
+
+
+def _message_of(
+    message: contract.BusMessage, fields: tuple[Field, ...], length: int
+) -> contract.BusMessageAction:
+    signals = _signals_of(fields)
+    return contract.BusMessageAction(
+        message=message, fields=[_field_of(one, signals) for one in fields], length=length
+    )
 
 
 def _action_of(action: ChainAction) -> contract.ChainAction:
@@ -33,16 +117,19 @@ def _action_of(action: ChainAction) -> contract.ChainAction:
             return contract.ChainAction(
                 pin=contract.PinAction(pin_id=pin_id, action=int(do), press_us=press_us)  # type: ignore[arg-type]
             )
-        case BusSend(bus_id, address, payload, extended, text):
+        case BusSend(bus_id, address, payload, extended, text, fields, length):
             message = contract.BusMessage(
                 bus_id=bus_id, address=address, payload=payload, extended=extended
             )
-            return contract.ChainAction(send=contract.BusMessageAction(message=message, text=text))
-        case BusReply(bus_id, address, payload, extended, after_us):
+            send = _message_of(message, fields, length)
+            send.text = text
+            return contract.ChainAction(send=send)
+        case BusReply(bus_id, address, payload, extended, after_us, fields, length):
             message = contract.BusMessage(
                 bus_id=bus_id, address=address, payload=payload, extended=extended
             )
-            answer = contract.BusMessageAction(message=message, answer_after_us=after_us)
+            answer = _message_of(message, fields, length)
+            answer.answer_after_us = after_us
             return contract.ChainAction(reply=answer)
         case Mark(text):
             return contract.ChainAction(mark=contract.MarkAction(text=text))

@@ -14,19 +14,26 @@ from looper.domain.model.chain_blocks import (
     BusReply,
     BusSend,
     ChainGroup,
+    Counter,
+    Delay,
     EventBlock,
     EventLink,
     Hold,
+    Logic,
     Mark,
     SetPin,
+    Threshold,
+    WhileWaiting,
 )
 from looper.domain.model.triggers import (
     BusReceived,
     BusTimeout,
+    Clock,
     Edge,
     EdgeWhile,
     Pattern,
     Quiet,
+    Start,
     TriggerCondition,
     Value,
     Width,
@@ -42,7 +49,12 @@ CONDITION_KINDS: dict[type, str] = {
     Value: "variable_value",
     BusReceived: "bus_received",
     BusTimeout: "bus_timeout",
+    Clock: "clock",
+    Start: "start",
 }
+
+#: The output a condition or an And says its state on.
+HOLDS = 1
 
 
 class ChainBuilding:
@@ -58,6 +70,52 @@ class ChainBuilding:
         """Add a condition: it fires at the simulated instant it becomes true."""
         kind = CONDITION_KINDS[type(condition)]
         return self._with_block(EventBlock(key, kind, condition, group, min_gap_us), "")
+
+    def threshold(self, key: str, threshold: Threshold, group: str = "") -> Self:
+        """Add a threshold on a signal node: it fires when the signal goes beyond its level."""
+        return self._with_block(EventBlock(key, "threshold", threshold, group), "")
+
+    def delay(
+        self,
+        key: str,
+        delay_us: int,
+        after: str = "",
+        group: str = "",
+        while_waiting: WhileWaiting = WhileWaiting.QUEUED,
+    ) -> Self:
+        """Add a delay: each event goes on `delay_us` later."""
+        return self._with_block(
+            EventBlock(key, "delay", Delay(delay_us, while_waiting), group), after
+        )
+
+    def counter(
+        self, key: str, n: int, after: str = "", group: str = "", only_nth: bool = False
+    ) -> Self:
+        """Add a counter: every n-th event goes on, or only the n-th."""
+        return self._with_block(EventBlock(key, "counter", Counter(n, only_nth), group), after)
+
+    def once(self, key: str, after: str = "", group: str = "") -> Self:
+        """Add a once: the first event goes on, no more until the chain is switched on again."""
+        return self._with_block(EventBlock(key, "once", Logic("once"), group), after)
+
+    def any_of(self, key: str, *sources: str, group: str = "") -> Self:
+        """Add an Or: an event from any of the sources goes on."""
+        graph = self._with_block(EventBlock(key, "or", Logic("or"), group), "")
+        for port, source in enumerate(sources):
+            graph = graph.link(source, key, to_port=port)
+        return graph
+
+    def all_of(self, key: str, *holding: str, group: str = "") -> Self:
+        """Add an And of the states of `holding`: it fires when all begin to hold."""
+        graph = self._with_block(EventBlock(key, "and", Logic("and"), group), "")
+        for port, source in enumerate(holding):
+            graph = graph.link(source, key, from_port=HOLDS, to_port=port)
+        return graph
+
+    def gate(self, key: str, after: str, open_while: str, group: str = "") -> Self:
+        """Add a gate: events of `after` go on only while the state of `open_while` holds."""
+        graph = self._with_block(EventBlock(key, "gate", Logic("gate"), group), after)
+        return graph.link(open_while, key, from_port=HOLDS, to_port=1)
 
     def send(self, key: str, message: BusSend, after: str = "", group: str = "") -> Self:
         """Add a bus send: fixed bytes on a CAN or UART bus."""

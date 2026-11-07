@@ -8,12 +8,18 @@ from looper.domain.model.chain_blocks import (
     BusSend,
     ChainBlockState,
     ChainGroup,
+    Counter,
+    Delay,
     EventBlock,
     EventLink,
+    Field,
     Hold,
+    Logic,
     Mark,
     PinDo,
     SetPin,
+    Threshold,
+    WhileWaiting,
 )
 from looper.domain.model.dma import DmaChannel, DmaChannels
 from looper.domain.model.findings import Dependency, Finding, Findings
@@ -52,6 +58,7 @@ from looper.domain.model.signal_graph import (
 from looper.domain.model.triggers import (
     BusReceived,
     BusTimeout,
+    Clock,
     Comparison,
     Crossing,
     Edge,
@@ -60,6 +67,7 @@ from looper.domain.model.triggers import (
     PinLevel,
     Polarity,
     Quiet,
+    Start,
     Trigger,
     TriggerCondition,
     TriggerMode,
@@ -146,4 +154,12 @@ __all__ = [
     "Variable",
     "Watch",
     "Width",
+    "Clock",
+    "Start",
+    "Threshold",
+    "Delay",
+    "Counter",
+    "Logic",
+    "WhileWaiting",
+    "Field",
 ]

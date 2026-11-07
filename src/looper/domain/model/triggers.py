@@ -171,8 +171,25 @@ class BusTimeout:
     extended: bool = False
 
 
+@dataclass(frozen=True)
+class Clock:
+    """Fires at `phase_us`, then every `period_us`, in simulated time."""
+
+    period_us: int = 100_000
+    phase_us: int = 0
+
+
+@dataclass(frozen=True)
+class Start:
+    """Fires at 0 s and, unless `first_life_only`, after every reset of the firmware."""
+
+    first_life_only: bool = False
+
+
 #: Everything the simulation can watch for today.
-TriggerCondition = Edge | Pattern | EdgeWhile | Width | Quiet | Value | BusReceived | BusTimeout
+TriggerCondition = (
+    Edge | Pattern | EdgeWhile | Width | Quiet | Value | BusReceived | BusTimeout | Clock | Start
+)
 
 
 @dataclass(frozen=True)

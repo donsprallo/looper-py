@@ -22,7 +22,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from enum import IntEnum
 
-from looper.domain.model.triggers import TriggerCondition
+from looper.domain.model.triggers import Polarity, TriggerCondition
 
 
 class PinDo(IntEnum):
@@ -43,14 +43,48 @@ class SetPin:
 
 
 @dataclass(frozen=True)
+class Field:
+    """One field of a message built when it goes out (looper Pro), placed as a DBC says.
+
+    Its value is `constant`, unless it reads the graph's node `signal` --
+    raw = round((value - offset) / scale) -- counts (``count``: 0, 1, 2 ...
+    one per message), or quotes the request a reply answers from
+    `request_bit`.
+
+    Attributes:
+        name: What the field is called.
+        start_bit: Where it begins, as a DBC numbers bits.
+        length: Its width in bits.
+        big_endian: Motorola order; otherwise Intel.
+    """
+
+    name: str
+    start_bit: int = 0
+    length: int = 8
+    constant: int = 0
+    signal: str = ""
+    count: bool = False
+    request_bit: int | None = None
+    big_endian: bool = False
+    is_signed: bool = False
+    scale: float = 1.0
+    offset: float = 0.0
+
+
+@dataclass(frozen=True)
 class BusSend:
-    """Send fixed bytes on a CAN or UART bus; on UART a text, when there are no bytes."""
+    """Send fixed bytes on a CAN or UART bus; on UART a text, when there are no bytes.
+
+    With `fields` (looper Pro) the message is `length` bytes built from them.
+    """
 
     bus_id: int
     address: int = 0
     payload: bytes = b""
     extended: bool = False
     text: str = ""
+    fields: tuple[Field, ...] = ()
+    length: int = 0
 
 
 @dataclass(frozen=True)
@@ -62,6 +96,54 @@ class BusReply:
     payload: bytes = b""
     extended: bool = False
     answer_after_us: int = 0
+    fields: tuple[Field, ...] = ()
+    length: int = 0
+
+
+@dataclass(frozen=True)
+class Threshold:
+    """Fires when the graph's node `signal` goes beyond `level`; holds while it is.
+
+    It is armed again once the signal is back by `hysteresis`; `check_us` is
+    how often it is looked at, 0 the server's choice.
+    """
+
+    signal: str
+    level: float = 0.0
+    hysteresis: float = 0.0
+    direction: Polarity = Polarity.RISE
+    check_us: int = 0
+
+
+class WhileWaiting(IntEnum):
+    """What a delay does with an event that comes while one waits."""
+
+    QUEUED = 0
+    RESTART = 1
+    DROPPED = 2
+
+
+@dataclass(frozen=True)
+class Delay:
+    """Pass each event on after `delay_us`."""
+
+    delay_us: int = 10_000
+    while_waiting: WhileWaiting = WhileWaiting.QUEUED
+
+
+@dataclass(frozen=True)
+class Counter:
+    """Pass every n-th event on, or with `only_nth` only the n-th."""
+
+    n: int = 3
+    only_nth: bool = False
+
+
+@dataclass(frozen=True)
+class Logic:
+    """A logic block without settings: ``once``, ``and``, ``or`` or ``gate``."""
+
+    kind: str
 
 
 @dataclass(frozen=True)
@@ -79,7 +161,8 @@ class Hold:
 
 
 ChainAction = SetPin | BusSend | BusReply | Mark | Hold
-BlockSettings = TriggerCondition | ChainAction
+ChainLogic = Delay | Counter | Logic
+BlockSettings = TriggerCondition | Threshold | ChainLogic | ChainAction
 
 
 @dataclass(frozen=True)

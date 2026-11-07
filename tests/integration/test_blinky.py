@@ -186,3 +186,25 @@ def test_a_chain_marks_every_rise_of_the_led_inside_the_simulation(
     assert states["rises"].fires >= 2
     assert states["noted"].fires == states["rises"].fires
     assert states["rises"].summary_text == "LED_STATUS rises"
+
+
+def test_a_clock_counted_and_delayed_marks_every_third_period(
+    simulation: looper.Simulation,
+) -> None:
+    graph = (
+        looper.SignalGraph()
+        .when("tick", looper.Clock(period_us=100_000))
+        .counter("third", 3, after="tick")
+        .delay("later", 10_000, after="third")
+        .mark("noted", "third tick", after="later")
+    )
+    simulation.apply_signal_graph(graph)
+    try:
+        simulation.advance(1.0)
+        states = {state.key: state for state in simulation.chains()}
+    finally:
+        simulation.apply_signal_graph(looper.SignalGraph())
+
+    assert states["tick"].fires >= 9
+    assert states["noted"].fires == states["tick"].fires // 3
+    assert states["third"].summary_text == "every 3rd"
