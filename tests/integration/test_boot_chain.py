@@ -105,6 +105,7 @@ def test_a_confirmed_update_is_expected_as_the_way_the_board_went(
 
     assert report, report.summary
     assert simulation.otp().read(0, 1) == b"\x01"
+    assert simulation.boot_chains()[-1].started_by == "pin"
 
 
 def test_a_power_cut_in_the_middle_of_an_update_leaves_b_invalid_and_a_runs(

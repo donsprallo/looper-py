@@ -1781,16 +1781,18 @@ class BootStep(_message.Message):
     def __init__(self, life: _Optional[int] = ..., image: _Optional[str] = ..., partition: _Optional[str] = ..., entered_by: _Optional[_Union[EnteredBy, str]] = ..., at_us: _Optional[int] = ..., ended_by: _Optional[_Union[LifeEndReason, str]] = ..., text: _Optional[str] = ...) -> None: ...
 
 class BootChain(_message.Message):
-    __slots__ = ("steps", "started_by", "text", "went")
+    __slots__ = ("steps", "started_by", "text", "went", "started_by_text")
     STEPS_FIELD_NUMBER: _ClassVar[int]
     STARTED_BY_FIELD_NUMBER: _ClassVar[int]
     TEXT_FIELD_NUMBER: _ClassVar[int]
     WENT_FIELD_NUMBER: _ClassVar[int]
+    STARTED_BY_TEXT_FIELD_NUMBER: _ClassVar[int]
     steps: _containers.RepeatedCompositeFieldContainer[BootStep]
     started_by: ResetCause
     text: str
     went: str
-    def __init__(self, steps: _Optional[_Iterable[_Union[BootStep, _Mapping]]] = ..., started_by: _Optional[_Union[ResetCause, str]] = ..., text: _Optional[str] = ..., went: _Optional[str] = ...) -> None: ...
+    started_by_text: str
+    def __init__(self, steps: _Optional[_Iterable[_Union[BootStep, _Mapping]]] = ..., started_by: _Optional[_Union[ResetCause, str]] = ..., text: _Optional[str] = ..., went: _Optional[str] = ..., started_by_text: _Optional[str] = ...) -> None: ...
 
 class BootChainView(_message.Message):
     __slots__ = ("chains", "note")

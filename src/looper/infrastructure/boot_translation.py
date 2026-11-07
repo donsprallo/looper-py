@@ -55,19 +55,11 @@ def chains_of(view: contract.BootChainView) -> tuple[BootChain, ...]:
                 BootStep(one.life, one.image, one.partition, one.at_us, one.text)
                 for one in chain.steps
             ),
-            started_by=_cause_word(chain.started_by),
+            started_by=chain.started_by_text,
             text=chain.text,
         )
         for chain in view.chains
     )
-
-
-def _cause_word(cause: int) -> str:
-    """``pin``, ``power-on``: the cause as the server words it."""
-    if not cause:
-        return ""
-    name = str(contract.ResetCause.Name(cause))
-    return name.removeprefix("RESET_CAUSE_").lower().replace("_", "-")
 
 
 def power_cut_request(

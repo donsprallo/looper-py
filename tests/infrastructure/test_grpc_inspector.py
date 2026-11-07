@@ -23,6 +23,7 @@ from looper import (
     SimulationUnreachableError,
 )
 from looper.infrastructure import grpc_inspector
+from looper.infrastructure.boot_translation import chains_of
 from looper.infrastructure.contract import looper_inspector_pb2 as contract
 from looper.infrastructure.contract import looper_inspector_pb2_grpc as service
 from looper.infrastructure.grpc_inspector import GrpcInspector
@@ -497,3 +498,11 @@ def test_a_life_a_jump_ended_has_no_cause_and_one_a_power_cut_ended_power_on() -
     assert (jumped.cause, jumped.ended_by, jumped.is_running) == ("", "jump", False)
     assert (cut.cause, cut.ended_by) == ("power-on", "power cut")
     assert life_of(contract.LifeView(life=3)).is_running
+
+
+def test_a_boot_chain_says_what_started_it_in_the_server_s_word() -> None:
+    view = contract.BootChainView(
+        chains=[contract.BootChain(started_by=contract.RESET_CAUSE_PIN, started_by_text="pin")]
+    )
+
+    assert [chain.started_by for chain in chains_of(view)] == ["pin"]

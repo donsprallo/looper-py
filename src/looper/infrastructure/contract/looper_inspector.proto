@@ -1224,6 +1224,7 @@ message BootChain {
   ResetCause started_by = 2;       // what reset the board: power-on for the first
   string text = 3;                 // "stage0 → stage1_a 1.0 → app_b 2.1"
   string went = 4;                 // the partitions, as expect().boot_chain().went() takes them: "stage0 stage1_a app_b"
+  string started_by_text = 5;      // started_by as a word: "power-on", "watchdog", "pin"
 }
 
 message BootChainView {
