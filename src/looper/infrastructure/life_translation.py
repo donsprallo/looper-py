@@ -24,6 +24,13 @@ ENTERED_BY = {
     contract.ENTERED_BY_POWER_ON: "power-on",
 }
 
+#: How a life ended, in the server's words.
+ENDED_BY = {
+    contract.LIFE_END_REASON_RESET: "reset",
+    contract.LIFE_END_REASON_JUMP: "jump",
+    contract.LIFE_END_REASON_POWER_CUT: "power cut",
+}
+
 
 def life_of(view: contract.LifeView) -> Life:
     """One life."""
@@ -38,6 +45,7 @@ def life_of(view: contract.LifeView) -> Life:
         image=view.image,
         partition=view.partition,
         entered_by=ENTERED_BY.get(view.entered_by, ""),
+        ended_by=ENDED_BY.get(view.ended_by, ""),
     )
 
 

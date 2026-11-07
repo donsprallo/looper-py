@@ -58,6 +58,8 @@ def test_the_board_jumps_through_its_stages_into_app_a(simulation: looper.Simula
         ("app@2.0", "app_a"),
     ]
     assert [life.entered_by for life in lives[1:]] == ["jump", "jump"]
+    assert [(life.cause, life.ended_by) for life in lives[:2]] == [("", "jump")] * 2
+    assert lives[2].is_running
 
 
 def test_an_update_written_into_b_on_trial_runs_after_a_reset(

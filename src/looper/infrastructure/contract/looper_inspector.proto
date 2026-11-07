@@ -1095,7 +1095,7 @@ message LifeView {
   uint64 started_at_us = 5;
   uint64 ended_at_us = 6;          // 0: it runs now
   LifeEndReason ended_by = 7;
-  ResetCause cause = 8;            // why it ended
+  ResetCause cause = 8;            // why it ended: the reset's cause, power-on for a power cut; unset for a jump (ended_by says it)
   string text = 9;                 // "life 3 · 12.300 s – 14.020 s · watchdog"
   bool has_dump = 10;              // ReadLifeDump answers for it
 }

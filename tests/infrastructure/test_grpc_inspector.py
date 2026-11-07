@@ -26,6 +26,7 @@ from looper.infrastructure import grpc_inspector
 from looper.infrastructure.contract import looper_inspector_pb2 as contract
 from looper.infrastructure.contract import looper_inspector_pb2_grpc as service
 from looper.infrastructure.grpc_inspector import GrpcInspector
+from looper.infrastructure.life_translation import life_of
 from looper.infrastructure.translation import buses_of, run_status_of
 from looper.starting import connect
 
@@ -481,3 +482,18 @@ def test_the_run_state_says_which_power_cut_is_armed() -> None:
 
     assert run_status_of(armed).power_cut_text.startswith("power cut armed")
     assert run_status_of(contract.RunState()).power_cut_text == ""
+
+
+def test_a_life_a_jump_ended_has_no_cause_and_one_a_power_cut_ended_power_on() -> None:
+    jumped = life_of(contract.LifeView(life=1, ended_by=contract.LIFE_END_REASON_JUMP))
+    cut = life_of(
+        contract.LifeView(
+            life=2,
+            ended_by=contract.LIFE_END_REASON_POWER_CUT,
+            cause=contract.RESET_CAUSE_POWER_ON,
+        )
+    )
+
+    assert (jumped.cause, jumped.ended_by, jumped.is_running) == ("", "jump", False)
+    assert (cut.cause, cut.ended_by) == ("power-on", "power cut")
+    assert life_of(contract.LifeView(life=3)).is_running

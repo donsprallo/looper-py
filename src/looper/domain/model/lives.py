@@ -23,12 +23,14 @@ class Life:
         number: 1 for the first of a run.
         started_at_us: When it began.
         ended_at_us: When it ended; 0 while it runs.
-        cause: The cause of the reset that ended it; empty while it runs.
+        cause: Why it ended, as a reset's cause: ``power-on`` for a power
+            cut; empty for a jump and while it runs.
         text: The line the server shows for it.
         has_dump: Whether what it left behind can be read.
         image: The image it ran, ``app@2.1``, with several images (Pro).
         partition: The partition that image was started from.
         entered_by: ``reset``, ``jump`` or ``power-on``.
+        ended_by: ``reset``, ``jump`` or ``power cut``; empty while it runs.
     """
 
     number: int
@@ -40,11 +42,12 @@ class Life:
     image: str = ""
     partition: str = ""
     entered_by: str = ""
+    ended_by: str = ""
 
     @property
     def is_running(self) -> bool:
         """Whether this is the life that runs now."""
-        return self.ended_at_us == 0 and not self.cause
+        return not self.ended_by
 
 
 @dataclass(frozen=True)
