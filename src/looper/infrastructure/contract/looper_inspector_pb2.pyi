@@ -218,6 +218,7 @@ class HeaderState(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     HEADER_STATE_VALID: _ClassVar[HeaderState]
     HEADER_STATE_BROKEN: _ClassVar[HeaderState]
     HEADER_STATE_UNKNOWN_IMAGE: _ClassVar[HeaderState]
+    HEADER_STATE_NO_HEADER: _ClassVar[HeaderState]
 
 class FlashActivity(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     __slots__ = ()
@@ -459,6 +460,7 @@ HEADER_STATE_EMPTY: HeaderState
 HEADER_STATE_VALID: HeaderState
 HEADER_STATE_BROKEN: HeaderState
 HEADER_STATE_UNKNOWN_IMAGE: HeaderState
+HEADER_STATE_NO_HEADER: HeaderState
 FLASH_ACTIVITY_ANY: FlashActivity
 FLASH_ACTIVITY_WRITE: FlashActivity
 FLASH_ACTIVITY_ERASE: FlashActivity

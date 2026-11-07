@@ -6,6 +6,7 @@ import pytest
 
 from doubles import ScriptedInspector
 from looper import Simulation, sweep_power_cuts
+from looper.domain.model import PartitionHeader
 from looper.infrastructure.boot_translation import power_cut_request
 from looper.infrastructure.contract import looper_inspector_pb2 as contract
 
@@ -64,3 +65,16 @@ def test_power_cuts_in_turn_lay_the_flash_down_again_and_reset_before_each() -> 
     assert [cut[0] for cut in inspector.power_cuts] == points
     assert inspector.flash_writes[-1] == (0, b"\x00", True)
     assert ran == [0, 1, 2]
+
+
+def test_a_partition_with_no_header_is_invalid_but_not_empty() -> None:
+    inspector = ScriptedInspector()
+    inspector.headers["app_b"] = PartitionHeader("app_b", "no header", "holds no image header")
+    simulation = Simulation(inspector)
+    invalid = simulation.expect()
+    invalid.flash().partition("app_b").is_invalid()
+    empty = simulation.expect()
+    empty.flash().partition("app_b").is_empty()
+
+    assert invalid.evaluate(for_seconds=0.0)
+    assert not empty.evaluate(for_seconds=0.0)

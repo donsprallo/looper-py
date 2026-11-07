@@ -250,8 +250,10 @@ class PartitionExpectation:
         return self._add(PartitionHolds(self._name, ("valid",), image))
 
     def is_invalid(self) -> Expectations:
-        """Expect no image a bootloader would start: broken, unknown or erased."""
-        return self._add(PartitionHolds(self._name, ("broken", "unknown image", "empty")))
+        """Expect no image a bootloader would start: broken, unknown, erased or no header."""
+        return self._add(
+            PartitionHolds(self._name, ("broken", "unknown image", "empty", "no header"))
+        )
 
     def is_empty(self) -> Expectations:
         """Expect the partition erased."""

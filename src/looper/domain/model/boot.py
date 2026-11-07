@@ -37,8 +37,9 @@ class PartitionHeader:
 
     Attributes:
         name: The partition.
-        state: ``valid``, ``empty``, ``broken``, ``unknown image``, or empty
-            for data or without the licence.
+        state: ``valid``, ``empty``, ``broken``, ``unknown image``, ``no
+            header`` for data (or a magic cut in its first word), or empty
+            without the licence.
         text: The server's sentence: ``valid · app@2.1 · v0x0201``.
     """
 

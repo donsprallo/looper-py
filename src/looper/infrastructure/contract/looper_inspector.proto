@@ -1128,7 +1128,7 @@ message PartitionView {
   uint64 offset = 2;
   uint64 size = 3;
   bool read_only = 4;
-  HeaderState header = 5;          // Pro; without a licence UNSPECIFIED
+  HeaderState header = 5;          // Pro; without a licence UNSPECIFIED (not read)
   string header_text = 6;
 }
 
@@ -1138,6 +1138,7 @@ enum HeaderState {
   HEADER_STATE_VALID = 2;
   HEADER_STATE_BROKEN = 3;
   HEADER_STATE_UNKNOWN_IMAGE = 4;
+  HEADER_STATE_NO_HEADER = 5;      // not erased, no magic: other data, or a magic cut in its first word
 }
 
 message FlashView {

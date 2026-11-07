@@ -12,6 +12,7 @@ HEADER_STATES = {
     contract.HEADER_STATE_VALID: "valid",
     contract.HEADER_STATE_BROKEN: "broken",
     contract.HEADER_STATE_UNKNOWN_IMAGE: "unknown image",
+    contract.HEADER_STATE_NO_HEADER: "no header",
 }
 
 
