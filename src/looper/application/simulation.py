@@ -8,6 +8,7 @@ looking, because there is one simulation.
 
 from __future__ import annotations
 
+import os
 from collections.abc import Callable, Iterator
 from types import TracebackType
 
@@ -46,6 +47,7 @@ from looper.domain.model import (
 )
 from looper.domain.model.chain_blocks import ChainBlockState
 from looper.domain.model.chain_runs import ChainExport, ChainRun
+from looper.domain.model.dbc import DbcFile
 from looper.domain.model.dma import DmaChannels
 from looper.domain.model.interrupts import Interrupts
 
@@ -146,6 +148,14 @@ class Simulation:
             SimulationRefusedError: If there is no such group.
         """
         return self._inspector.export_chain(group, round(run_for_s * MICROSECONDS_PER_SECOND))
+
+    def read_dbc(self, path: str | os.PathLike[str]) -> DbcFile:
+        """A DBC file's CAN messages and their signals, read by the server.
+
+        The path is on the server's disk. Reading is free; a file that cannot
+        be read comes back with its ``problem`` and no messages.
+        """
+        return self._inspector.read_dbc(os.fspath(path))
 
     @property
     def triggers(self) -> Triggers:

@@ -56,6 +56,15 @@ class ChainServicer(service.InspectorServicer):  # type: ignore[misc]
         )
         return contract.ChainList(nodes=[node])
 
+    def ReadDbc(self, request: Any, context: Any) -> contract.DbcView:
+        rpm = contract.DbcSignalView(
+            name="rpm", start_bit=24, length=16, scale=0.125, unit="rpm", maximum=8000.0
+        )
+        engine = contract.DbcMessageView(
+            name="EngineData", address=0x123, length=8, cycle_us=100_000, signals=[rpm]
+        )
+        return contract.DbcView(path=request.path, messages=[engine])
+
     def SwitchChainGroup(self, request: Any, context: Any) -> contract.Ack:
         self.switch = request
         if request.group_key == "diag" and request.enabled:
@@ -195,3 +204,16 @@ def test_logic_goes_out_with_its_links_and_a_threshold_with_its_signal() -> None
     assert nodes["third"].block.logic.counter.only_nth
     states = [(link.from_node, link.from_port, link.to_port) for link in request.event_links][:2]
     assert states == [("fast", 1, 0), ("pressed", 1, 1)]
+
+
+def test_a_dbc_file_is_read_by_the_server_into_messages_and_signals(
+    inspector: GrpcInspector,
+) -> None:
+    read = inspector.read_dbc("engine.dbc")
+
+    engine = read.message("EngineData")
+    assert (read.path, read.problem) == ("engine.dbc", "")
+    assert (engine.identifier, engine.length, engine.cycle_us) == (0x123, 8, 100_000)
+    (rpm,) = engine.signals
+    assert (rpm.start_bit, rpm.length, rpm.scale, rpm.unit) == (24, 16, 0.125, "rpm")
+    assert (rpm.minimum, rpm.maximum) == (None, 8000.0)

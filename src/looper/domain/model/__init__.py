@@ -32,6 +32,7 @@ from looper.domain.model.chain_scenarios import (
     SwitchSignal,
     step_port,
 )
+from looper.domain.model.dbc import DbcFile, DbcMessage, DbcSignal
 from looper.domain.model.dma import DmaChannel, DmaChannels
 from looper.domain.model.event_conditions import Interrupt, ResetSeen
 from looper.domain.model.findings import Dependency, Finding, Findings
@@ -91,6 +92,9 @@ from looper.domain.model.triggers import (
 from looper.domain.model.variables import Variable, Watch
 
 __all__ = [
+    "DbcFile",
+    "DbcMessage",
+    "DbcSignal",
     "BusReceived",
     "BusTimeout",
     "BusReply",

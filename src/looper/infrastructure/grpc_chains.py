@@ -8,6 +8,7 @@ from typing import Any
 from looper.application.chain_port import ChainInspector
 from looper.domain.model.chain_blocks import ChainBlockState
 from looper.domain.model.chain_runs import ChainExport, SequenceState
+from looper.domain.model.dbc import DbcFile, DbcMessage, DbcSignal
 from looper.infrastructure import chain_translation
 from looper.infrastructure.contract import looper_inspector_pb2 as contract
 from looper.infrastructure.contract import looper_inspector_pb2_grpc as service
@@ -47,3 +48,34 @@ class GrpcChainCalls(ChainInspector):
         request = contract.PytestExportRequest(group_key=group, run_for_us=run_for_us)
         written = self._call(self._stub.ExportChainAsPytest, request)
         return ChainExport(written.file_name, written.text, tuple(written.warnings))
+
+    def read_dbc(self, path: str) -> DbcFile:
+        """A DBC file, read by the server."""
+        return dbc_file_of(self._call(self._stub.ReadDbc, contract.DbcRequest(path=path)))
+
+
+def dbc_file_of(view: contract.DbcView) -> DbcFile:
+    """The file as the domain keeps it."""
+    return DbcFile(
+        view.path, tuple(_message_of(message) for message in view.messages), view.problem
+    )
+
+
+def _message_of(view: contract.DbcMessageView) -> DbcMessage:
+    signals = tuple(_signal_of(signal) for signal in view.signals)
+    return DbcMessage(view.name, view.address, view.extended, view.length, view.cycle_us, signals)
+
+
+def _signal_of(view: contract.DbcSignalView) -> DbcSignal:
+    return DbcSignal(
+        name=view.name,
+        start_bit=view.start_bit,
+        length=view.length,
+        big_endian=view.big_endian,
+        is_signed=view.is_signed,
+        scale=view.scale,
+        offset=view.offset,
+        unit=view.unit,
+        minimum=view.minimum if view.HasField("minimum") else None,
+        maximum=view.maximum if view.HasField("maximum") else None,
+    )

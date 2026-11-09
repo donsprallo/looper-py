@@ -10,6 +10,7 @@ from abc import ABC, abstractmethod
 
 from looper.domain.model.chain_blocks import ChainBlockState
 from looper.domain.model.chain_runs import ChainExport, SequenceState
+from looper.domain.model.dbc import DbcFile
 
 
 class ChainInspector(ABC):
@@ -41,4 +42,11 @@ class ChainInspector(ABC):
         Raises:
             ProFeatureLockedError: Without the licence.
             SimulationRefusedError: If there is no such group.
+        """
+
+    @abstractmethod
+    def read_dbc(self, path: str) -> DbcFile:
+        """A DBC file's CAN messages and signals, read by the server from its disk.
+
+        A file that cannot be read is answered with its ``problem``, not refused.
         """

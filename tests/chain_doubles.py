@@ -5,6 +5,7 @@ from __future__ import annotations
 from looper.application.chain_port import ChainInspector
 from looper.domain.model import ChainBlockState
 from looper.domain.model.chain_runs import ChainExport, SequenceState
+from looper.domain.model.dbc import DbcFile
 
 
 class ScriptedChains(ChainInspector):
@@ -31,3 +32,6 @@ class ScriptedChains(ChainInspector):
     def export_chain(self, group: str, run_for_us: int) -> ChainExport:
         self.exported.append((group, run_for_us))
         return ChainExport(f"test_{group}.py", "")
+
+    def read_dbc(self, path: str) -> DbcFile:
+        return DbcFile(path)
