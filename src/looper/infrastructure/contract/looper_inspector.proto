@@ -202,11 +202,17 @@ enum Capability {
   CAPABILITY_DMA = 17;             // ObserveDma, DmaEvent in the stream
   CAPABILITY_DMA_GUARD = 18;       // this platform can tell a read of a buffer a DMA channel still writes
   CAPABILITY_CHAINS = 19;          // chains in ApplySignalGraph, CheckSignalGraph, ObserveChains, SwitchChainGroup, ListChainBlocks, ChainFire
+  CAPABILITY_HARDWARE = 20;        // a board at a debug probe: FlashFirmware, ObserveTarget, hold and resume through ControlRun
 }
 
 enum ServerMode {
   SERVER_MODE_SIMULATION = 0;
   SERVER_MODE_STATIC = 1;
+  // A board at a debug probe (`looper-srv hardware`). Every time is the
+  // target's own: the DWT cycle counter turned into microseconds where the
+  // core has one, otherwise the host's time since attaching (mode_text says
+  // which). What a board cannot do is refused with FAILED_PRECONDITION.
+  SERVER_MODE_HARDWARE = 2;
 }
 
 enum ClockMode {
@@ -230,6 +236,7 @@ message RunControl {
 message RunReply { Ack ack = 1; RunState state = 2; }
 
 message RunState {
+  // In SERVER_MODE_HARDWARE the target's time, not simulated time (see ServerMode).
   uint64 now_us = 1;
   ClockMode mode = 2;
   double pace_ratio = 3;
@@ -1129,6 +1136,41 @@ service Inspector {
   rpc FollowSequence(SequenceFollowRequest) returns (Ack);
   // The recorded calls of a stretch of the run, pass by pass (Pro).
   rpc ObserveSequence(SequenceRequest) returns (RecordedSequence);
+
+  // A board at a debug probe (SERVER_MODE_HARDWARE, CAPABILITY_HARDWARE, Pro):
+  // write the firmware into its flash and verify it, and see what its core
+  // does. Halt and resume are ControlRun{hold} and ControlRun{max_speed} or
+  // {pace_ratio: 1.0}; a reset is ResetFirmware with `when` now.
+  rpc FlashFirmware(FlashFirmwareRequest) returns (FlashFirmwareView);
+  rpc ObserveTarget(Empty) returns (TargetView);
+}
+
+message FlashFirmwareRequest {
+  string elf_path = 1;   // empty: the ELF `[target] elf` names
+  bool verify = 2;       // read the flash back and compare
+}
+
+message FlashFirmwareView {
+  uint64 bytes = 1;      // bytes written
+  string took_text = 2;  // e.g. "1.4 s"
+  string text = 3;       // e.g. "Flashed blinky.elf (904 bytes) and verified it."
+}
+
+enum CoreState {
+  CORE_STATE_UNSPECIFIED = 0;
+  CORE_STATE_RUNNING = 1;
+  CORE_STATE_HALTED = 2;
+  CORE_STATE_RESET = 3;
+  CORE_STATE_LOCKED_UP = 4;
+}
+
+message TargetView {
+  string chip = 1;              // e.g. "STM32L152RETx"
+  string probe_text = 2;        // e.g. "ST-Link V2-1 (0483:3752, 066BFF54…)"
+  CoreState core_state = 3;
+  string pc_text = 4;           // while halted, e.g. "0x080000c4 main.c:57"
+  string halt_reason_text = 5;  // e.g. "halted by request at main.c:57"
+  string time_base_text = 6;    // e.g. "times are the DWT cycle counter at 2.097 MHz"
 }
 
 // A reset from outside: PIN (the reset pin), POWER_ON or BROWN_OUT (the power goes and comes back; without [retained] battery the retained memory is lost). Absent: PIN. SOFTWARE and WATCHDOG are refused.

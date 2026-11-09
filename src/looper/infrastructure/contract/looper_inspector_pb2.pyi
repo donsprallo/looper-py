@@ -61,11 +61,13 @@ class Capability(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     CAPABILITY_DMA: _ClassVar[Capability]
     CAPABILITY_DMA_GUARD: _ClassVar[Capability]
     CAPABILITY_CHAINS: _ClassVar[Capability]
+    CAPABILITY_HARDWARE: _ClassVar[Capability]
 
 class ServerMode(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     __slots__ = ()
     SERVER_MODE_SIMULATION: _ClassVar[ServerMode]
     SERVER_MODE_STATIC: _ClassVar[ServerMode]
+    SERVER_MODE_HARDWARE: _ClassVar[ServerMode]
 
 class ClockMode(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     __slots__ = ()
@@ -215,6 +217,14 @@ class ExchangeUnit(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     EXCHANGE_UNIT_LINE: _ClassVar[ExchangeUnit]
     EXCHANGE_UNIT_FRAME: _ClassVar[ExchangeUnit]
     EXCHANGE_UNIT_TRANSACTION: _ClassVar[ExchangeUnit]
+
+class CoreState(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+    __slots__ = ()
+    CORE_STATE_UNSPECIFIED: _ClassVar[CoreState]
+    CORE_STATE_RUNNING: _ClassVar[CoreState]
+    CORE_STATE_HALTED: _ClassVar[CoreState]
+    CORE_STATE_RESET: _ClassVar[CoreState]
+    CORE_STATE_LOCKED_UP: _ClassVar[CoreState]
 
 class HeaderState(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     __slots__ = ()
@@ -368,8 +378,10 @@ CAPABILITY_INTERRUPTS: Capability
 CAPABILITY_DMA: Capability
 CAPABILITY_DMA_GUARD: Capability
 CAPABILITY_CHAINS: Capability
+CAPABILITY_HARDWARE: Capability
 SERVER_MODE_SIMULATION: ServerMode
 SERVER_MODE_STATIC: ServerMode
+SERVER_MODE_HARDWARE: ServerMode
 CLOCK_MODE_HELD: ClockMode
 CLOCK_MODE_PACED: ClockMode
 CLOCK_MODE_MAX: ClockMode
@@ -465,6 +477,11 @@ EXCHANGE_UNIT_WRITE: ExchangeUnit
 EXCHANGE_UNIT_LINE: ExchangeUnit
 EXCHANGE_UNIT_FRAME: ExchangeUnit
 EXCHANGE_UNIT_TRANSACTION: ExchangeUnit
+CORE_STATE_UNSPECIFIED: CoreState
+CORE_STATE_RUNNING: CoreState
+CORE_STATE_HALTED: CoreState
+CORE_STATE_RESET: CoreState
+CORE_STATE_LOCKED_UP: CoreState
 HEADER_STATE_UNSPECIFIED: HeaderState
 HEADER_STATE_EMPTY: HeaderState
 HEADER_STATE_VALID: HeaderState
@@ -1589,6 +1606,40 @@ class ViewPosition(_message.Message):
     epoch: int
     as_of_event_seq: int
     def __init__(self, epoch: _Optional[int] = ..., as_of_event_seq: _Optional[int] = ...) -> None: ...
+
+class FlashFirmwareRequest(_message.Message):
+    __slots__ = ("elf_path", "verify")
+    ELF_PATH_FIELD_NUMBER: _ClassVar[int]
+    VERIFY_FIELD_NUMBER: _ClassVar[int]
+    elf_path: str
+    verify: bool
+    def __init__(self, elf_path: _Optional[str] = ..., verify: _Optional[bool] = ...) -> None: ...
+
+class FlashFirmwareView(_message.Message):
+    __slots__ = ("bytes", "took_text", "text")
+    BYTES_FIELD_NUMBER: _ClassVar[int]
+    TOOK_TEXT_FIELD_NUMBER: _ClassVar[int]
+    TEXT_FIELD_NUMBER: _ClassVar[int]
+    bytes: int
+    took_text: str
+    text: str
+    def __init__(self, bytes: _Optional[int] = ..., took_text: _Optional[str] = ..., text: _Optional[str] = ...) -> None: ...
+
+class TargetView(_message.Message):
+    __slots__ = ("chip", "probe_text", "core_state", "pc_text", "halt_reason_text", "time_base_text")
+    CHIP_FIELD_NUMBER: _ClassVar[int]
+    PROBE_TEXT_FIELD_NUMBER: _ClassVar[int]
+    CORE_STATE_FIELD_NUMBER: _ClassVar[int]
+    PC_TEXT_FIELD_NUMBER: _ClassVar[int]
+    HALT_REASON_TEXT_FIELD_NUMBER: _ClassVar[int]
+    TIME_BASE_TEXT_FIELD_NUMBER: _ClassVar[int]
+    chip: str
+    probe_text: str
+    core_state: CoreState
+    pc_text: str
+    halt_reason_text: str
+    time_base_text: str
+    def __init__(self, chip: _Optional[str] = ..., probe_text: _Optional[str] = ..., core_state: _Optional[_Union[CoreState, str]] = ..., pc_text: _Optional[str] = ..., halt_reason_text: _Optional[str] = ..., time_base_text: _Optional[str] = ...) -> None: ...
 
 class ResetRequest(_message.Message):
     __slots__ = ("cause", "when")

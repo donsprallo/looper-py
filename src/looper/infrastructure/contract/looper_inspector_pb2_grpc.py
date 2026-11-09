@@ -484,6 +484,16 @@ class InspectorStub:
                 request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.SequenceRequest.SerializeToString,
                 response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.RecordedSequence.FromString,
                 _registered_method=True)
+        self.FlashFirmware = channel.unary_unary(
+                '/looper.inspector.v3.Inspector/FlashFirmware',
+                request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.FlashFirmwareRequest.SerializeToString,
+                response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.FlashFirmwareView.FromString,
+                _registered_method=True)
+        self.ObserveTarget = channel.unary_unary(
+                '/looper.inspector.v3.Inspector/ObserveTarget',
+                request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
+                response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.TargetView.FromString,
+                _registered_method=True)
 
 
 class InspectorServicer:
@@ -1151,6 +1161,22 @@ class InspectorServicer:
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def FlashFirmware(self, request, context):
+        """A board at a debug probe (SERVER_MODE_HARDWARE, CAPABILITY_HARDWARE, Pro):
+        write the firmware into its flash and verify it, and see what its core
+        does. Halt and resume are ControlRun{hold} and ControlRun{max_speed} or
+        {pace_ratio: 1.0}; a reset is ResetFirmware with `when` now.
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def ObserveTarget(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_InspectorServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -1603,6 +1629,16 @@ def add_InspectorServicer_to_server(servicer, server):
                     servicer.ObserveSequence,
                     request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.SequenceRequest.FromString,
                     response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.RecordedSequence.SerializeToString,
+            ),
+            'FlashFirmware': grpc.unary_unary_rpc_method_handler(
+                    servicer.FlashFirmware,
+                    request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.FlashFirmwareRequest.FromString,
+                    response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.FlashFirmwareView.SerializeToString,
+            ),
+            'ObserveTarget': grpc.unary_unary_rpc_method_handler(
+                    servicer.ObserveTarget,
+                    request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.FromString,
+                    response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.TargetView.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -4035,6 +4071,60 @@ class Inspector:
             '/looper.inspector.v3.Inspector/ObserveSequence',
             looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.SequenceRequest.SerializeToString,
             looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.RecordedSequence.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def FlashFirmware(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/looper.inspector.v3.Inspector/FlashFirmware',
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.FlashFirmwareRequest.SerializeToString,
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.FlashFirmwareView.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def ObserveTarget(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/looper.inspector.v3.Inspector/ObserveTarget',
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.TargetView.FromString,
             options,
             channel_credentials,
             insecure,
