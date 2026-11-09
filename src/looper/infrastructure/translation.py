@@ -54,6 +54,7 @@ def description_of(message: contract.Description) -> Description:
         reads_the_build=message.reads_the_build,
         edition="pro" if message.license.edition == contract.EDITION_PRO else "free",
         licence_note=message.license.note,
+        pro_parts=tuple(part.name for part in message.license.parts if part.unlocked),
     )
 
 

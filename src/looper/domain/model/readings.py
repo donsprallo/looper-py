@@ -40,6 +40,10 @@ class Description:
         reads_the_build: Whether the debug information could be read.
         edition: ``pro`` when the server's licence unlocks a Pro part, else ``free``.
         licence_note: Why it is free, or that the licence ran out; empty otherwise.
+        pro_parts: The parts of looper Pro the licence unlocks now, by the
+            names a licence file uses (``architecture``, ``bootloader``,
+            ``run-findings``, ``scenarios``), so that a test can skip what
+            it cannot use before asking.
     """
 
     contract_version: int
@@ -48,6 +52,7 @@ class Description:
     reads_the_build: bool = False
     edition: str = "free"
     licence_note: str = ""
+    pro_parts: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)

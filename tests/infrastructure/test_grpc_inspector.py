@@ -28,7 +28,7 @@ from looper.infrastructure.contract import looper_inspector_pb2 as contract
 from looper.infrastructure.contract import looper_inspector_pb2_grpc as service
 from looper.infrastructure.grpc_inspector import GrpcInspector
 from looper.infrastructure.life_translation import life_of
-from looper.infrastructure.translation import buses_of, run_status_of
+from looper.infrastructure.translation import buses_of, description_of, run_status_of
 from looper.starting import connect
 
 A_VARIABLE = contract.VariableView(
@@ -209,6 +209,20 @@ def test_the_description_becomes_values_of_the_domain(inspector: GrpcInspector) 
 
     assert described.contract_version == contract.CONTRACT_VERSION_CURRENT
     assert described.definition_path == "/projects/blinky/looper.toml"
+
+
+def test_the_description_names_the_pro_parts_the_licence_unlocks() -> None:
+    licence = contract.LicenseView(
+        edition=contract.EDITION_PRO,
+        parts=[
+            contract.ProPartView(name="architecture", unlocked=False, locked_text="locked"),
+            contract.ProPartView(name="scenarios", unlocked=True),
+        ],
+    )
+
+    described = description_of(contract.Description(license=licence))
+
+    assert (described.edition, described.pro_parts) == ("pro", ("scenarios",))
 
 
 def test_the_run_state_says_where_the_clock_is_and_how_it_goes(inspector: GrpcInspector) -> None:
