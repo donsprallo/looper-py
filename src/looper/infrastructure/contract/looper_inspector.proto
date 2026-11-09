@@ -156,6 +156,9 @@ enum ProFeature {
   // Chains that answer or test: Bus reply, a Bus send behind a Bus received,
   // message fields, injected faults, sequences, the pytest export.
   PRO_FEATURE_SCENARIOS = 4;
+  // A board at a debug probe: flashing, reset, halt, resume and its globals
+  // (looper-srv's hardware session). looper-core never answers it.
+  PRO_FEATURE_HARDWARE = 5;
 }
 
 message LicenseView {

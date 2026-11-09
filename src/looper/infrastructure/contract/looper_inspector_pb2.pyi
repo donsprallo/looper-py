@@ -37,6 +37,7 @@ class ProFeature(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     PRO_FEATURE_BOOTLOADER: _ClassVar[ProFeature]
     PRO_FEATURE_RUN_FINDINGS: _ClassVar[ProFeature]
     PRO_FEATURE_SCENARIOS: _ClassVar[ProFeature]
+    PRO_FEATURE_HARDWARE: _ClassVar[ProFeature]
 
 class Capability(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     __slots__ = ()
@@ -346,6 +347,7 @@ PRO_FEATURE_ARCHITECTURE: ProFeature
 PRO_FEATURE_BOOTLOADER: ProFeature
 PRO_FEATURE_RUN_FINDINGS: ProFeature
 PRO_FEATURE_SCENARIOS: ProFeature
+PRO_FEATURE_HARDWARE: ProFeature
 CAPABILITY_UNSPECIFIED: Capability
 CAPABILITY_PACED: Capability
 CAPABILITY_JOBS: Capability
