@@ -208,9 +208,9 @@ FAIL  the resets: expected no reset loop, saw Reset loop: 10 resets within 1 s (
 
 `no_loop()` asks the server's finding at the end of the window, so it also
 fails for a loop that began before the window and is still going. A reset loop
-holds a free-running simulation at once; a run with a target -- `advance`,
-`evaluate`, RunFor -- still reaches its target and is held when it gets there.
-See {core}`A reset loop <resets.html#a-reset-loop>`.
+is **found and told, not held**: the run goes on, so a test watches it
+happen. A project that wants the run held at a loop sets `hold_on_loop = true`
+in the `[reset]` section of its `looper.toml`. See {core}`A reset loop <resets.html#a-reset-loop>`.
 
 The resets are also in the event stream: `simulation.read_events(since)`
 returns a page whose `resets` are `ResetMark`s -- `sim_us`, `cause` and the

@@ -96,6 +96,16 @@ counter = simulation.watch_variable(variable.variable_id).channel_id
 | `looper.Width(pin_id, high, comparison, duration_us)` | a high (or low) pulse whose length compares as asked is seen; see below |
 | `looper.Quiet(pin_id, duration_us)` | the pin does not change for `duration_us` |
 | `looper.Value(channel_id, comparison, value, mask, on_change)` | a watched variable compares as asked, or changes at all |
+| `looper.BusReceived(bus_id, address, ...)` | a message crosses a bus; see [Chains](chains.md#the-builders) |
+| `looper.BusTimeout(bus_id, address, duration_us, ...)` | no such message came for `duration_us` |
+| `looper.Clock(period_us, phase_us)` | at the phase, then every period |
+| `looper.Start(first_life_only)` | at 0 s and after every reset |
+| `looper.Interrupt(source_id, on_entry)` | a source becomes pending, or its handler is entered |
+| `looper.ResetSeen(cause)` | a life begins after a reset of that cause |
+
+The last six are the conditions of [chains](chains.md) too -- a trigger is a
+chain of one condition and, for a SINGLE trigger, a hold -- so what they
+mean is told there.
 
 A few examples:
 
@@ -163,9 +173,9 @@ number. It is for display only; it does not authorise anything.
 
 ## What the simulation refuses
 
-Not everything can be watched yet. Conditions on a byte sequence, on analog
-channels or on exchanges are not supported at the moment, and a pin or
-channel the simulation does not have is refused as well. The refusal is a
+Not everything can be watched as a trigger. A condition on analog channels is
+not supported (a *Threshold* is a block of [chains](chains.md)), and a pin or
+channel the simulation does not have is refused. The refusal is a
 `looper.SimulationRefusedError` with the simulation's own sentence, which says
 what it can do instead. `current` and `disarm` raise it as well for a trigger
 number the simulation does not hold.

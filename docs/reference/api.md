@@ -23,6 +23,7 @@ looper.ProFeatureLockedError                        # a looper Pro part without 
 looper.Profile, looper.ProfileEntry               # where the time went
 looper.Findings, looper.Finding, looper.Dependency  # what the architecture analysis found (Pro)
 looper.SignalGraph, looper.SignalNodeKind         # a graph of signals and models
+looper.BusReceived, looper.Sequence, looper.Fault, looper.ChainRun  # chains: conditions, logic, actions
 looper.Life, looper.LifeDump, looper.Lives        # the firmware's lives
 looper.ResetMark, looper.FlashMark                # resets and flash operations in the stream
 looper.Retained, looper.Flash, looper.FlashPartition  # what survives a reset
@@ -253,6 +254,99 @@ offers. See [Setting the scene](../guides/scene.md#a-graph-of-signals).
    :members: output
 
 .. autoclass:: looper.ModelParameter
+```
+
+### Chains
+
+The event half of a graph: conditions, logic and actions that run inside the
+simulation. The guide [Chains from a test](../guides/chains.md) explains them;
+`simulation.chains()`, `simulation.switch_chain(group, on)`,
+`simulation.run_until_chain(name, timeout_s)` and
+`simulation.export_chain(group, run_for_s)` read, switch, run and export them.
+
+```{eval-rst}
+.. autoclass:: looper.SignalGraph
+   :members: when, threshold, delay, counter, once, any_of, all_of, gate, logic, sequence, switch_signal, inject_fault, raise_interrupt, reset_firmware, send, reply, set_pin, mark, hold, link, group
+   :noindex:
+
+.. autoclass:: looper.BusReceived
+
+.. autoclass:: looper.BusTimeout
+
+.. autoclass:: looper.Crossing
+   :members:
+   :undoc-members:
+
+.. autoclass:: looper.Clock
+
+.. autoclass:: looper.Start
+
+.. autoclass:: looper.Interrupt
+
+.. autoclass:: looper.ResetSeen
+
+.. autoclass:: looper.Threshold
+
+.. autoclass:: looper.Delay
+
+.. autoclass:: looper.WhileWaiting
+   :members:
+   :undoc-members:
+
+.. autoclass:: looper.Counter
+
+.. autoclass:: looper.Logic
+
+.. autoclass:: looper.Sequence
+
+.. autoclass:: looper.Step
+
+.. autoclass:: looper.StepKind
+   :members:
+   :undoc-members:
+
+.. autoclass:: looper.BusSend
+
+.. autoclass:: looper.BusReply
+
+.. autoclass:: looper.Field
+
+.. autoclass:: looper.SetPin
+
+.. autoclass:: looper.PinDo
+   :members:
+   :undoc-members:
+
+.. autoclass:: looper.Mark
+
+.. autoclass:: looper.Hold
+
+.. autoclass:: looper.SwitchSignal
+
+.. autoclass:: looper.SignalDo
+   :members:
+   :undoc-members:
+
+.. autoclass:: looper.Fault
+
+.. autoclass:: looper.FaultKind
+   :members:
+   :undoc-members:
+
+.. autoclass:: looper.ChainGroup
+
+.. autoclass:: looper.ChainBlockState
+
+.. autoclass:: looper.ChainRun
+
+.. autoclass:: looper.SequenceState
+   :members:
+
+.. autoclass:: looper.SequenceProgress
+   :members:
+   :undoc-members:
+
+.. autofunction:: looper.step_port
 ```
 
 ## Triggers

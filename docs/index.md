@@ -132,6 +132,7 @@ environment -- only the `looper-cli` command. See [How it works](concepts.md).
 | have a concrete question about your firmware | [Recipes](recipes/index.md) |
 | want the simulation to tell you when a pin changed or a value was reached | [Triggers](guides/triggers.md) |
 | want to know every expectation there is | [Expecting things](guides/expectations.md) and the [reference](reference/expectations.md) |
+| want the simulation to react by itself: answer a frame, press a pin, make a sensor stick, judge a run with a Sequence (a part is looper Pro) | [Chains from a test](guides/chains.md) |
 | want to close a loop with a model, or drive an input from a graph of signals | [Setting the scene](guides/scene.md#a-graph-of-signals) |
 | want to reset the firmware, test its watchdog, or reach the retained memory and the flash | [Resets, lives and the memories](guides/resets-and-memories.md) and the recipe [Reset](recipes/reset.md) |
 | want to test a firmware with interrupts and DMA: raise a source, read the lock and a channel, the race mode, and the checks of the findings (a part is looper Pro) | [Interrupts and DMA from a test](guides/interrupts-and-dma.md) |
@@ -156,6 +157,7 @@ guides/reaching
 guides/scene
 guides/variables
 guides/triggers
+guides/chains
 guides/expectations
 guides/profile-and-findings
 guides/resets-and-memories

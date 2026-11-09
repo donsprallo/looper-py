@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="230" viewBox="0 0 900 230" role="img">
+<title>run_until_chain looks every 10 ms of simulated time</title>
+<desc>A time axis cut into 10 ms slices. The Sequence ends inside the fourth slice. run_until_chain reads its state at the end of each slice and returns at the end of the fourth, up to 10 ms after the Sequence ended.</desc>
+<defs><marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs>
+<g fill="currentColor" stroke="none">
+<text x="24" y="28" font-family="Segoe UI, Helvetica Neue, Helvetica, Arial, sans-serif" font-size="13" font-weight="bold" text-anchor="start" fill="currentColor" fill-opacity="1">run_until_chain runs in slices and reads the Sequence after each.</text>
+<line x1="60" y1="130" x2="860" y2="130" stroke="currentColor" stroke-width="2" marker-end="url(#arr)"/>
+<line x1="60" y1="110" x2="60" y2="150" stroke="currentColor" stroke-width="2"/>
+<text x="60" y="170" font-family="Segoe UI, Helvetica Neue, Helvetica, Arial, sans-serif" font-size="11" text-anchor="middle" fill="currentColor" fill-opacity="0.8">start</text>
+<line x1="220" y1="110" x2="220" y2="150" stroke="currentColor" stroke-width="2"/>
+<text x="220" y="170" font-family="Segoe UI, Helvetica Neue, Helvetica, Arial, sans-serif" font-size="11" text-anchor="middle" fill="currentColor" fill-opacity="0.8">10 ms</text>
+<line x1="380" y1="110" x2="380" y2="150" stroke="currentColor" stroke-width="2"/>
+<text x="380" y="170" font-family="Segoe UI, Helvetica Neue, Helvetica, Arial, sans-serif" font-size="11" text-anchor="middle" fill="currentColor" fill-opacity="0.8">20 ms</text>
+<line x1="540" y1="110" x2="540" y2="150" stroke="currentColor" stroke-width="2"/>
+<text x="540" y="170" font-family="Segoe UI, Helvetica Neue, Helvetica, Arial, sans-serif" font-size="11" text-anchor="middle" fill="currentColor" fill-opacity="0.8">30 ms</text>
+<line x1="700" y1="110" x2="700" y2="150" stroke="currentColor" stroke-width="2"/>
+<text x="700" y="170" font-family="Segoe UI, Helvetica Neue, Helvetica, Arial, sans-serif" font-size="11" text-anchor="middle" fill="currentColor" fill-opacity="0.8">40 ms</text>
+<rect x="64" y="96" width="152" height="12" rx="3" fill="#3b82f6" fill-opacity="0.18" stroke="#3b82f6"/>
+<text x="140" y="88" font-family="Segoe UI, Helvetica Neue, Helvetica, Arial, sans-serif" font-size="10" text-anchor="middle" fill="currentColor" fill-opacity="0.75">run 10 ms, then read</text>
+<rect x="224" y="96" width="152" height="12" rx="3" fill="#3b82f6" fill-opacity="0.18" stroke="#3b82f6"/>
+<text x="300" y="88" font-family="Segoe UI, Helvetica Neue, Helvetica, Arial, sans-serif" font-size="10" text-anchor="middle" fill="currentColor" fill-opacity="0.75">run 10 ms, then read</text>
+<rect x="384" y="96" width="152" height="12" rx="3" fill="#3b82f6" fill-opacity="0.18" stroke="#3b82f6"/>
+<text x="460" y="88" font-family="Segoe UI, Helvetica Neue, Helvetica, Arial, sans-serif" font-size="10" text-anchor="middle" fill="currentColor" fill-opacity="0.75">run 10 ms, then read</text>
+<rect x="544" y="96" width="152" height="12" rx="3" fill="#3b82f6" fill-opacity="0.18" stroke="#3b82f6"/>
+<text x="620" y="88" font-family="Segoe UI, Helvetica Neue, Helvetica, Arial, sans-serif" font-size="10" text-anchor="middle" fill="currentColor" fill-opacity="0.75">run 10 ms, then read</text>
+<circle cx="610" cy="130" r="8" fill="#10b981"/>
+<text x="610" y="200" font-family="Segoe UI, Helvetica Neue, Helvetica, Arial, sans-serif" font-size="11" text-anchor="middle" fill="currentColor" fill-opacity="1">the Sequence ends here (the exact time is in failure_text)</text>
+<path d="M700,118 L700,64" stroke="#10b981" stroke-width="2" fill="none"/>
+<text x="694" y="58" font-family="Segoe UI, Helvetica Neue, Helvetica, Arial, sans-serif" font-size="12" font-weight="bold" text-anchor="end" fill="currentColor" fill-opacity="1">returns the ChainRun</text>
+</g>
+</svg>
