@@ -17,7 +17,8 @@ Die Grenze ist ein Prozess: `looper-core` bedient den Inspector-Vertrag
 (`looper-cli run`), dieses Projekt ist einer seiner Clients, so wie
 `looper-rs`. Der Vertrag ist
 `src/looper/infrastructure/contract/looper_inspector.proto`, eine geprüfte
-Kopie des Schemas aus `looper-core` (`tests/test_contract_in_step.py`). Er ist
+Kopie des Originals in `looper-srv` (`tests/test_contract_in_step.py`), das
+`looper-core` schrittweise ersetzt und dieselben Befehle wie `looper-cli` versteht. Er ist
 Version 3: Zeit ist `sim_us`, ein Ereignisstrom ersetzt die Aufzeichnungen,
 und jede Änderung wird mit einem `Ack` quittiert (eine Ablehnung wird zum
 `SimulationRefusedError`).
@@ -81,7 +82,7 @@ src/looper/
     └── looper_cli.py     # `looper-cli run` als Kindprozess
 
 ## 5. Regeln für Claude bei der Code-Generierung
-- **Vertrag nur gemeinsam ändern:** Erst das Schema in `looper-core`, dann
+- **Vertrag nur gemeinsam ändern:** Erst das Schema in `looper-srv`, dann
   die Kopie hier, dann `uv run python scripts/generate_contract.py`.
 - **Kein `looper_core`-Import**, auch nicht in Tests. Ein Integrationstest
   startet `looper-cli` als Prozess.
