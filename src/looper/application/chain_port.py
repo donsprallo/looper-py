@@ -25,6 +25,9 @@ class ChainInspector(ABC):
 
         Raises:
             SimulationRefusedError: If there is no such group, or no room for it.
+            ProFeatureLockedError: If it is switched on and holds a part of
+                looper Pro the server's licence does not unlock; the server's
+                sentence says which. Switching it off is never refused so.
         """
 
     @abstractmethod

@@ -19,6 +19,7 @@ from looper import (
     Pattern,
     PinLevel,
     Polarity,
+    ProFeatureLockedError,
     SetPin,
     SignalGraph,
     Threshold,
@@ -31,6 +32,10 @@ from looper.infrastructure.grpc_inspector import GrpcInspector
 from looper.infrastructure.signal_graph_translation import signal_graph_request_of
 
 BUTTON = 4
+LOCKED_DIAG = (
+    "The group Diag reply cannot be switched on: it holds Bus reply. Scenarios: replies, "
+    "fields, faults, sequences, pytest export is part of looper Pro - no licence found."
+)
 
 
 class ChainServicer(service.InspectorServicer):  # type: ignore[misc]
@@ -53,6 +58,8 @@ class ChainServicer(service.InspectorServicer):  # type: ignore[misc]
 
     def SwitchChainGroup(self, request: Any, context: Any) -> contract.Ack:
         self.switch = request
+        if request.group_key == "diag" and request.enabled:
+            context.abort(grpc.StatusCode.PERMISSION_DENIED, LOCKED_DIAG)
         return contract.Ack()
 
 
@@ -112,6 +119,15 @@ def test_a_switch_names_the_group(inspector: GrpcInspector, servicer: ChainServi
 
     assert servicer.switch is not None
     assert (servicer.switch.group_key, servicer.switch.enabled) == ("echo", False)
+
+
+def test_a_pro_group_switched_on_without_the_licence_is_refused_in_the_server_s_words(
+    inspector: GrpcInspector,
+) -> None:
+    inspector.switch_chain("diag", False)
+
+    with pytest.raises(ProFeatureLockedError, match="^The group Diag reply cannot be switched on"):
+        inspector.switch_chain("diag", True)
 
 
 def test_a_reply_answers_what_a_bus_received_fired_on() -> None:
