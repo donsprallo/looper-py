@@ -591,7 +591,7 @@ class Description(_message.Message):
     def __init__(self, contract_version: _Optional[_Union[ContractVersion, str]] = ..., firmware_name: _Optional[str] = ..., reads_the_build: _Optional[bool] = ..., definition_path: _Optional[str] = ..., capabilities: _Optional[_Iterable[_Union[Capability, str]]] = ..., retention_us: _Optional[int] = ..., max_events_per_batch: _Optional[int] = ..., mode: _Optional[_Union[ServerMode, str]] = ..., mode_text: _Optional[str] = ..., input_text: _Optional[str] = ..., license: _Optional[_Union[LicenseView, _Mapping]] = ...) -> None: ...
 
 class LicenseView(_message.Message):
-    __slots__ = ("edition", "unlocked", "licensee", "expires_text", "source_text", "note", "install_path")
+    __slots__ = ("edition", "unlocked", "licensee", "expires_text", "source_text", "note", "install_path", "parts")
     EDITION_FIELD_NUMBER: _ClassVar[int]
     UNLOCKED_FIELD_NUMBER: _ClassVar[int]
     LICENSEE_FIELD_NUMBER: _ClassVar[int]
@@ -599,6 +599,7 @@ class LicenseView(_message.Message):
     SOURCE_TEXT_FIELD_NUMBER: _ClassVar[int]
     NOTE_FIELD_NUMBER: _ClassVar[int]
     INSTALL_PATH_FIELD_NUMBER: _ClassVar[int]
+    PARTS_FIELD_NUMBER: _ClassVar[int]
     edition: Edition
     unlocked: _containers.RepeatedScalarFieldContainer[ProFeature]
     licensee: str
@@ -606,7 +607,22 @@ class LicenseView(_message.Message):
     source_text: str
     note: str
     install_path: str
-    def __init__(self, edition: _Optional[_Union[Edition, str]] = ..., unlocked: _Optional[_Iterable[_Union[ProFeature, str]]] = ..., licensee: _Optional[str] = ..., expires_text: _Optional[str] = ..., source_text: _Optional[str] = ..., note: _Optional[str] = ..., install_path: _Optional[str] = ...) -> None: ...
+    parts: _containers.RepeatedCompositeFieldContainer[ProPartView]
+    def __init__(self, edition: _Optional[_Union[Edition, str]] = ..., unlocked: _Optional[_Iterable[_Union[ProFeature, str]]] = ..., licensee: _Optional[str] = ..., expires_text: _Optional[str] = ..., source_text: _Optional[str] = ..., note: _Optional[str] = ..., install_path: _Optional[str] = ..., parts: _Optional[_Iterable[_Union[ProPartView, _Mapping]]] = ...) -> None: ...
+
+class ProPartView(_message.Message):
+    __slots__ = ("feature", "name", "title", "unlocked", "locked_text")
+    FEATURE_FIELD_NUMBER: _ClassVar[int]
+    NAME_FIELD_NUMBER: _ClassVar[int]
+    TITLE_FIELD_NUMBER: _ClassVar[int]
+    UNLOCKED_FIELD_NUMBER: _ClassVar[int]
+    LOCKED_TEXT_FIELD_NUMBER: _ClassVar[int]
+    feature: ProFeature
+    name: str
+    title: str
+    unlocked: bool
+    locked_text: str
+    def __init__(self, feature: _Optional[_Union[ProFeature, str]] = ..., name: _Optional[str] = ..., title: _Optional[str] = ..., unlocked: _Optional[bool] = ..., locked_text: _Optional[str] = ...) -> None: ...
 
 class RunControl(_message.Message):
     __slots__ = ("hold", "run_for_us", "run_until_us", "step_pass", "pace_ratio", "max_speed")

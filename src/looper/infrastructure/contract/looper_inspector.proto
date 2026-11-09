@@ -141,8 +141,8 @@ enum Edition {
   EDITION_PRO = 1;
 }
 
-// A part of looper that needs a licence. Today one: the whole Architect
-// (metrics of single functions stay free; the Source view shows them).
+// A part of looper that needs a licence. A licence file names them in its
+// `features` by ProPartView.name; one naming none unlocks all of them.
 enum ProFeature {
   PRO_FEATURE_UNSPECIFIED = 0;
   PRO_FEATURE_ARCHITECTURE = 1;   // graph, findings, rules, baseline, machines, call tree, sequences
@@ -166,6 +166,16 @@ message LicenseView {
   string source_text = 5;            // where the licence was read from
   string note = 6;                   // why it is free, or that it ran out and Pro stops soon
   string install_path = 7;           // where a licence is installed for this user (~/.looper/license.toml)
+  repeated ProPartView parts = 8;    // every Pro part this server knows, unlocked or not
+}
+
+// One part of looper Pro, as the Licence window lists it.
+message ProPartView {
+  ProFeature feature = 1;
+  string name = 2;         // what a licence file's `features` calls it, e.g. "run-findings"
+  string title = 3;        // e.g. "Run findings"
+  bool unlocked = 4;       // may be used now
+  string locked_text = 5;  // the sentence a call into it is refused with; "" while unlocked
 }
 
 enum Capability {
