@@ -93,6 +93,7 @@ with looper.run("looper.toml", virtual=True) as simulation:
     simulation.description        # the name, the definition and the contract version
     simulation.description.edition       # 'free' or 'pro': what the server's licence unlocks
     simulation.description.licence_note  # why it is free, or that the licence ran out
+    simulation.description.pro_parts     # ('architecture', ...): the Pro parts unlocked now
 ```
 
 The edition is the server's, read from its licence; see

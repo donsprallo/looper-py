@@ -124,9 +124,31 @@ def test_the_architecture(simulation):
     assert not findings.new()
 ```
 
-`simulation.description.edition` is `"pro"` or `"free"`, and
+`simulation.description.edition` is `"pro"` or `"free"`,
 `simulation.description.licence_note` says why it is free, or that the licence ran
-out; read them to decide before asking. Measures of a single function -- the
+out, and `simulation.description.pro_parts` names the parts of looper Pro the
+licence unlocks now; read them to decide before asking:
+
+```python
+def test_the_architecture(simulation):
+    if "architecture" not in simulation.description.pro_parts:
+        pytest.skip(simulation.description.licence_note or "no licence for the Architect")
+    assert not simulation.findings().new()
+```
+
+A licence may unlock all of Pro or only some parts. Each part has a name, and
+each locked call raises `ProFeatureLockedError` with the server's sentence for it:
+
+| Name | Part | Raised by | Sentence |
+| --- | --- | --- | --- |
+| `architecture` | the Architect | `findings()` | *The Architect is part of looper Pro - why.* |
+| `bootloader` | images, boot chains, the OTP, the power cut | the calls of the [bootloader guide](bootloader.md) | *Bootloader and boot chains is part of looper Pro - why.* |
+| `run-findings` | findings of interrupts and DMA, the race mode | `check.interrupt()`, `check.interrupts()`, `check.dma()`, `check.run_findings()`, `simulation.race()` | *Run findings is part of looper Pro - why.* |
+| `scenarios` | Bus reply, message fields, Inject fault, Sequence, pytest export | `switch_chain(group, True)` for a group that holds one, `export_chain()` | *Scenarios: replies, fields, faults, sequences, pytest export is part of looper Pro - why.* |
+
+*why* is *no licence found (looked in …)*, *the licence of … does not include it*
+or *the licence of … ran out on …*. A chain group with a locked part is refused
+with *The group … cannot be switched on: it holds …* and then that sentence. Measures of a single function -- the
 `profile()` above -- stay free.
 
 **In CI** the licence is a secret. Put the text of the licence file into it and
@@ -142,7 +164,7 @@ hand it over in `LOOPER_LICENSE`, which takes a path or the file's content:
 
 looper-cli reads the licence when it starts, and again at every restart of the
 simulation. A licence that ran out still works for 14 days with a note, then
-the Architect is locked again. Where looper looks for a licence, in what order,
+its parts are locked again. Where looper looks for a licence, in what order,
 is in {core}`looper Pro and the licence <usage.html#looper-pro-and-the-licence>`.
 The `looper-cli audit --architecture` command does the same check in a build
 step, with exit code 3 for a missing licence and 1 for a finding.
