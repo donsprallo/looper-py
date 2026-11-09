@@ -144,7 +144,7 @@ each locked call raises `ProFeatureLockedError` with the server's sentence for i
 | `architecture` | the Architect | `findings()` | *The Architect is part of looper Pro - why.* |
 | `bootloader` | images, boot chains, the OTP, the power cut | the calls of the [bootloader guide](bootloader.md) | *Bootloader and boot chains is part of looper Pro - why.* |
 | `run-findings` | findings of interrupts and DMA, the race mode | `check.interrupt()`, `check.interrupts()`, `check.dma()`, `check.run_findings()`, `simulation.race()` | *Run findings is part of looper Pro - why.* |
-| `scenarios` | Bus reply, message fields, Inject fault, Sequence, pytest export | `switch_chain(group, True)` for a group that holds one, `export_chain()` | *Scenarios: replies, fields, faults, sequences, pytest export is part of looper Pro - why.* |
+| `scenarios` | Bus reply, message fields, Inject fault, Sequence, pytest export | `switch_chain(group, True)` for a group that holds one, `export_chain()` | *Scenarios is part of looper Pro - why.* |
 
 *why* is *no licence found (looked in …)*, *the licence of … does not include it*
 or *the licence of … ran out on …*. A chain group with a locked part is refused

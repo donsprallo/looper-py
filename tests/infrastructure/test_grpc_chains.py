@@ -33,8 +33,8 @@ from looper.infrastructure.signal_graph_translation import signal_graph_request_
 
 BUTTON = 4
 LOCKED_DIAG = (
-    "The group Diag reply cannot be switched on: it holds Bus reply. Scenarios: replies, "
-    "fields, faults, sequences, pytest export is part of looper Pro - no licence found."
+    "The group Diag reply cannot be switched on: it holds Bus reply. "
+    "Scenarios is part of looper Pro - no licence found."
 )
 
 
