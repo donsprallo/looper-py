@@ -1863,7 +1863,7 @@ class LifeDumpView(_message.Message):
     def __init__(self, life: _Optional[_Union[LifeView, _Mapping]] = ..., memory: _Optional[_Union[MemoryView, _Mapping]] = ..., profile: _Optional[_Union[ProfileView, _Mapping]] = ..., note: _Optional[str] = ...) -> None: ...
 
 class PinView(_message.Message):
-    __slots__ = ("pin_id", "name", "direction", "level", "is_active", "is_drivable", "polarity", "drive_text", "last_writer_text", "last_written_us")
+    __slots__ = ("pin_id", "name", "direction", "level", "is_active", "is_drivable", "polarity", "drive_text", "last_writer_text", "last_written_us", "last_writer_node_key")
     PIN_ID_FIELD_NUMBER: _ClassVar[int]
     NAME_FIELD_NUMBER: _ClassVar[int]
     DIRECTION_FIELD_NUMBER: _ClassVar[int]
@@ -1874,6 +1874,7 @@ class PinView(_message.Message):
     DRIVE_TEXT_FIELD_NUMBER: _ClassVar[int]
     LAST_WRITER_TEXT_FIELD_NUMBER: _ClassVar[int]
     LAST_WRITTEN_US_FIELD_NUMBER: _ClassVar[int]
+    LAST_WRITER_NODE_KEY_FIELD_NUMBER: _ClassVar[int]
     pin_id: int
     name: str
     direction: str
@@ -1884,7 +1885,8 @@ class PinView(_message.Message):
     drive_text: str
     last_writer_text: str
     last_written_us: int
-    def __init__(self, pin_id: _Optional[int] = ..., name: _Optional[str] = ..., direction: _Optional[str] = ..., level: _Optional[str] = ..., is_active: _Optional[bool] = ..., is_drivable: _Optional[bool] = ..., polarity: _Optional[str] = ..., drive_text: _Optional[str] = ..., last_writer_text: _Optional[str] = ..., last_written_us: _Optional[int] = ...) -> None: ...
+    last_writer_node_key: str
+    def __init__(self, pin_id: _Optional[int] = ..., name: _Optional[str] = ..., direction: _Optional[str] = ..., level: _Optional[str] = ..., is_active: _Optional[bool] = ..., is_drivable: _Optional[bool] = ..., polarity: _Optional[str] = ..., drive_text: _Optional[str] = ..., last_writer_text: _Optional[str] = ..., last_written_us: _Optional[int] = ..., last_writer_node_key: _Optional[str] = ...) -> None: ...
 
 class SimulationView(_message.Message):
     __slots__ = ("sim_us", "pins")
@@ -1909,7 +1911,7 @@ class SignalView(_message.Message):
     def __init__(self, waveform: _Optional[str] = ..., amplitude: _Optional[float] = ..., offset: _Optional[float] = ..., frequency_hz: _Optional[float] = ..., phase_degrees: _Optional[float] = ...) -> None: ...
 
 class ChannelView(_message.Message):
-    __slots__ = ("channel_id", "name", "unit", "direction", "value", "is_drivable", "signal", "is_silent", "display_value", "is_driven_by_graph", "is_settable", "settable_text", "value_text", "last_writer_text", "last_written_us")
+    __slots__ = ("channel_id", "name", "unit", "direction", "value", "is_drivable", "signal", "is_silent", "display_value", "is_driven_by_graph", "is_settable", "settable_text", "value_text", "last_writer_text", "last_written_us", "last_writer_node_key")
     CHANNEL_ID_FIELD_NUMBER: _ClassVar[int]
     NAME_FIELD_NUMBER: _ClassVar[int]
     UNIT_FIELD_NUMBER: _ClassVar[int]
@@ -1925,6 +1927,7 @@ class ChannelView(_message.Message):
     VALUE_TEXT_FIELD_NUMBER: _ClassVar[int]
     LAST_WRITER_TEXT_FIELD_NUMBER: _ClassVar[int]
     LAST_WRITTEN_US_FIELD_NUMBER: _ClassVar[int]
+    LAST_WRITER_NODE_KEY_FIELD_NUMBER: _ClassVar[int]
     channel_id: int
     name: str
     unit: str
@@ -1940,7 +1943,8 @@ class ChannelView(_message.Message):
     value_text: str
     last_writer_text: str
     last_written_us: int
-    def __init__(self, channel_id: _Optional[int] = ..., name: _Optional[str] = ..., unit: _Optional[str] = ..., direction: _Optional[str] = ..., value: _Optional[float] = ..., is_drivable: _Optional[bool] = ..., signal: _Optional[_Union[SignalView, _Mapping]] = ..., is_silent: _Optional[bool] = ..., display_value: _Optional[str] = ..., is_driven_by_graph: _Optional[bool] = ..., is_settable: _Optional[bool] = ..., settable_text: _Optional[str] = ..., value_text: _Optional[str] = ..., last_writer_text: _Optional[str] = ..., last_written_us: _Optional[int] = ...) -> None: ...
+    last_writer_node_key: str
+    def __init__(self, channel_id: _Optional[int] = ..., name: _Optional[str] = ..., unit: _Optional[str] = ..., direction: _Optional[str] = ..., value: _Optional[float] = ..., is_drivable: _Optional[bool] = ..., signal: _Optional[_Union[SignalView, _Mapping]] = ..., is_silent: _Optional[bool] = ..., display_value: _Optional[str] = ..., is_driven_by_graph: _Optional[bool] = ..., is_settable: _Optional[bool] = ..., settable_text: _Optional[str] = ..., value_text: _Optional[str] = ..., last_writer_text: _Optional[str] = ..., last_written_us: _Optional[int] = ..., last_writer_node_key: _Optional[str] = ...) -> None: ...
 
 class ChannelList(_message.Message):
     __slots__ = ("channels",)
@@ -2134,7 +2138,7 @@ class GraphValueRequest(_message.Message):
     def __init__(self, node: _Optional[str] = ..., value: _Optional[float] = ..., when: _Optional[_Union[When, _Mapping]] = ...) -> None: ...
 
 class GraphValueView(_message.Message):
-    __slots__ = ("node", "value", "unit", "lowest", "highest", "feeds_text", "last_writer_text", "last_written_us")
+    __slots__ = ("node", "value", "unit", "lowest", "highest", "feeds_text", "last_writer_text", "last_written_us", "last_writer_node_key")
     NODE_FIELD_NUMBER: _ClassVar[int]
     VALUE_FIELD_NUMBER: _ClassVar[int]
     UNIT_FIELD_NUMBER: _ClassVar[int]
@@ -2143,6 +2147,7 @@ class GraphValueView(_message.Message):
     FEEDS_TEXT_FIELD_NUMBER: _ClassVar[int]
     LAST_WRITER_TEXT_FIELD_NUMBER: _ClassVar[int]
     LAST_WRITTEN_US_FIELD_NUMBER: _ClassVar[int]
+    LAST_WRITER_NODE_KEY_FIELD_NUMBER: _ClassVar[int]
     node: str
     value: float
     unit: str
@@ -2151,7 +2156,8 @@ class GraphValueView(_message.Message):
     feeds_text: str
     last_writer_text: str
     last_written_us: int
-    def __init__(self, node: _Optional[str] = ..., value: _Optional[float] = ..., unit: _Optional[str] = ..., lowest: _Optional[float] = ..., highest: _Optional[float] = ..., feeds_text: _Optional[str] = ..., last_writer_text: _Optional[str] = ..., last_written_us: _Optional[int] = ...) -> None: ...
+    last_writer_node_key: str
+    def __init__(self, node: _Optional[str] = ..., value: _Optional[float] = ..., unit: _Optional[str] = ..., lowest: _Optional[float] = ..., highest: _Optional[float] = ..., feeds_text: _Optional[str] = ..., last_writer_text: _Optional[str] = ..., last_written_us: _Optional[int] = ..., last_writer_node_key: _Optional[str] = ...) -> None: ...
 
 class ProbeView(_message.Message):
     __slots__ = ("name", "channel_id", "node", "output")
@@ -4858,7 +4864,7 @@ class ChainNodeView(_message.Message):
     def __init__(self, node_key: _Optional[str] = ..., group_key: _Optional[str] = ..., chain_id: _Optional[int] = ..., block: _Optional[int] = ..., installed: _Optional[bool] = ..., state: _Optional[_Union[ChainNodeView.State, str]] = ..., state_text: _Optional[str] = ..., summary_text: _Optional[str] = ..., refusal_text: _Optional[str] = ..., fire_count: _Optional[int] = ..., last_fire_us: _Optional[int] = ..., detail_text: _Optional[str] = ..., interval_text: _Optional[str] = ..., is_locked: _Optional[bool] = ..., kind: _Optional[str] = ..., settings: _Optional[_Union[ChainBlockRequest, _Mapping]] = ..., writes_also: _Optional[_Iterable[str]] = ...) -> None: ...
 
 class ChainGroupView(_message.Message):
-    __slots__ = ("group_key", "name", "enabled", "state_text", "event_blocks", "signal_blocks", "needs_pro", "problem_text", "trigger_id")
+    __slots__ = ("group_key", "name", "enabled", "state_text", "event_blocks", "signal_blocks", "needs_pro", "problem_text", "trigger_id", "links")
     GROUP_KEY_FIELD_NUMBER: _ClassVar[int]
     NAME_FIELD_NUMBER: _ClassVar[int]
     ENABLED_FIELD_NUMBER: _ClassVar[int]
@@ -4868,6 +4874,7 @@ class ChainGroupView(_message.Message):
     NEEDS_PRO_FIELD_NUMBER: _ClassVar[int]
     PROBLEM_TEXT_FIELD_NUMBER: _ClassVar[int]
     TRIGGER_ID_FIELD_NUMBER: _ClassVar[int]
+    LINKS_FIELD_NUMBER: _ClassVar[int]
     group_key: str
     name: str
     enabled: bool
@@ -4877,7 +4884,8 @@ class ChainGroupView(_message.Message):
     needs_pro: bool
     problem_text: str
     trigger_id: int
-    def __init__(self, group_key: _Optional[str] = ..., name: _Optional[str] = ..., enabled: _Optional[bool] = ..., state_text: _Optional[str] = ..., event_blocks: _Optional[int] = ..., signal_blocks: _Optional[int] = ..., needs_pro: _Optional[bool] = ..., problem_text: _Optional[str] = ..., trigger_id: _Optional[int] = ...) -> None: ...
+    links: _containers.RepeatedCompositeFieldContainer[EventLinkRequest]
+    def __init__(self, group_key: _Optional[str] = ..., name: _Optional[str] = ..., enabled: _Optional[bool] = ..., state_text: _Optional[str] = ..., event_blocks: _Optional[int] = ..., signal_blocks: _Optional[int] = ..., needs_pro: _Optional[bool] = ..., problem_text: _Optional[str] = ..., trigger_id: _Optional[int] = ..., links: _Optional[_Iterable[_Union[EventLinkRequest, _Mapping]]] = ...) -> None: ...
 
 class SequenceStateView(_message.Message):
     __slots__ = ("node_key", "step_index", "step_count", "state", "step_text", "failure_text", "step_times_us")

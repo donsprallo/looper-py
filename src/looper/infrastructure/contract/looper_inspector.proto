@@ -1304,6 +1304,9 @@ message PinView {
   // "chain \"Boost test\" at 2.500000 s". Empty when a chain did not.
   string last_writer_text = 9;
   uint64 last_written_us = 10;
+  // The node_key of the action block that set it; empty when a chain did
+  // not, or when no block of that chain sets this pin.
+  string last_writer_node_key = 11;
 }
 
 message SimulationView {
@@ -1349,6 +1352,8 @@ message ChannelView {
   // 'chain "Boost test" at 2.500000 s'; empty otherwise.
   string last_writer_text = 14;
   uint64 last_written_us = 15;
+  // The node_key of the Switch signal block that held it; empty otherwise.
+  string last_writer_node_key = 16;
 }
 
 message ChannelList {
@@ -1393,7 +1398,10 @@ message SignalNodeRequest {
   // The channel, pin or watch channel a source reads.
   uint32 source = 4;
   // What the node reads, in order: the two inputs of an operation, the
-  // inputs of a model.
+  // inputs of a model, the signals of a block's message fields. An entry
+  // with an empty `node` keeps the place of an input not linked yet, so
+  // that the inputs after it keep theirs; the block then has the problem
+  // "Signal input not linked".
   repeated SignalInputRequest inputs = 5;
   // The model a model node stands for, as ListModels names it.
   string model = 6;
@@ -1539,6 +1547,8 @@ message GraphValueView {
   // empty otherwise. `value` is what the simulation gives now.
   string last_writer_text = 7;
   uint64 last_written_us = 8;
+  // The node_key of the Switch signal block that set it; empty otherwise.
+  string last_writer_node_key = 9;
 }
 
 // A signal inside the applied graph that is recorded like a channel.
@@ -3344,11 +3354,15 @@ message ChainGroupView {
   bool needs_pro = 7;
   string problem_text = 8;
   uint32 trigger_id = 9;     // a Logic trigger's group; 0 otherwise
+  // A Logic trigger's group: the links between its blocks, by their
+  // node_key, so that a client can copy it as a chain of its own. Empty for
+  // a group of the graph, whose links are the client's.
+  repeated EventLinkRequest links = 10;
 }
 
 message SequenceStateView {
   string node_key = 1;
-  uint32 step_index = 2;     // from 1; 0 before the start
+  uint32 step_index = 2;     // from 1; 0 before the start; FAILED: the step that failed
   uint32 step_count = 3;
   enum State {
     WAITING = 0;
