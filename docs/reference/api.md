@@ -262,12 +262,21 @@ The event half of a graph: conditions, logic and actions that run inside the
 simulation. The guide [Chains from a test](../guides/chains.md) explains them;
 `simulation.chains()`, `simulation.switch_chain(group, on)`,
 `simulation.run_until_chain(name, timeout_s)` and
-`simulation.export_chain(group, run_for_s)` read, switch, run and export them.
+`simulation.export_chain(group, run_for_s)` read, switch, run and export them;
+`simulation.read_dbc(path)` reads a DBC file's messages for the fields of a
+message.
 
 ```{eval-rst}
 .. autoclass:: looper.SignalGraph
    :members: when, threshold, delay, counter, once, any_of, all_of, gate, logic, sequence, switch_signal, inject_fault, raise_interrupt, reset_firmware, send, reply, set_pin, mark, hold, link, group
    :noindex:
+
+.. autoclass:: looper.DbcFile
+   :members: message
+
+.. autoclass:: looper.DbcMessage
+
+.. autoclass:: looper.DbcSignal
 
 .. autoclass:: looper.BusReceived
 

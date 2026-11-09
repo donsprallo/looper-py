@@ -332,10 +332,31 @@ Operations and models of the signal graph are **left out** and the warnings say
 so; a value is exported with its current value. Without a licence the call
 raises `looper.ProFeatureLockedError`.
 
-## Not in the library
+### Fields from a DBC file
 
-Reading a DBC file (`ReadDbc`) and filling a block from it is a thing of the
-window. In a test, write the fields.
+`simulation.read_dbc(path)` has the server read a DBC file – the path is on the
+server's disk – and gives its CAN messages with their signals. Reading is free.
+The library does not fill a block by itself; take what you need from the
+message:
+
+```python
+engine = simulation.read_dbc("can/engine.dbc").message("EngineData")
+rpm = next(signal for signal in engine.signals if signal.name == "rpm")
+fields = (
+    looper.Field(rpm.name, start_bit=rpm.start_bit, length=rpm.length,
+                 big_endian=rpm.big_endian, is_signed=rpm.is_signed,
+                 scale=rpm.scale, offset=rpm.offset, signal="speed"),
+)
+looper.BusSend(bus_id, engine.identifier, fields=fields, length=engine.length)
+```
+
+A `DbcFile` has the `path`, the `messages` in the file's order and a `problem`:
+a file that cannot be read is not refused, it comes back with the server's
+sentence and no messages. A `DbcMessage` has its `name`, `identifier`,
+`extended` (29 bit), `length` in bytes, `cycle_us` (0 when the file does not
+say) and `signals`; a `DbcSignal` its `name`, `start_bit`, `length`,
+`big_endian`, `is_signed`, `scale`, `offset`, `unit`, and `minimum` and
+`maximum` when the file gives them.
 
 ## What the chains do not see
 
