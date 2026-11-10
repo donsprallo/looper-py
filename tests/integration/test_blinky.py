@@ -19,19 +19,13 @@ from pathlib import Path
 import pytest
 
 import looper
+from server_under_test import CORE, server_command
 
 # The findings are part of looper Pro. looper-cli is started from a checkout,
 # where the development switch unlocks Pro, so no licence is needed here.
 os.environ["LOOPER_DEV_EDITION"] = "pro"
 
-PROJECT_ROOT = Path(__file__).resolve().parents[2]
-CORE = Path(os.environ.get("LOOPER_CORE", PROJECT_ROOT.parent / "looper-core"))
 DEFINITION = CORE / "tests" / "fixtures" / "blinky" / "looper.toml"
-
-#: looper-cli from the neighbouring checkout, run as a module so that the
-#: test does not depend on its console script being installed.
-LOOPER_CLI = ("uv", "run", "--no-sync", "--project", str(CORE), "python", "-m")
-CLI_MODULE = "looper_core.presentation.cli.main"
 
 
 @pytest.fixture(scope="module")
@@ -41,7 +35,7 @@ def simulation() -> Iterator[looper.Simulation]:
         pytest.skip(f"no looper-core checkout at {CORE}")
     if shutil.which("gcc") is None and shutil.which("clang") is None:
         pytest.skip("no C compiler on PATH")
-    with looper.run(DEFINITION, virtual=True, looper_cli=(*LOOPER_CLI, CLI_MODULE)) as started:
+    with looper.run(DEFINITION, virtual=True, looper_cli=server_command()) as started:
         yield started
 
 

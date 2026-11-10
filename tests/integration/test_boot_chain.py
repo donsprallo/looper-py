@@ -11,21 +11,16 @@ unlocked by looper-core's development switch, as in its own tests.
 
 from __future__ import annotations
 
-import os
 import shutil
 import zlib
 from collections.abc import Iterator
-from pathlib import Path
 
 import pytest
 
 import looper
+from server_under_test import CORE, server_command
 
-PROJECT_ROOT = Path(__file__).resolve().parents[2]
-CORE = Path(os.environ.get("LOOPER_CORE", PROJECT_ROOT.parent / "looper-core"))
 DEFINITION = CORE / "tests" / "fixtures" / "boot_chain" / "looper.toml"
-LOOPER_CLI = ("uv", "run", "--no-sync", "--project", str(CORE), "python", "-m")
-CLI_MODULE = "looper_core.presentation.cli.main"
 
 BOOT_STATE_MAGIC, BOOT_STATE = 0xB5B5B5B5, 0x12000
 SLOT_A, ON_TRIAL = 0, 1
@@ -39,7 +34,7 @@ def simulation(monkeypatch: pytest.MonkeyPatch) -> Iterator[looper.Simulation]:
     if shutil.which("gcc") is None and shutil.which("clang") is None:
         pytest.skip("no C compiler on PATH")
     monkeypatch.setenv("LOOPER_DEV_EDITION", "pro")
-    with looper.run(DEFINITION, virtual=True, looper_cli=(*LOOPER_CLI, CLI_MODULE)) as started:
+    with looper.run(DEFINITION, virtual=True, looper_cli=server_command()) as started:
         yield started
 
 
