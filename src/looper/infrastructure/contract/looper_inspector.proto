@@ -1150,6 +1150,10 @@ service Inspector {
   // hierarchy) only with the Architect; without it they are empty and
   // pro_locked says why. A path names the module of a file.
   rpc ObserveModuleCard(ModuleCardRequest) returns (ModuleCard);
+  // The architecture's history (Pro, stage 5.6): one run per commit the code
+  // was read at (written by the server once the index is complete and the
+  // commit is new) and per audit, with the series to draw and their labels.
+  rpc ObserveArchitectureHistory(HistoryRequest) returns (ArchitectureHistory);
   // The firmware's state machines: a switch over a variable the code sets.
   rpc ObserveStateMachines(Empty) returns (StateMachineList);
   rpc ObserveStateMachine(StateMachineChoice) returns (FirmwareStateMachine);
@@ -2784,6 +2788,44 @@ enum CardTypeKind {
   CARD_TYPE_KIND_UNION = 1;
   CARD_TYPE_KIND_CLASS = 2;
   CARD_TYPE_KIND_INTERFACE = 3;    // a struct of function pointers, or an abstract class
+}
+
+// The architecture's history (looper-srv, stage 5.6).
+message HistoryRequest {
+  uint32 last = 1;               // how many of the newest runs; 0 for all
+  uint64 known_revision = 2;
+}
+
+message HistoryValue {
+  string series = 1;             // HistorySeries.series
+  double value = 2;
+  string value_text = 3;         // "496 B", "3"
+}
+
+message HistorySeries {
+  string series = 1;             // "new", "findings", "cycles", ...
+  string title = 2;              // "New findings"
+  string unit_text = 3;          // "findings", "B"
+  bool shown_by_default = 4;
+}
+
+message HistoryRun {
+  string run_id = 1;
+  uint64 at_unix_s = 2;
+  string label = 3;              // "9 Nov · 406787f"
+  string commit = 4;
+  string source_text = 5;        // "window", "audit"
+  string summary_text = 6;       // "3 new · 41 known · 2 cycles"
+  repeated HistoryValue values = 7;  // a series without a value (an unbounded stack) is missing
+}
+
+message ArchitectureHistory {
+  uint64 revision = 1;
+  bool unchanged = 2;
+  repeated HistorySeries series = 3;
+  repeated HistoryRun runs = 4;  // oldest first
+  string path_text = 5;          // ".looper/architecture-history.jsonl"
+  string state_text = 6;         // without runs: why, else ""
 }
 
 message ModuleCardRequest {

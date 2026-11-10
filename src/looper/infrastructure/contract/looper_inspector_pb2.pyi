@@ -4009,6 +4009,70 @@ class StackWorstCaseView(_message.Message):
     produce_text: str
     def __init__(self, revision: _Optional[int] = ..., unchanged: _Optional[bool] = ..., progress: _Optional[_Union[IndexProgress, _Mapping]] = ..., entries: _Optional[_Iterable[_Union[StackEntry, _Mapping]]] = ..., chosen_id: _Optional[str] = ..., worst_bytes_from: _Optional[_Union[FrameBytes, str]] = ..., measured_bytes_from: _Optional[_Union[FrameBytes, str]] = ..., frames_text: _Optional[str] = ..., host_hint: _Optional[str] = ..., total_bytes: _Optional[int] = ..., total_text: _Optional[str] = ..., size_bytes: _Optional[int] = ..., size_text: _Optional[str] = ..., state_text: _Optional[str] = ..., produce_text: _Optional[str] = ...) -> None: ...
 
+class HistoryRequest(_message.Message):
+    __slots__ = ("last", "known_revision")
+    LAST_FIELD_NUMBER: _ClassVar[int]
+    KNOWN_REVISION_FIELD_NUMBER: _ClassVar[int]
+    last: int
+    known_revision: int
+    def __init__(self, last: _Optional[int] = ..., known_revision: _Optional[int] = ...) -> None: ...
+
+class HistoryValue(_message.Message):
+    __slots__ = ("series", "value", "value_text")
+    SERIES_FIELD_NUMBER: _ClassVar[int]
+    VALUE_FIELD_NUMBER: _ClassVar[int]
+    VALUE_TEXT_FIELD_NUMBER: _ClassVar[int]
+    series: str
+    value: float
+    value_text: str
+    def __init__(self, series: _Optional[str] = ..., value: _Optional[float] = ..., value_text: _Optional[str] = ...) -> None: ...
+
+class HistorySeries(_message.Message):
+    __slots__ = ("series", "title", "unit_text", "shown_by_default")
+    SERIES_FIELD_NUMBER: _ClassVar[int]
+    TITLE_FIELD_NUMBER: _ClassVar[int]
+    UNIT_TEXT_FIELD_NUMBER: _ClassVar[int]
+    SHOWN_BY_DEFAULT_FIELD_NUMBER: _ClassVar[int]
+    series: str
+    title: str
+    unit_text: str
+    shown_by_default: bool
+    def __init__(self, series: _Optional[str] = ..., title: _Optional[str] = ..., unit_text: _Optional[str] = ..., shown_by_default: _Optional[bool] = ...) -> None: ...
+
+class HistoryRun(_message.Message):
+    __slots__ = ("run_id", "at_unix_s", "label", "commit", "source_text", "summary_text", "values")
+    RUN_ID_FIELD_NUMBER: _ClassVar[int]
+    AT_UNIX_S_FIELD_NUMBER: _ClassVar[int]
+    LABEL_FIELD_NUMBER: _ClassVar[int]
+    COMMIT_FIELD_NUMBER: _ClassVar[int]
+    SOURCE_TEXT_FIELD_NUMBER: _ClassVar[int]
+    SUMMARY_TEXT_FIELD_NUMBER: _ClassVar[int]
+    VALUES_FIELD_NUMBER: _ClassVar[int]
+    run_id: str
+    at_unix_s: int
+    label: str
+    commit: str
+    source_text: str
+    summary_text: str
+    values: _containers.RepeatedCompositeFieldContainer[HistoryValue]
+    def __init__(self, run_id: _Optional[str] = ..., at_unix_s: _Optional[int] = ..., label: _Optional[str] = ..., commit: _Optional[str] = ..., source_text: _Optional[str] = ..., summary_text: _Optional[str] = ..., values: _Optional[_Iterable[_Union[HistoryValue, _Mapping]]] = ...) -> None: ...
+
+class ArchitectureHistory(_message.Message):
+    __slots__ = ("revision", "unchanged", "series", "runs", "path_text", "state_text")
+    REVISION_FIELD_NUMBER: _ClassVar[int]
+    UNCHANGED_FIELD_NUMBER: _ClassVar[int]
+    SERIES_FIELD_NUMBER: _ClassVar[int]
+    RUNS_FIELD_NUMBER: _ClassVar[int]
+    PATH_TEXT_FIELD_NUMBER: _ClassVar[int]
+    STATE_TEXT_FIELD_NUMBER: _ClassVar[int]
+    revision: int
+    unchanged: bool
+    series: _containers.RepeatedCompositeFieldContainer[HistorySeries]
+    runs: _containers.RepeatedCompositeFieldContainer[HistoryRun]
+    path_text: str
+    state_text: str
+    def __init__(self, revision: _Optional[int] = ..., unchanged: _Optional[bool] = ..., series: _Optional[_Iterable[_Union[HistorySeries, _Mapping]]] = ..., runs: _Optional[_Iterable[_Union[HistoryRun, _Mapping]]] = ..., path_text: _Optional[str] = ..., state_text: _Optional[str] = ...) -> None: ...
+
 class ModuleCardRequest(_message.Message):
     __slots__ = ("module_id", "path", "known_revision")
     MODULE_ID_FIELD_NUMBER: _ClassVar[int]

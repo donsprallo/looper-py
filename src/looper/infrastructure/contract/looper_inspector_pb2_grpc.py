@@ -469,6 +469,11 @@ class InspectorStub:
                 request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ModuleCardRequest.SerializeToString,
                 response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ModuleCard.FromString,
                 _registered_method=True)
+        self.ObserveArchitectureHistory = channel.unary_unary(
+                '/looper.inspector.v3.Inspector/ObserveArchitectureHistory',
+                request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.HistoryRequest.SerializeToString,
+                response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ArchitectureHistory.FromString,
+                _registered_method=True)
         self.ObserveStateMachines = channel.unary_unary(
                 '/looper.inspector.v3.Inspector/ObserveStateMachines',
                 request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
@@ -1164,6 +1169,15 @@ class InspectorServicer:
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def ObserveArchitectureHistory(self, request, context):
+        """The architecture's history (Pro, stage 5.6): one run per commit the code
+        was read at (written by the server once the index is complete and the
+        commit is new) and per audit, with the series to draw and their labels.
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
     def ObserveStateMachines(self, request, context):
         """The firmware's state machines: a switch over a variable the code sets.
         """
@@ -1665,6 +1679,11 @@ def add_InspectorServicer_to_server(servicer, server):
                     servicer.ObserveModuleCard,
                     request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ModuleCardRequest.FromString,
                     response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ModuleCard.SerializeToString,
+            ),
+            'ObserveArchitectureHistory': grpc.unary_unary_rpc_method_handler(
+                    servicer.ObserveArchitectureHistory,
+                    request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.HistoryRequest.FromString,
+                    response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ArchitectureHistory.SerializeToString,
             ),
             'ObserveStateMachines': grpc.unary_unary_rpc_method_handler(
                     servicer.ObserveStateMachines,
@@ -4056,6 +4075,33 @@ class Inspector:
             '/looper.inspector.v3.Inspector/ObserveModuleCard',
             looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ModuleCardRequest.SerializeToString,
             looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ModuleCard.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def ObserveArchitectureHistory(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/looper.inspector.v3.Inspector/ObserveArchitectureHistory',
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.HistoryRequest.SerializeToString,
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ArchitectureHistory.FromString,
             options,
             channel_credentials,
             insecure,
