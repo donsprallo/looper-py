@@ -1138,6 +1138,11 @@ service Inspector {
   // main loop shares with an interrupt, with its locks (Pro, stage 5.1).
   // Read from the code; a run backs the findings with evidence later.
   rpc ObserveIsrContexts(IsrContextRequest) returns (IsrContextView);
+  // The stack each context needs at most -- the deepest path in bytes over
+  // the calls of the code, with the frame sizes a compiler wrote with
+  // -fstack-usage (.su) -- and the main loop with the deepest ISR on top
+  // (Pro, stage 5.3). The measured path of a run comes with a simulation.
+  rpc ObserveStackWorstCase(StackRequest) returns (StackWorstCaseView);
   // The firmware's state machines: a switch over a variable the code sets.
   rpc ObserveStateMachines(Empty) returns (StateMachineList);
   rpc ObserveStateMachine(StateMachineChoice) returns (FirmwareStateMachine);
@@ -2699,6 +2704,66 @@ message IsrContextView {
   string word_text = 9;          // "Target word 32 bits (thumbv7em-none-eabi)" / "Word width unknown – set [isr] word_bits"
   string run_text = 10;          // "Static – no run"
   string state_text = 11;        // the empty state, else ""
+}
+
+// Whose bytes a frame has.
+enum FrameBytes {
+  FRAME_BYTES_NONE = 0;
+  FRAME_BYTES_TARGET = 1;          // a .su file of a build for the target
+  FRAME_BYTES_HOST_SU = 2;         // a .su file of this PC's build: the path carries over, the bytes do not
+  FRAME_BYTES_HOST_MEASURED = 3;   // measured in a run of this PC's build
+}
+
+message StackRequest {
+  string context_id = 1;         // "" the main loop
+  uint64 known_revision = 2;
+}
+
+message StackPathFrame {
+  string function = 1;
+  string module = 2;
+  string path = 3;
+  uint32 line = 4;
+  uint64 bytes = 5;
+  string bytes_text = 6;         // "256 B"
+  FrameBytes bytes_from = 7;
+  bool dynamic = 8;
+  bool never_ran = 9;
+  bool by_pointer = 10;
+  string note = 11;              // "recursion: walk calls itself"
+}
+
+message StackEntry {
+  string context_id = 1;
+  string title = 2;
+  uint64 worst_bytes = 3;
+  string worst_text = 4;         // "412 B", "unbounded"
+  bool bounded = 5;
+  string unbounded_text = 6;     // why there is no bound
+  uint64 measured_bytes = 7;
+  string measured_text = 8;      // "" without a run
+  repeated StackPathFrame worst_path = 9;      // only of the chosen entry
+  repeated StackPathFrame measured_path = 10;  // only of the chosen entry
+  string gap_text = 11;          // "The deepest static path never ran – a test is missing."
+  ContextKind kind = 12;
+}
+
+message StackWorstCaseView {
+  uint64 revision = 1;
+  bool unchanged = 2;
+  IndexProgress progress = 3;
+  repeated StackEntry entries = 4;   // one per context; paths only in the chosen one
+  string chosen_id = 5;
+  FrameBytes worst_bytes_from = 6;
+  FrameBytes measured_bytes_from = 7;
+  string frames_text = 8;            // "5 .su files from su/arm (target thumbv7em-none-eabi) · 23 functions"
+  string host_hint = 9;              // "Frame sizes of this PC's build – …", "" with the target's bytes
+  uint64 total_bytes = 10;
+  string total_text = 11;            // "main 412 B + deepest ISR 96 B = 508 B"
+  uint64 size_bytes = 12;
+  string size_text = 13;             // "2 048 B · 25 % used", from [stack] size
+  string state_text = 14;            // the empty state, else ""
+  string produce_text = 15;          // the offer to compute the target's frames, "" without one
 }
 
 message FindingList {

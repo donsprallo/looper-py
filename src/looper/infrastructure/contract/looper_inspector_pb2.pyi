@@ -297,6 +297,13 @@ class IsrOrigin(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     ISR_ORIGIN_ATTRIBUTE: _ClassVar[IsrOrigin]
     ISR_ORIGIN_RULES: _ClassVar[IsrOrigin]
 
+class FrameBytes(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+    __slots__ = ()
+    FRAME_BYTES_NONE: _ClassVar[FrameBytes]
+    FRAME_BYTES_TARGET: _ClassVar[FrameBytes]
+    FRAME_BYTES_HOST_SU: _ClassVar[FrameBytes]
+    FRAME_BYTES_HOST_MEASURED: _ClassVar[FrameBytes]
+
 class NestingKind(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     __slots__ = ()
     NESTING_KIND_NONE: _ClassVar[NestingKind]
@@ -548,6 +555,10 @@ ISR_ORIGIN_CONTRACT: IsrOrigin
 ISR_ORIGIN_VECTOR_TABLE: IsrOrigin
 ISR_ORIGIN_ATTRIBUTE: IsrOrigin
 ISR_ORIGIN_RULES: IsrOrigin
+FRAME_BYTES_NONE: FrameBytes
+FRAME_BYTES_TARGET: FrameBytes
+FRAME_BYTES_HOST_SU: FrameBytes
+FRAME_BYTES_HOST_MEASURED: FrameBytes
 NESTING_KIND_NONE: NestingKind
 NESTING_KIND_INSIDE: NestingKind
 NESTING_KIND_ALSO_OUTSIDE: NestingKind
@@ -3872,6 +3883,102 @@ class IsrContextView(_message.Message):
     run_text: str
     state_text: str
     def __init__(self, revision: _Optional[int] = ..., unchanged: _Optional[bool] = ..., progress: _Optional[_Union[IndexProgress, _Mapping]] = ..., contexts: _Optional[_Iterable[_Union[ExecutionContext, _Mapping]]] = ..., chosen_id: _Optional[str] = ..., functions: _Optional[_Iterable[_Union[ReachedFunction, _Mapping]]] = ..., shared: _Optional[_Iterable[_Union[SharedVariable, _Mapping]]] = ..., locks_text: _Optional[str] = ..., word_text: _Optional[str] = ..., run_text: _Optional[str] = ..., state_text: _Optional[str] = ...) -> None: ...
+
+class StackRequest(_message.Message):
+    __slots__ = ("context_id", "known_revision")
+    CONTEXT_ID_FIELD_NUMBER: _ClassVar[int]
+    KNOWN_REVISION_FIELD_NUMBER: _ClassVar[int]
+    context_id: str
+    known_revision: int
+    def __init__(self, context_id: _Optional[str] = ..., known_revision: _Optional[int] = ...) -> None: ...
+
+class StackPathFrame(_message.Message):
+    __slots__ = ("function", "module", "path", "line", "bytes", "bytes_text", "bytes_from", "dynamic", "never_ran", "by_pointer", "note")
+    FUNCTION_FIELD_NUMBER: _ClassVar[int]
+    MODULE_FIELD_NUMBER: _ClassVar[int]
+    PATH_FIELD_NUMBER: _ClassVar[int]
+    LINE_FIELD_NUMBER: _ClassVar[int]
+    BYTES_FIELD_NUMBER: _ClassVar[int]
+    BYTES_TEXT_FIELD_NUMBER: _ClassVar[int]
+    BYTES_FROM_FIELD_NUMBER: _ClassVar[int]
+    DYNAMIC_FIELD_NUMBER: _ClassVar[int]
+    NEVER_RAN_FIELD_NUMBER: _ClassVar[int]
+    BY_POINTER_FIELD_NUMBER: _ClassVar[int]
+    NOTE_FIELD_NUMBER: _ClassVar[int]
+    function: str
+    module: str
+    path: str
+    line: int
+    bytes: int
+    bytes_text: str
+    bytes_from: FrameBytes
+    dynamic: bool
+    never_ran: bool
+    by_pointer: bool
+    note: str
+    def __init__(self, function: _Optional[str] = ..., module: _Optional[str] = ..., path: _Optional[str] = ..., line: _Optional[int] = ..., bytes: _Optional[int] = ..., bytes_text: _Optional[str] = ..., bytes_from: _Optional[_Union[FrameBytes, str]] = ..., dynamic: _Optional[bool] = ..., never_ran: _Optional[bool] = ..., by_pointer: _Optional[bool] = ..., note: _Optional[str] = ...) -> None: ...
+
+class StackEntry(_message.Message):
+    __slots__ = ("context_id", "title", "worst_bytes", "worst_text", "bounded", "unbounded_text", "measured_bytes", "measured_text", "worst_path", "measured_path", "gap_text", "kind")
+    CONTEXT_ID_FIELD_NUMBER: _ClassVar[int]
+    TITLE_FIELD_NUMBER: _ClassVar[int]
+    WORST_BYTES_FIELD_NUMBER: _ClassVar[int]
+    WORST_TEXT_FIELD_NUMBER: _ClassVar[int]
+    BOUNDED_FIELD_NUMBER: _ClassVar[int]
+    UNBOUNDED_TEXT_FIELD_NUMBER: _ClassVar[int]
+    MEASURED_BYTES_FIELD_NUMBER: _ClassVar[int]
+    MEASURED_TEXT_FIELD_NUMBER: _ClassVar[int]
+    WORST_PATH_FIELD_NUMBER: _ClassVar[int]
+    MEASURED_PATH_FIELD_NUMBER: _ClassVar[int]
+    GAP_TEXT_FIELD_NUMBER: _ClassVar[int]
+    KIND_FIELD_NUMBER: _ClassVar[int]
+    context_id: str
+    title: str
+    worst_bytes: int
+    worst_text: str
+    bounded: bool
+    unbounded_text: str
+    measured_bytes: int
+    measured_text: str
+    worst_path: _containers.RepeatedCompositeFieldContainer[StackPathFrame]
+    measured_path: _containers.RepeatedCompositeFieldContainer[StackPathFrame]
+    gap_text: str
+    kind: ContextKind
+    def __init__(self, context_id: _Optional[str] = ..., title: _Optional[str] = ..., worst_bytes: _Optional[int] = ..., worst_text: _Optional[str] = ..., bounded: _Optional[bool] = ..., unbounded_text: _Optional[str] = ..., measured_bytes: _Optional[int] = ..., measured_text: _Optional[str] = ..., worst_path: _Optional[_Iterable[_Union[StackPathFrame, _Mapping]]] = ..., measured_path: _Optional[_Iterable[_Union[StackPathFrame, _Mapping]]] = ..., gap_text: _Optional[str] = ..., kind: _Optional[_Union[ContextKind, str]] = ...) -> None: ...
+
+class StackWorstCaseView(_message.Message):
+    __slots__ = ("revision", "unchanged", "progress", "entries", "chosen_id", "worst_bytes_from", "measured_bytes_from", "frames_text", "host_hint", "total_bytes", "total_text", "size_bytes", "size_text", "state_text", "produce_text")
+    REVISION_FIELD_NUMBER: _ClassVar[int]
+    UNCHANGED_FIELD_NUMBER: _ClassVar[int]
+    PROGRESS_FIELD_NUMBER: _ClassVar[int]
+    ENTRIES_FIELD_NUMBER: _ClassVar[int]
+    CHOSEN_ID_FIELD_NUMBER: _ClassVar[int]
+    WORST_BYTES_FROM_FIELD_NUMBER: _ClassVar[int]
+    MEASURED_BYTES_FROM_FIELD_NUMBER: _ClassVar[int]
+    FRAMES_TEXT_FIELD_NUMBER: _ClassVar[int]
+    HOST_HINT_FIELD_NUMBER: _ClassVar[int]
+    TOTAL_BYTES_FIELD_NUMBER: _ClassVar[int]
+    TOTAL_TEXT_FIELD_NUMBER: _ClassVar[int]
+    SIZE_BYTES_FIELD_NUMBER: _ClassVar[int]
+    SIZE_TEXT_FIELD_NUMBER: _ClassVar[int]
+    STATE_TEXT_FIELD_NUMBER: _ClassVar[int]
+    PRODUCE_TEXT_FIELD_NUMBER: _ClassVar[int]
+    revision: int
+    unchanged: bool
+    progress: IndexProgress
+    entries: _containers.RepeatedCompositeFieldContainer[StackEntry]
+    chosen_id: str
+    worst_bytes_from: FrameBytes
+    measured_bytes_from: FrameBytes
+    frames_text: str
+    host_hint: str
+    total_bytes: int
+    total_text: str
+    size_bytes: int
+    size_text: str
+    state_text: str
+    produce_text: str
+    def __init__(self, revision: _Optional[int] = ..., unchanged: _Optional[bool] = ..., progress: _Optional[_Union[IndexProgress, _Mapping]] = ..., entries: _Optional[_Iterable[_Union[StackEntry, _Mapping]]] = ..., chosen_id: _Optional[str] = ..., worst_bytes_from: _Optional[_Union[FrameBytes, str]] = ..., measured_bytes_from: _Optional[_Union[FrameBytes, str]] = ..., frames_text: _Optional[str] = ..., host_hint: _Optional[str] = ..., total_bytes: _Optional[int] = ..., total_text: _Optional[str] = ..., size_bytes: _Optional[int] = ..., size_text: _Optional[str] = ..., state_text: _Optional[str] = ..., produce_text: _Optional[str] = ...) -> None: ...
 
 class FindingList(_message.Message):
     __slots__ = ("revision", "unchanged", "findings", "complete", "note", "fixed")

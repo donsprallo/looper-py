@@ -459,6 +459,11 @@ class InspectorStub:
                 request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.IsrContextRequest.SerializeToString,
                 response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.IsrContextView.FromString,
                 _registered_method=True)
+        self.ObserveStackWorstCase = channel.unary_unary(
+                '/looper.inspector.v3.Inspector/ObserveStackWorstCase',
+                request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.StackRequest.SerializeToString,
+                response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.StackWorstCaseView.FromString,
+                _registered_method=True)
         self.ObserveStateMachines = channel.unary_unary(
                 '/looper.inspector.v3.Inspector/ObserveStateMachines',
                 request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
@@ -1132,6 +1137,16 @@ class InspectorServicer:
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def ObserveStackWorstCase(self, request, context):
+        """The stack each context needs at most -- the deepest path in bytes over
+        the calls of the code, with the frame sizes a compiler wrote with
+        -fstack-usage (.su) -- and the main loop with the deepest ISR on top
+        (Pro, stage 5.3). The measured path of a run comes with a simulation.
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
     def ObserveStateMachines(self, request, context):
         """The firmware's state machines: a switch over a variable the code sets.
         """
@@ -1623,6 +1638,11 @@ def add_InspectorServicer_to_server(servicer, server):
                     servicer.ObserveIsrContexts,
                     request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.IsrContextRequest.FromString,
                     response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.IsrContextView.SerializeToString,
+            ),
+            'ObserveStackWorstCase': grpc.unary_unary_rpc_method_handler(
+                    servicer.ObserveStackWorstCase,
+                    request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.StackRequest.FromString,
+                    response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.StackWorstCaseView.SerializeToString,
             ),
             'ObserveStateMachines': grpc.unary_unary_rpc_method_handler(
                     servicer.ObserveStateMachines,
@@ -3960,6 +3980,33 @@ class Inspector:
             '/looper.inspector.v3.Inspector/ObserveIsrContexts',
             looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.IsrContextRequest.SerializeToString,
             looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.IsrContextView.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def ObserveStackWorstCase(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/looper.inspector.v3.Inspector/ObserveStackWorstCase',
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.StackRequest.SerializeToString,
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.StackWorstCaseView.FromString,
             options,
             channel_credentials,
             insecure,
