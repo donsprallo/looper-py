@@ -36,7 +36,7 @@ class InspectorStub:
         """
         self.Describe = channel.unary_unary(
                 '/looper.inspector.v3.Inspector/Describe',
-                request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
+                request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.DescribeRequest.SerializeToString,
                 response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Description.FromString,
                 _registered_method=True)
         self.ControlRun = channel.unary_unary(
@@ -514,13 +514,19 @@ class InspectorStub:
                 request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
                 response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.TargetView.FromString,
                 _registered_method=True)
+        self.Pair = channel.unary_unary(
+                '/looper.inspector.v3.Inspector/Pair',
+                request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.PairRequest.SerializeToString,
+                response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.PairView.FromString,
+                _registered_method=True)
 
 
 class InspectorServicer:
     """Missing associated documentation comment in .proto file."""
 
     def Describe(self, request, context):
-        """Missing associated documentation comment in .proto file."""
+        """A client that names itself is told whether it can use this server.
+        """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
@@ -1242,12 +1248,22 @@ class InspectorServicer:
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def Pair(self, request, context):
+        """---- Server ----
+        Trade a pairing code for a token. Only over TLS, on a server that
+        listens beyond this PC; a server on this PC alone refuses it with
+        FAILED_PRECONDITION and a sentence.
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_InspectorServicer_to_server(servicer, server):
     rpc_method_handlers = {
             'Describe': grpc.unary_unary_rpc_method_handler(
                     servicer.Describe,
-                    request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.FromString,
+                    request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.DescribeRequest.FromString,
                     response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Description.SerializeToString,
             ),
             'ControlRun': grpc.unary_unary_rpc_method_handler(
@@ -1725,6 +1741,11 @@ def add_InspectorServicer_to_server(servicer, server):
                     request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.FromString,
                     response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.TargetView.SerializeToString,
             ),
+            'Pair': grpc.unary_unary_rpc_method_handler(
+                    servicer.Pair,
+                    request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.PairRequest.FromString,
+                    response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.PairView.SerializeToString,
+            ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
             'looper.inspector.v3.Inspector', rpc_method_handlers)
@@ -1751,7 +1772,7 @@ class Inspector:
             request,
             target,
             '/looper.inspector.v3.Inspector/Describe',
-            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.DescribeRequest.SerializeToString,
             looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Description.FromString,
             options,
             channel_credentials,
@@ -4318,6 +4339,33 @@ class Inspector:
             '/looper.inspector.v3.Inspector/ObserveTarget',
             looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
             looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.TargetView.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def Pair(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/looper.inspector.v3.Inspector/Pair',
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.PairRequest.SerializeToString,
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.PairView.FromString,
             options,
             channel_credentials,
             insecure,

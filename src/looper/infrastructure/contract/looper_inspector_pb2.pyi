@@ -25,6 +25,20 @@ class Refusal(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     REFUSAL_OTHER: _ClassVar[Refusal]
     REFUSAL_RESETTING: _ClassVar[Refusal]
 
+class StartedBy(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+    __slots__ = ()
+    STARTED_BY_UNSPECIFIED: _ClassVar[StartedBy]
+    STARTED_BY_TERMINAL: _ClassVar[StartedBy]
+    STARTED_BY_WINDOW: _ClassVar[StartedBy]
+    STARTED_BY_TEST: _ClassVar[StartedBy]
+
+class ClientKind(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+    __slots__ = ()
+    CLIENT_KIND_UNSPECIFIED: _ClassVar[ClientKind]
+    CLIENT_KIND_WINDOW: _ClassVar[ClientKind]
+    CLIENT_KIND_TEST: _ClassVar[ClientKind]
+    CLIENT_KIND_SCRIPT: _ClassVar[ClientKind]
+
 class Edition(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     __slots__ = ()
     EDITION_FREE: _ClassVar[Edition]
@@ -398,6 +412,14 @@ REFUSAL_INVALID: Refusal
 REFUSAL_WRONG_MODE: Refusal
 REFUSAL_OTHER: Refusal
 REFUSAL_RESETTING: Refusal
+STARTED_BY_UNSPECIFIED: StartedBy
+STARTED_BY_TERMINAL: StartedBy
+STARTED_BY_WINDOW: StartedBy
+STARTED_BY_TEST: StartedBy
+CLIENT_KIND_UNSPECIFIED: ClientKind
+CLIENT_KIND_WINDOW: ClientKind
+CLIENT_KIND_TEST: ClientKind
+CLIENT_KIND_SCRIPT: ClientKind
 EDITION_FREE: Edition
 EDITION_PRO: Edition
 PRO_FEATURE_UNSPECIFIED: ProFeature
@@ -659,7 +681,7 @@ class When(_message.Message):
     def __init__(self, at_us: _Optional[int] = ..., after_us: _Optional[int] = ..., allow_late: _Optional[bool] = ...) -> None: ...
 
 class Description(_message.Message):
-    __slots__ = ("contract_version", "firmware_name", "reads_the_build", "definition_path", "capabilities", "retention_us", "max_events_per_batch", "mode", "mode_text", "input_text", "license", "refused_calls")
+    __slots__ = ("contract_version", "firmware_name", "reads_the_build", "definition_path", "capabilities", "retention_us", "max_events_per_batch", "mode", "mode_text", "input_text", "license", "refused_calls", "server_id", "instance_id", "started_at_unix_ms", "started_text", "started_by", "owner_pid", "started_by_text", "started_by_short_text", "lifetime_text", "clients", "clients_text", "clients_short_text", "mode_short_text", "definition_text", "host_text", "server_version_text", "compatible", "compatibility_text", "token_required", "tls", "certificate_sha256")
     CONTRACT_VERSION_FIELD_NUMBER: _ClassVar[int]
     FIRMWARE_NAME_FIELD_NUMBER: _ClassVar[int]
     READS_THE_BUILD_FIELD_NUMBER: _ClassVar[int]
@@ -672,6 +694,27 @@ class Description(_message.Message):
     INPUT_TEXT_FIELD_NUMBER: _ClassVar[int]
     LICENSE_FIELD_NUMBER: _ClassVar[int]
     REFUSED_CALLS_FIELD_NUMBER: _ClassVar[int]
+    SERVER_ID_FIELD_NUMBER: _ClassVar[int]
+    INSTANCE_ID_FIELD_NUMBER: _ClassVar[int]
+    STARTED_AT_UNIX_MS_FIELD_NUMBER: _ClassVar[int]
+    STARTED_TEXT_FIELD_NUMBER: _ClassVar[int]
+    STARTED_BY_FIELD_NUMBER: _ClassVar[int]
+    OWNER_PID_FIELD_NUMBER: _ClassVar[int]
+    STARTED_BY_TEXT_FIELD_NUMBER: _ClassVar[int]
+    STARTED_BY_SHORT_TEXT_FIELD_NUMBER: _ClassVar[int]
+    LIFETIME_TEXT_FIELD_NUMBER: _ClassVar[int]
+    CLIENTS_FIELD_NUMBER: _ClassVar[int]
+    CLIENTS_TEXT_FIELD_NUMBER: _ClassVar[int]
+    CLIENTS_SHORT_TEXT_FIELD_NUMBER: _ClassVar[int]
+    MODE_SHORT_TEXT_FIELD_NUMBER: _ClassVar[int]
+    DEFINITION_TEXT_FIELD_NUMBER: _ClassVar[int]
+    HOST_TEXT_FIELD_NUMBER: _ClassVar[int]
+    SERVER_VERSION_TEXT_FIELD_NUMBER: _ClassVar[int]
+    COMPATIBLE_FIELD_NUMBER: _ClassVar[int]
+    COMPATIBILITY_TEXT_FIELD_NUMBER: _ClassVar[int]
+    TOKEN_REQUIRED_FIELD_NUMBER: _ClassVar[int]
+    TLS_FIELD_NUMBER: _ClassVar[int]
+    CERTIFICATE_SHA256_FIELD_NUMBER: _ClassVar[int]
     contract_version: ContractVersion
     firmware_name: str
     reads_the_build: bool
@@ -684,7 +727,58 @@ class Description(_message.Message):
     input_text: str
     license: LicenseView
     refused_calls: _containers.RepeatedCompositeFieldContainer[RefusedCall]
-    def __init__(self, contract_version: _Optional[_Union[ContractVersion, str]] = ..., firmware_name: _Optional[str] = ..., reads_the_build: _Optional[bool] = ..., definition_path: _Optional[str] = ..., capabilities: _Optional[_Iterable[_Union[Capability, str]]] = ..., retention_us: _Optional[int] = ..., max_events_per_batch: _Optional[int] = ..., mode: _Optional[_Union[ServerMode, str]] = ..., mode_text: _Optional[str] = ..., input_text: _Optional[str] = ..., license: _Optional[_Union[LicenseView, _Mapping]] = ..., refused_calls: _Optional[_Iterable[_Union[RefusedCall, _Mapping]]] = ...) -> None: ...
+    server_id: str
+    instance_id: str
+    started_at_unix_ms: int
+    started_text: str
+    started_by: StartedBy
+    owner_pid: int
+    started_by_text: str
+    started_by_short_text: str
+    lifetime_text: str
+    clients: int
+    clients_text: str
+    clients_short_text: str
+    mode_short_text: str
+    definition_text: str
+    host_text: str
+    server_version_text: str
+    compatible: bool
+    compatibility_text: str
+    token_required: bool
+    tls: bool
+    certificate_sha256: str
+    def __init__(self, contract_version: _Optional[_Union[ContractVersion, str]] = ..., firmware_name: _Optional[str] = ..., reads_the_build: _Optional[bool] = ..., definition_path: _Optional[str] = ..., capabilities: _Optional[_Iterable[_Union[Capability, str]]] = ..., retention_us: _Optional[int] = ..., max_events_per_batch: _Optional[int] = ..., mode: _Optional[_Union[ServerMode, str]] = ..., mode_text: _Optional[str] = ..., input_text: _Optional[str] = ..., license: _Optional[_Union[LicenseView, _Mapping]] = ..., refused_calls: _Optional[_Iterable[_Union[RefusedCall, _Mapping]]] = ..., server_id: _Optional[str] = ..., instance_id: _Optional[str] = ..., started_at_unix_ms: _Optional[int] = ..., started_text: _Optional[str] = ..., started_by: _Optional[_Union[StartedBy, str]] = ..., owner_pid: _Optional[int] = ..., started_by_text: _Optional[str] = ..., started_by_short_text: _Optional[str] = ..., lifetime_text: _Optional[str] = ..., clients: _Optional[int] = ..., clients_text: _Optional[str] = ..., clients_short_text: _Optional[str] = ..., mode_short_text: _Optional[str] = ..., definition_text: _Optional[str] = ..., host_text: _Optional[str] = ..., server_version_text: _Optional[str] = ..., compatible: _Optional[bool] = ..., compatibility_text: _Optional[str] = ..., token_required: _Optional[bool] = ..., tls: _Optional[bool] = ..., certificate_sha256: _Optional[str] = ...) -> None: ...
+
+class DescribeRequest(_message.Message):
+    __slots__ = ("client_contract_version", "client_name", "client_kind")
+    CLIENT_CONTRACT_VERSION_FIELD_NUMBER: _ClassVar[int]
+    CLIENT_NAME_FIELD_NUMBER: _ClassVar[int]
+    CLIENT_KIND_FIELD_NUMBER: _ClassVar[int]
+    client_contract_version: ContractVersion
+    client_name: str
+    client_kind: ClientKind
+    def __init__(self, client_contract_version: _Optional[_Union[ContractVersion, str]] = ..., client_name: _Optional[str] = ..., client_kind: _Optional[_Union[ClientKind, str]] = ...) -> None: ...
+
+class PairRequest(_message.Message):
+    __slots__ = ("code", "client_name")
+    CODE_FIELD_NUMBER: _ClassVar[int]
+    CLIENT_NAME_FIELD_NUMBER: _ClassVar[int]
+    code: str
+    client_name: str
+    def __init__(self, code: _Optional[str] = ..., client_name: _Optional[str] = ...) -> None: ...
+
+class PairView(_message.Message):
+    __slots__ = ("paired", "token", "text", "tries_left")
+    PAIRED_FIELD_NUMBER: _ClassVar[int]
+    TOKEN_FIELD_NUMBER: _ClassVar[int]
+    TEXT_FIELD_NUMBER: _ClassVar[int]
+    TRIES_LEFT_FIELD_NUMBER: _ClassVar[int]
+    paired: bool
+    token: str
+    text: str
+    tries_left: int
+    def __init__(self, paired: _Optional[bool] = ..., token: _Optional[str] = ..., text: _Optional[str] = ..., tries_left: _Optional[int] = ...) -> None: ...
 
 class RefusedCall(_message.Message):
     __slots__ = ("rpc", "text")

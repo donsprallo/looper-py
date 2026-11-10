@@ -53,6 +53,7 @@ from looper.infrastructure import (
     translation,
     trigger_translation,
 )
+from looper.infrastructure.client_identity import describe_request
 from looper.infrastructure.contract import looper_inspector_pb2 as contract
 from looper.infrastructure.contract import looper_inspector_pb2_grpc as service
 from looper.infrastructure.grpc_boot import GrpcBootCalls
@@ -106,7 +107,7 @@ class GrpcInspector(GrpcBootCalls, GrpcInterruptCalls, GrpcChainCalls, Inspector
 
     def describe(self) -> Description:
         """What the server is attached to."""
-        return translation.description_of(self._call(self._stub.Describe, EMPTY))
+        return translation.description_of(self._call(self._stub.Describe, describe_request()))
 
     def read_events(self, epoch: int, from_event_seq: int) -> EventPage:
         """One page of samples and exchanges, from an event number on."""

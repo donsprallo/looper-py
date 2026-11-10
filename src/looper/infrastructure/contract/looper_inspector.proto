@@ -136,8 +136,78 @@ message Description {
   // that a client greys out what is not offered before it asks. A call
   // locked by the licence is not listed: LicenseView says that.
   repeated RefusedCall refused_calls = 13;
+
+  // ---- Server discovery: fields 14 to 39 are reserved for it ----
+  // What looper-srv says about the process that answers: which installation
+  // and which start it is, who started it and how long it lives, who is
+  // attached, and whether the asking client can use it. Every text is the
+  // server's, so that a list of servers shows them as they are.
+  string server_id = 14;              // stable per installation and user, e.g. "srv-2b7c..."
+  string instance_id = 15;            // this process; the name of its registry entry
+  int64 started_at_unix_ms = 16;
+  string started_text = 17;           // e.g. "10:42", "yesterday", "3 Nov"
+  StartedBy started_by = 18;
+  uint32 owner_pid = 19;              // the window or test that started it; 0 for none
+  string started_by_text = 20;        // e.g. "Started by a looper-rs window (pid 5678)."
+  string started_by_short_text = 21;  // e.g. "window (pid 5678)"
+  string lifetime_text = 22;          // e.g. "It ends when that window closes or leaves it."
+  uint32 clients = 23;                // connections that asked more than Describe
+  string clients_text = 24;           // e.g. "2 windows and 1 test attached"
+  string clients_short_text = 25;     // e.g. "2 clients", "1 window", "–"
+  string mode_short_text = 26;        // "simulation", "code" or "board"
+  string definition_text = 27;        // e.g. "blinky/looper.toml"
+  string host_text = 28;              // the machine's name, e.g. "lab-pc-3"
+  string server_version_text = 29;    // e.g. "looper-srv 0.1.0"
+  // Whether the client that asked, by its DescribeRequest, can use this
+  // server; when not, compatibility_text says why and what to update. A
+  // client that names no contract version is judged by contract_version.
+  bool compatible = 30;
+  string compatibility_text = 31;
+  bool token_required = 32;           // the server listens beyond this PC and wants a token
+  bool tls = 33;                      // the server speaks TLS; a typed address is dialled so
+  string certificate_sha256 = 34;     // the fingerprint of its certificate, when it speaks TLS
+
   reserved 3;
   reserved "time_mode";
+}
+
+// Who started a server, so that a list can say how long it lives.
+enum StartedBy {
+  STARTED_BY_UNSPECIFIED = 0;
+  STARTED_BY_TERMINAL = 1;   // a person, in a terminal; it runs until stopped there
+  STARTED_BY_WINDOW = 2;     // a looper-rs window; it ends when that window closes or leaves it
+  STARTED_BY_TEST = 3;       // a test; it ends with the test
+}
+
+// What kind of client asks, so that the server counts windows and tests
+// without reading their names.
+enum ClientKind {
+  CLIENT_KIND_UNSPECIFIED = 0;
+  CLIENT_KIND_WINDOW = 1;
+  CLIENT_KIND_TEST = 2;
+  CLIENT_KIND_SCRIPT = 3;
+}
+
+// Who asks Describe. Every field may be left out: an old client sends an
+// empty message (formerly Empty, which is the same on the wire), and a look
+// from a list of servers names nobody, so that it is not counted.
+message DescribeRequest {
+  ContractVersion client_contract_version = 1;
+  string client_name = 2;   // e.g. "looper-rs window (pid 5678)"
+  ClientKind client_kind = 3;
+}
+
+// A pairing code read off the server's terminal, traded for a token.
+message PairRequest {
+  string code = 1;          // e.g. "K7Q-4MX"
+  string client_name = 2;
+}
+
+message PairView {
+  bool paired = 1;
+  string token = 2;         // the token to send as `authorization: Bearer`, when paired
+  string text = 3;          // what happened, e.g. "Paired." or why not
+  uint32 tries_left = 4;
 }
 
 message RefusedCall {
@@ -923,7 +993,8 @@ message ViewPosition {
 }
 
 service Inspector {
-  rpc Describe(Empty) returns (Description);
+  // A client that names itself is told whether it can use this server.
+  rpc Describe(DescribeRequest) returns (Description);
 
   // ---- Running ----
   // Returns at once; a run in progress is seen in RunState.target_us and
@@ -1179,6 +1250,12 @@ service Inspector {
   // the probe is opened anew, the board attached, the licence read again.
   rpc FlashFirmware(FlashFirmwareRequest) returns (FlashFirmwareView);
   rpc ObserveTarget(Empty) returns (TargetView);
+
+  // ---- Server ----
+  // Trade a pairing code for a token. Only over TLS, on a server that
+  // listens beyond this PC; a server on this PC alone refuses it with
+  // FAILED_PRECONDITION and a sentence.
+  rpc Pair(PairRequest) returns (PairView);
 }
 
 message FlashFirmwareRequest {
