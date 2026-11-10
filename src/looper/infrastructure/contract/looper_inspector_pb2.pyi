@@ -4051,6 +4051,68 @@ class IsrContextView(_message.Message):
     state_text: str
     def __init__(self, revision: _Optional[int] = ..., unchanged: _Optional[bool] = ..., progress: _Optional[_Union[IndexProgress, _Mapping]] = ..., contexts: _Optional[_Iterable[_Union[ExecutionContext, _Mapping]]] = ..., chosen_id: _Optional[str] = ..., functions: _Optional[_Iterable[_Union[ReachedFunction, _Mapping]]] = ..., shared: _Optional[_Iterable[_Union[SharedVariable, _Mapping]]] = ..., locks_text: _Optional[str] = ..., word_text: _Optional[str] = ..., run_text: _Optional[str] = ..., state_text: _Optional[str] = ...) -> None: ...
 
+class HotspotPoint(_message.Message):
+    __slots__ = ("function", "module", "path", "line", "cognitive", "cognitive_text", "calls_per_second", "rate_text", "tier", "quadrant", "code_lines")
+    FUNCTION_FIELD_NUMBER: _ClassVar[int]
+    MODULE_FIELD_NUMBER: _ClassVar[int]
+    PATH_FIELD_NUMBER: _ClassVar[int]
+    LINE_FIELD_NUMBER: _ClassVar[int]
+    COGNITIVE_FIELD_NUMBER: _ClassVar[int]
+    COGNITIVE_TEXT_FIELD_NUMBER: _ClassVar[int]
+    CALLS_PER_SECOND_FIELD_NUMBER: _ClassVar[int]
+    RATE_TEXT_FIELD_NUMBER: _ClassVar[int]
+    TIER_FIELD_NUMBER: _ClassVar[int]
+    QUADRANT_FIELD_NUMBER: _ClassVar[int]
+    CODE_LINES_FIELD_NUMBER: _ClassVar[int]
+    function: str
+    module: str
+    path: str
+    line: int
+    cognitive: float
+    cognitive_text: str
+    calls_per_second: float
+    rate_text: str
+    tier: Tier
+    quadrant: int
+    code_lines: int
+    def __init__(self, function: _Optional[str] = ..., module: _Optional[str] = ..., path: _Optional[str] = ..., line: _Optional[int] = ..., cognitive: _Optional[float] = ..., cognitive_text: _Optional[str] = ..., calls_per_second: _Optional[float] = ..., rate_text: _Optional[str] = ..., tier: _Optional[_Union[Tier, str]] = ..., quadrant: _Optional[int] = ..., code_lines: _Optional[int] = ...) -> None: ...
+
+class HotspotQuadrant(_message.Message):
+    __slots__ = ("quadrant", "title", "text", "functions")
+    QUADRANT_FIELD_NUMBER: _ClassVar[int]
+    TITLE_FIELD_NUMBER: _ClassVar[int]
+    TEXT_FIELD_NUMBER: _ClassVar[int]
+    FUNCTIONS_FIELD_NUMBER: _ClassVar[int]
+    quadrant: int
+    title: str
+    text: str
+    functions: int
+    def __init__(self, quadrant: _Optional[int] = ..., title: _Optional[str] = ..., text: _Optional[str] = ..., functions: _Optional[int] = ...) -> None: ...
+
+class HotspotMatrixView(_message.Message):
+    __slots__ = ("revision", "unchanged", "cognitive_limit", "cognitive_limit_text", "rate_limit", "rate_limit_text", "quadrants", "points", "source_text", "state_text")
+    REVISION_FIELD_NUMBER: _ClassVar[int]
+    UNCHANGED_FIELD_NUMBER: _ClassVar[int]
+    COGNITIVE_LIMIT_FIELD_NUMBER: _ClassVar[int]
+    COGNITIVE_LIMIT_TEXT_FIELD_NUMBER: _ClassVar[int]
+    RATE_LIMIT_FIELD_NUMBER: _ClassVar[int]
+    RATE_LIMIT_TEXT_FIELD_NUMBER: _ClassVar[int]
+    QUADRANTS_FIELD_NUMBER: _ClassVar[int]
+    POINTS_FIELD_NUMBER: _ClassVar[int]
+    SOURCE_TEXT_FIELD_NUMBER: _ClassVar[int]
+    STATE_TEXT_FIELD_NUMBER: _ClassVar[int]
+    revision: int
+    unchanged: bool
+    cognitive_limit: float
+    cognitive_limit_text: str
+    rate_limit: float
+    rate_limit_text: str
+    quadrants: _containers.RepeatedCompositeFieldContainer[HotspotQuadrant]
+    points: _containers.RepeatedCompositeFieldContainer[HotspotPoint]
+    source_text: str
+    state_text: str
+    def __init__(self, revision: _Optional[int] = ..., unchanged: _Optional[bool] = ..., cognitive_limit: _Optional[float] = ..., cognitive_limit_text: _Optional[str] = ..., rate_limit: _Optional[float] = ..., rate_limit_text: _Optional[str] = ..., quadrants: _Optional[_Iterable[_Union[HotspotQuadrant, _Mapping]]] = ..., points: _Optional[_Iterable[_Union[HotspotPoint, _Mapping]]] = ..., source_text: _Optional[str] = ..., state_text: _Optional[str] = ...) -> None: ...
+
 class StackRequest(_message.Message):
     __slots__ = ("context_id", "known_revision")
     CONTEXT_ID_FIELD_NUMBER: _ClassVar[int]

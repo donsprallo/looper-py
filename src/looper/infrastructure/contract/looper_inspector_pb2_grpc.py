@@ -464,6 +464,11 @@ class InspectorStub:
                 request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.StackRequest.SerializeToString,
                 response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.StackWorstCaseView.FromString,
                 _registered_method=True)
+        self.ObserveHotspotMatrix = channel.unary_unary(
+                '/looper.inspector.v3.Inspector/ObserveHotspotMatrix',
+                request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ArchitectureRequest.SerializeToString,
+                response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.HotspotMatrixView.FromString,
+                _registered_method=True)
         self.ObserveModuleCard = channel.unary_unary(
                 '/looper.inspector.v3.Inspector/ObserveModuleCard',
                 request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ModuleCardRequest.SerializeToString,
@@ -1163,6 +1168,16 @@ class InspectorServicer:
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def ObserveHotspotMatrix(self, request, context):
+        """Every function the run called, by its cognitive complexity and how often
+        it runs, in four quadrants whose lines and names the server draws (Pro,
+        stage 5.2c). Only in a simulation: the rate is calls per simulated
+        second since the matrix was first asked for.
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
     def ObserveModuleCard(self, request, context):
         """A module's card (stage 5.4): its interface and private parts, its
         globals and its types with their layout, for C and C++ alike. Free --
@@ -1690,6 +1705,11 @@ def add_InspectorServicer_to_server(servicer, server):
                     servicer.ObserveStackWorstCase,
                     request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.StackRequest.FromString,
                     response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.StackWorstCaseView.SerializeToString,
+            ),
+            'ObserveHotspotMatrix': grpc.unary_unary_rpc_method_handler(
+                    servicer.ObserveHotspotMatrix,
+                    request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ArchitectureRequest.FromString,
+                    response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.HotspotMatrixView.SerializeToString,
             ),
             'ObserveModuleCard': grpc.unary_unary_rpc_method_handler(
                     servicer.ObserveModuleCard,
@@ -4069,6 +4089,33 @@ class Inspector:
             '/looper.inspector.v3.Inspector/ObserveStackWorstCase',
             looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.StackRequest.SerializeToString,
             looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.StackWorstCaseView.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def ObserveHotspotMatrix(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/looper.inspector.v3.Inspector/ObserveHotspotMatrix',
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ArchitectureRequest.SerializeToString,
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.HotspotMatrixView.FromString,
             options,
             channel_credentials,
             insecure,

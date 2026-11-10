@@ -1214,6 +1214,11 @@ service Inspector {
   // -fstack-usage (.su) -- and the main loop with the deepest ISR on top
   // (Pro, stage 5.3). The measured path of a run comes with a simulation.
   rpc ObserveStackWorstCase(StackRequest) returns (StackWorstCaseView);
+  // Every function the run called, by its cognitive complexity and how often
+  // it runs, in four quadrants whose lines and names the server draws (Pro,
+  // stage 5.2c). Only in a simulation: the rate is calls per simulated
+  // second since the matrix was first asked for.
+  rpc ObserveHotspotMatrix(ArchitectureRequest) returns (HotspotMatrixView);
   // A module's card (stage 5.4): its interface and private parts, its
   // globals and its types with their layout, for C and C++ alike. Free --
   // what the language says -- with the parts looper infers (C methods,
@@ -2828,6 +2833,43 @@ enum FrameBytes {
   FRAME_BYTES_TARGET = 1;          // a .su file of a build for the target
   FRAME_BYTES_HOST_SU = 2;         // a .su file of this PC's build: the path carries over, the bytes do not
   FRAME_BYTES_HOST_MEASURED = 3;   // measured in a run of this PC's build
+}
+
+// One function of the hotspot matrix.
+message HotspotPoint {
+  string function = 1;
+  string module = 2;
+  string path = 3;
+  uint32 line = 4;
+  double cognitive = 5;
+  string cognitive_text = 6;     // "cognitive 18"
+  double calls_per_second = 7;
+  string rate_text = 8;          // "1 204 calls/s"
+  Tier tier = 9;                 // of its cognitive complexity
+  uint32 quadrant = 10;          // 1 to 4, HotspotQuadrant.quadrant
+  uint32 code_lines = 11;
+}
+
+// A quadrant of the matrix: 1 complex and often run, 2 simple and often, 3
+// simple and seldom, 4 complex and seldom.
+message HotspotQuadrant {
+  uint32 quadrant = 1;
+  string title = 2;              // "Refactor first"
+  string text = 3;               // what it means
+  uint32 functions = 4;
+}
+
+message HotspotMatrixView {
+  uint64 revision = 1;
+  bool unchanged = 2;
+  double cognitive_limit = 3;
+  string cognitive_limit_text = 4;   // "cognitive limit 15"
+  double rate_limit = 5;
+  string rate_limit_text = 6;        // "often: from 120 calls/s (top quarter)"
+  repeated HotspotQuadrant quadrants = 7;
+  repeated HotspotPoint points = 8;  // quadrant 1 first, each by rate
+  string source_text = 9;            // "calls from the profile since 12.4 s"
+  string state_text = 10;            // why there are no points; "" with points
 }
 
 message StackRequest {
