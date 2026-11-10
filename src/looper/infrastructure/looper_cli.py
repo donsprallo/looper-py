@@ -5,10 +5,15 @@ contract for it on a free port, which it names on the line that starts with
 `listening on`. It is told to stop when its standard input closes, and that
 input is held here: however the test ends -- finished, failed, killed -- the
 pipe closes with it, and looper-cli stops the simulation and the server.
+
+looper-srv understands the same command. Started from here, it is told that a
+test started it and which process that is, so that a list of servers on this
+PC shows it as a test's, ending with it.
 """
 
 from __future__ import annotations
 
+import os
 import subprocess
 import threading
 from collections.abc import Iterator, Sequence
@@ -21,6 +26,9 @@ LISTENING_PREFIX = "listening on "
 
 #: Where the server should listen: this machine, any free port.
 LISTEN_ANYWHERE_LOCAL = "127.0.0.1:0"
+
+#: What looper-srv's program is called, with or without `.exe`.
+LOOPER_SRV = "looper-srv"
 
 #: How long looper-cli is given to stop the server and the simulation.
 STOP_GRACE_SECONDS = 8.0
@@ -59,6 +67,8 @@ class RunCommand:
             arguments.append("--virtual")
         if not self.build:
             arguments.append("--no-build")
+        if is_looper_srv(self.program):
+            arguments.extend(["--started-by", "test", "--owner-pid", str(os.getpid())])
         return arguments
 
 
@@ -145,6 +155,11 @@ def address_in(line: str) -> str | None:
     if not stripped.startswith(LISTENING_PREFIX):
         return None
     return stripped.removeprefix(LISTENING_PREFIX)
+
+
+def is_looper_srv(program: Sequence[str]) -> bool:
+    """Whether a program is looper-srv, which takes who started it; looper-cli would refuse that."""
+    return bool(program) and Path(program[0]).stem == LOOPER_SRV
 
 
 def program_of(command: str | Sequence[str]) -> tuple[str, ...]:

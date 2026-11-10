@@ -8,6 +8,7 @@ the address read from the right line, and a stop that really stops.
 
 from __future__ import annotations
 
+import os
 import sys
 from pathlib import Path
 
@@ -52,6 +53,17 @@ def test_a_virtual_clock_and_a_skipped_build_are_passed_on() -> None:
 
     assert "--virtual" in arguments
     assert "--no-build" in arguments
+
+
+def test_looper_srv_is_told_that_a_test_started_it_and_looper_cli_is_not() -> None:
+    srv = RunCommand(program=("C:/tools/looper-srv.exe", "--core", "looper-cli")).arguments()
+    cli = RunCommand(program=("looper-cli",)).arguments()
+
+    assert srv[srv.index("--started-by") + 1] == "test"
+    assert srv[srv.index("--owner-pid") + 1] == str(os.getpid())
+    assert srv.index("--started-by") > srv.index("run")
+    assert "--started-by" not in cli
+    assert "--owner-pid" not in cli
 
 
 def test_a_command_given_as_text_is_split_at_spaces() -> None:
