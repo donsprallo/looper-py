@@ -3595,7 +3595,7 @@ message RaceRequest {
 }
 
 enum RaceStrategy {
-  RACE_STRATEGY_ROUND_ROBIN = 0;   // in pass p at the point with index p mod N
+  RACE_STRATEGY_ROUND_ROBIN = 0;   // in each pass at the first point the cycle has not raised at
 }
 
 // What the race mode did since it was switched on. The points are the
