@@ -276,6 +276,27 @@ class Tier(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     TIER_NOTICEABLE: _ClassVar[Tier]
     TIER_CRITICAL: _ClassVar[Tier]
 
+class FindingEvidence(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+    __slots__ = ()
+    FINDING_EVIDENCE_STATIC: _ClassVar[FindingEvidence]
+    FINDING_EVIDENCE_BOTH_RAN: _ClassVar[FindingEvidence]
+    FINDING_EVIDENCE_INTERRUPTED: _ClassVar[FindingEvidence]
+    FINDING_EVIDENCE_NO_POINT: _ClassVar[FindingEvidence]
+
+class ContextKind(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+    __slots__ = ()
+    CONTEXT_KIND_MAIN: _ClassVar[ContextKind]
+    CONTEXT_KIND_ISR: _ClassVar[ContextKind]
+    CONTEXT_KIND_STARTUP: _ClassVar[ContextKind]
+
+class IsrOrigin(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+    __slots__ = ()
+    ISR_ORIGIN_UNSPECIFIED: _ClassVar[IsrOrigin]
+    ISR_ORIGIN_CONTRACT: _ClassVar[IsrOrigin]
+    ISR_ORIGIN_VECTOR_TABLE: _ClassVar[IsrOrigin]
+    ISR_ORIGIN_ATTRIBUTE: _ClassVar[IsrOrigin]
+    ISR_ORIGIN_RULES: _ClassVar[IsrOrigin]
+
 class NestingKind(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     __slots__ = ()
     NESTING_KIND_NONE: _ClassVar[NestingKind]
@@ -515,6 +536,18 @@ RESTART_PHASE_RESTARTING: RestartPhase
 TIER_GOOD: Tier
 TIER_NOTICEABLE: Tier
 TIER_CRITICAL: Tier
+FINDING_EVIDENCE_STATIC: FindingEvidence
+FINDING_EVIDENCE_BOTH_RAN: FindingEvidence
+FINDING_EVIDENCE_INTERRUPTED: FindingEvidence
+FINDING_EVIDENCE_NO_POINT: FindingEvidence
+CONTEXT_KIND_MAIN: ContextKind
+CONTEXT_KIND_ISR: ContextKind
+CONTEXT_KIND_STARTUP: ContextKind
+ISR_ORIGIN_UNSPECIFIED: IsrOrigin
+ISR_ORIGIN_CONTRACT: IsrOrigin
+ISR_ORIGIN_VECTOR_TABLE: IsrOrigin
+ISR_ORIGIN_ATTRIBUTE: IsrOrigin
+ISR_ORIGIN_RULES: IsrOrigin
 NESTING_KIND_NONE: NestingKind
 NESTING_KIND_INSIDE: NestingKind
 NESTING_KIND_ALSO_OUTSIDE: NestingKind
@@ -3647,7 +3680,7 @@ class CodePlace(_message.Message):
     def __init__(self, path: _Optional[str] = ..., line: _Optional[int] = ..., kind: _Optional[str] = ..., what: _Optional[str] = ...) -> None: ...
 
 class ArchitectureFinding(_message.Message):
-    __slots__ = ("key", "kind", "severity", "title", "explanation", "places", "node_ids", "edge_ids", "function", "state", "note")
+    __slots__ = ("key", "kind", "severity", "title", "explanation", "places", "node_ids", "edge_ids", "function", "state", "note", "evidence", "evidence_text", "interrupt_source_id", "evidence_event_seq", "context_ids")
     KEY_FIELD_NUMBER: _ClassVar[int]
     KIND_FIELD_NUMBER: _ClassVar[int]
     SEVERITY_FIELD_NUMBER: _ClassVar[int]
@@ -3659,6 +3692,11 @@ class ArchitectureFinding(_message.Message):
     FUNCTION_FIELD_NUMBER: _ClassVar[int]
     STATE_FIELD_NUMBER: _ClassVar[int]
     NOTE_FIELD_NUMBER: _ClassVar[int]
+    EVIDENCE_FIELD_NUMBER: _ClassVar[int]
+    EVIDENCE_TEXT_FIELD_NUMBER: _ClassVar[int]
+    INTERRUPT_SOURCE_ID_FIELD_NUMBER: _ClassVar[int]
+    EVIDENCE_EVENT_SEQ_FIELD_NUMBER: _ClassVar[int]
+    CONTEXT_IDS_FIELD_NUMBER: _ClassVar[int]
     key: str
     kind: str
     severity: Tier
@@ -3670,7 +3708,154 @@ class ArchitectureFinding(_message.Message):
     function: str
     state: str
     note: str
-    def __init__(self, key: _Optional[str] = ..., kind: _Optional[str] = ..., severity: _Optional[_Union[Tier, str]] = ..., title: _Optional[str] = ..., explanation: _Optional[str] = ..., places: _Optional[_Iterable[_Union[CodePlace, _Mapping]]] = ..., node_ids: _Optional[_Iterable[str]] = ..., edge_ids: _Optional[_Iterable[str]] = ..., function: _Optional[str] = ..., state: _Optional[str] = ..., note: _Optional[str] = ...) -> None: ...
+    evidence: FindingEvidence
+    evidence_text: str
+    interrupt_source_id: int
+    evidence_event_seq: int
+    context_ids: _containers.RepeatedScalarFieldContainer[str]
+    def __init__(self, key: _Optional[str] = ..., kind: _Optional[str] = ..., severity: _Optional[_Union[Tier, str]] = ..., title: _Optional[str] = ..., explanation: _Optional[str] = ..., places: _Optional[_Iterable[_Union[CodePlace, _Mapping]]] = ..., node_ids: _Optional[_Iterable[str]] = ..., edge_ids: _Optional[_Iterable[str]] = ..., function: _Optional[str] = ..., state: _Optional[str] = ..., note: _Optional[str] = ..., evidence: _Optional[_Union[FindingEvidence, str]] = ..., evidence_text: _Optional[str] = ..., interrupt_source_id: _Optional[int] = ..., evidence_event_seq: _Optional[int] = ..., context_ids: _Optional[_Iterable[str]] = ...) -> None: ...
+
+class IsrContextRequest(_message.Message):
+    __slots__ = ("context_id", "known_revision")
+    CONTEXT_ID_FIELD_NUMBER: _ClassVar[int]
+    KNOWN_REVISION_FIELD_NUMBER: _ClassVar[int]
+    context_id: str
+    known_revision: int
+    def __init__(self, context_id: _Optional[str] = ..., known_revision: _Optional[int] = ...) -> None: ...
+
+class ExecutionContext(_message.Message):
+    __slots__ = ("context_id", "kind", "title", "root_function", "path", "line", "origins", "origin_text", "source_name", "source_id", "priority_text", "functions", "reach_text", "run_text", "critical", "noticeable", "note")
+    CONTEXT_ID_FIELD_NUMBER: _ClassVar[int]
+    KIND_FIELD_NUMBER: _ClassVar[int]
+    TITLE_FIELD_NUMBER: _ClassVar[int]
+    ROOT_FUNCTION_FIELD_NUMBER: _ClassVar[int]
+    PATH_FIELD_NUMBER: _ClassVar[int]
+    LINE_FIELD_NUMBER: _ClassVar[int]
+    ORIGINS_FIELD_NUMBER: _ClassVar[int]
+    ORIGIN_TEXT_FIELD_NUMBER: _ClassVar[int]
+    SOURCE_NAME_FIELD_NUMBER: _ClassVar[int]
+    SOURCE_ID_FIELD_NUMBER: _ClassVar[int]
+    PRIORITY_TEXT_FIELD_NUMBER: _ClassVar[int]
+    FUNCTIONS_FIELD_NUMBER: _ClassVar[int]
+    REACH_TEXT_FIELD_NUMBER: _ClassVar[int]
+    RUN_TEXT_FIELD_NUMBER: _ClassVar[int]
+    CRITICAL_FIELD_NUMBER: _ClassVar[int]
+    NOTICEABLE_FIELD_NUMBER: _ClassVar[int]
+    NOTE_FIELD_NUMBER: _ClassVar[int]
+    context_id: str
+    kind: ContextKind
+    title: str
+    root_function: str
+    path: str
+    line: int
+    origins: _containers.RepeatedScalarFieldContainer[IsrOrigin]
+    origin_text: str
+    source_name: str
+    source_id: int
+    priority_text: str
+    functions: int
+    reach_text: str
+    run_text: str
+    critical: int
+    noticeable: int
+    note: str
+    def __init__(self, context_id: _Optional[str] = ..., kind: _Optional[_Union[ContextKind, str]] = ..., title: _Optional[str] = ..., root_function: _Optional[str] = ..., path: _Optional[str] = ..., line: _Optional[int] = ..., origins: _Optional[_Iterable[_Union[IsrOrigin, str]]] = ..., origin_text: _Optional[str] = ..., source_name: _Optional[str] = ..., source_id: _Optional[int] = ..., priority_text: _Optional[str] = ..., functions: _Optional[int] = ..., reach_text: _Optional[str] = ..., run_text: _Optional[str] = ..., critical: _Optional[int] = ..., noticeable: _Optional[int] = ..., note: _Optional[str] = ...) -> None: ...
+
+class ReachedFunction(_message.Message):
+    __slots__ = ("function", "module", "path", "line", "depth", "via", "context_ids", "by_pointer")
+    FUNCTION_FIELD_NUMBER: _ClassVar[int]
+    MODULE_FIELD_NUMBER: _ClassVar[int]
+    PATH_FIELD_NUMBER: _ClassVar[int]
+    LINE_FIELD_NUMBER: _ClassVar[int]
+    DEPTH_FIELD_NUMBER: _ClassVar[int]
+    VIA_FIELD_NUMBER: _ClassVar[int]
+    CONTEXT_IDS_FIELD_NUMBER: _ClassVar[int]
+    BY_POINTER_FIELD_NUMBER: _ClassVar[int]
+    function: str
+    module: str
+    path: str
+    line: int
+    depth: int
+    via: str
+    context_ids: _containers.RepeatedScalarFieldContainer[str]
+    by_pointer: bool
+    def __init__(self, function: _Optional[str] = ..., module: _Optional[str] = ..., path: _Optional[str] = ..., line: _Optional[int] = ..., depth: _Optional[int] = ..., via: _Optional[str] = ..., context_ids: _Optional[_Iterable[str]] = ..., by_pointer: _Optional[bool] = ...) -> None: ...
+
+class SharedAccess(_message.Message):
+    __slots__ = ("context_id", "function", "kind_text", "place", "locked", "lock_text")
+    CONTEXT_ID_FIELD_NUMBER: _ClassVar[int]
+    FUNCTION_FIELD_NUMBER: _ClassVar[int]
+    KIND_TEXT_FIELD_NUMBER: _ClassVar[int]
+    PLACE_FIELD_NUMBER: _ClassVar[int]
+    LOCKED_FIELD_NUMBER: _ClassVar[int]
+    LOCK_TEXT_FIELD_NUMBER: _ClassVar[int]
+    context_id: str
+    function: str
+    kind_text: str
+    place: CodePlace
+    locked: bool
+    lock_text: str
+    def __init__(self, context_id: _Optional[str] = ..., function: _Optional[str] = ..., kind_text: _Optional[str] = ..., place: _Optional[_Union[CodePlace, _Mapping]] = ..., locked: _Optional[bool] = ..., lock_text: _Optional[str] = ...) -> None: ...
+
+class SharedVariable(_message.Message):
+    __slots__ = ("variable", "module", "type_text", "is_volatile", "is_atomic", "bytes", "width_text", "context_ids", "accesses", "finding_keys", "worst_tier", "evidence", "evidence_text", "evidence_event_seq", "interrupt_source_id")
+    VARIABLE_FIELD_NUMBER: _ClassVar[int]
+    MODULE_FIELD_NUMBER: _ClassVar[int]
+    TYPE_TEXT_FIELD_NUMBER: _ClassVar[int]
+    IS_VOLATILE_FIELD_NUMBER: _ClassVar[int]
+    IS_ATOMIC_FIELD_NUMBER: _ClassVar[int]
+    BYTES_FIELD_NUMBER: _ClassVar[int]
+    WIDTH_TEXT_FIELD_NUMBER: _ClassVar[int]
+    CONTEXT_IDS_FIELD_NUMBER: _ClassVar[int]
+    ACCESSES_FIELD_NUMBER: _ClassVar[int]
+    FINDING_KEYS_FIELD_NUMBER: _ClassVar[int]
+    WORST_TIER_FIELD_NUMBER: _ClassVar[int]
+    EVIDENCE_FIELD_NUMBER: _ClassVar[int]
+    EVIDENCE_TEXT_FIELD_NUMBER: _ClassVar[int]
+    EVIDENCE_EVENT_SEQ_FIELD_NUMBER: _ClassVar[int]
+    INTERRUPT_SOURCE_ID_FIELD_NUMBER: _ClassVar[int]
+    variable: str
+    module: str
+    type_text: str
+    is_volatile: bool
+    is_atomic: bool
+    bytes: int
+    width_text: str
+    context_ids: _containers.RepeatedScalarFieldContainer[str]
+    accesses: _containers.RepeatedCompositeFieldContainer[SharedAccess]
+    finding_keys: _containers.RepeatedScalarFieldContainer[str]
+    worst_tier: Tier
+    evidence: FindingEvidence
+    evidence_text: str
+    evidence_event_seq: int
+    interrupt_source_id: int
+    def __init__(self, variable: _Optional[str] = ..., module: _Optional[str] = ..., type_text: _Optional[str] = ..., is_volatile: _Optional[bool] = ..., is_atomic: _Optional[bool] = ..., bytes: _Optional[int] = ..., width_text: _Optional[str] = ..., context_ids: _Optional[_Iterable[str]] = ..., accesses: _Optional[_Iterable[_Union[SharedAccess, _Mapping]]] = ..., finding_keys: _Optional[_Iterable[str]] = ..., worst_tier: _Optional[_Union[Tier, str]] = ..., evidence: _Optional[_Union[FindingEvidence, str]] = ..., evidence_text: _Optional[str] = ..., evidence_event_seq: _Optional[int] = ..., interrupt_source_id: _Optional[int] = ...) -> None: ...
+
+class IsrContextView(_message.Message):
+    __slots__ = ("revision", "unchanged", "progress", "contexts", "chosen_id", "functions", "shared", "locks_text", "word_text", "run_text", "state_text")
+    REVISION_FIELD_NUMBER: _ClassVar[int]
+    UNCHANGED_FIELD_NUMBER: _ClassVar[int]
+    PROGRESS_FIELD_NUMBER: _ClassVar[int]
+    CONTEXTS_FIELD_NUMBER: _ClassVar[int]
+    CHOSEN_ID_FIELD_NUMBER: _ClassVar[int]
+    FUNCTIONS_FIELD_NUMBER: _ClassVar[int]
+    SHARED_FIELD_NUMBER: _ClassVar[int]
+    LOCKS_TEXT_FIELD_NUMBER: _ClassVar[int]
+    WORD_TEXT_FIELD_NUMBER: _ClassVar[int]
+    RUN_TEXT_FIELD_NUMBER: _ClassVar[int]
+    STATE_TEXT_FIELD_NUMBER: _ClassVar[int]
+    revision: int
+    unchanged: bool
+    progress: IndexProgress
+    contexts: _containers.RepeatedCompositeFieldContainer[ExecutionContext]
+    chosen_id: str
+    functions: _containers.RepeatedCompositeFieldContainer[ReachedFunction]
+    shared: _containers.RepeatedCompositeFieldContainer[SharedVariable]
+    locks_text: str
+    word_text: str
+    run_text: str
+    state_text: str
+    def __init__(self, revision: _Optional[int] = ..., unchanged: _Optional[bool] = ..., progress: _Optional[_Union[IndexProgress, _Mapping]] = ..., contexts: _Optional[_Iterable[_Union[ExecutionContext, _Mapping]]] = ..., chosen_id: _Optional[str] = ..., functions: _Optional[_Iterable[_Union[ReachedFunction, _Mapping]]] = ..., shared: _Optional[_Iterable[_Union[SharedVariable, _Mapping]]] = ..., locks_text: _Optional[str] = ..., word_text: _Optional[str] = ..., run_text: _Optional[str] = ..., state_text: _Optional[str] = ...) -> None: ...
 
 class FindingList(_message.Message):
     __slots__ = ("revision", "unchanged", "findings", "complete", "note", "fixed")

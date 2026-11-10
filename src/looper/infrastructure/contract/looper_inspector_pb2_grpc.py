@@ -454,6 +454,11 @@ class InspectorStub:
                 request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.AcceptFindingsRequest.SerializeToString,
                 response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Ack.FromString,
                 _registered_method=True)
+        self.ObserveIsrContexts = channel.unary_unary(
+                '/looper.inspector.v3.Inspector/ObserveIsrContexts',
+                request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.IsrContextRequest.SerializeToString,
+                response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.IsrContextView.FromString,
+                _registered_method=True)
         self.ObserveStateMachines = channel.unary_unary(
                 '/looper.inspector.v3.Inspector/ObserveStateMachines',
                 request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
@@ -1117,6 +1122,16 @@ class InspectorServicer:
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def ObserveIsrContexts(self, request, context):
+        """The firmware's execution contexts -- the main loop, the startup code and
+        every interrupt service routine -- what each reaches, and the data the
+        main loop shares with an interrupt, with its locks (Pro, stage 5.1).
+        Read from the code; a run backs the findings with evidence later.
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
     def ObserveStateMachines(self, request, context):
         """The firmware's state machines: a switch over a variable the code sets.
         """
@@ -1603,6 +1618,11 @@ def add_InspectorServicer_to_server(servicer, server):
                     servicer.AcceptFindings,
                     request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.AcceptFindingsRequest.FromString,
                     response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Ack.SerializeToString,
+            ),
+            'ObserveIsrContexts': grpc.unary_unary_rpc_method_handler(
+                    servicer.ObserveIsrContexts,
+                    request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.IsrContextRequest.FromString,
+                    response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.IsrContextView.SerializeToString,
             ),
             'ObserveStateMachines': grpc.unary_unary_rpc_method_handler(
                     servicer.ObserveStateMachines,
@@ -3913,6 +3933,33 @@ class Inspector:
             '/looper.inspector.v3.Inspector/AcceptFindings',
             looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.AcceptFindingsRequest.SerializeToString,
             looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Ack.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def ObserveIsrContexts(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/looper.inspector.v3.Inspector/ObserveIsrContexts',
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.IsrContextRequest.SerializeToString,
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.IsrContextView.FromString,
             options,
             channel_credentials,
             insecure,

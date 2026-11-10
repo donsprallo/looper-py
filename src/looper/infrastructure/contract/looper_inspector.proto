@@ -1133,6 +1133,11 @@ service Inspector {
   rpc ChangeArchitectureRules(RuleChangeRequest) returns (RuleChangeReply);
   // Take findings into architecture-baseline.toml, so they are known rather than new.
   rpc AcceptFindings(AcceptFindingsRequest) returns (Ack);
+  // The firmware's execution contexts -- the main loop, the startup code and
+  // every interrupt service routine -- what each reaches, and the data the
+  // main loop shares with an interrupt, with its locks (Pro, stage 5.1).
+  // Read from the code; a run backs the findings with evidence later.
+  rpc ObserveIsrContexts(IsrContextRequest) returns (IsrContextView);
   // The firmware's state machines: a switch over a variable the code sets.
   rpc ObserveStateMachines(Empty) returns (StateMachineList);
   rpc ObserveStateMachine(StateMachineChoice) returns (FirmwareStateMachine);
@@ -2548,7 +2553,9 @@ message ArchitectureGraph {
 }
 
 message FindingFilter {
-  string node_id = 1;          // "" every finding
+  // "" every finding; a node's id; "context:main", "context:startup" or
+  // "context:isr/TIM2" the findings about what that context reaches.
+  string node_id = 1;
   uint64 known_revision = 2;
 }
 
@@ -2571,6 +2578,115 @@ message ArchitectureFinding {
   string function = 9;
   string state = 10;           // new, known, accepted -- against the baseline
   string note = 11;            // what it was accepted with
+  // Stage 5.1, set for the ISR findings (kind isr-*): what a run says about
+  // it (STATIC without a run), the sentence for it, the interrupt source a
+  // race can be provoked on (0 none), the event to jump to, and the contexts
+  // it is about.
+  FindingEvidence evidence = 12;
+  string evidence_text = 13;
+  uint32 interrupt_source_id = 14;
+  uint64 evidence_event_seq = 15;
+  repeated string context_ids = 16;
+}
+
+// What a run says about a finding of the code (stage 5.1).
+enum FindingEvidence {
+  FINDING_EVIDENCE_STATIC = 0;       // only the code says so: no run, or the source never ran
+  FINDING_EVIDENCE_BOTH_RAN = 1;     // the ISR and the access both ran
+  FINDING_EVIDENCE_INTERRUPTED = 2;  // the ISR came between the read and the write
+  FINDING_EVIDENCE_NO_POINT = 3;     // the simulation cannot interrupt there
+}
+
+enum ContextKind {
+  CONTEXT_KIND_MAIN = 0;
+  CONTEXT_KIND_ISR = 1;
+  CONTEXT_KIND_STARTUP = 2;
+}
+
+// Where an ISR root was found.
+enum IsrOrigin {
+  ISR_ORIGIN_UNSPECIFIED = 0;
+  ISR_ORIGIN_CONTRACT = 1;       // a role irq.handler in contract.toml
+  ISR_ORIGIN_VECTOR_TABLE = 2;   // .word in .isr_vector, or a C array placed there
+  ISR_ORIGIN_ATTRIBUTE = 3;      // __attribute__((interrupt)) and the like
+  ISR_ORIGIN_RULES = 4;          // [isr] handlers of architecture.toml
+}
+
+message IsrContextRequest {
+  string context_id = 1;         // "" the main loop
+  uint64 known_revision = 2;
+}
+
+message ExecutionContext {
+  string context_id = 1;         // "main", "startup", "isr/TIM2", "isr/EXTI1_IRQHandler"
+  ContextKind kind = 2;
+  string title = 3;              // "Main loop", "ISR TIM2"
+  string root_function = 4;
+  string path = 5;
+  uint32 line = 6;
+  repeated IsrOrigin origins = 7;
+  string origin_text = 8;        // "contract.toml (irq.handler) · vector table startup.s:9"
+  string source_name = 9;        // the source in contract.toml, "" without
+  uint32 source_id = 10;         // the runtime's number, 0 without
+  string priority_text = 11;     // "priority 2", ""
+  uint32 functions = 12;
+  string reach_text = 13;        // "reaches 7 functions in 3 modules · cognitive 18 in all"
+  string run_text = 14;          // "ran 1 204 times · mean 3 µs", "" without a run
+  uint32 critical = 15;
+  uint32 noticeable = 16;
+  string note = 17;              // "calls through a pointer: reach may be larger"
+}
+
+message ReachedFunction {
+  string function = 1;
+  string module = 2;
+  string path = 3;
+  uint32 line = 4;
+  uint32 depth = 5;
+  string via = 6;                // "via empty_the_fifo"
+  repeated string context_ids = 7;   // every context that reaches it
+  bool by_pointer = 8;           // only over a target a run saw
+}
+
+message SharedAccess {
+  string context_id = 1;
+  string function = 2;
+  string kind_text = 3;          // "reads", "writes", "read-modify-write"
+  CodePlace place = 4;
+  bool locked = 5;
+  string lock_text = 6;          // "inside __disable_irq … __enable_irq", "locked by its callers"
+}
+
+message SharedVariable {
+  string variable = 1;
+  string module = 2;
+  string type_text = 3;
+  bool is_volatile = 4;
+  bool is_atomic = 5;
+  uint32 bytes = 6;
+  string width_text = 7;         // "8 bytes – wider than the 32-bit word"
+  repeated string context_ids = 8;
+  repeated SharedAccess accesses = 9;
+  repeated string finding_keys = 10;
+  Tier worst_tier = 11;
+  FindingEvidence evidence = 12;
+  string evidence_text = 13;
+  uint64 evidence_event_seq = 14;
+  uint32 interrupt_source_id = 15;
+}
+
+message IsrContextView {
+  uint64 revision = 1;
+  bool unchanged = 2;
+  IndexProgress progress = 3;
+  repeated ExecutionContext contexts = 4;
+  string chosen_id = 5;
+  repeated ReachedFunction functions = 6;   // of the chosen context
+  repeated SharedVariable shared = 7;       // the chosen context shares (main: all)
+  string locks_text = 8;         // "Locks: irq.disable/irq.enable (contract.toml), __disable_irq (architecture.toml)"
+  string word_text = 9;          // "Target word 32 bits (thumbv7em-none-eabi)" / "Word width unknown – set [isr] word_bits"
+  string run_text = 10;          // "Static – no run"
+  string state_text = 11;        // the empty state, else ""
 }
 
 message FindingList {
