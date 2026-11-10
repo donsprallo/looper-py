@@ -56,6 +56,13 @@ or once for the whole session, through the environment:
 $ LOOPER_CLI="uv run --project ../looper-core looper-cli" pytest
 ```
 
+The command may also be **looper-srv**, which understands the same arguments
+(`looper_cli="looper-srv"`). The library then tells it that a test started it
+and which process that is (`--started-by test --owner-pid PID`), so that
+`looper-rs --list-servers` shows the server as a test's and it ends with the
+test. `looper-cli` is not given these arguments, it would refuse them. The
+library knows looper-srv by the name of the program, with or without `.exe`.
+
 ## `looper.connect`
 
 Start `looper-cli run` yourself, on a fixed address:
