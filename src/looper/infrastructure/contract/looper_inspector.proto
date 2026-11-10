@@ -2698,6 +2698,11 @@ message ArchitectureFinding {
   uint32 interrupt_source_id = 14;
   uint64 evidence_event_seq = 15;
   repeated string context_ids = 16;
+  // With evidence_event_seq: when that event happened, and the source of
+  // interrupt_source_id by its name in contract.toml, as the Logic
+  // analyzer's lanes name it -- so that "Show in Logic" needs no lookup.
+  uint64 evidence_sim_us = 17;
+  string interrupt_source_name = 18;
 }
 
 // What a graph's edges are weighed with (stage 5.2).
@@ -2799,6 +2804,8 @@ message SharedVariable {
   string evidence_text = 13;
   uint64 evidence_event_seq = 14;
   uint32 interrupt_source_id = 15;
+  uint64 evidence_sim_us = 16;          // as ArchitectureFinding's
+  string interrupt_source_name = 17;    // as ArchitectureFinding's
 }
 
 message IsrContextView {

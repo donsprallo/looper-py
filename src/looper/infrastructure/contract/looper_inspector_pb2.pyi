@@ -3866,7 +3866,7 @@ class CodePlace(_message.Message):
     def __init__(self, path: _Optional[str] = ..., line: _Optional[int] = ..., kind: _Optional[str] = ..., what: _Optional[str] = ...) -> None: ...
 
 class ArchitectureFinding(_message.Message):
-    __slots__ = ("key", "kind", "severity", "title", "explanation", "places", "node_ids", "edge_ids", "function", "state", "note", "evidence", "evidence_text", "interrupt_source_id", "evidence_event_seq", "context_ids")
+    __slots__ = ("key", "kind", "severity", "title", "explanation", "places", "node_ids", "edge_ids", "function", "state", "note", "evidence", "evidence_text", "interrupt_source_id", "evidence_event_seq", "context_ids", "evidence_sim_us", "interrupt_source_name")
     KEY_FIELD_NUMBER: _ClassVar[int]
     KIND_FIELD_NUMBER: _ClassVar[int]
     SEVERITY_FIELD_NUMBER: _ClassVar[int]
@@ -3883,6 +3883,8 @@ class ArchitectureFinding(_message.Message):
     INTERRUPT_SOURCE_ID_FIELD_NUMBER: _ClassVar[int]
     EVIDENCE_EVENT_SEQ_FIELD_NUMBER: _ClassVar[int]
     CONTEXT_IDS_FIELD_NUMBER: _ClassVar[int]
+    EVIDENCE_SIM_US_FIELD_NUMBER: _ClassVar[int]
+    INTERRUPT_SOURCE_NAME_FIELD_NUMBER: _ClassVar[int]
     key: str
     kind: str
     severity: Tier
@@ -3899,7 +3901,9 @@ class ArchitectureFinding(_message.Message):
     interrupt_source_id: int
     evidence_event_seq: int
     context_ids: _containers.RepeatedScalarFieldContainer[str]
-    def __init__(self, key: _Optional[str] = ..., kind: _Optional[str] = ..., severity: _Optional[_Union[Tier, str]] = ..., title: _Optional[str] = ..., explanation: _Optional[str] = ..., places: _Optional[_Iterable[_Union[CodePlace, _Mapping]]] = ..., node_ids: _Optional[_Iterable[str]] = ..., edge_ids: _Optional[_Iterable[str]] = ..., function: _Optional[str] = ..., state: _Optional[str] = ..., note: _Optional[str] = ..., evidence: _Optional[_Union[FindingEvidence, str]] = ..., evidence_text: _Optional[str] = ..., interrupt_source_id: _Optional[int] = ..., evidence_event_seq: _Optional[int] = ..., context_ids: _Optional[_Iterable[str]] = ...) -> None: ...
+    evidence_sim_us: int
+    interrupt_source_name: str
+    def __init__(self, key: _Optional[str] = ..., kind: _Optional[str] = ..., severity: _Optional[_Union[Tier, str]] = ..., title: _Optional[str] = ..., explanation: _Optional[str] = ..., places: _Optional[_Iterable[_Union[CodePlace, _Mapping]]] = ..., node_ids: _Optional[_Iterable[str]] = ..., edge_ids: _Optional[_Iterable[str]] = ..., function: _Optional[str] = ..., state: _Optional[str] = ..., note: _Optional[str] = ..., evidence: _Optional[_Union[FindingEvidence, str]] = ..., evidence_text: _Optional[str] = ..., interrupt_source_id: _Optional[int] = ..., evidence_event_seq: _Optional[int] = ..., context_ids: _Optional[_Iterable[str]] = ..., evidence_sim_us: _Optional[int] = ..., interrupt_source_name: _Optional[str] = ...) -> None: ...
 
 class IsrContextRequest(_message.Message):
     __slots__ = ("context_id", "known_revision")
@@ -3984,7 +3988,7 @@ class SharedAccess(_message.Message):
     def __init__(self, context_id: _Optional[str] = ..., function: _Optional[str] = ..., kind_text: _Optional[str] = ..., place: _Optional[_Union[CodePlace, _Mapping]] = ..., locked: _Optional[bool] = ..., lock_text: _Optional[str] = ...) -> None: ...
 
 class SharedVariable(_message.Message):
-    __slots__ = ("variable", "module", "type_text", "is_volatile", "is_atomic", "bytes", "width_text", "context_ids", "accesses", "finding_keys", "worst_tier", "evidence", "evidence_text", "evidence_event_seq", "interrupt_source_id")
+    __slots__ = ("variable", "module", "type_text", "is_volatile", "is_atomic", "bytes", "width_text", "context_ids", "accesses", "finding_keys", "worst_tier", "evidence", "evidence_text", "evidence_event_seq", "interrupt_source_id", "evidence_sim_us", "interrupt_source_name")
     VARIABLE_FIELD_NUMBER: _ClassVar[int]
     MODULE_FIELD_NUMBER: _ClassVar[int]
     TYPE_TEXT_FIELD_NUMBER: _ClassVar[int]
@@ -4000,6 +4004,8 @@ class SharedVariable(_message.Message):
     EVIDENCE_TEXT_FIELD_NUMBER: _ClassVar[int]
     EVIDENCE_EVENT_SEQ_FIELD_NUMBER: _ClassVar[int]
     INTERRUPT_SOURCE_ID_FIELD_NUMBER: _ClassVar[int]
+    EVIDENCE_SIM_US_FIELD_NUMBER: _ClassVar[int]
+    INTERRUPT_SOURCE_NAME_FIELD_NUMBER: _ClassVar[int]
     variable: str
     module: str
     type_text: str
@@ -4015,7 +4021,9 @@ class SharedVariable(_message.Message):
     evidence_text: str
     evidence_event_seq: int
     interrupt_source_id: int
-    def __init__(self, variable: _Optional[str] = ..., module: _Optional[str] = ..., type_text: _Optional[str] = ..., is_volatile: _Optional[bool] = ..., is_atomic: _Optional[bool] = ..., bytes: _Optional[int] = ..., width_text: _Optional[str] = ..., context_ids: _Optional[_Iterable[str]] = ..., accesses: _Optional[_Iterable[_Union[SharedAccess, _Mapping]]] = ..., finding_keys: _Optional[_Iterable[str]] = ..., worst_tier: _Optional[_Union[Tier, str]] = ..., evidence: _Optional[_Union[FindingEvidence, str]] = ..., evidence_text: _Optional[str] = ..., evidence_event_seq: _Optional[int] = ..., interrupt_source_id: _Optional[int] = ...) -> None: ...
+    evidence_sim_us: int
+    interrupt_source_name: str
+    def __init__(self, variable: _Optional[str] = ..., module: _Optional[str] = ..., type_text: _Optional[str] = ..., is_volatile: _Optional[bool] = ..., is_atomic: _Optional[bool] = ..., bytes: _Optional[int] = ..., width_text: _Optional[str] = ..., context_ids: _Optional[_Iterable[str]] = ..., accesses: _Optional[_Iterable[_Union[SharedAccess, _Mapping]]] = ..., finding_keys: _Optional[_Iterable[str]] = ..., worst_tier: _Optional[_Union[Tier, str]] = ..., evidence: _Optional[_Union[FindingEvidence, str]] = ..., evidence_text: _Optional[str] = ..., evidence_event_seq: _Optional[int] = ..., interrupt_source_id: _Optional[int] = ..., evidence_sim_us: _Optional[int] = ..., interrupt_source_name: _Optional[str] = ...) -> None: ...
 
 class IsrContextView(_message.Message):
     __slots__ = ("revision", "unchanged", "progress", "contexts", "chosen_id", "functions", "shared", "locks_text", "word_text", "run_text", "state_text")
