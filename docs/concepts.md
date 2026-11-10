@@ -46,6 +46,12 @@ Because the boundary is a process, your test environment needs only this
 library and the `looper-cli` command -- not `looper-core` itself, and none of
 its dependencies.
 
+The library starts `looper-cli` unless you name another command (`looper_cli=`
+or `LOOPER_CLI`). A {rs}`looper-rs <index.html>` window does it differently: it
+starts **looper-srv**, which starts `looper-cli` as its child. Both serve the
+same contract, and looper-srv takes the same arguments, so a test may name it
+as the command; see [Starting and attaching](guides/reaching.md).
+
 ## 2. There is one simulation, and everybody looks at it
 
 Any number of clients may look at one simulation: two tests, a test and a

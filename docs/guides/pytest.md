@@ -162,6 +162,12 @@ def simulation():
 $ LOOPER_SERVER=127.0.0.1:50051 pytest tests/test_led.py
 ```
 
+`LOOPER_SERVER` is a name this fixture chose; the library reads no such
+variable. Take care if you also work on the library itself: its own integration
+tests read `LOOPER_SERVER` as a *selector* (`LOOPER_SERVER=srv` starts
+looper-srv in front of looper-core instead of looper-core alone), not as an
+address. For your own tests pick another name, such as `LOOPER_ADDRESS`.
+
 ## In CI
 
 A CI job needs Python, uv, a C compiler and the `looper-core` checkout. For
