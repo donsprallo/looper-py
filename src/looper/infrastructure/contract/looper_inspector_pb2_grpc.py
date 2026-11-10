@@ -464,6 +464,11 @@ class InspectorStub:
                 request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.StackRequest.SerializeToString,
                 response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.StackWorstCaseView.FromString,
                 _registered_method=True)
+        self.ObserveModuleCard = channel.unary_unary(
+                '/looper.inspector.v3.Inspector/ObserveModuleCard',
+                request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ModuleCardRequest.SerializeToString,
+                response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ModuleCard.FromString,
+                _registered_method=True)
         self.ObserveStateMachines = channel.unary_unary(
                 '/looper.inspector.v3.Inspector/ObserveStateMachines',
                 request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
@@ -1147,6 +1152,18 @@ class InspectorServicer:
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def ObserveModuleCard(self, request, context):
+        """A module's card (stage 5.4): its interface and private parts, its
+        globals and its types with their layout, for C and C++ alike. Free --
+        what the language says -- with the parts looper infers (C methods,
+        interfaces of function pointers and their implementers, the project's
+        hierarchy) only with the Architect; without it they are empty and
+        pro_locked says why. A path names the module of a file.
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
     def ObserveStateMachines(self, request, context):
         """The firmware's state machines: a switch over a variable the code sets.
         """
@@ -1643,6 +1660,11 @@ def add_InspectorServicer_to_server(servicer, server):
                     servicer.ObserveStackWorstCase,
                     request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.StackRequest.FromString,
                     response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.StackWorstCaseView.SerializeToString,
+            ),
+            'ObserveModuleCard': grpc.unary_unary_rpc_method_handler(
+                    servicer.ObserveModuleCard,
+                    request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ModuleCardRequest.FromString,
+                    response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ModuleCard.SerializeToString,
             ),
             'ObserveStateMachines': grpc.unary_unary_rpc_method_handler(
                     servicer.ObserveStateMachines,
@@ -4007,6 +4029,33 @@ class Inspector:
             '/looper.inspector.v3.Inspector/ObserveStackWorstCase',
             looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.StackRequest.SerializeToString,
             looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.StackWorstCaseView.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def ObserveModuleCard(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/looper.inspector.v3.Inspector/ObserveModuleCard',
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ModuleCardRequest.SerializeToString,
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ModuleCard.FromString,
             options,
             channel_credentials,
             insecure,

@@ -1143,6 +1143,13 @@ service Inspector {
   // -fstack-usage (.su) -- and the main loop with the deepest ISR on top
   // (Pro, stage 5.3). The measured path of a run comes with a simulation.
   rpc ObserveStackWorstCase(StackRequest) returns (StackWorstCaseView);
+  // A module's card (stage 5.4): its interface and private parts, its
+  // globals and its types with their layout, for C and C++ alike. Free --
+  // what the language says -- with the parts looper infers (C methods,
+  // interfaces of function pointers and their implementers, the project's
+  // hierarchy) only with the Architect; without it they are empty and
+  // pro_locked says why. A path names the module of a file.
+  rpc ObserveModuleCard(ModuleCardRequest) returns (ModuleCard);
   // The firmware's state machines: a switch over a variable the code sets.
   rpc ObserveStateMachines(Empty) returns (StateMachineList);
   rpc ObserveStateMachine(StateMachineChoice) returns (FirmwareStateMachine);
@@ -2764,6 +2771,125 @@ message StackWorstCaseView {
   string size_text = 13;             // "2 048 B · 25 % used", from [stack] size
   string state_text = 14;            // the empty state, else ""
   string produce_text = 15;          // the offer to compute the target's frames, "" without one
+}
+
+enum MemberAccess {
+  MEMBER_ACCESS_PUBLIC = 0;
+  MEMBER_ACCESS_PROTECTED = 1;
+  MEMBER_ACCESS_PRIVATE = 2;
+}
+
+enum CardTypeKind {
+  CARD_TYPE_KIND_STRUCT = 0;
+  CARD_TYPE_KIND_UNION = 1;
+  CARD_TYPE_KIND_CLASS = 2;
+  CARD_TYPE_KIND_INTERFACE = 3;    // a struct of function pointers, or an abstract class
+}
+
+message ModuleCardRequest {
+  string module_id = 1;            // "module:app/blinker"
+  string path = 2;                 // or the module of this file
+  uint64 known_revision = 3;
+}
+
+message CardFunction {
+  string name = 1;
+  string signature = 2;
+  string path = 3;
+  uint32 line = 4;
+  bool is_public = 5;
+  MemberAccess access = 6;
+  repeated string marks = 7;       // "virtual", "override", "pure", "static", "const", "ISR"
+  Tier worst_tier = 8;
+  string metrics_text = 9;
+}
+
+message CardVariable {
+  string name = 1;
+  string type_text = 2;
+  string path = 3;
+  uint32 line = 4;
+  bool is_exported = 5;
+  bool is_volatile = 6;
+  string size_text = 7;
+  string contexts_text = 8;
+}
+
+message TypeField {
+  string name = 1;
+  string type_text = 2;
+  uint32 offset = 3;
+  uint32 bytes = 4;
+  string offset_text = 5;
+  string size_text = 6;
+  uint32 padding_after = 7;
+  string padding_text = 8;
+  bool is_function_pointer = 9;
+  MemberAccess access = 10;
+  bool is_static = 11;
+  string bits_text = 12;           // a bit field "bits 0–3", else ""
+}
+
+message TypeBase {
+  string type_id = 1;
+  string name = 2;
+  MemberAccess access = 3;
+  bool is_virtual = 4;
+}
+
+message TypeImplementer {
+  string name = 1;
+  string path = 2;
+  uint32 line = 3;
+  string kind_text = 4;            // "initialiser of led_driver_ops_t", "derived class"
+  repeated string bindings = 5;    // "on → gpio_led_on"
+  string module = 6;
+}
+
+message CardType {
+  string type_id = 1;
+  string name = 2;
+  CardTypeKind kind = 3;
+  string kind_text = 4;            // "C struct with 3 methods", "abstract class"
+  string path = 5;
+  uint32 line = 6;
+  bool is_opaque = 7;
+  string opaque_text = 8;
+  uint32 bytes = 9;
+  string size_text = 10;
+  uint32 padding_bytes = 11;
+  string layout_text = 12;         // "for thumbv7em-none-eabi: 12 bytes, 3 of them padding"
+  repeated TypeField fields = 13;
+  repeated CardFunction methods = 14;
+  string methods_rule_text = 15;
+  repeated TypeBase bases = 16;
+  repeated string derived_ids = 17;
+  repeated TypeImplementer implementers = 18;
+  bool is_abstract = 19;
+  bool has_vtable = 20;
+  repeated string machine_ids = 21;
+  bool pro_locked = 22;
+  string locked_text = 23;         // why the Pro parts are empty
+}
+
+message ModuleCard {
+  uint64 revision = 1;
+  bool unchanged = 2;
+  IndexProgress progress = 3;
+  string module_id = 4;
+  string title = 5;
+  repeated string files = 6;
+  string layer = 7;
+  repeated CardFunction interface = 8;
+  repeated CardFunction private_functions = 9;
+  repeated CardVariable exported = 10;
+  repeated CardVariable private_variables = 11;
+  repeated CardType types = 12;
+  string encapsulation_text = 13;  // "2 of 3 types opaque"
+  string language_text = 14;       // "C", "C++"
+  bool pro_locked = 15;
+  string locked_text = 16;
+  string note = 17;                // a file without a module, ""
 }
 
 message FindingList {

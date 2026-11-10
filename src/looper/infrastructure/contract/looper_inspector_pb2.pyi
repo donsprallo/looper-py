@@ -304,6 +304,19 @@ class FrameBytes(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     FRAME_BYTES_HOST_SU: _ClassVar[FrameBytes]
     FRAME_BYTES_HOST_MEASURED: _ClassVar[FrameBytes]
 
+class MemberAccess(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+    __slots__ = ()
+    MEMBER_ACCESS_PUBLIC: _ClassVar[MemberAccess]
+    MEMBER_ACCESS_PROTECTED: _ClassVar[MemberAccess]
+    MEMBER_ACCESS_PRIVATE: _ClassVar[MemberAccess]
+
+class CardTypeKind(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+    __slots__ = ()
+    CARD_TYPE_KIND_STRUCT: _ClassVar[CardTypeKind]
+    CARD_TYPE_KIND_UNION: _ClassVar[CardTypeKind]
+    CARD_TYPE_KIND_CLASS: _ClassVar[CardTypeKind]
+    CARD_TYPE_KIND_INTERFACE: _ClassVar[CardTypeKind]
+
 class NestingKind(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     __slots__ = ()
     NESTING_KIND_NONE: _ClassVar[NestingKind]
@@ -559,6 +572,13 @@ FRAME_BYTES_NONE: FrameBytes
 FRAME_BYTES_TARGET: FrameBytes
 FRAME_BYTES_HOST_SU: FrameBytes
 FRAME_BYTES_HOST_MEASURED: FrameBytes
+MEMBER_ACCESS_PUBLIC: MemberAccess
+MEMBER_ACCESS_PROTECTED: MemberAccess
+MEMBER_ACCESS_PRIVATE: MemberAccess
+CARD_TYPE_KIND_STRUCT: CardTypeKind
+CARD_TYPE_KIND_UNION: CardTypeKind
+CARD_TYPE_KIND_CLASS: CardTypeKind
+CARD_TYPE_KIND_INTERFACE: CardTypeKind
 NESTING_KIND_NONE: NestingKind
 NESTING_KIND_INSIDE: NestingKind
 NESTING_KIND_ALSO_OUTSIDE: NestingKind
@@ -3979,6 +3999,202 @@ class StackWorstCaseView(_message.Message):
     state_text: str
     produce_text: str
     def __init__(self, revision: _Optional[int] = ..., unchanged: _Optional[bool] = ..., progress: _Optional[_Union[IndexProgress, _Mapping]] = ..., entries: _Optional[_Iterable[_Union[StackEntry, _Mapping]]] = ..., chosen_id: _Optional[str] = ..., worst_bytes_from: _Optional[_Union[FrameBytes, str]] = ..., measured_bytes_from: _Optional[_Union[FrameBytes, str]] = ..., frames_text: _Optional[str] = ..., host_hint: _Optional[str] = ..., total_bytes: _Optional[int] = ..., total_text: _Optional[str] = ..., size_bytes: _Optional[int] = ..., size_text: _Optional[str] = ..., state_text: _Optional[str] = ..., produce_text: _Optional[str] = ...) -> None: ...
+
+class ModuleCardRequest(_message.Message):
+    __slots__ = ("module_id", "path", "known_revision")
+    MODULE_ID_FIELD_NUMBER: _ClassVar[int]
+    PATH_FIELD_NUMBER: _ClassVar[int]
+    KNOWN_REVISION_FIELD_NUMBER: _ClassVar[int]
+    module_id: str
+    path: str
+    known_revision: int
+    def __init__(self, module_id: _Optional[str] = ..., path: _Optional[str] = ..., known_revision: _Optional[int] = ...) -> None: ...
+
+class CardFunction(_message.Message):
+    __slots__ = ("name", "signature", "path", "line", "is_public", "access", "marks", "worst_tier", "metrics_text")
+    NAME_FIELD_NUMBER: _ClassVar[int]
+    SIGNATURE_FIELD_NUMBER: _ClassVar[int]
+    PATH_FIELD_NUMBER: _ClassVar[int]
+    LINE_FIELD_NUMBER: _ClassVar[int]
+    IS_PUBLIC_FIELD_NUMBER: _ClassVar[int]
+    ACCESS_FIELD_NUMBER: _ClassVar[int]
+    MARKS_FIELD_NUMBER: _ClassVar[int]
+    WORST_TIER_FIELD_NUMBER: _ClassVar[int]
+    METRICS_TEXT_FIELD_NUMBER: _ClassVar[int]
+    name: str
+    signature: str
+    path: str
+    line: int
+    is_public: bool
+    access: MemberAccess
+    marks: _containers.RepeatedScalarFieldContainer[str]
+    worst_tier: Tier
+    metrics_text: str
+    def __init__(self, name: _Optional[str] = ..., signature: _Optional[str] = ..., path: _Optional[str] = ..., line: _Optional[int] = ..., is_public: _Optional[bool] = ..., access: _Optional[_Union[MemberAccess, str]] = ..., marks: _Optional[_Iterable[str]] = ..., worst_tier: _Optional[_Union[Tier, str]] = ..., metrics_text: _Optional[str] = ...) -> None: ...
+
+class CardVariable(_message.Message):
+    __slots__ = ("name", "type_text", "path", "line", "is_exported", "is_volatile", "size_text", "contexts_text")
+    NAME_FIELD_NUMBER: _ClassVar[int]
+    TYPE_TEXT_FIELD_NUMBER: _ClassVar[int]
+    PATH_FIELD_NUMBER: _ClassVar[int]
+    LINE_FIELD_NUMBER: _ClassVar[int]
+    IS_EXPORTED_FIELD_NUMBER: _ClassVar[int]
+    IS_VOLATILE_FIELD_NUMBER: _ClassVar[int]
+    SIZE_TEXT_FIELD_NUMBER: _ClassVar[int]
+    CONTEXTS_TEXT_FIELD_NUMBER: _ClassVar[int]
+    name: str
+    type_text: str
+    path: str
+    line: int
+    is_exported: bool
+    is_volatile: bool
+    size_text: str
+    contexts_text: str
+    def __init__(self, name: _Optional[str] = ..., type_text: _Optional[str] = ..., path: _Optional[str] = ..., line: _Optional[int] = ..., is_exported: _Optional[bool] = ..., is_volatile: _Optional[bool] = ..., size_text: _Optional[str] = ..., contexts_text: _Optional[str] = ...) -> None: ...
+
+class TypeField(_message.Message):
+    __slots__ = ("name", "type_text", "offset", "bytes", "offset_text", "size_text", "padding_after", "padding_text", "is_function_pointer", "access", "is_static", "bits_text")
+    NAME_FIELD_NUMBER: _ClassVar[int]
+    TYPE_TEXT_FIELD_NUMBER: _ClassVar[int]
+    OFFSET_FIELD_NUMBER: _ClassVar[int]
+    BYTES_FIELD_NUMBER: _ClassVar[int]
+    OFFSET_TEXT_FIELD_NUMBER: _ClassVar[int]
+    SIZE_TEXT_FIELD_NUMBER: _ClassVar[int]
+    PADDING_AFTER_FIELD_NUMBER: _ClassVar[int]
+    PADDING_TEXT_FIELD_NUMBER: _ClassVar[int]
+    IS_FUNCTION_POINTER_FIELD_NUMBER: _ClassVar[int]
+    ACCESS_FIELD_NUMBER: _ClassVar[int]
+    IS_STATIC_FIELD_NUMBER: _ClassVar[int]
+    BITS_TEXT_FIELD_NUMBER: _ClassVar[int]
+    name: str
+    type_text: str
+    offset: int
+    bytes: int
+    offset_text: str
+    size_text: str
+    padding_after: int
+    padding_text: str
+    is_function_pointer: bool
+    access: MemberAccess
+    is_static: bool
+    bits_text: str
+    def __init__(self, name: _Optional[str] = ..., type_text: _Optional[str] = ..., offset: _Optional[int] = ..., bytes: _Optional[int] = ..., offset_text: _Optional[str] = ..., size_text: _Optional[str] = ..., padding_after: _Optional[int] = ..., padding_text: _Optional[str] = ..., is_function_pointer: _Optional[bool] = ..., access: _Optional[_Union[MemberAccess, str]] = ..., is_static: _Optional[bool] = ..., bits_text: _Optional[str] = ...) -> None: ...
+
+class TypeBase(_message.Message):
+    __slots__ = ("type_id", "name", "access", "is_virtual")
+    TYPE_ID_FIELD_NUMBER: _ClassVar[int]
+    NAME_FIELD_NUMBER: _ClassVar[int]
+    ACCESS_FIELD_NUMBER: _ClassVar[int]
+    IS_VIRTUAL_FIELD_NUMBER: _ClassVar[int]
+    type_id: str
+    name: str
+    access: MemberAccess
+    is_virtual: bool
+    def __init__(self, type_id: _Optional[str] = ..., name: _Optional[str] = ..., access: _Optional[_Union[MemberAccess, str]] = ..., is_virtual: _Optional[bool] = ...) -> None: ...
+
+class TypeImplementer(_message.Message):
+    __slots__ = ("name", "path", "line", "kind_text", "bindings", "module")
+    NAME_FIELD_NUMBER: _ClassVar[int]
+    PATH_FIELD_NUMBER: _ClassVar[int]
+    LINE_FIELD_NUMBER: _ClassVar[int]
+    KIND_TEXT_FIELD_NUMBER: _ClassVar[int]
+    BINDINGS_FIELD_NUMBER: _ClassVar[int]
+    MODULE_FIELD_NUMBER: _ClassVar[int]
+    name: str
+    path: str
+    line: int
+    kind_text: str
+    bindings: _containers.RepeatedScalarFieldContainer[str]
+    module: str
+    def __init__(self, name: _Optional[str] = ..., path: _Optional[str] = ..., line: _Optional[int] = ..., kind_text: _Optional[str] = ..., bindings: _Optional[_Iterable[str]] = ..., module: _Optional[str] = ...) -> None: ...
+
+class CardType(_message.Message):
+    __slots__ = ("type_id", "name", "kind", "kind_text", "path", "line", "is_opaque", "opaque_text", "bytes", "size_text", "padding_bytes", "layout_text", "fields", "methods", "methods_rule_text", "bases", "derived_ids", "implementers", "is_abstract", "has_vtable", "machine_ids", "pro_locked", "locked_text")
+    TYPE_ID_FIELD_NUMBER: _ClassVar[int]
+    NAME_FIELD_NUMBER: _ClassVar[int]
+    KIND_FIELD_NUMBER: _ClassVar[int]
+    KIND_TEXT_FIELD_NUMBER: _ClassVar[int]
+    PATH_FIELD_NUMBER: _ClassVar[int]
+    LINE_FIELD_NUMBER: _ClassVar[int]
+    IS_OPAQUE_FIELD_NUMBER: _ClassVar[int]
+    OPAQUE_TEXT_FIELD_NUMBER: _ClassVar[int]
+    BYTES_FIELD_NUMBER: _ClassVar[int]
+    SIZE_TEXT_FIELD_NUMBER: _ClassVar[int]
+    PADDING_BYTES_FIELD_NUMBER: _ClassVar[int]
+    LAYOUT_TEXT_FIELD_NUMBER: _ClassVar[int]
+    FIELDS_FIELD_NUMBER: _ClassVar[int]
+    METHODS_FIELD_NUMBER: _ClassVar[int]
+    METHODS_RULE_TEXT_FIELD_NUMBER: _ClassVar[int]
+    BASES_FIELD_NUMBER: _ClassVar[int]
+    DERIVED_IDS_FIELD_NUMBER: _ClassVar[int]
+    IMPLEMENTERS_FIELD_NUMBER: _ClassVar[int]
+    IS_ABSTRACT_FIELD_NUMBER: _ClassVar[int]
+    HAS_VTABLE_FIELD_NUMBER: _ClassVar[int]
+    MACHINE_IDS_FIELD_NUMBER: _ClassVar[int]
+    PRO_LOCKED_FIELD_NUMBER: _ClassVar[int]
+    LOCKED_TEXT_FIELD_NUMBER: _ClassVar[int]
+    type_id: str
+    name: str
+    kind: CardTypeKind
+    kind_text: str
+    path: str
+    line: int
+    is_opaque: bool
+    opaque_text: str
+    bytes: int
+    size_text: str
+    padding_bytes: int
+    layout_text: str
+    fields: _containers.RepeatedCompositeFieldContainer[TypeField]
+    methods: _containers.RepeatedCompositeFieldContainer[CardFunction]
+    methods_rule_text: str
+    bases: _containers.RepeatedCompositeFieldContainer[TypeBase]
+    derived_ids: _containers.RepeatedScalarFieldContainer[str]
+    implementers: _containers.RepeatedCompositeFieldContainer[TypeImplementer]
+    is_abstract: bool
+    has_vtable: bool
+    machine_ids: _containers.RepeatedScalarFieldContainer[str]
+    pro_locked: bool
+    locked_text: str
+    def __init__(self, type_id: _Optional[str] = ..., name: _Optional[str] = ..., kind: _Optional[_Union[CardTypeKind, str]] = ..., kind_text: _Optional[str] = ..., path: _Optional[str] = ..., line: _Optional[int] = ..., is_opaque: _Optional[bool] = ..., opaque_text: _Optional[str] = ..., bytes: _Optional[int] = ..., size_text: _Optional[str] = ..., padding_bytes: _Optional[int] = ..., layout_text: _Optional[str] = ..., fields: _Optional[_Iterable[_Union[TypeField, _Mapping]]] = ..., methods: _Optional[_Iterable[_Union[CardFunction, _Mapping]]] = ..., methods_rule_text: _Optional[str] = ..., bases: _Optional[_Iterable[_Union[TypeBase, _Mapping]]] = ..., derived_ids: _Optional[_Iterable[str]] = ..., implementers: _Optional[_Iterable[_Union[TypeImplementer, _Mapping]]] = ..., is_abstract: _Optional[bool] = ..., has_vtable: _Optional[bool] = ..., machine_ids: _Optional[_Iterable[str]] = ..., pro_locked: _Optional[bool] = ..., locked_text: _Optional[str] = ...) -> None: ...
+
+class ModuleCard(_message.Message):
+    __slots__ = ("revision", "unchanged", "progress", "module_id", "title", "files", "layer", "interface", "private_functions", "exported", "private_variables", "types", "encapsulation_text", "language_text", "pro_locked", "locked_text", "note")
+    REVISION_FIELD_NUMBER: _ClassVar[int]
+    UNCHANGED_FIELD_NUMBER: _ClassVar[int]
+    PROGRESS_FIELD_NUMBER: _ClassVar[int]
+    MODULE_ID_FIELD_NUMBER: _ClassVar[int]
+    TITLE_FIELD_NUMBER: _ClassVar[int]
+    FILES_FIELD_NUMBER: _ClassVar[int]
+    LAYER_FIELD_NUMBER: _ClassVar[int]
+    INTERFACE_FIELD_NUMBER: _ClassVar[int]
+    PRIVATE_FUNCTIONS_FIELD_NUMBER: _ClassVar[int]
+    EXPORTED_FIELD_NUMBER: _ClassVar[int]
+    PRIVATE_VARIABLES_FIELD_NUMBER: _ClassVar[int]
+    TYPES_FIELD_NUMBER: _ClassVar[int]
+    ENCAPSULATION_TEXT_FIELD_NUMBER: _ClassVar[int]
+    LANGUAGE_TEXT_FIELD_NUMBER: _ClassVar[int]
+    PRO_LOCKED_FIELD_NUMBER: _ClassVar[int]
+    LOCKED_TEXT_FIELD_NUMBER: _ClassVar[int]
+    NOTE_FIELD_NUMBER: _ClassVar[int]
+    revision: int
+    unchanged: bool
+    progress: IndexProgress
+    module_id: str
+    title: str
+    files: _containers.RepeatedScalarFieldContainer[str]
+    layer: str
+    interface: _containers.RepeatedCompositeFieldContainer[CardFunction]
+    private_functions: _containers.RepeatedCompositeFieldContainer[CardFunction]
+    exported: _containers.RepeatedCompositeFieldContainer[CardVariable]
+    private_variables: _containers.RepeatedCompositeFieldContainer[CardVariable]
+    types: _containers.RepeatedCompositeFieldContainer[CardType]
+    encapsulation_text: str
+    language_text: str
+    pro_locked: bool
+    locked_text: str
+    note: str
+    def __init__(self, revision: _Optional[int] = ..., unchanged: _Optional[bool] = ..., progress: _Optional[_Union[IndexProgress, _Mapping]] = ..., module_id: _Optional[str] = ..., title: _Optional[str] = ..., files: _Optional[_Iterable[str]] = ..., layer: _Optional[str] = ..., interface: _Optional[_Iterable[_Union[CardFunction, _Mapping]]] = ..., private_functions: _Optional[_Iterable[_Union[CardFunction, _Mapping]]] = ..., exported: _Optional[_Iterable[_Union[CardVariable, _Mapping]]] = ..., private_variables: _Optional[_Iterable[_Union[CardVariable, _Mapping]]] = ..., types: _Optional[_Iterable[_Union[CardType, _Mapping]]] = ..., encapsulation_text: _Optional[str] = ..., language_text: _Optional[str] = ..., pro_locked: _Optional[bool] = ..., locked_text: _Optional[str] = ..., note: _Optional[str] = ...) -> None: ...
 
 class FindingList(_message.Message):
     __slots__ = ("revision", "unchanged", "findings", "complete", "note", "fixed")
