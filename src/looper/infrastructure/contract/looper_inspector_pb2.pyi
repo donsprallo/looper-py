@@ -344,12 +344,18 @@ class TransitionEvidence(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     TRANSITION_EVIDENCE_NOT_IN_CODE: _ClassVar[TransitionEvidence]
     TRANSITION_EVIDENCE_OUTSIDE_PARENT: _ClassVar[TransitionEvidence]
 
+class LifelineGrouping(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+    __slots__ = ()
+    LIFELINE_GROUPING_MODULES: _ClassVar[LifelineGrouping]
+    LIFELINE_GROUPING_CLASSES: _ClassVar[LifelineGrouping]
+
 class LifelineKind(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     __slots__ = ()
     LIFELINE_KIND_MODULE: _ClassVar[LifelineKind]
     LIFELINE_KIND_EXTERNAL: _ClassVar[LifelineKind]
     LIFELINE_KIND_DEVICE: _ClassVar[LifelineKind]
     LIFELINE_KIND_ISR: _ClassVar[LifelineKind]
+    LIFELINE_KIND_CLASS: _ClassVar[LifelineKind]
 
 class FragmentKind(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     __slots__ = ()
@@ -594,10 +600,13 @@ TRANSITION_EVIDENCE_CODE: TransitionEvidence
 TRANSITION_EVIDENCE_BETWEEN_PASSES: TransitionEvidence
 TRANSITION_EVIDENCE_NOT_IN_CODE: TransitionEvidence
 TRANSITION_EVIDENCE_OUTSIDE_PARENT: TransitionEvidence
+LIFELINE_GROUPING_MODULES: LifelineGrouping
+LIFELINE_GROUPING_CLASSES: LifelineGrouping
 LIFELINE_KIND_MODULE: LifelineKind
 LIFELINE_KIND_EXTERNAL: LifelineKind
 LIFELINE_KIND_DEVICE: LifelineKind
 LIFELINE_KIND_ISR: LifelineKind
+LIFELINE_KIND_CLASS: LifelineKind
 FRAGMENT_KIND_LOOP: FragmentKind
 FRAGMENT_KIND_ALT: FragmentKind
 FRAGMENT_KIND_OPT: FragmentKind
@@ -4579,12 +4588,14 @@ class MachineFollowRequest(_message.Message):
     def __init__(self, machine_id: _Optional[str] = ..., variable_path: _Optional[str] = ..., follow: _Optional[bool] = ..., with_parent: _Optional[bool] = ...) -> None: ...
 
 class CallTreeRequest(_message.Message):
-    __slots__ = ("function", "depth")
+    __slots__ = ("function", "depth", "grouping")
     FUNCTION_FIELD_NUMBER: _ClassVar[int]
     DEPTH_FIELD_NUMBER: _ClassVar[int]
+    GROUPING_FIELD_NUMBER: _ClassVar[int]
     function: str
     depth: int
-    def __init__(self, function: _Optional[str] = ..., depth: _Optional[int] = ...) -> None: ...
+    grouping: LifelineGrouping
+    def __init__(self, function: _Optional[str] = ..., depth: _Optional[int] = ..., grouping: _Optional[_Union[LifelineGrouping, str]] = ...) -> None: ...
 
 class SequenceLifeline(_message.Message):
     __slots__ = ("lifeline_id", "name", "caption", "kind", "stereotype")
@@ -4667,12 +4678,14 @@ class CallTree(_message.Message):
     def __init__(self, function: _Optional[str] = ..., found: _Optional[bool] = ..., functions: _Optional[_Iterable[str]] = ..., lifelines: _Optional[_Iterable[_Union[SequenceLifeline, _Mapping]]] = ..., messages: _Optional[_Iterable[_Union[SequenceMessage, _Mapping]]] = ..., fragments: _Optional[_Iterable[_Union[SequenceFragment, _Mapping]]] = ..., banner_text: _Optional[str] = ...) -> None: ...
 
 class SequenceFollowRequest(_message.Message):
-    __slots__ = ("follow", "lifeline_ids")
+    __slots__ = ("follow", "lifeline_ids", "grouping")
     FOLLOW_FIELD_NUMBER: _ClassVar[int]
     LIFELINE_IDS_FIELD_NUMBER: _ClassVar[int]
+    GROUPING_FIELD_NUMBER: _ClassVar[int]
     follow: bool
     lifeline_ids: _containers.RepeatedScalarFieldContainer[str]
-    def __init__(self, follow: _Optional[bool] = ..., lifeline_ids: _Optional[_Iterable[str]] = ...) -> None: ...
+    grouping: LifelineGrouping
+    def __init__(self, follow: _Optional[bool] = ..., lifeline_ids: _Optional[_Iterable[str]] = ..., grouping: _Optional[_Union[LifelineGrouping, str]] = ...) -> None: ...
 
 class SequenceRequest(_message.Message):
     __slots__ = ("from_us", "to_us")

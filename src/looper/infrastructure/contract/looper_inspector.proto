@@ -3149,6 +3149,14 @@ message MachineFollowRequest {
 message CallTreeRequest {
   string function = 1;          // by name
   uint32 depth = 2;             // how many calls deep, 1 to 6
+  LifelineGrouping grouping = 3;  // looper-srv (stage 5.4d): modules or classes as lifelines
+}
+
+// What a lifeline of a sequence stands for (looper-srv, stage 5.4d).
+enum LifelineGrouping {
+  LIFELINE_GROUPING_MODULES = 0;  // one lifeline per module
+  LIFELINE_GROUPING_CLASSES = 1;  // one per class: a C++ method's class, a C function's struct
+                                  // by its first parameter; other functions keep their module's
 }
 
 enum LifelineKind {
@@ -3156,6 +3164,7 @@ enum LifelineKind {
   LIFELINE_KIND_EXTERNAL = 1;   // functions the project does not define
   LIFELINE_KIND_DEVICE = 2;     // a bus device or peripheral
   LIFELINE_KIND_ISR = 3;
+  LIFELINE_KIND_CLASS = 4;      // looper-srv: a class or struct, with LIFELINE_GROUPING_CLASSES
 }
 
 message SequenceLifeline {
@@ -3163,7 +3172,7 @@ message SequenceLifeline {
   string name = 2;              // ":light_show"
   string caption = 3;           // its layer
   LifelineKind kind = 4;
-  string stereotype = 5;        // "device"; empty otherwise
+  string stereotype = 5;        // "device", "class", "struct"; empty otherwise
 }
 
 // A UML combined fragment.
@@ -3222,6 +3231,7 @@ message CallTree {
 message SequenceFollowRequest {
   bool follow = 1;              // false stops the recording
   repeated string lifeline_ids = 2;  // the modules to record; none for every module
+  LifelineGrouping grouping = 3;  // looper-srv: classes once recording moves to srv (M6)
 }
 
 message SequenceRequest {
