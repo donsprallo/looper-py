@@ -2,7 +2,7 @@
 
 looper-srv replaces looper-core step by step and understands the same
 commands, so the integration tests are the same calls against either.
-``LOOPER_SERVER=srv`` starts looper-srv (``LOOPER_SRV_EXE``, by default the
+``LOOPER_TEST_SERVER=srv`` starts looper-srv (``LOOPER_SRV_EXE``, by default the
 debug build in a looper-srv checkout beside this one), which starts the
 looper-core of ``LOOPER_CORE`` as its child for what it does not answer
 itself. Without it the tests start looper-core directly, as before.
@@ -31,7 +31,7 @@ CORE_COMMAND = (
     "looper_core.presentation.cli.main",
 )
 
-#: The looper-srv executable started with ``LOOPER_SERVER=srv``.
+#: The looper-srv executable started with ``LOOPER_TEST_SERVER=srv``.
 SRV_EXE = Path(
     os.environ.get(
         "LOOPER_SRV_EXE",
@@ -46,7 +46,7 @@ SRV_CORE_FINDINGS = {"LOOPER_SRV_CORE_FINDINGS": "1"}
 
 def server_command() -> tuple[str, ...]:
     """The program and leading arguments that start the server under test."""
-    if os.environ.get("LOOPER_SERVER", "core") != "srv":
+    if os.environ.get("LOOPER_TEST_SERVER", "core") != "srv":
         return CORE_COMMAND
     # srv reads the code of a simulation itself since its step 6.3 and knows finding kinds core
     # never served (stack-*, isr-*); the tests compare with core, so srv leaves them out as in its
