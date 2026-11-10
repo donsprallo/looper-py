@@ -2489,6 +2489,8 @@ message ArchitectureFocus {
   uint32 depth = 3;            // rings of a focus, 1 to 3
   repeated string kinds = 4;   // calls, reads, writes, address, types, macros, includes; empty: the use graph
   uint64 known_revision = 5;
+  // 6 is kept for the run weights of stage 5.2.
+  string context_id = 7;       // "" every context; "main", "isr/TIM2": only what that context reaches
 }
 
 message ArchitectureCrumb {
@@ -2519,6 +2521,7 @@ message ArchitectureNode {
   sint32 ring = 12;            // in a focus: users negative, used positive
   string caption = 13;
   Tier worst_tier = 14;
+  string contexts_text = 15;   // "main · ISR TIM2" on a module an ISR reaches, else ""
 }
 
 message ArchitectureEdge {
@@ -2550,6 +2553,15 @@ message ArchitectureGraph {
   repeated ArchitectureCycle cycles = 8;
   string banner = 9;
   string shown_text = 10;
+  // 11 and 12 are kept for the run weights of stage 5.2.
+  repeated ExecutionContextChoice contexts = 13;   // the contexts a graph can be narrowed to; none without an ISR
+}
+
+// A context a view can be narrowed to (stage 5.1).
+message ExecutionContextChoice {
+  string context_id = 1;
+  string title = 2;
+  ContextKind kind = 3;
 }
 
 message FindingFilter {

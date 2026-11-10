@@ -3536,18 +3536,20 @@ class FileMetricsView(_message.Message):
     def __init__(self, revision: _Optional[int] = ..., unchanged: _Optional[bool] = ..., progress: _Optional[_Union[IndexProgress, _Mapping]] = ..., profile: _Optional[str] = ..., measures: _Optional[_Iterable[_Union[MeasureDescription, _Mapping]]] = ..., files: _Optional[_Iterable[_Union[FileMeasures, _Mapping]]] = ...) -> None: ...
 
 class ArchitectureFocus(_message.Message):
-    __slots__ = ("node_id", "focus", "depth", "kinds", "known_revision")
+    __slots__ = ("node_id", "focus", "depth", "kinds", "known_revision", "context_id")
     NODE_ID_FIELD_NUMBER: _ClassVar[int]
     FOCUS_FIELD_NUMBER: _ClassVar[int]
     DEPTH_FIELD_NUMBER: _ClassVar[int]
     KINDS_FIELD_NUMBER: _ClassVar[int]
     KNOWN_REVISION_FIELD_NUMBER: _ClassVar[int]
+    CONTEXT_ID_FIELD_NUMBER: _ClassVar[int]
     node_id: str
     focus: str
     depth: int
     kinds: _containers.RepeatedScalarFieldContainer[str]
     known_revision: int
-    def __init__(self, node_id: _Optional[str] = ..., focus: _Optional[str] = ..., depth: _Optional[int] = ..., kinds: _Optional[_Iterable[str]] = ..., known_revision: _Optional[int] = ...) -> None: ...
+    context_id: str
+    def __init__(self, node_id: _Optional[str] = ..., focus: _Optional[str] = ..., depth: _Optional[int] = ..., kinds: _Optional[_Iterable[str]] = ..., known_revision: _Optional[int] = ..., context_id: _Optional[str] = ...) -> None: ...
 
 class ArchitectureCrumb(_message.Message):
     __slots__ = ("node_id", "title", "kind")
@@ -3572,7 +3574,7 @@ class ArchitectureBand(_message.Message):
     def __init__(self, name: _Optional[str] = ..., title: _Optional[str] = ..., is_scope: _Optional[bool] = ..., proposed: _Optional[bool] = ...) -> None: ...
 
 class ArchitectureNode(_message.Message):
-    __slots__ = ("node_id", "kind", "title", "band", "metrics_text", "critical", "noticeable", "cycle_id", "has_children", "path", "line", "ring", "caption", "worst_tier")
+    __slots__ = ("node_id", "kind", "title", "band", "metrics_text", "critical", "noticeable", "cycle_id", "has_children", "path", "line", "ring", "caption", "worst_tier", "contexts_text")
     NODE_ID_FIELD_NUMBER: _ClassVar[int]
     KIND_FIELD_NUMBER: _ClassVar[int]
     TITLE_FIELD_NUMBER: _ClassVar[int]
@@ -3587,6 +3589,7 @@ class ArchitectureNode(_message.Message):
     RING_FIELD_NUMBER: _ClassVar[int]
     CAPTION_FIELD_NUMBER: _ClassVar[int]
     WORST_TIER_FIELD_NUMBER: _ClassVar[int]
+    CONTEXTS_TEXT_FIELD_NUMBER: _ClassVar[int]
     node_id: str
     kind: str
     title: str
@@ -3601,7 +3604,8 @@ class ArchitectureNode(_message.Message):
     ring: int
     caption: str
     worst_tier: Tier
-    def __init__(self, node_id: _Optional[str] = ..., kind: _Optional[str] = ..., title: _Optional[str] = ..., band: _Optional[int] = ..., metrics_text: _Optional[str] = ..., critical: _Optional[int] = ..., noticeable: _Optional[int] = ..., cycle_id: _Optional[str] = ..., has_children: _Optional[bool] = ..., path: _Optional[str] = ..., line: _Optional[int] = ..., ring: _Optional[int] = ..., caption: _Optional[str] = ..., worst_tier: _Optional[_Union[Tier, str]] = ...) -> None: ...
+    contexts_text: str
+    def __init__(self, node_id: _Optional[str] = ..., kind: _Optional[str] = ..., title: _Optional[str] = ..., band: _Optional[int] = ..., metrics_text: _Optional[str] = ..., critical: _Optional[int] = ..., noticeable: _Optional[int] = ..., cycle_id: _Optional[str] = ..., has_children: _Optional[bool] = ..., path: _Optional[str] = ..., line: _Optional[int] = ..., ring: _Optional[int] = ..., caption: _Optional[str] = ..., worst_tier: _Optional[_Union[Tier, str]] = ..., contexts_text: _Optional[str] = ...) -> None: ...
 
 class ArchitectureEdge(_message.Message):
     __slots__ = ("edge_id", "from_id", "to_id", "weight", "kinds_text", "direction", "violation", "exception", "cycle_id", "in_cut")
@@ -3636,7 +3640,7 @@ class ArchitectureCycle(_message.Message):
     def __init__(self, cycle_id: _Optional[str] = ..., text: _Optional[str] = ...) -> None: ...
 
 class ArchitectureGraph(_message.Message):
-    __slots__ = ("revision", "unchanged", "progress", "crumbs", "bands", "nodes", "edges", "cycles", "banner", "shown_text")
+    __slots__ = ("revision", "unchanged", "progress", "crumbs", "bands", "nodes", "edges", "cycles", "banner", "shown_text", "contexts")
     REVISION_FIELD_NUMBER: _ClassVar[int]
     UNCHANGED_FIELD_NUMBER: _ClassVar[int]
     PROGRESS_FIELD_NUMBER: _ClassVar[int]
@@ -3647,6 +3651,7 @@ class ArchitectureGraph(_message.Message):
     CYCLES_FIELD_NUMBER: _ClassVar[int]
     BANNER_FIELD_NUMBER: _ClassVar[int]
     SHOWN_TEXT_FIELD_NUMBER: _ClassVar[int]
+    CONTEXTS_FIELD_NUMBER: _ClassVar[int]
     revision: int
     unchanged: bool
     progress: IndexProgress
@@ -3657,7 +3662,18 @@ class ArchitectureGraph(_message.Message):
     cycles: _containers.RepeatedCompositeFieldContainer[ArchitectureCycle]
     banner: str
     shown_text: str
-    def __init__(self, revision: _Optional[int] = ..., unchanged: _Optional[bool] = ..., progress: _Optional[_Union[IndexProgress, _Mapping]] = ..., crumbs: _Optional[_Iterable[_Union[ArchitectureCrumb, _Mapping]]] = ..., bands: _Optional[_Iterable[_Union[ArchitectureBand, _Mapping]]] = ..., nodes: _Optional[_Iterable[_Union[ArchitectureNode, _Mapping]]] = ..., edges: _Optional[_Iterable[_Union[ArchitectureEdge, _Mapping]]] = ..., cycles: _Optional[_Iterable[_Union[ArchitectureCycle, _Mapping]]] = ..., banner: _Optional[str] = ..., shown_text: _Optional[str] = ...) -> None: ...
+    contexts: _containers.RepeatedCompositeFieldContainer[ExecutionContextChoice]
+    def __init__(self, revision: _Optional[int] = ..., unchanged: _Optional[bool] = ..., progress: _Optional[_Union[IndexProgress, _Mapping]] = ..., crumbs: _Optional[_Iterable[_Union[ArchitectureCrumb, _Mapping]]] = ..., bands: _Optional[_Iterable[_Union[ArchitectureBand, _Mapping]]] = ..., nodes: _Optional[_Iterable[_Union[ArchitectureNode, _Mapping]]] = ..., edges: _Optional[_Iterable[_Union[ArchitectureEdge, _Mapping]]] = ..., cycles: _Optional[_Iterable[_Union[ArchitectureCycle, _Mapping]]] = ..., banner: _Optional[str] = ..., shown_text: _Optional[str] = ..., contexts: _Optional[_Iterable[_Union[ExecutionContextChoice, _Mapping]]] = ...) -> None: ...
+
+class ExecutionContextChoice(_message.Message):
+    __slots__ = ("context_id", "title", "kind")
+    CONTEXT_ID_FIELD_NUMBER: _ClassVar[int]
+    TITLE_FIELD_NUMBER: _ClassVar[int]
+    KIND_FIELD_NUMBER: _ClassVar[int]
+    context_id: str
+    title: str
+    kind: ContextKind
+    def __init__(self, context_id: _Optional[str] = ..., title: _Optional[str] = ..., kind: _Optional[_Union[ContextKind, str]] = ...) -> None: ...
 
 class FindingFilter(_message.Message):
     __slots__ = ("node_id", "known_revision")
