@@ -40,8 +40,16 @@ SRV_EXE = Path(
 )
 
 
+#: What makes a debug build of looper-srv leave out the finding kinds core never served (D7).
+SRV_CORE_FINDINGS = {"LOOPER_SRV_CORE_FINDINGS": "1"}
+
+
 def server_command() -> tuple[str, ...]:
     """The program and leading arguments that start the server under test."""
     if os.environ.get("LOOPER_SERVER", "core") != "srv":
         return CORE_COMMAND
+    # srv reads the code of a simulation itself since its step 6.3 and knows finding kinds core
+    # never served (stack-*, isr-*); the tests compare with core, so srv leaves them out as in its
+    # conformance suite (deviation D7, read only by a debug build).
+    os.environ.update(SRV_CORE_FINDINGS)
     return (str(SRV_EXE), "--core", " ".join(CORE_COMMAND))
