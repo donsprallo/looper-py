@@ -1165,7 +1165,11 @@ class InspectorServicer:
         """A board at a debug probe (SERVER_MODE_HARDWARE, CAPABILITY_HARDWARE, Pro):
         write the firmware into its flash and verify it, and see what its core
         does. Halt and resume are ControlRun{hold} and ControlRun{max_speed} or
-        {pace_ratio: 1.0}; a reset is ResetFirmware with `when` now.
+        {pace_ratio: 1.0}; a reset is ResetFirmware with `when` now. A client
+        resumes with pace_ratio 1.0 only. FlashFirmware returns at once, as
+        RestartSimulation does: it is accepted or refused, and the writing is
+        followed in TargetView.flash. On a board, RestartSimulation reconnects:
+        the probe is opened anew, the board attached, the licence read again.
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')

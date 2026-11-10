@@ -225,6 +225,7 @@ class CoreState(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     CORE_STATE_HALTED: _ClassVar[CoreState]
     CORE_STATE_RESET: _ClassVar[CoreState]
     CORE_STATE_LOCKED_UP: _ClassVar[CoreState]
+    CORE_STATE_DETACHED: _ClassVar[CoreState]
 
 class HeaderState(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     __slots__ = ()
@@ -482,6 +483,7 @@ CORE_STATE_RUNNING: CoreState
 CORE_STATE_HALTED: CoreState
 CORE_STATE_RESET: CoreState
 CORE_STATE_LOCKED_UP: CoreState
+CORE_STATE_DETACHED: CoreState
 HEADER_STATE_UNSPECIFIED: HeaderState
 HEADER_STATE_EMPTY: HeaderState
 HEADER_STATE_VALID: HeaderState
@@ -584,7 +586,7 @@ class When(_message.Message):
     def __init__(self, at_us: _Optional[int] = ..., after_us: _Optional[int] = ..., allow_late: _Optional[bool] = ...) -> None: ...
 
 class Description(_message.Message):
-    __slots__ = ("contract_version", "firmware_name", "reads_the_build", "definition_path", "capabilities", "retention_us", "max_events_per_batch", "mode", "mode_text", "input_text", "license")
+    __slots__ = ("contract_version", "firmware_name", "reads_the_build", "definition_path", "capabilities", "retention_us", "max_events_per_batch", "mode", "mode_text", "input_text", "license", "refused_calls")
     CONTRACT_VERSION_FIELD_NUMBER: _ClassVar[int]
     FIRMWARE_NAME_FIELD_NUMBER: _ClassVar[int]
     READS_THE_BUILD_FIELD_NUMBER: _ClassVar[int]
@@ -596,6 +598,7 @@ class Description(_message.Message):
     MODE_TEXT_FIELD_NUMBER: _ClassVar[int]
     INPUT_TEXT_FIELD_NUMBER: _ClassVar[int]
     LICENSE_FIELD_NUMBER: _ClassVar[int]
+    REFUSED_CALLS_FIELD_NUMBER: _ClassVar[int]
     contract_version: ContractVersion
     firmware_name: str
     reads_the_build: bool
@@ -607,7 +610,16 @@ class Description(_message.Message):
     mode_text: str
     input_text: str
     license: LicenseView
-    def __init__(self, contract_version: _Optional[_Union[ContractVersion, str]] = ..., firmware_name: _Optional[str] = ..., reads_the_build: _Optional[bool] = ..., definition_path: _Optional[str] = ..., capabilities: _Optional[_Iterable[_Union[Capability, str]]] = ..., retention_us: _Optional[int] = ..., max_events_per_batch: _Optional[int] = ..., mode: _Optional[_Union[ServerMode, str]] = ..., mode_text: _Optional[str] = ..., input_text: _Optional[str] = ..., license: _Optional[_Union[LicenseView, _Mapping]] = ...) -> None: ...
+    refused_calls: _containers.RepeatedCompositeFieldContainer[RefusedCall]
+    def __init__(self, contract_version: _Optional[_Union[ContractVersion, str]] = ..., firmware_name: _Optional[str] = ..., reads_the_build: _Optional[bool] = ..., definition_path: _Optional[str] = ..., capabilities: _Optional[_Iterable[_Union[Capability, str]]] = ..., retention_us: _Optional[int] = ..., max_events_per_batch: _Optional[int] = ..., mode: _Optional[_Union[ServerMode, str]] = ..., mode_text: _Optional[str] = ..., input_text: _Optional[str] = ..., license: _Optional[_Union[LicenseView, _Mapping]] = ..., refused_calls: _Optional[_Iterable[_Union[RefusedCall, _Mapping]]] = ...) -> None: ...
+
+class RefusedCall(_message.Message):
+    __slots__ = ("rpc", "text")
+    RPC_FIELD_NUMBER: _ClassVar[int]
+    TEXT_FIELD_NUMBER: _ClassVar[int]
+    rpc: str
+    text: str
+    def __init__(self, rpc: _Optional[str] = ..., text: _Optional[str] = ...) -> None: ...
 
 class LicenseView(_message.Message):
     __slots__ = ("edition", "unlocked", "licensee", "expires_text", "source_text", "note", "install_path", "parts")
@@ -1625,21 +1637,45 @@ class FlashFirmwareView(_message.Message):
     text: str
     def __init__(self, bytes: _Optional[int] = ..., took_text: _Optional[str] = ..., text: _Optional[str] = ...) -> None: ...
 
+class FlashProgress(_message.Message):
+    __slots__ = ("running", "phase_text", "fraction", "result_text", "failed", "took_text")
+    RUNNING_FIELD_NUMBER: _ClassVar[int]
+    PHASE_TEXT_FIELD_NUMBER: _ClassVar[int]
+    FRACTION_FIELD_NUMBER: _ClassVar[int]
+    RESULT_TEXT_FIELD_NUMBER: _ClassVar[int]
+    FAILED_FIELD_NUMBER: _ClassVar[int]
+    TOOK_TEXT_FIELD_NUMBER: _ClassVar[int]
+    running: bool
+    phase_text: str
+    fraction: float
+    result_text: str
+    failed: bool
+    took_text: str
+    def __init__(self, running: _Optional[bool] = ..., phase_text: _Optional[str] = ..., fraction: _Optional[float] = ..., result_text: _Optional[str] = ..., failed: _Optional[bool] = ..., took_text: _Optional[str] = ...) -> None: ...
+
 class TargetView(_message.Message):
-    __slots__ = ("chip", "probe_text", "core_state", "pc_text", "halt_reason_text", "time_base_text")
+    __slots__ = ("chip", "probe_text", "core_state", "pc_text", "halt_reason_text", "time_base_text", "problem_text", "halted_at", "elf_path", "flash")
     CHIP_FIELD_NUMBER: _ClassVar[int]
     PROBE_TEXT_FIELD_NUMBER: _ClassVar[int]
     CORE_STATE_FIELD_NUMBER: _ClassVar[int]
     PC_TEXT_FIELD_NUMBER: _ClassVar[int]
     HALT_REASON_TEXT_FIELD_NUMBER: _ClassVar[int]
     TIME_BASE_TEXT_FIELD_NUMBER: _ClassVar[int]
+    PROBLEM_TEXT_FIELD_NUMBER: _ClassVar[int]
+    HALTED_AT_FIELD_NUMBER: _ClassVar[int]
+    ELF_PATH_FIELD_NUMBER: _ClassVar[int]
+    FLASH_FIELD_NUMBER: _ClassVar[int]
     chip: str
     probe_text: str
     core_state: CoreState
     pc_text: str
     halt_reason_text: str
     time_base_text: str
-    def __init__(self, chip: _Optional[str] = ..., probe_text: _Optional[str] = ..., core_state: _Optional[_Union[CoreState, str]] = ..., pc_text: _Optional[str] = ..., halt_reason_text: _Optional[str] = ..., time_base_text: _Optional[str] = ...) -> None: ...
+    problem_text: str
+    halted_at: CodePlace
+    elf_path: str
+    flash: FlashProgress
+    def __init__(self, chip: _Optional[str] = ..., probe_text: _Optional[str] = ..., core_state: _Optional[_Union[CoreState, str]] = ..., pc_text: _Optional[str] = ..., halt_reason_text: _Optional[str] = ..., time_base_text: _Optional[str] = ..., problem_text: _Optional[str] = ..., halted_at: _Optional[_Union[CodePlace, _Mapping]] = ..., elf_path: _Optional[str] = ..., flash: _Optional[_Union[FlashProgress, _Mapping]] = ...) -> None: ...
 
 class ResetRequest(_message.Message):
     __slots__ = ("cause", "when")

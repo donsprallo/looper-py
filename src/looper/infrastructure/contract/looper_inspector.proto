@@ -132,8 +132,17 @@ message Description {
   // into a Pro part the licence does not unlock is refused with
   // PERMISSION_DENIED and a sentence saying what is locked and why.
   LicenseView license = 12;
+  // Every RPC this session refuses, with the sentence it is refused with, so
+  // that a client greys out what is not offered before it asks. A call
+  // locked by the licence is not listed: LicenseView says that.
+  repeated RefusedCall refused_calls = 13;
   reserved 3;
   reserved "time_mode";
+}
+
+message RefusedCall {
+  string rpc = 1;   // the method's name in this schema, e.g. "ObserveSimulation"
+  string text = 2;  // e.g. "Driving pins is only offered in a simulation: a board's pins are wired."
 }
 
 enum Edition {
@@ -256,6 +265,8 @@ message RunState {
   // firmware at a line. Simulated time stands still meanwhile; `now_us` is
   // where it stands. Empty while it runs. Also a firmware that hangs without
   // a role call and no watchdog to reset it: "The firmware hangs ...".
+  // Always empty on a board: a halted core still answers, and why it is
+  // halted is TargetView.halt_reason_text; mode HELD says that it stands.
   string hold_reason = 11;
   // The firmware's life: 1 until its first reset, then one more per reset
   // (a reset is not a restart: time and the recording go on). resets is how
@@ -1140,7 +1151,11 @@ service Inspector {
   // A board at a debug probe (SERVER_MODE_HARDWARE, CAPABILITY_HARDWARE, Pro):
   // write the firmware into its flash and verify it, and see what its core
   // does. Halt and resume are ControlRun{hold} and ControlRun{max_speed} or
-  // {pace_ratio: 1.0}; a reset is ResetFirmware with `when` now.
+  // {pace_ratio: 1.0}; a reset is ResetFirmware with `when` now. A client
+  // resumes with pace_ratio 1.0 only. FlashFirmware returns at once, as
+  // RestartSimulation does: it is accepted or refused, and the writing is
+  // followed in TargetView.flash. On a board, RestartSimulation reconnects:
+  // the probe is opened anew, the board attached, the licence read again.
   rpc FlashFirmware(FlashFirmwareRequest) returns (FlashFirmwareView);
   rpc ObserveTarget(Empty) returns (TargetView);
 }
@@ -1151,9 +1166,19 @@ message FlashFirmwareRequest {
 }
 
 message FlashFirmwareView {
-  uint64 bytes = 1;      // bytes written
-  string took_text = 2;  // e.g. "1.4 s"
-  string text = 3;       // e.g. "Flashed blinky.elf (904 bytes) and verified it."
+  uint64 bytes = 1;      // bytes the flash will be written with
+  string took_text = 2;  // empty when the call returns; the time is in FlashProgress.took_text
+  string text = 3;       // e.g. "Flashing blinky.elf (904 bytes)."
+}
+
+// A flash being written, or the last one written, in the server's words.
+message FlashProgress {
+  bool running = 1;
+  string phase_text = 2;   // e.g. "erasing", "programming", "verifying"
+  float fraction = 3;      // 0 to 1 while running
+  string result_text = 4;  // when done: "Flashed blinky.elf (904 bytes), verified it and started it."
+  bool failed = 5;         // result_text then says why
+  string took_text = 6;    // e.g. "1.4 s"
 }
 
 enum CoreState {
@@ -1162,6 +1187,10 @@ enum CoreState {
   CORE_STATE_HALTED = 2;
   CORE_STATE_RESET = 3;
   CORE_STATE_LOCKED_UP = 4;
+  // No board is attached: no probe, the probe in use, a chip other than
+  // [target] names. TargetView.problem_text says which; the server tries
+  // again about once a second.
+  CORE_STATE_DETACHED = 5;
 }
 
 message TargetView {
@@ -1171,6 +1200,10 @@ message TargetView {
   string pc_text = 4;           // while halted, e.g. "0x080000c4 main.c:57"
   string halt_reason_text = 5;  // e.g. "halted by request at main.c:57"
   string time_base_text = 6;    // e.g. "times are the DWT cycle counter at 2.097 MHz"
+  string problem_text = 7;      // why no board is attached; empty while one is
+  CodePlace halted_at = 8;      // while halted at a known line: the path as ListSources names it, and the line
+  string elf_path = 9;          // the ELF FlashFirmware takes when it names none
+  FlashProgress flash = 10;     // the flash being written, or the last one; unset before the first
 }
 
 // A reset from outside: PIN (the reset pin), POWER_ON or BROWN_OUT (the power goes and comes back; without [retained] battery the retained memory is lost). Absent: PIN. SOFTWARE and WATCHDOG are refused.
