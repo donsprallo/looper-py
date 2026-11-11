@@ -126,7 +126,7 @@ from looper.domain.model import (
 from looper.infrastructure.looper_cli import LooperCliError, ServerStartError
 from looper.starting import ContractMismatchError, connect, run
 
-__version__ = "0.2.0"
+__version__ = "0.3.0"
 
 __all__ = [
     "BusReceived",
