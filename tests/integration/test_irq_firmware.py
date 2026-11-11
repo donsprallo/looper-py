@@ -1,10 +1,10 @@
-"""The interrupt test firmware of looper-core, raised and read from a test.
+"""The interrupt test firmware of looper, raised and read from a test.
 
 A button on EXTI0 counts presses in its ISR, TIM2 ticks every millisecond.
 A test reads what each source did and raises one itself.
 
-Needs a looper-core checkout beside this one and a C compiler, and skips
-without them. ``LOOPER_CORE`` points at a checkout elsewhere.
+Needs a looper-docs checkout beside this one and a C compiler, and skips
+without them. ``LOOPER_FIXTURES`` points at the fixtures elsewhere.
 """
 
 from __future__ import annotations
@@ -15,9 +15,9 @@ from collections.abc import Iterator
 import pytest
 
 import looper
-from server_under_test import CORE, server_command
+from server_under_test import FIXTURES, server_command
 
-DEFINITION = CORE / "tests" / "fixtures" / "irq_firmware" / "looper.toml"
+DEFINITION = FIXTURES / "irq_firmware" / "looper.toml"
 
 
 @pytest.fixture
@@ -26,7 +26,7 @@ def simulation(monkeypatch: pytest.MonkeyPatch) -> Iterator[looper.Simulation]:
     monkeypatch.setenv("LOOPER_DEV_EDITION", "free")
     monkeypatch.setenv("LOOPER_LICENSE", "no licence here")
     if not DEFINITION.is_file():
-        pytest.skip(f"no looper-core checkout at {CORE}")
+        pytest.skip(f"no fixture at {DEFINITION}")
     if shutil.which("gcc") is None and shutil.which("clang") is None:
         pytest.skip("no C compiler on PATH")
     with looper.run(DEFINITION, virtual=True, looper_cli=server_command()) as started:
@@ -62,7 +62,7 @@ def pro_simulation(monkeypatch: pytest.MonkeyPatch) -> Iterator[looper.Simulatio
     """The interrupt firmware with run findings unlocked, as a checkout unlocks them."""
     monkeypatch.setenv("LOOPER_DEV_EDITION", "pro")
     if not DEFINITION.is_file():
-        pytest.skip(f"no looper-core checkout at {CORE}")
+        pytest.skip(f"no fixture at {DEFINITION}")
     with looper.run(DEFINITION, virtual=True, looper_cli=server_command()) as started:
         yield started
 

@@ -108,9 +108,12 @@ $ uv run pytest
 $ uv run ruff check src tests && uv run mypy
 ```
 
-The tests under `tests/integration` build and run the test firmware of a
-`looper-core` checkout beside this one (`tests/fixtures/blinky` there), and skip
-without it or without a C compiler. `LOOPER_CORE` points at a checkout elsewhere.
+The tests under `tests/integration` start looper-srv (`LOOPER_SRV_EXE`, by
+default the debug build of a `looper-srv` checkout beside this one) and build
+and run the test firmware in `fixtures/` of a `looper-docs` checkout beside this
+one (`LOOPER_FIXTURES` points elsewhere); they skip without it or without a C
+compiler. `LOOPER_TEST_SERVER=core` starts the reference, looper-core
+(`LOOPER_CORE`), instead.
 
 The contract is `src/looper/infrastructure/contract/looper_inspector.proto`,
 a copy of the schema in `looper-core`; `tests/test_contract_in_step.py` fails

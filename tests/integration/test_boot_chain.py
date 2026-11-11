@@ -1,11 +1,11 @@
-"""The boot chain test firmware of looper-core, updated and checked from a test (Pro).
+"""The boot chain test firmware of looper, updated and checked from a test (Pro).
 
 The board starts stage 0, which jumps through stage 1 into the application
 in slot A. A test writes a built image into slot B, puts it on trial in the
 boot state, resets, and expects slot B to hold that image and to run it.
 
-Needs a looper-core checkout beside this one and a C compiler, and skips
-without them. ``LOOPER_CORE`` points at a checkout elsewhere. Pro is
+Needs a looper-docs checkout beside this one and a C compiler, and skips
+without them. ``LOOPER_FIXTURES`` points at the fixtures elsewhere. Pro is
 unlocked by looper-core's development switch, as in its own tests.
 """
 
@@ -18,9 +18,9 @@ from collections.abc import Iterator
 import pytest
 
 import looper
-from server_under_test import CORE, server_command
+from server_under_test import FIXTURES, server_command
 
-DEFINITION = CORE / "tests" / "fixtures" / "boot_chain" / "looper.toml"
+DEFINITION = FIXTURES / "boot_chain" / "looper.toml"
 
 BOOT_STATE_MAGIC, BOOT_STATE = 0xB5B5B5B5, 0x12000
 SLOT_A, ON_TRIAL = 0, 1
@@ -30,7 +30,7 @@ SLOT_A, ON_TRIAL = 0, 1
 def simulation(monkeypatch: pytest.MonkeyPatch) -> Iterator[looper.Simulation]:
     """The boot chain firmware and its images, built, started on a held clock and attached to."""
     if not DEFINITION.is_file():
-        pytest.skip(f"no looper-core checkout at {CORE}")
+        pytest.skip(f"no fixture at {DEFINITION}")
     if shutil.which("gcc") is None and shutil.which("clang") is None:
         pytest.skip("no C compiler on PATH")
     monkeypatch.setenv("LOOPER_DEV_EDITION", "pro")

@@ -1,12 +1,12 @@
-"""The reset test firmware of looper-core, reset and checked from a test.
+"""The reset test firmware of looper, reset and checked from a test.
 
 The firmware counts its starts in retained memory, keeps a small checked
 configuration in the flash, and resets itself when its reset button is
 pressed. A test resets it from outside, expects resets of a cause, reads
 what survives a reset, and lays broken data down in the flash on purpose.
 
-Needs a looper-core checkout beside this one and a C compiler, and skips
-without them. ``LOOPER_CORE`` points at a checkout elsewhere.
+Needs a looper-docs checkout beside this one and a C compiler, and skips
+without them. ``LOOPER_FIXTURES`` points at the fixtures elsewhere.
 """
 
 from __future__ import annotations
@@ -18,9 +18,9 @@ from pathlib import Path
 import pytest
 
 import looper
-from server_under_test import CORE, server_command
+from server_under_test import FIXTURES, server_command
 
-DEFINITION = CORE / "tests" / "fixtures" / "reset_firmware" / "looper.toml"
+DEFINITION = FIXTURES / "reset_firmware" / "looper.toml"
 
 RESET_BUTTON = 2
 STARTS, CONFIG_STATE = 0, 8
@@ -31,7 +31,7 @@ BROKEN = 2
 def simulation() -> Iterator[looper.Simulation]:
     """The reset firmware, built, started on a held clock and attached to."""
     if not DEFINITION.is_file():
-        pytest.skip(f"no looper-core checkout at {CORE}")
+        pytest.skip(f"no fixture at {DEFINITION}")
     if shutil.which("gcc") is None and shutil.which("clang") is None:
         pytest.skip("no C compiler on PATH")
     with looper.run(DEFINITION, virtual=True, looper_cli=server_command()) as started:

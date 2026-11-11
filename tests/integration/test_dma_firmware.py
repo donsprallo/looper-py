@@ -1,12 +1,12 @@
-"""The DMA test firmware of looper-core, read and checked from a test.
+"""The DMA test firmware of looper, read and checked from a test.
 
 USART2 receives by circular DMA until its line is idle. A test sends it
 bytes and reads where the transfer stands; with the licence it checks that
 the firmware leaves the running buffer alone, which PEEK breaks. ADC1 scans
 AIN0 every millisecond into a circular buffer whose halves are averaged.
 
-Needs a looper-core checkout beside this one and a C compiler, and skips
-without them. ``LOOPER_CORE`` points at a checkout elsewhere.
+Needs a looper-docs checkout beside this one and a C compiler, and skips
+without them. ``LOOPER_FIXTURES`` points at the fixtures elsewhere.
 """
 
 from __future__ import annotations
@@ -18,9 +18,9 @@ import pytest
 
 import looper
 from looper.domain.model.requests import BusMessage, Signal
-from server_under_test import CORE, server_command
+from server_under_test import FIXTURES, server_command
 
-DEFINITION = CORE / "tests" / "fixtures" / "dma_firmware" / "looper.toml"
+DEFINITION = FIXTURES / "dma_firmware" / "looper.toml"
 #: The switch that reads ahead in the running buffer, and USART2's bus.
 PEEK, USART2_BUS = 1, 2
 
@@ -30,7 +30,7 @@ def pro_simulation(monkeypatch: pytest.MonkeyPatch) -> Iterator[looper.Simulatio
     """The DMA firmware with run findings unlocked, as a checkout unlocks them."""
     monkeypatch.setenv("LOOPER_DEV_EDITION", "pro")
     if not DEFINITION.is_file():
-        pytest.skip(f"no looper-core checkout at {CORE}")
+        pytest.skip(f"no fixture at {DEFINITION}")
     if shutil.which("gcc") is None and shutil.which("clang") is None:
         pytest.skip("no C compiler on PATH")
     with looper.run(DEFINITION, virtual=True, looper_cli=server_command()) as started:

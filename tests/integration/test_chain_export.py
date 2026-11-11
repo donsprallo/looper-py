@@ -4,8 +4,8 @@ The server writes the test of a chain group from looper-py's builder calls
 (looper Pro); this runs that very text against the simulation it came from,
 so that an export that no longer matches this library's API fails here.
 
-Needs a looper-core checkout beside this one and a C compiler, and skips
-without them. ``LOOPER_CORE`` points at a checkout elsewhere.
+Needs a looper-docs checkout beside this one and a C compiler, and skips
+without them. ``LOOPER_FIXTURES`` points at the fixtures elsewhere.
 """
 
 from __future__ import annotations
@@ -18,19 +18,19 @@ from typing import Any
 import pytest
 
 import looper
-from server_under_test import CORE, server_command
+from server_under_test import FIXTURES, server_command
 
 # The export is part of looper Pro, which the development switch unlocks.
 os.environ["LOOPER_DEV_EDITION"] = "pro"
 
-DEFINITION = CORE / "tests" / "fixtures" / "blinky" / "looper.toml"
+DEFINITION = FIXTURES / "blinky" / "looper.toml"
 
 
 @pytest.fixture(scope="module")
 def simulation() -> Iterator[looper.Simulation]:
     """The blinky example, built, started on a held clock and attached to."""
     if not DEFINITION.is_file():
-        pytest.skip(f"no looper-core checkout at {CORE}")
+        pytest.skip(f"no fixture at {DEFINITION}")
     if shutil.which("gcc") is None and shutil.which("clang") is None:
         pytest.skip("no C compiler on PATH")
     with looper.run(DEFINITION, virtual=True, looper_cli=server_command()) as started:

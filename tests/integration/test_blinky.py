@@ -1,12 +1,12 @@
-"""The blinky test firmware of looper-core, run and checked from a test.
+"""The blinky test firmware of looper, run and checked from a test.
 
 The whole path a user takes: looper-cli builds the firmware, starts it on a
 virtual clock and serves it; this library attaches, sets the scene and
 expects things of it. The firmware blinks every 500 ms, and every 100 ms
 while the button is pressed.
 
-Needs a looper-core checkout beside this one and a C compiler, and skips
-without them. ``LOOPER_CORE`` points at a checkout elsewhere.
+Needs a looper-docs checkout beside this one and a C compiler, and skips
+without them. ``LOOPER_FIXTURES`` points at the fixtures elsewhere.
 """
 
 from __future__ import annotations
@@ -19,20 +19,20 @@ from pathlib import Path
 import pytest
 
 import looper
-from server_under_test import CORE, server_command
+from server_under_test import FIXTURES, server_command
 
 # The findings are part of looper Pro. looper-cli is started from a checkout,
 # where the development switch unlocks Pro, so no licence is needed here.
 os.environ["LOOPER_DEV_EDITION"] = "pro"
 
-DEFINITION = CORE / "tests" / "fixtures" / "blinky" / "looper.toml"
+DEFINITION = FIXTURES / "blinky" / "looper.toml"
 
 
 @pytest.fixture(scope="module")
 def simulation() -> Iterator[looper.Simulation]:
     """The blinky example, built, started on a held clock and attached to."""
     if not DEFINITION.is_file():
-        pytest.skip(f"no looper-core checkout at {CORE}")
+        pytest.skip(f"no fixture at {DEFINITION}")
     if shutil.which("gcc") is None and shutil.which("clang") is None:
         pytest.skip("no C compiler on PATH")
     with looper.run(DEFINITION, virtual=True, looper_cli=server_command()) as started:
