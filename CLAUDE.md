@@ -68,6 +68,7 @@ prüft das.
 src/looper/
 ├── __init__.py           # öffentliche API: run, connect, Simulation, Expectations
 ├── starting.py           # Composition Root
+├── strategies.py         # Hypothesis-Strategien für Busnachrichten (optional, Extra `hypothesis`)
 ├── domain/
 │   ├── model/            # Observation, Lesungen, Outcome, ExpectationReport
 │   └── checks/           # eine Datei pro Gegenstand: Kanal, Bus, Aufruf, Speicher

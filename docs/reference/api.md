@@ -401,6 +401,15 @@ explains how they are used.
    :undoc-members:
 ```
 
+## Strategies for property tests
+
+Needs the optional dependency `hypothesis` (`looper-py[hypothesis]`).
+
+```{eval-rst}
+.. automodule:: looper.strategies
+   :members: unsigned, signed, one_of_values, raw, fields, length_prefixed, with_checksum, sum8, xor8, bus_messages
+```
+
 ## Errors
 
 ```{eval-rst}

@@ -105,6 +105,14 @@ Run the same expectation over many input values with
 `pytest.mark.parametrize`, without starting the simulation each time.
 :::
 
+:::{grid-item-card} Does the firmware survive every message?
+:link: recipes/property-tests
+:link-type: doc
+
+Describe a message format once and let Hypothesis draw hundreds of messages
+from it with `looper.strategies`; a failure is shrunk to the smallest one.
+:::
+
 ::::
 
 ## How it fits together
@@ -182,6 +190,7 @@ recipes/reset
 recipes/update
 recipes/bus
 recipes/sweeps
+recipes/property-tests
 ```
 
 ```{toctree}
