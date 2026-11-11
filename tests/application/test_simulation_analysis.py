@@ -60,7 +60,7 @@ def test_a_server_that_does_not_read_the_code_says_how_to_start_one_that_does() 
     inspector = ScriptedInspector()
     inspector.findings = None
 
-    with pytest.raises(SimulationRefusedError, match="looper-cli run") as refused:
+    with pytest.raises(SimulationRefusedError, match="looper-srv run") as refused:
         Simulation(inspector).findings()
     assert "does not read the project's code" in str(refused.value)
 
