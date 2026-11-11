@@ -2,7 +2,7 @@
 
 One method per question the use cases here ask, answered synchronously in
 the values of the domain. Nothing above the port knows how it is answered:
-`GrpcInspector` speaks the inspector contract to `looper-cli run`, a test
+`GrpcInspector` speaks the inspector contract to `looper-srv run`, a test
 answers from a script.
 
 How the port says no is part of what it promises. A refusal is something

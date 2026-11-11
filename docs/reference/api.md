@@ -18,7 +18,7 @@ looper.Width, looper.Quiet, looper.Value
 looper.PinLevel, looper.Polarity, looper.Comparison
 looper.TriggerMode, looper.TriggerState
 looper.SimulationRefusedError, looper.SimulationUnreachableError
-looper.LooperCliError, looper.ContractMismatchError
+looper.ServerStartError, looper.ContractMismatchError  # LooperCliError: deprecated alias
 looper.ProFeatureLockedError                        # a looper Pro part without a licence
 looper.Profile, looper.ProfileEntry               # where the time went
 looper.Findings, looper.Finding, looper.Dependency  # what the architecture analysis found (Pro)
@@ -410,7 +410,7 @@ explains how they are used.
 
 .. autoexception:: looper.SimulationUnreachableError
 
-.. autoexception:: looper.LooperCliError
+.. autoexception:: looper.ServerStartError
 
 .. autoexception:: looper.ContractMismatchError
 ```

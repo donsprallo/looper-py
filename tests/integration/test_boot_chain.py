@@ -34,7 +34,7 @@ def simulation(monkeypatch: pytest.MonkeyPatch) -> Iterator[looper.Simulation]:
     if shutil.which("gcc") is None and shutil.which("clang") is None:
         pytest.skip("no C compiler on PATH")
     monkeypatch.setenv("LOOPER_DEV_EDITION", "pro")
-    with looper.run(DEFINITION, virtual=True, looper_cli=server_command()) as started:
+    with looper.run(DEFINITION, virtual=True, server=server_command()) as started:
         yield started
 
 

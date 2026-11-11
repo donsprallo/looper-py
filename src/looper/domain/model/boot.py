@@ -1,7 +1,7 @@
 """The bootloader's parts as a test reads them: images, partition headers, boot chains (Pro).
 
 These are the server's words. Whether a header is valid, which image it
-names, which way a boot went -- looper-core decides and says it; a test
+names, which way a boot went -- the server decides and says it; a test
 only compares.
 """
 

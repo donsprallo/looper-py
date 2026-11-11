@@ -22,9 +22,8 @@ looper-py itself depends only on `grpcio` and `protobuf`. It starts
 described in {learn}`Installation <getting-started/installation.html>`). Either
 put the program on your `PATH`, where the library finds it as `looper-srv`, or
 leave it in its checkout and tell looper-py where it is. The library looks, in
-this order, at the argument `looper_cli=` of `looper.run`, the environment
-variable `LOOPER_SRV`, the environment variable `LOOPER_CLI` (still read), and
-then `looper-srv` on the `PATH`:
+this order, at the argument `server=` of `looper.run`, the environment
+variable `LOOPER_SRV`, and then `looper-srv` on the `PATH`:
 
 ::::{tab-set}
 
@@ -46,7 +45,9 @@ A Windows installer that puts `looper-srv` and what it needs on the `PATH` is
 coming; it is prepared but not built yet.
 
 The same command can also be passed to [`looper.run`](../guides/reaching.md)
-as `looper_cli=...`, which is handy in a `conftest.py`.
+as `server=...`, which is handy in a `conftest.py`. (The older names,
+`looper_cli=` and the environment variable `LOOPER_CLI`, still work but are
+deprecated and warn.)
 
 ## Step 2: add looper-py to your test environment
 

@@ -47,13 +47,16 @@ of [`looper-rs`](../looper-rs) look at one simulation together.
 
 | Call | What it does |
 | --- | --- |
-| `looper.run(definition, virtual=..., build=..., looper_cli=...)` | starts `looper-srv run` for a build definition and attaches to it; closing stops it |
+| `looper.run(definition, virtual=..., build=..., server=...)` | starts `looper-srv run` for a build definition and attaches to it; closing stops it |
 | `looper.connect(address)` | attaches to a `looper-srv run` that is already serving |
 
 The command that runs the server is looked up in this order: the argument
-`looper_cli=`, the `LOOPER_SRV` environment variable, the `LOOPER_CLI`
-environment variable (still read), and then `looper-srv` on the `PATH`, for
-example `LOOPER_SRV=../looper-srv/target/release/looper-srv`.
+`server=`, the `LOOPER_SRV` environment variable, and then `looper-srv` on the
+`PATH`, for example `LOOPER_SRV=../looper-srv/target/release/looper-srv`. The
+old names `looper_cli=` and `LOOPER_CLI` are deprecated: they still work, with
+a `DeprecationWarning`. A server that cannot be started, or that cannot build
+the simulation, raises `looper.ServerStartError` (formerly `LooperCliError`,
+which remains as a deprecated alias).
 
 ## What a test can do
 

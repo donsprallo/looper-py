@@ -2,16 +2,16 @@
 
 ## When starting
 
-`looper.LooperCliError: could not start 'looper-srv': ...`
+`looper.ServerStartError: could not start 'looper-srv': ...`
 : The `looper-srv` program was not found. Put it on the `PATH`, or tell the
-  library where it is with `LOOPER_SRV` or `looper_cli=` -- see
-  [Installation](getting-started/installation.md). (The exception keeps its
-  old name, `LooperCliError`, for every server.)
+  library where it is with `LOOPER_SRV` or `server=` -- see
+  [Installation](getting-started/installation.md). (`ServerStartError` was
+  called `LooperCliError` before; the old name still works as a deprecated
+  alias, so `except looper.LooperCliError` catches it too.)
 
-`looper.LooperCliError: looper-cli stopped before it served (exit 1)`
+`looper.ServerStartError: the server stopped before it served (exit 1)`
 : The server ran but gave up: the build definition was not found, the
-  headers could not be parsed, or the compiler rejected the code. The message
-  says `looper-cli` whichever server was started. What the server printed is in
+  headers could not be parsed, or the compiler rejected the code. What the server printed is in
   the test's error output, just above -- run the test with `pytest -s` to see
   it as it happens.
 
@@ -23,7 +23,7 @@
 : The server answered, but it does not know the contract at all: it is older
   than the version the library speaks. Update `looper-srv`.
 
-`looper.LooperCliError: looper-cli stopped before it served (exit 1)`, and above it `Permission denied` at the link step
+`looper.ServerStartError: the server stopped before it served (exit 1)`, and above it `Permission denied` at the link step
 : A `blinky.exe` -- or whatever firmware you build -- is still running and
   Windows will not let the build overwrite it. Often it is a window or a
   server from an earlier run. Wait for that run to end or stop its server,

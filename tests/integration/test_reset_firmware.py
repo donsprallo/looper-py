@@ -34,7 +34,7 @@ def simulation() -> Iterator[looper.Simulation]:
         pytest.skip(f"no fixture at {DEFINITION}")
     if shutil.which("gcc") is None and shutil.which("clang") is None:
         pytest.skip("no C compiler on PATH")
-    with looper.run(DEFINITION, virtual=True, looper_cli=server_command()) as started:
+    with looper.run(DEFINITION, virtual=True, server=server_command()) as started:
         yield started
 
 

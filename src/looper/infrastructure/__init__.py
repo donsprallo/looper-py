@@ -1,1 +1,1 @@
-"""The adapters behind the port: gRPC, and the looper-cli process."""
+"""The adapters behind the port: gRPC, and the server process."""

@@ -23,7 +23,7 @@ with looper.run("path/to/looper.toml", virtual=True) as simulation:
 | `definition` | `looper.toml` in the working directory | the build definition of the simulation |
 | `virtual` | `False` | start with a held clock, in step with the test -- what tests want |
 | `build` | `True` | build first; `False` starts what was built last |
-| `looper_cli` | `$LOOPER_SRV`, then `$LOOPER_CLI`, then `looper-srv` | the command that runs the server, as text or as a list (the argument keeps its old name) |
+| `server` | `$LOOPER_SRV`, then `looper-srv` | the command that runs the server, as text or as a list |
 
 What `looper-srv` and the firmware print goes to the error stream of your
 test process. pytest shows it for a failed test; `pytest -s` shows it always.
@@ -44,10 +44,10 @@ with looper.run("looper.toml", virtual=True, build=False) as simulation:
 
 ```python
 # as text, split at spaces
-looper.run("looper.toml", looper_cli="../looper-srv/target/release/looper-srv")
+looper.run("looper.toml", server="../looper-srv/target/release/looper-srv")
 
 # as a list, for paths with spaces in them
-looper.run("looper.toml", looper_cli=["C:/Program Files/looper/looper-srv.exe"])
+looper.run("looper.toml", server=["C:/Program Files/looper/looper-srv.exe"])
 ```
 
 or once for the whole session, through the environment:
@@ -56,8 +56,13 @@ or once for the whole session, through the environment:
 $ LOOPER_SRV="../looper-srv/target/release/looper-srv" pytest
 ```
 
-Without any of these the library runs `looper-srv` from the `PATH`. The
-environment variable `LOOPER_CLI` is still read when `LOOPER_SRV` is not set.
+Without any of these the library runs `looper-srv` from the `PATH`.
+
+The argument `looper_cli=` and the environment variable `LOOPER_CLI` are the
+old names of `server=` and `LOOPER_SRV`, from the days when looper-core's
+`looper-cli` was the server. Both still work but are deprecated: they raise a
+`DeprecationWarning`, and `LOOPER_CLI` is read only when `LOOPER_SRV` is not
+set. Passing both `server=` and `looper_cli=` is a `TypeError`.
 
 The library tells the server that a test started it and which process that
 is (`--started-by test --owner-pid PID`), so that `looper-rs --list-servers`

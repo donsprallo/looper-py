@@ -95,7 +95,7 @@ class Findings:
         return tuple(one for one in self.findings if one.kind == kind)
 
     def new(self) -> tuple[Finding, ...]:
-        """The findings the baseline does not hold: what `looper-cli audit` would fail on."""
+        """The findings the baseline does not hold: what `looper-srv audit` would fail on."""
         return tuple(one for one in self.findings if one.is_new)
 
     def between(self, from_module: str, to_module: str) -> tuple[Finding, ...]:

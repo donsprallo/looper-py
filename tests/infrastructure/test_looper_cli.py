@@ -14,6 +14,7 @@ from pathlib import Path
 
 import pytest
 
+import looper
 from looper import LooperCliError
 from looper.infrastructure.looper_cli import LooperCliRun, RunCommand, address_in, program_of
 
@@ -96,3 +97,7 @@ def test_a_tool_that_ends_before_serving_says_so(stand_in: Path) -> None:
 def test_a_tool_that_cannot_be_found_says_which() -> None:
     with pytest.raises(LooperCliError, match="no-such-looper-cli"):
         LooperCliRun.start(RunCommand(program=("no-such-looper-cli",)))
+
+
+def test_the_old_name_of_the_error_is_the_same_error() -> None:
+    assert LooperCliError is looper.ServerStartError

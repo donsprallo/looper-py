@@ -45,8 +45,8 @@ sequenceDiagram
 Because the boundary is a process, your test environment needs only this
 library and the `looper-srv` program -- none of its dependencies.
 
-The library starts `looper-srv` unless you name another command (`looper_cli=`,
-`LOOPER_SRV` or `LOOPER_CLI`, in that order). A {rs}`looper-rs <index.html>`
+The library starts `looper-srv` unless you name another command (`server=`
+or `LOOPER_SRV`, in that order). A {rs}`looper-rs <index.html>`
 window starts **looper-srv** in the same way, so a test and the window talk
 to the same kind of server and the same contract; see
 [Starting and attaching](guides/reaching.md).
@@ -158,5 +158,5 @@ A server that is too old or too new for this library is neither: it raises
 `looper.ContractMismatchError` when you attach.
 
 Everything else -- `looper-srv` not found, a build that failed -- is raised
-when the simulation is started, as `looper.LooperCliError`. See
+when the simulation is started, as `looper.ServerStartError`. See
 [Troubleshooting](troubleshooting.md).

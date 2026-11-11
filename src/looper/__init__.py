@@ -13,9 +13,9 @@
             report = check.evaluate(for_seconds=1.0)
             assert report, report.summary
 
-`run` starts `looper-cli run` for a build definition; `connect` attaches to
+`run` starts `looper-srv run` for a build definition; `connect` attaches to
 one that is already serving. Everything goes through the inspector contract
-that `looper-cli run` serves, so the window and the test may look at one
+that `looper-srv run` serves, so the window and the test may look at one
 simulation together.
 """
 
@@ -123,7 +123,7 @@ from looper.domain.model import (
     Width,
     step_port,
 )
-from looper.infrastructure.looper_cli import LooperCliError
+from looper.infrastructure.looper_cli import LooperCliError, ServerStartError
 from looper.starting import ContractMismatchError, connect, run
 
 __version__ = "0.2.0"
@@ -161,6 +161,7 @@ __all__ = [
     "Lives",
     "ResetMark",
     "Retained",
+    "ServerStartError",
     "Bus",
     "BusMessage",
     "CallTiming",
@@ -179,7 +180,7 @@ __all__ = [
     "Findings",
     "HeapUsage",
     "Image",
-    "LooperCliError",
+    "LooperCliError",  # deprecated: the old name of ServerStartError
     "MemoryUsage",
     "ModelParameter",
     "NodeOutput",

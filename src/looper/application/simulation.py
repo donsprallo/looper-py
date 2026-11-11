@@ -267,8 +267,8 @@ class Simulation:
 
         Raises:
             SimulationRefusedError: If the server does not analyse the
-                project's code: it does when `looper-cli run` or
-                `looper-cli inspect` was started from a looper.toml whose
+                project's code: it does when `looper-srv run` or
+                `looper-srv inspect` was started from a looper.toml whose
                 sources it can read.
         """
         return complete_findings(self._inspector, wait_seconds)

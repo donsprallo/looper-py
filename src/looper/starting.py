@@ -9,6 +9,7 @@ the contract this library was built against, and hand back a `Simulation`.
 from __future__ import annotations
 
 import os
+import warnings
 from collections.abc import Callable, Sequence
 from pathlib import Path
 
@@ -20,8 +21,8 @@ from looper.infrastructure.looper_cli import LooperCliRun, RunCommand, program_o
 #: Where the command that runs the server can be given without code, for
 #: example ``C:/looper/looper-srv.exe``.
 LOOPER_SRV_VARIABLE = "LOOPER_SRV"
-#: The older name of that variable, from the days of looper-core's ``looper-cli``;
-#: still read when ``LOOPER_SRV`` is not set.
+#: The older name of that variable, from the days of looper-core's ``looper-cli``.
+#: Deprecated: still read when ``LOOPER_SRV`` is not set, with a warning.
 LOOPER_CLI_VARIABLE = "LOOPER_CLI"
 #: The server a test starts when nothing names another: looper-srv on the ``PATH``.
 DEFAULT_SERVER = "looper-srv"
@@ -47,6 +48,7 @@ def run(
     *,
     virtual: bool = False,
     build: bool = True,
+    server: str | Sequence[str] | None = None,
     looper_cli: str | Sequence[str] | None = None,
 ) -> Simulation:
     """Build a simulation, start it, and attach to it.
@@ -56,17 +58,20 @@ def run(
             directory when none is named.
         virtual: Run on a virtual clock, which only moves when told to.
         build: Build first, or start what was built last.
-        looper_cli: The command that runs the server (looper-srv, or
-            looper-core's ``looper-cli``, which takes the same commands).
-            Defaults to the ``LOOPER_SRV`` environment variable, then
-            ``LOOPER_CLI``, then ``looper-srv``.
+        server: The command that runs the server, as text or as a list, for
+            example ``"../looper-srv/target/release/looper-srv"``. Defaults
+            to the ``LOOPER_SRV`` environment variable, then ``looper-srv``
+            on the ``PATH``.
+        looper_cli: Deprecated: the old name of ``server``, from the days of
+            looper-core's ``looper-cli``. Still taken, with a warning.
 
     Raises:
-        LooperCliError: If the server could not build, start or serve it.
+        ServerStartError: If the server could not build, start or serve it.
         ContractMismatchError: If it speaks another contract version.
+        TypeError: If both ``server`` and ``looper_cli`` are given.
     """
     command = RunCommand(
-        program=program_of(looper_cli or _server_from_environment()),
+        program=program_of(_server_named(server, looper_cli)),
         definition=Path(definition) if definition is not None else None,
         virtual=virtual,
         build=build,
@@ -120,10 +125,33 @@ def _discarding(action: Callable[[], object] | None) -> Callable[[], None] | Non
     return discarded
 
 
+def _server_named(
+    server: str | Sequence[str] | None, looper_cli: str | Sequence[str] | None
+) -> str | Sequence[str]:
+    """The server the caller named, under its name or its deprecated one, or the environment's."""
+    if looper_cli is not None:
+        if server is not None:
+            raise TypeError("name the server once: looper_cli= is the deprecated name of server=")
+        warnings.warn(
+            "looper.run(looper_cli=...) is deprecated; use looper.run(server=...)",
+            DeprecationWarning,
+            stacklevel=3,
+        )
+        return looper_cli
+    return server or _server_from_environment()
+
+
 def _server_from_environment() -> str:
     """The server the environment names, or looper-srv."""
-    for variable in (LOOPER_SRV_VARIABLE, LOOPER_CLI_VARIABLE):
-        named = os.environ.get(variable)
-        if named:
-            return named
+    named = os.environ.get(LOOPER_SRV_VARIABLE)
+    if named:
+        return named
+    older = os.environ.get(LOOPER_CLI_VARIABLE)
+    if older:
+        warnings.warn(
+            f"{LOOPER_CLI_VARIABLE} is deprecated; name the server in {LOOPER_SRV_VARIABLE}",
+            DeprecationWarning,
+            stacklevel=4,
+        )
+        return older
     return DEFAULT_SERVER

@@ -13,18 +13,20 @@ with looper.run("looper.toml", virtual=True) as simulation:
     ...
 ```
 
-Die Grenze ist ein Prozess: `looper-core` bedient den Inspector-Vertrag
-(`looper-cli run`), dieses Projekt ist einer seiner Clients, so wie
+Die Grenze ist ein Prozess: `looper-srv` bedient den Inspector-Vertrag
+(`looper-srv run`), dieses Projekt ist einer seiner Clients, so wie
 `looper-rs`. Der Vertrag ist
 `src/looper/infrastructure/contract/looper_inspector.proto`, eine geprüfte
-Kopie des Originals in `looper-srv` (`tests/test_contract_in_step.py`), das
-`looper-core` schrittweise ersetzt und dieselben Befehle wie `looper-cli` versteht. Er ist
+Kopie des Originals in `looper-srv` (`tests/test_contract_in_step.py`).
+`looper-srv` hat `looper-core` abgelöst (M10) und versteht dieselben Befehle
+wie `looper-cli`; core ist eingefroren und nur noch Referenz der
+Konformitätsprüfung (`LOOPER_TEST_SERVER=core`). Der Vertrag ist
 Version 3: Zeit ist `sim_us`, ein Ereignisstrom ersetzt die Aufzeichnungen,
 und jede Änderung wird mit einem `Ack` quittiert (eine Ablehnung wird zum
 `SimulationRefusedError`).
 
-**Absolute Regel:** Nichts hier importiert `looper_core`. Die Abhängigkeit
-läuft über den Vertrag, nicht über Python-Pakete.
+**Absolute Regel:** Nichts hier importiert `looper_core` oder Code von
+`looper-srv`. Die Abhängigkeit läuft über den Vertrag, nicht über Pakete.
 
 ## 1. Architektur (Clean Architecture / Hexagonal)
 Die Abhängigkeiten zeigen *nur* nach innen. `tests/test_architecture.py`
@@ -36,15 +38,17 @@ prüft das.
 2. **Application** (`looper.application`): Der Port `Inspector` (ABC), die
    Use Cases `Expectations` und `Simulation`. Kennt die Domain, nicht gRPC.
 3. **Infrastructure** (`looper.infrastructure`): `GrpcInspector` mit den
-   generierten Bindings, `LooperCliRun`, der `looper-cli run` als
-   Kindprozess startet.
+   generierten Bindings, `LooperCliRun`, der `looper-srv run` als
+   Kindprozess startet (Fehler: `ServerStartError`; `LooperCliError` ist nur
+   noch ein veralteter Alias).
 4. **Composition Root** (`looper.starting`): `run()` und `connect()` – die
    einzige Stelle, die einen konkreten Adapter benennt.
 
-## 2. Keine Geschäftslogik, die looper-core gehört
+## 2. Keine Geschäftslogik, die looper-srv gehört
 - Was die Simulation selbst betrifft (Anzeigetexte, Wertebereiche, Regeln
-  über Pins und Busse), kommt als Feld im Vertrag. Fehlt eines, wird es im
-  Schema von `looper-core` ergänzt, nicht hier nachgebaut.
+  über Pins und Busse), entscheidet ein Use Case in `looper-srv` und kommt
+  als Feld im Vertrag. Fehlt eines, wird es im Schema von `looper-srv`
+  ergänzt, nicht hier nachgebaut. `looper-core` ist eingefroren.
 - Hier zu Hause sind die Erwartungen eines Tests: was ein Kanal erreichen,
   was ein Bus tragen, wie tief der Stack werden darf. Sie lebten früher als
   `looper.testing` in `looper-core` und sind mit dem Wechsel auf gRPC
@@ -79,12 +83,13 @@ src/looper/
     ├── grpc_inspector.py
     ├── translation.py    # Nachrichten -> Domain
     ├── trigger_translation.py  # Trigger <-> Vertrag
-    └── looper_cli.py     # `looper-cli run` als Kindprozess
+    └── looper_cli.py     # `looper-srv run` als Kindprozess (alter Modulname)
 
 ## 5. Regeln für Claude bei der Code-Generierung
 - **Vertrag nur gemeinsam ändern:** Erst das Schema in `looper-srv`, dann
   die Kopie hier, dann `uv run python scripts/generate_contract.py`.
 - **Kein `looper_core`-Import**, auch nicht in Tests. Ein Integrationstest
-  startet `looper-cli` als Prozess.
+  startet `looper-srv` als Prozess (`server=`, `LOOPER_SRV`); die alten
+  Namen `looper_cli=` und `LOOPER_CLI` sind veraltet und warnen.
 - **Inkrementelles Arbeiten:** Bei größeren Features erst die Domain, dann
   Rückfrage, dann Use Cases und Infrastruktur.

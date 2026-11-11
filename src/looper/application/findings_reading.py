@@ -21,7 +21,7 @@ POLL_SECONDS = 0.2
 #: What a test is told when the server does not answer architecture questions.
 NOT_SERVED = (
     "the server does not analyse the project's architecture ({reason}); "
-    "it does when started by `looper-cli run` or `looper-cli inspect` from a "
+    "it does when started by `looper-srv run` or `looper-srv inspect` from a "
     "looper.toml whose sources it can read"
 )
 
