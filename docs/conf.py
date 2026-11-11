@@ -53,11 +53,11 @@ typehints_use_signature_return = True
 
 intersphinx_mapping = {"python": ("https://docs.python.org/3", None)}
 
-# looper-core and looper-rs document themselves in builds of their own. These
+# looper-core and looper-gui document themselves in builds of their own. These
 # are the only places that say where those builds are published; the
 # defaults assume all of them are deployed side by side.
 CORE_DOCS = os.environ.get("LOOPER_CORE_DOCS", "../looper-core")
-RS_DOCS = os.environ.get("LOOPER_RS_DOCS", "../looper-rs")
+RS_DOCS = os.environ.get("LOOPER_GUI_DOCS", "../looper-gui")
 # The tutorial, the installation of the whole system, the first test and the
 # licence are written once, in looper-docs.
 LEARN_DOCS = os.environ.get("LOOPER_LEARN_DOCS", "../looper-docs")

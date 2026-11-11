@@ -83,7 +83,7 @@ FAIL  CAN2: expected nothing refused, saw 1 of 2 refused at 0x701
 ```
 
 Something was put on the bus at address `0x701`, and nothing took it. The
-looper-rs {rs}`bus page <gui/buses.html>` shows the exchange, and as a ladder
+looper-gui {rs}`bus page <gui/buses.html>` shows the exchange, and as a ladder
 diagram who was talking to whom.
 
 ```text

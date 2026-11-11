@@ -138,12 +138,12 @@ pytest shows it under *Captured stderr* for a failed test, and always with
 
 ## Watching a test in a window
 
-To see what a test does, start `looper-srv run` yourself, open a looper-rs
+To see what a test does, start `looper-srv run` yourself, open a looper-gui
 window on it, and point the test at it with `looper.connect`:
 
 ```console
 $ looper-srv run looper.toml --virtual --listen 127.0.0.1:50051
-$ looper-rs --server 127.0.0.1:50051
+$ looper-gui --server 127.0.0.1:50051
 ```
 
 ```python

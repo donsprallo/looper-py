@@ -15,5 +15,5 @@
 <text x="470" y="238" font-family="Consolas, Menlo, DejaVu Sans Mono, monospace" font-size="11.5" fill="#5f6879" font-weight="normal" text-anchor="middle" xml:space="preserve">= last_fired_at_us + post_us = hold_at_us</text>
 <line x1="383" y1="180" x2="467" y2="180" stroke="#b57d09" stroke-width="1.5" marker-end="url(#arrow)"/>
 <text x="335.0" y="184" font-family="Segoe UI, Helvetica Neue, Helvetica, Arial, sans-serif" font-size="12" fill="#b57d09" font-weight="normal" text-anchor="middle">post_us</text>
-<text x="60" y="250" font-family="Segoe UI, Helvetica Neue, Helvetica, Arial, sans-serif" font-size="12" fill="#5f6879" font-weight="normal" text-anchor="start">Every client sees the hold -- a looper-rs window on the same simulation stops at the same instant.</text>
+<text x="60" y="250" font-family="Segoe UI, Helvetica Neue, Helvetica, Arial, sans-serif" font-size="12" fill="#5f6879" font-weight="normal" text-anchor="start">Every client sees the hold -- a looper-gui window on the same simulation stops at the same instant.</text>
 </svg>

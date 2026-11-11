@@ -49,7 +49,7 @@ ok    the stack: expected at most 1024 bytes of stack, saw 352 bytes at the deep
 
 Size the target's stack from the deepest path and the frame sizes of the
 board's compiler; {rs}`Memory analysis step by step <analysis/memory.html>`
-in looper-rs walks through it.
+in looper-gui walks through it.
 
 ## When it fails
 
@@ -58,7 +58,7 @@ FAIL  the stack: expected at most 3 frames, saw 4 frames at the deepest
 ```
 
 Something nests deeper than the limit. The {rs}`Memory page <gui/memory.html>`
-of looper-rs shows the deepest path, function by function.
+of looper-gui shows the deepest path, function by function.
 
 ## Choosing the limit
 

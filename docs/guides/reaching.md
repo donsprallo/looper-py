@@ -65,7 +65,7 @@ old names of `server=` and `LOOPER_SRV`, from the days when looper-core's
 set. Passing both `server=` and `looper_cli=` is a `TypeError`.
 
 The library tells the server that a test started it and which process that
-is (`--started-by test --owner-pid PID`), so that `looper-rs --list-servers`
+is (`--started-by test --owner-pid PID`), so that `looper-gui --list-servers`
 shows the server as a test's and it ends with the test. It does so when the
 program is called looper-srv, with or without `.exe`.
 
@@ -90,8 +90,8 @@ and attach to it from a test, a notebook or the Python prompt:
 >>> simulation.close()
 ```
 
-This is the way to watch a test in a {rs}`looper-rs <index.html>` window:
-point the window at the same address (`looper-rs --server 127.0.0.1:50051`),
+This is the way to watch a test in a {rs}`looper-gui <index.html>` window:
+point the window at the same address (`looper-gui --server 127.0.0.1:50051`),
 and step through the test. Remember that `evaluate` clears the recordings for
 the window too.
 

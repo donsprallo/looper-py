@@ -43,7 +43,7 @@ your test (looper)            looper-srv                     your firmware
 
 The library speaks the inspector contract that `looper-srv run` serves, and
 imports nothing of looper's server. That is what lets a test and the window
-of [`looper-rs`](../looper-rs) look at one simulation together.
+of [`looper-gui`](../looper-gui) look at one simulation together.
 
 | Call | What it does |
 | --- | --- |

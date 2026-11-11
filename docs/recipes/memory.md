@@ -71,7 +71,7 @@ ok    the heap: expected at most 256 bytes out at once, saw 120 bytes at the pea
 FAIL  the heap: expected no allocation at all, saw 3 allocations
 ```
 
-Something allocated during the window. The {rs}`Memory page of looper-rs <gui/memory.html>`
+Something allocated during the window. The {rs}`Memory page of looper-gui <gui/memory.html>`
 shows where each block still out came from, by function.
 
 ```text

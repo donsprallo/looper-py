@@ -148,7 +148,7 @@ message Description {
   string started_text = 17;           // e.g. "10:42", "yesterday", "3 Nov"
   StartedBy started_by = 18;
   uint32 owner_pid = 19;              // the window or test that started it; 0 for none
-  string started_by_text = 20;        // e.g. "Started by a looper-rs window (pid 5678)."
+  string started_by_text = 20;        // e.g. "Started by a looper-gui window (pid 5678)."
   string started_by_short_text = 21;  // e.g. "window (pid 5678)"
   string lifetime_text = 22;          // e.g. "It ends when that window closes or leaves it."
   uint32 clients = 23;                // connections that asked more than Describe
@@ -175,7 +175,7 @@ message Description {
 enum StartedBy {
   STARTED_BY_UNSPECIFIED = 0;
   STARTED_BY_TERMINAL = 1;   // a person, in a terminal; it runs until stopped there
-  STARTED_BY_WINDOW = 2;     // a looper-rs window; it ends when that window closes or leaves it
+  STARTED_BY_WINDOW = 2;     // a looper-gui window; it ends when that window closes or leaves it
   STARTED_BY_TEST = 3;       // a test; it ends with the test
 }
 
@@ -193,7 +193,7 @@ enum ClientKind {
 // from a list of servers names nobody, so that it is not counted.
 message DescribeRequest {
   ContractVersion client_contract_version = 1;
-  string client_name = 2;   // e.g. "looper-rs window (pid 5678)"
+  string client_name = 2;   // e.g. "looper-gui window (pid 5678)"
   ClientKind client_kind = 3;
 }
 

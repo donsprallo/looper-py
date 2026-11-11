@@ -15,7 +15,7 @@ with looper.run("looper.toml", virtual=True) as simulation:
 
 Die Grenze ist ein Prozess: `looper-srv` bedient den Inspector-Vertrag
 (`looper-srv run`), dieses Projekt ist einer seiner Clients, so wie
-`looper-rs`. Der Vertrag ist
+`looper-gui`. Der Vertrag ist
 `src/looper/infrastructure/contract/looper_inspector.proto`, eine geprüfte
 Kopie des Originals in `looper-srv` (`tests/test_contract_in_step.py`).
 `looper-srv` hat `looper-core` abgelöst (M10) und versteht dieselben Befehle

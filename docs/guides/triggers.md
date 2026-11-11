@@ -43,7 +43,7 @@ unit as in the event stream. `advance` takes seconds.
 
 `TriggerMode.SINGLE` (the default)
 : Fires once, then **holds the simulation** `post_us` later -- for every
-  client. A looper-rs window attached to the same simulation stops at the
+  client. A looper-gui window attached to the same simulation stops at the
   same instant. With `post_us=0` the hold is at the fire itself.
 
 `TriggerMode.NORMAL`

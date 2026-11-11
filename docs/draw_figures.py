@@ -2,7 +2,7 @@
 
 The figures are code so that a label can be changed without a drawing
 program, and so that every figure shares one palette and one font with the
-handbooks of looper-core and looper-rs. Each is drawn on a light card of its
+handbooks of looper-core and looper-gui. Each is drawn on a light card of its
 own, which keeps it readable in Furo's dark scheme as well.
 
 Run it from anywhere; it needs nothing beyond the standard library:
@@ -26,7 +26,7 @@ OUT = Path(sys.argv[1]) if len(sys.argv) > 1 else Path(__file__).resolve().paren
 SANS = "Segoe UI, Helvetica Neue, Helvetica, Arial, sans-serif"
 MONO = "Consolas, Menlo, DejaVu Sans Mono, monospace"
 
-# The light palette shared with the looper-rs handbook.
+# The light palette shared with the looper-gui handbook.
 TEXT = "#1b1f2a"
 MUTED = "#5f6879"
 BORDER = "#d7dbe4"
@@ -150,7 +150,7 @@ def system_overview():
     svg.path("M470,70 C470,28 785,28 785,68", stroke=MUTED, dash="5 4", arrow=True)
     svg.text(628, 34, "builds and starts it", size=12, fill=MUTED, anchor="middle")
     svg.rect(345, 300, 250, 64, fill=VIOLET_SOFT, stroke=VIOLET, rx=12, width=1.5)
-    svg.text(470, 327, "looper-rs window", size=15, weight="bold", anchor="middle")
+    svg.text(470, 327, "looper-gui window", size=15, weight="bold", anchor="middle")
     svg.text(470, 346, "optional, looks at the same simulation", size=12, fill=MUTED,
              anchor="middle")
     svg.line(470, 298, 470, 256, stroke=VIOLET, arrow=True, dash="4 3")
@@ -387,7 +387,7 @@ def trigger_hold():
              anchor="middle", mono=True)
     svg.line(fire_x + 3, axis + 40, hold_x - 3, axis + 40, stroke=WARN, arrow=True)
     svg.text((fire_x + hold_x) / 2 - 90, axis + 44, "post_us", size=12, fill=WARN, anchor="middle")
-    svg.text(left, 250, "Every client sees the hold -- a looper-rs window on the same simulation "
+    svg.text(left, 250, "Every client sees the hold -- a looper-gui window on the same simulation "
              "stops at the same instant.", size=12, fill=MUTED)
     svg.save("trigger-hold.svg")
 

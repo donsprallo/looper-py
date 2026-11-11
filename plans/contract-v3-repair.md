@@ -9,7 +9,7 @@ Nothing new is added.
 Inputs read: looper-py (`CLAUDE.md`, `README.md`, `docs/`, `src/`, `tests/`,
 `scripts/`, `pyproject.toml`), looper-core (schema, `servicer.py`,
 `run_control.py`, `event_drain.py`, `cli/build_command.py`, history),
-looper-rt (`looper_app.c`, `looper_commands_pace.c`), looper-rs
+looper-rt (`looper_app.c`, `looper_commands_pace.c`), looper-gui
 (`plans/contract-v3.md`, `docs/development/contract.md`,
 `tests/contract_in_step.rs`, `src/inspector/grpc_inspector.rs`), plus two
 probes run against a live `looper-cli run --no-build` of `examples/blinky`
@@ -375,13 +375,13 @@ agent's. `pyproject.toml` version `0.2.0`.
    `uv run python scripts/generate_contract.py`.
 3. `tests/test_contract_in_step.py` compares byte-for-byte (line endings
    normalised) with `../looper-core` or `$LOOPER_CORE`, and skips without a
-   checkout – the same rule as looper-rs `tests/contract_in_step.rs`.
+   checkout – the same rule as looper-gui `tests/contract_in_step.rs`.
 4. `CONTRACT_VERSION` comes from the bindings; a version bump in core makes
    `connect` refuse an old server and vice versa – after step 5 also when
    the package name changed.
 
 Recommendation: run looper-py's `test_contract_in_step.py` whenever the
-schema in core changes, as looper-rs does; the two clients went out of step
+schema in core changes, as looper-gui does; the two clients went out of step
 here because only one of them was updated.
 
 ---

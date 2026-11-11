@@ -15,7 +15,7 @@ Three processes: your test, `looper-srv run`, and the simulation.
 The simulation is your firmware compiled for your computer, linked with the
 looper runtime and a device model that plays the hardware. It has exactly one
 client: the `looper-srv run` process that started it. That process serves
-everybody else -- your test, a {rs}`looper-rs <index.html>` window -- over
+everybody else -- your test, a {rs}`looper-gui <index.html>` window -- over
 gRPC, through the *inspector contract*.
 
 `looper.run` starts that process for you and stops it when you are done:
@@ -46,7 +46,7 @@ Because the boundary is a process, your test environment needs only this
 library and the `looper-srv` program -- none of its dependencies.
 
 The library starts `looper-srv` unless you name another command (`server=`
-or `LOOPER_SRV`, in that order). A {rs}`looper-rs <index.html>`
+or `LOOPER_SRV`, in that order). A {rs}`looper-gui <index.html>`
 window starts **looper-srv** in the same way, so a test and the window talk
 to the same kind of server and the same contract; see
 [Starting and attaching](guides/reaching.md).
@@ -64,7 +64,7 @@ changes for all of them:
 | the clock, and letting time pass | where it has read the recordings up to |
 
 `evaluate` clears the recordings and the measurements before it watches, so
-that a check sees its own window. If a looper-rs window is looking at the same
+that a check sees its own window. If a looper-gui window is looking at the same
 simulation, it sees them cleared as well. That is the honest arrangement --
 they are looking at one firmware -- and it is why tests usually get a
 simulation of their own (see [Starting and attaching](guides/reaching.md)).
@@ -90,7 +90,7 @@ tells you which one it is right now:
 : The clock runs as fast as the computer allows.
 
 The mode is not fixed at the start. Any client attached to the simulation --
-a looper-rs window, another test -- can switch it while it runs, so
+a looper-gui window, another test -- can switch it while it runs, so
 `clock_mode` asks the simulation each time you read it.
 
 ```{figure} images/lockstep.svg
