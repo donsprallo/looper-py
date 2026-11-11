@@ -1,6 +1,6 @@
 """Reaching a simulation: the composition root.
 
-The one place that names a concrete adapter. `run` starts `looper-cli run`
+The one place that names a concrete adapter. `run` starts `looper-srv run`
 for a build definition and connects to the server it starts; `connect`
 attaches to one that is already serving. Both check that the server speaks
 the contract this library was built against, and hand back a `Simulation`.
@@ -17,10 +17,14 @@ from looper.application.simulation import Simulation
 from looper.infrastructure.grpc_inspector import CONTRACT_VERSION, GrpcInspector
 from looper.infrastructure.looper_cli import LooperCliRun, RunCommand, program_of
 
-#: Where the command that runs looper-cli can be given without code, for
-#: example ``uv run --project ../looper-core looper-cli``.
+#: Where the command that runs the server can be given without code, for
+#: example ``C:/looper/looper-srv.exe``.
+LOOPER_SRV_VARIABLE = "LOOPER_SRV"
+#: The older name of that variable, from the days of looper-core's ``looper-cli``;
+#: still read when ``LOOPER_SRV`` is not set.
 LOOPER_CLI_VARIABLE = "LOOPER_CLI"
-DEFAULT_LOOPER_CLI = "looper-cli"
+#: The server a test starts when nothing names another: looper-srv on the ``PATH``.
+DEFAULT_SERVER = "looper-srv"
 
 
 class ContractMismatchError(RuntimeError):
@@ -28,7 +32,7 @@ class ContractMismatchError(RuntimeError):
 
 
 def connect(address: str) -> Simulation:
-    """Attach to a `looper-cli run` that is already serving at `address`.
+    """Attach to a `looper-srv run` that is already serving at `address`.
 
     Raises:
         SimulationUnreachableError: If nothing answers there.
@@ -52,15 +56,17 @@ def run(
             directory when none is named.
         virtual: Run on a virtual clock, which only moves when told to.
         build: Build first, or start what was built last.
-        looper_cli: The command that runs looper-cli. Defaults to the
-            ``LOOPER_CLI`` environment variable, then to ``looper-cli``.
+        looper_cli: The command that runs the server (looper-srv, or
+            looper-core's ``looper-cli``, which takes the same commands).
+            Defaults to the ``LOOPER_SRV`` environment variable, then
+            ``LOOPER_CLI``, then ``looper-srv``.
 
     Raises:
-        LooperCliError: If looper-cli could not build, start or serve it.
+        LooperCliError: If the server could not build, start or serve it.
         ContractMismatchError: If it speaks another contract version.
     """
     command = RunCommand(
-        program=program_of(looper_cli or os.environ.get(LOOPER_CLI_VARIABLE, DEFAULT_LOOPER_CLI)),
+        program=program_of(looper_cli or _server_from_environment()),
         definition=Path(definition) if definition is not None else None,
         virtual=virtual,
         build=build,
@@ -112,3 +118,12 @@ def _discarding(action: Callable[[], object] | None) -> Callable[[], None] | Non
         action()
 
     return discarded
+
+
+def _server_from_environment() -> str:
+    """The server the environment names, or looper-srv."""
+    for variable in (LOOPER_SRV_VARIABLE, LOOPER_CLI_VARIABLE):
+        named = os.environ.get(variable)
+        if named:
+            return named
+    return DEFAULT_SERVER
