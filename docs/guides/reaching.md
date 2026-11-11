@@ -23,14 +23,14 @@ with looper.run("path/to/looper.toml", virtual=True) as simulation:
 | `definition` | `looper.toml` in the working directory | the build definition of the simulation |
 | `virtual` | `False` | start with a held clock, in step with the test -- what tests want |
 | `build` | `True` | build first; `False` starts what was built last |
-| `looper_cli` | `$LOOPER_CLI`, then `looper-cli` | the command that runs looper-cli, as text or as a list |
+| `looper_cli` | `$LOOPER_SRV`, then `$LOOPER_CLI`, then `looper-srv` | the command that runs the server, as text or as a list (the argument keeps its old name) |
 
-What `looper-cli` and the firmware print goes to the error stream of your
+What `looper-srv` and the firmware print goes to the error stream of your
 test process. pytest shows it for a failed test; `pytest -s` shows it always.
 
 ### Building, or not
 
-`build=True` is cheap when nothing changed: `looper-cli` compiles only what
+`build=True` is cheap when nothing changed: `looper-srv` compiles only what
 is out of date, which for an unchanged project is a check of a few file
 times. Pass `build=False` when another step of your pipeline already built
 the simulation and you want the test to fail rather than rebuild:
@@ -40,35 +40,36 @@ with looper.run("looper.toml", virtual=True, build=False) as simulation:
     ...
 ```
 
-### Telling it how to run looper-cli
+### Telling it how to run looper-srv
 
 ```python
 # as text, split at spaces
-looper.run("looper.toml", looper_cli="uv run --project ../looper-core looper-cli")
+looper.run("looper.toml", looper_cli="../looper-srv/target/release/looper-srv")
 
 # as a list, for paths with spaces in them
-looper.run("looper.toml", looper_cli=["C:/Program Files/looper/looper-cli.exe"])
+looper.run("looper.toml", looper_cli=["C:/Program Files/looper/looper-srv.exe"])
 ```
 
 or once for the whole session, through the environment:
 
 ```console
-$ LOOPER_CLI="uv run --project ../looper-core looper-cli" pytest
+$ LOOPER_SRV="../looper-srv/target/release/looper-srv" pytest
 ```
 
-The command may also be **looper-srv**, which understands the same arguments
-(`looper_cli="looper-srv"`). The library then tells it that a test started it
-and which process that is (`--started-by test --owner-pid PID`), so that
-`looper-rs --list-servers` shows the server as a test's and it ends with the
-test. `looper-cli` is not given these arguments, it would refuse them. The
-library knows looper-srv by the name of the program, with or without `.exe`.
+Without any of these the library runs `looper-srv` from the `PATH`. The
+environment variable `LOOPER_CLI` is still read when `LOOPER_SRV` is not set.
+
+The library tells the server that a test started it and which process that
+is (`--started-by test --owner-pid PID`), so that `looper-rs --list-servers`
+shows the server as a test's and it ends with the test. It does so when the
+program is called looper-srv, with or without `.exe`.
 
 ## `looper.connect`
 
-Start `looper-cli run` yourself, on a fixed address:
+Start `looper-srv run` yourself, on a fixed address:
 
 ```console
-$ looper-cli run path/to/looper.toml --virtual --listen 127.0.0.1:50051
+$ looper-srv run path/to/looper.toml --virtual --listen 127.0.0.1:50051
 listening on 127.0.0.1:50051
 ```
 
@@ -110,7 +111,7 @@ The edition is the server's, read from its licence; see
 
 Leaving the `with` block closes the simulation. Without a `with` block, call
 `simulation.close()` yourself -- closing twice is fine. If your test process
-is killed, `looper-cli` notices that its standard input closed and stops the
+is killed, `looper-srv` notices that its standard input closed and stops the
 simulation anyway: nothing is left running.
 
 ## When the versions do not match

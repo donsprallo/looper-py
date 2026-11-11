@@ -1,6 +1,6 @@
 # looper-py
 
-The Python library tests are written with for [`looper`](../looper-core)
+The Python library tests are written with for [`looper`](../looper-srv)
 simulations: start a simulation or attach to a running one, set the scene,
 let time pass, and say what should then be true. The repository is
 `looper-py`; what a test imports is `looper`.
@@ -33,26 +33,27 @@ ok    the stack: expected at most 64 frames, saw 11 frames at the deepest
 ## How it reaches a simulation
 
 ```text
-your test (looper)            looper-core                    your firmware
+your test (looper)            looper-srv                     your firmware
 +------------------+  gRPC   +-------------------------+ pipes +-------------+
-| Simulation       | ------> | looper-cli run          | ----> | simulation  |
+| Simulation       | ------> | looper-srv run          | ----> | simulation  |
 | Expectations     | <------ |  use cases -> contract  | <---- | (looper-rt) |
 +------------------+         +-------------------------+       +-------------+
         inspector contract: looper_inspector.proto
 ```
 
-The library speaks the inspector contract that `looper-cli run` serves, and
-imports nothing of `looper-core`. That is what lets a test and the window
+The library speaks the inspector contract that `looper-srv run` serves, and
+imports nothing of looper's server. That is what lets a test and the window
 of [`looper-rs`](../looper-rs) look at one simulation together.
 
 | Call | What it does |
 | --- | --- |
-| `looper.run(definition, virtual=..., build=..., looper_cli=...)` | starts `looper-cli run` for a build definition and attaches to it; closing stops it |
-| `looper.connect(address)` | attaches to a `looper-cli run` that is already serving |
+| `looper.run(definition, virtual=..., build=..., looper_cli=...)` | starts `looper-srv run` for a build definition and attaches to it; closing stops it |
+| `looper.connect(address)` | attaches to a `looper-srv run` that is already serving |
 
-The command that runs looper-cli defaults to `looper-cli`, or to the
-`LOOPER_CLI` environment variable, for example
-`LOOPER_CLI="uv run --project ../looper-core looper-cli"`.
+The command that runs the server is looked up in this order: the argument
+`looper_cli=`, the `LOOPER_SRV` environment variable, the `LOOPER_CLI`
+environment variable (still read), and then `looper-srv` on the `PATH`, for
+example `LOOPER_SRV=../looper-srv/target/release/looper-srv`.
 
 ## What a test can do
 
@@ -112,11 +113,11 @@ The tests under `tests/integration` start looper-srv (`LOOPER_SRV_EXE`, by
 default the debug build of a `looper-srv` checkout beside this one) and build
 and run the test firmware in `fixtures/` of a `looper-docs` checkout beside this
 one (`LOOPER_FIXTURES` points elsewhere); they skip without it or without a C
-compiler. `LOOPER_TEST_SERVER=core` starts the reference, looper-core
-(`LOOPER_CORE`), instead.
+compiler. `LOOPER_TEST_SERVER=core` starts the reference, the historical
+looper-core (`LOOPER_CORE`), instead.
 
 The contract is `src/looper/infrastructure/contract/looper_inspector.proto`,
-a copy of the schema in `looper-core`; `tests/test_contract_in_step.py` fails
+a copy of the schema in `looper-srv`; `tests/test_contract_in_step.py` fails
 when the two differ. After copying it over:
 
 ```console

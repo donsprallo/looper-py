@@ -110,16 +110,16 @@ Run the same expectation over many input values with
 ## How it fits together
 
 ```{figure} images/system-overview.svg
-:alt: Your test talks gRPC to looper-cli run, which builds and runs the simulation and talks to it over pipes. A looper-rs window can look at the same simulation.
+:alt: Your test talks gRPC to looper-srv run, which builds and runs the simulation and talks to it over pipes. A looper-rs window can look at the same simulation.
 
-A test reaches the simulation through `looper-cli run`, which the library
+A test reaches the simulation through `looper-srv run`, which the library
 starts for it. The looper-rs window can look at the same simulation while the
 test runs.
 ```
 
-The library speaks the inspector contract that `looper-cli run` serves. It
-does not import `looper-core` and needs nothing of it installed in your test
-environment -- only the `looper-cli` command. See [How it works](concepts.md).
+The library speaks the inspector contract that `looper-srv run` serves. It
+needs nothing of the server installed in your test environment -- only the
+`looper-srv` program. See [How it works](concepts.md).
 
 ## Where to start
 

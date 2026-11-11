@@ -82,7 +82,7 @@ are only looked for then; `is_complete` says whether it got that far.
 | --- | --- |
 | `findings.findings` | every `Finding` |
 | `findings.of_kind(kind)` | the findings of one kind, such as `"rule violation"` or `"cycle"` |
-| `findings.new()` | the findings the baseline does not hold: what `looper-cli audit --architecture` fails on |
+| `findings.new()` | the findings the baseline does not hold: what `looper-srv audit --architecture` fails on |
 | `findings.between(from_module, to_module)` | the findings about one module using another |
 | `findings.fixed` | keys the baseline accepts that are no longer found |
 
@@ -98,8 +98,8 @@ assert [one.modules for one in violations] == [("app/app", "hal/pins")]
 assert violations[0].severity == "critical"
 ```
 
-The server has to analyse the project's code: it does when `looper-cli run` or
-`looper-cli inspect` was started from a `looper.toml` whose sources it can read;
+The server has to analyse the project's code: it does when `looper-srv run` or
+`looper-srv inspect` was started from a `looper.toml` whose sources it can read;
 otherwise `findings()` raises `SimulationRefusedError`.
 
 ### A licence
@@ -157,14 +157,14 @@ hand it over in `LOOPER_LICENSE`, which takes a path or the file's content:
 ```yaml
 - name: Run the tests
   env:
-    LOOPER_CLI: uv run --project ../looper-core looper-cli
+    LOOPER_SRV: ../looper-srv/target/release/looper-srv
     LOOPER_LICENSE: ${{ secrets.LOOPER_LICENSE }}
   run: uv run pytest
 ```
 
-looper-cli reads the licence when it starts, and again at every restart of the
+looper-srv reads the licence when it starts, and again at every restart of the
 simulation. A licence that ran out still works for 14 days with a note, then
 its parts are locked again. Where looper looks for a licence, in what order,
 is in {core}`looper Pro and the licence <usage.html#looper-pro-and-the-licence>`.
-The `looper-cli audit --architecture` command does the same check in a build
+The `looper-srv audit --architecture` command does the same check in a build
 step, with exit code 3 for a missing licence and 1 for a finding.

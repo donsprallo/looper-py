@@ -135,10 +135,10 @@ def two_way(svg, x1, x2, y, label, sublabel=""):
 
 
 def system_overview():
-    svg = Svg(940, 400, "A test, looper-cli run and the simulation, with a window beside the test")
+    svg = Svg(940, 400, "A test, looper-srv run and the simulation, with a window beside the test")
     box(svg, 30, 70, 250, 180, "your test", "pytest + looper (this library)", BLUE_SOFT, ACCENT,
         ["looper.run(...)", "simulation.expect()"])
-    box(svg, 345, 70, 250, 180, "looper-cli run", "looper-core", GREEN_SOFT, GOOD,
+    box(svg, 345, 70, 250, 180, "looper-srv run", "the server", GREEN_SOFT, GOOD,
         ["inspector server", "use cases"])
     box(svg, 660, 70, 250, 180, "simulation", "your firmware, built for the host", AMBER_SOFT, WARN,
         ["firmware + device model", "looper-rt"])

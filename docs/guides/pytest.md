@@ -106,7 +106,7 @@ More in the recipe [Does it hold across a range of inputs?](../recipes/sweeps.md
 
 ## Marking tests that need a simulation
 
-Firmware tests need a C compiler and `looper-cli`. Mark them, so a developer
+Firmware tests need a C compiler and `looper-srv`. Mark them, so a developer
 without them can still run the rest:
 
 ```python
@@ -132,17 +132,17 @@ def test_the_led_blinks(simulation):
 
 ## Seeing what the firmware printed
 
-What `looper-cli` and the firmware print goes to the test's error stream.
+What `looper-srv` and the firmware print goes to the test's error stream.
 pytest shows it under *Captured stderr* for a failed test, and always with
 `pytest -s`.
 
 ## Watching a test in a window
 
-To see what a test does, start `looper-cli run` yourself, open a looper-rs
+To see what a test does, start `looper-srv run` yourself, open a looper-rs
 window on it, and point the test at it with `looper.connect`:
 
 ```console
-$ looper-cli run looper.toml --virtual --listen 127.0.0.1:50051
+$ looper-srv run looper.toml --virtual --listen 127.0.0.1:50051
 $ looper-rs --server 127.0.0.1:50051
 ```
 
@@ -167,7 +167,8 @@ variable.
 
 ## In CI
 
-A CI job needs Python, uv, a C compiler and the `looper-core` checkout. For
+A CI job needs Python, uv, a C compiler and a `looper-srv` build, with the
+`looper-rt` checkout next to it. For
 GitHub Actions on Linux:
 
 ```yaml
@@ -183,19 +184,23 @@ jobs:
           path: firmware
       - uses: actions/checkout@v4
         with:
-          repository: your-org/looper-core
-          path: looper-core
+          repository: your-org/looper-srv
+          path: looper-srv
+      - uses: actions/checkout@v4
+        with:
+          repository: your-org/looper-rt
+          path: looper-rt
       - uses: actions/checkout@v4
         with:
           repository: your-org/looper-py
           path: looper-py
       - uses: astral-sh/setup-uv@v5
       - run: sudo apt-get install -y gcc
-      - run: uv tool install ./looper-core
+      - run: cargo build --release --manifest-path looper-srv/Cargo.toml
       - working-directory: firmware
         run: |
           uv add --dev --editable ../looper-py
-          uv run pytest --junitxml=report.xml
+          LOOPER_SRV=../looper-srv/target/release/looper-srv uv run pytest --junitxml=report.xml
 ```
 
 On a held clock the results do not depend on how busy the CI machine is:
@@ -204,7 +209,7 @@ the same commit gives the same report on every run.
 ### A licence in CI
 
 Tests that read the architecture's findings (`simulation.findings()`) need a
-looper Pro licence on the machine that runs `looper-cli`. Keep the text of the
+looper Pro licence on the machine that runs `looper-srv`. Keep the text of the
 licence file in a secret, and give it to the job as `LOOPER_LICENSE`, which takes
 a path or the file's content:
 

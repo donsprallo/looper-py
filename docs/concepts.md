@@ -7,14 +7,14 @@ ideas below.
 ## 1. Your test talks to a server, not to the firmware
 
 ```{figure} images/system-overview.svg
-:alt: Your test talks gRPC to looper-cli run, which builds and runs the simulation and talks to it over pipes.
+:alt: Your test talks gRPC to looper-srv run, which builds and runs the simulation and talks to it over pipes.
 
-Three processes: your test, `looper-cli run`, and the simulation.
+Three processes: your test, `looper-srv run`, and the simulation.
 ```
 
 The simulation is your firmware compiled for your computer, linked with the
 looper runtime and a device model that plays the hardware. It has exactly one
-client: the `looper-cli run` process that started it. That process serves
+client: the `looper-srv run` process that started it. That process serves
 everybody else -- your test, a {rs}`looper-rs <index.html>` window -- over
 gRPC, through the *inspector contract*.
 
@@ -24,7 +24,7 @@ gRPC, through the *inspector contract*.
 sequenceDiagram
     autonumber
     participant T as your test
-    participant C as looper-cli run
+    participant C as looper-srv run
     participant S as simulation
     T->>C: starts it: run looper.toml --listen 127.0.0.1:0
     C->>C: generates and compiles (only what changed)
@@ -43,14 +43,13 @@ sequenceDiagram
 ```
 
 Because the boundary is a process, your test environment needs only this
-library and the `looper-cli` command -- not `looper-core` itself, and none of
-its dependencies.
+library and the `looper-srv` program -- none of its dependencies.
 
-The library starts `looper-cli` unless you name another command (`looper_cli=`
-or `LOOPER_CLI`). A {rs}`looper-rs <index.html>` window does it differently: it
-starts **looper-srv**, which starts `looper-cli` as its child. Both serve the
-same contract, and looper-srv takes the same arguments, so a test may name it
-as the command; see [Starting and attaching](guides/reaching.md).
+The library starts `looper-srv` unless you name another command (`looper_cli=`,
+`LOOPER_SRV` or `LOOPER_CLI`, in that order). A {rs}`looper-rs <index.html>`
+window starts **looper-srv** in the same way, so a test and the window talk
+to the same kind of server and the same contract; see
+[Starting and attaching](guides/reaching.md).
 
 ## 2. There is one simulation, and everybody looks at it
 
@@ -158,6 +157,6 @@ of two things happened:
 A server that is too old or too new for this library is neither: it raises
 `looper.ContractMismatchError` when you attach.
 
-Everything else -- `looper-cli` not found, a build that failed -- is raised
+Everything else -- `looper-srv` not found, a build that failed -- is raised
 when the simulation is started, as `looper.LooperCliError`. See
 [Troubleshooting](troubleshooting.md).

@@ -172,8 +172,8 @@ cleared as for any power-on, unless the project says it has a battery.
 **An armed cut outlives every reset and every jump.** It is the bench's switch,
 not the firmware's, so a reset from outside, the watchdog's, the firmware's own
 and a jump leave it armed, and the server arms it again in the next life with the
-bytes it still waited for (this needs looper-rt 0.22.0, which the version of
-looper-core you run asks for). After a hang, which says nothing of its own, the
+bytes it still waited for (this needs looper-rt 0.22.0, which the looper-rt
+checkout beside looper-srv brings). After a hang, which says nothing of its own, the
 cut keeps the count it had. Only the cut itself and `disarm_power_cut()` end it.
 
 ```python

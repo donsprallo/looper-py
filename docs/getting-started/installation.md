@@ -9,55 +9,41 @@ A test written with looper-py needs three things:
 | What | Why | Check with |
 | --- | --- | --- |
 | Python 3.13 or newer | the library and your tests | `python --version` |
-| the `looper-cli` command from `looper-core` | it builds, starts and serves the simulation | `looper-cli --version` |
+| the `looper-srv` program | it builds, starts and serves the simulation | `looper-srv --help` |
 | a C compiler (`gcc` or `clang`) | the simulation is your firmware, compiled for your computer | `gcc --version` |
 
-looper-py itself depends only on `grpcio` and `protobuf`. It does not import
-`looper-core`; it starts `looper-cli` as a separate program and talks to it.
+looper-py itself depends only on `grpcio` and `protobuf`. It starts
+`looper-srv` as a separate program and talks to it.
 
-## Step 1: make `looper-cli` available
+## Step 1: make `looper-srv` available
 
-`looper-cli` comes with `looper-core`. Either install it as a tool, so that
-it is on your `PATH` everywhere:
-
-::::{tab-set}
-
-:::{tab-item} uv
-```console
-$ uv tool install ../looper-core
-$ looper-cli --version
-looper 0.1.0
-```
-:::
-
-:::{tab-item} pipx
-```console
-$ pipx install ../looper-core
-$ looper-cli --version
-looper 0.1.0
-```
-:::
-
-::::
-
-or leave it in its checkout and tell looper-py how to run it. The library
-reads the command from the `LOOPER_CLI` environment variable:
+`looper-srv` is built from its own checkout (`cargo build --release` in
+`looper-srv`; the runtime `looper-rt` and the library `libclang` it needs are
+described in {learn}`Installation <getting-started/installation.html>`). Either
+put the program on your `PATH`, where the library finds it as `looper-srv`, or
+leave it in its checkout and tell looper-py where it is. The library looks, in
+this order, at the argument `looper_cli=` of `looper.run`, the environment
+variable `LOOPER_SRV`, the environment variable `LOOPER_CLI` (still read), and
+then `looper-srv` on the `PATH`:
 
 ::::{tab-set}
 
 :::{tab-item} bash
 ```console
-$ export LOOPER_CLI="uv run --project ../looper-core looper-cli"
+$ export LOOPER_SRV="../looper-srv/target/release/looper-srv"
 ```
 :::
 
 :::{tab-item} PowerShell
 ```console
-PS> $env:LOOPER_CLI = "uv run --project ../looper-core looper-cli"
+PS> $env:LOOPER_SRV = "../looper-srv/target/release/looper-srv"
 ```
 :::
 
 ::::
+
+A Windows installer that puts `looper-srv` and what it needs on the `PATH` is
+coming; it is prepared but not built yet.
 
 The same command can also be passed to [`looper.run`](../guides/reaching.md)
 as `looper_cli=...`, which is handy in a `conftest.py`.
@@ -90,17 +76,13 @@ $ python -c "import looper; print(looper.__version__)"
 ```
 
 ```{note}
-The distribution is called `looper-py`, the package is `looper`. Do not
-install `looper-py` into the same environment as `looper-core` itself: both
-carry the inspector contract, and the two copies collide in one process.
-Install `looper-core` as a tool, or point `LOOPER_CLI` at its own
-environment, as above.
+The distribution is called `looper-py`, the package is `looper`.
 ```
 
 ## Step 3: a project the library can run
 
 `looper.run` takes the build definition of a simulation, the `looper.toml`
-that `looper-core` reads. If your firmware has none yet, start with the
+that `looper-srv` reads. If your firmware has none yet, start with the
 example in looper-docs:
 
 ```console

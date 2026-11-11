@@ -2,24 +2,26 @@
 
 ## When starting
 
-`looper.LooperCliError: could not start 'looper-cli': ...`
-: The `looper-cli` command was not found. Install `looper-core` as a tool
-  (`uv tool install ../looper-core`), or tell the library how to run it with
-  `LOOPER_CLI` or `looper_cli=` -- see [Installation](getting-started/installation.md).
+`looper.LooperCliError: could not start 'looper-srv': ...`
+: The `looper-srv` program was not found. Put it on the `PATH`, or tell the
+  library where it is with `LOOPER_SRV` or `looper_cli=` -- see
+  [Installation](getting-started/installation.md). (The exception keeps its
+  old name, `LooperCliError`, for every server.)
 
 `looper.LooperCliError: looper-cli stopped before it served (exit 1)`
-: `looper-cli` ran but gave up: the build definition was not found, the
-  headers could not be parsed, or the compiler rejected the code. What it
-  printed is in the test's error output, just above -- run the test with
-  `pytest -s` to see it as it happens.
+: The server ran but gave up: the build definition was not found, the
+  headers could not be parsed, or the compiler rejected the code. The message
+  says `looper-cli` whichever server was started. What the server printed is in
+  the test's error output, just above -- run the test with `pytest -s` to see
+  it as it happens.
 
 `looper.ContractMismatchError: the server speaks contract version 2, this library 3; ...`
-: `looper-cli` and this library were made for different versions of the
+: The server and this library were made for different versions of the
   inspector contract. Update whichever is older.
 
 `looper.ContractMismatchError: the server does not speak contract version 3; ...`
 : The server answered, but it does not know the contract at all: it is older
-  than the version the library speaks. Update `looper-core`.
+  than the version the library speaks. Update `looper-srv`.
 
 `looper.LooperCliError: looper-cli stopped before it served (exit 1)`, and above it `Permission denied` at the link step
 : A `blinky.exe` -- or whatever firmware you build -- is still running and
@@ -34,7 +36,7 @@ A test behaves as if an old firmware were running, with `build=False`
 
 `looper.SimulationUnreachableError: no inspector server at 127.0.0.1:50051`
 : `looper.connect` found nothing at that address. Check the line
-  `listening on ...` that `looper-cli run` printed.
+  `listening on ...` that `looper-srv run` printed.
 
 ## While a test runs
 

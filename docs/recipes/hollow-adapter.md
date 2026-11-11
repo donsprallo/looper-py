@@ -66,7 +66,7 @@ the very start: no `advance` before `evaluate`.
 
 ## Before running anything
 
-`looper-cli audit` answers the same question statically, from the headers and
+`looper-srv audit` answers the same question statically, from the headers and
 the contract, without building or running anything -- see
 {core}`Checking a simulation <checking.html>`. The test above answers it for
 what the firmware really calls.
