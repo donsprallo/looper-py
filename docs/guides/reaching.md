@@ -24,6 +24,8 @@ with looper.run("path/to/looper.toml", virtual=True) as simulation:
 | `virtual` | `False` | start with a held clock, in step with the test -- what tests want |
 | `build` | `True` | build first; `False` starts what was built last |
 | `server` | `$LOOPER_SRV`, then `looper-srv` | the command that runs the server, as text or as a list |
+| `time_model` | what `[time]` in looper.toml chooses | the time model to run on, such as `"adaptive"` (see [How it works](../concepts.md)) |
+| `time_params` | the model's defaults | its parameters as whole numbers, such as `{"max_step_us": 500}` |
 
 What `looper-srv` and the firmware print goes to the error stream of your
 test process. pytest shows it for a failed test; `pytest -s` shows it always.

@@ -9,7 +9,7 @@ looking, because there is one simulation.
 from __future__ import annotations
 
 import os
-from collections.abc import Callable, Iterator
+from collections.abc import Callable, Iterator, Mapping
 from types import TracebackType
 
 from looper.application.bootloader import Otp
@@ -20,8 +20,10 @@ from looper.application.findings_reading import complete_findings
 from looper.application.memories import Flash, Retained
 from looper.application.ports import Inspector, SimulationRefusedError
 from looper.application.race import Race
+from looper.application.restarting import restart_simulation
 from looper.application.triggers import Triggers
 from looper.domain.model import (
+    ActiveTimeModel,
     BootChain,
     Bus,
     BusMessage,
@@ -42,6 +44,7 @@ from looper.domain.model import (
     Signal,
     SignalGraph,
     SignalModel,
+    TimeModel,
     Variable,
     Watch,
 )
@@ -105,6 +108,72 @@ class Simulation:
         held, when it is.
         """
         return self._inspector.run_state()
+
+    @property
+    def time_model(self) -> ActiveTimeModel | None:
+        """The time model the simulation runs on, read from it each time.
+
+        None from a server that predates time models. Its `summary_text` is
+        the line to keep beside a measurement: two runs are comparable when
+        it is the same.
+        """
+        return self._inspector.run_state().time_model
+
+    @property
+    def time_models(self) -> tuple[TimeModel, ...]:
+        """The time models the simulation can restart with, as the server listed them."""
+        return self._description.time_models
+
+    def restart(
+        self,
+        *,
+        time_model: str | None = None,
+        time_params: Mapping[str, float] | None = None,
+        from_definition: bool = False,
+        rebuild: bool = False,
+        timeout_s: float = 120.0,
+    ) -> str:
+        """Start the simulation again from 0 s, and wait until the new one answers.
+
+        Without `time_model` the restart keeps the model running now, with
+        its parameters, when it was chosen at a restart or by `looper.run`;
+        otherwise it follows looper.toml. Another model needs no build. The
+        recordings begin anew; watches and armed triggers are gone with the
+        old simulation.
+
+        Args:
+            time_model: The model to restart on, such as ``"adaptive"``.
+            time_params: Its parameters, such as ``{"max_step_us": 500}``;
+                one left out takes its default. Only with `time_model`.
+            from_definition: Restart on what looper.toml chooses.
+            rebuild: Build first; the old simulation runs on meanwhile.
+            timeout_s: How long the build and the restart may take.
+
+        Returns:
+            What the server says the restart did, such as ``Restarted at 0 s
+            · same build · time model adaptive (was fixed 250 µs)``.
+
+        Raises:
+            ValueError: For `time_params` without `time_model`.
+            SimulationRefusedError: If the server refused the model or a
+                parameter, or the build failed; the simulation then runs on
+                as it was.
+            TimeoutError: If the new simulation did not answer in time.
+        """
+        if time_params and time_model is None:
+            raise ValueError("time_params need a time_model to belong to")
+        done = restart_simulation(
+            self._inspector,
+            rebuild=rebuild,
+            time_model=time_model,
+            time_params=time_params or {},
+            from_definition=from_definition,
+            timeout_s=timeout_s,
+        )
+        self._description = self._inspector.describe()
+        self._events = EventStream(self._inspector)
+        self._triggers = Triggers(self._inspector)
+        return done
 
     def chains(self) -> tuple[ChainBlockState, ...]:
         """Every event block of the graph and of the Logic triggers, in the server's words.

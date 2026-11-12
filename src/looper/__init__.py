@@ -32,6 +32,7 @@ from looper.application.ports import (
 from looper.application.simulation import Simulation
 from looper.application.triggers import Triggers
 from looper.domain.model import (
+    ActiveTimeModel,
     BootChain,
     BootStep,
     Bus,
@@ -113,6 +114,8 @@ from looper.domain.model import (
     StepKind,
     SwitchSignal,
     Threshold,
+    TimeModel,
+    TimeModelParameter,
     Trigger,
     TriggerMode,
     TriggerState,
@@ -156,9 +159,12 @@ __all__ = [
     "Flash",
     "FlashMark",
     "FlashPartition",
+    "ActiveTimeModel",
     "Life",
     "LifeDump",
     "Lives",
+    "TimeModel",
+    "TimeModelParameter",
     "ResetMark",
     "Retained",
     "ServerStartError",

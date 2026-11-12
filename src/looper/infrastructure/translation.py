@@ -25,7 +25,7 @@ from looper.domain.model import (
     Variable,
     Watch,
 )
-from looper.infrastructure import interrupt_translation, mark_translation
+from looper.infrastructure import interrupt_translation, mark_translation, time_model_translation
 from looper.infrastructure.contract import looper_inspector_pb2 as contract
 
 #: The origin the server gives a function measured at the adapter boundary.
@@ -55,6 +55,7 @@ def description_of(message: contract.Description) -> Description:
         edition="pro" if message.license.edition == contract.EDITION_PRO else "free",
         licence_note=message.license.note,
         pro_parts=tuple(part.name for part in message.license.parts if part.unlocked),
+        time_models=time_model_translation.time_models_of(message.time_models),
     )
 
 
@@ -71,6 +72,7 @@ def run_status_of(message: contract.RunState) -> RunStatus:
         pace_ratio=message.pace_ratio,
         behind_us=message.behind_us,
         slipped_us=message.slipped_us,
+        time_model=time_model_translation.active_time_model_of(message),
     )
 
 

@@ -14,6 +14,7 @@ from enum import StrEnum
 
 from looper.domain.model.interrupt_facts import InterruptMark
 from looper.domain.model.marks import FlashMark, ResetMark
+from looper.domain.model.time_models import ActiveTimeModel, TimeModel
 
 
 class ClockMode(StrEnum):
@@ -44,6 +45,8 @@ class Description:
             names a licence file uses (``architecture``, ``bootloader``,
             ``run-findings``, ``scenarios``), so that a test can skip what
             it cannot use before asking.
+        time_models: The time models the simulation can restart with, in
+            the server's order; empty from a server that predates them.
     """
 
     contract_version: int
@@ -53,6 +56,7 @@ class Description:
     edition: str = "free"
     licence_note: str = ""
     pro_parts: tuple[str, ...] = ()
+    time_models: tuple[TimeModel, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -153,6 +157,8 @@ class RunStatus:
             slip, and this is the only way a test learns that it did - a
             measurement over simulated time is worth what this number says
             it is.
+        time_model: The time model the simulation runs on; None from a
+            server that predates time models.
     """
 
     now_us: int
@@ -165,6 +171,7 @@ class RunStatus:
     pace_ratio: float = 0.0
     behind_us: int = 0
     slipped_us: int = 0
+    time_model: ActiveTimeModel | None = None
 
 
 @dataclass(frozen=True)

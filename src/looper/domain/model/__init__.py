@@ -68,6 +68,12 @@ from looper.domain.model.signal_graph import (
     SignalProbe,
     SignalTarget,
 )
+from looper.domain.model.time_models import (
+    ActiveTimeModel,
+    RestartStep,
+    TimeModel,
+    TimeModelParameter,
+)
 from looper.domain.model.triggers import (
     BusReceived,
     BusTimeout,
@@ -92,6 +98,10 @@ from looper.domain.model.triggers import (
 from looper.domain.model.variables import Variable, Watch
 
 __all__ = [
+    "ActiveTimeModel",
+    "RestartStep",
+    "TimeModel",
+    "TimeModelParameter",
     "DbcFile",
     "DbcMessage",
     "DbcSignal",

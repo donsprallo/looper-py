@@ -20,6 +20,7 @@ from looper.application.boot_port import BootInspector
 from looper.application.chain_port import ChainInspector
 from looper.application.interrupt_port import InterruptInspector
 from looper.application.life_port import LifeInspector
+from looper.application.restart_port import RestartInspector
 from looper.domain.model import (
     Bus,
     BusMessage,
@@ -63,7 +64,9 @@ class ContractNotServedError(SimulationUnreachableError):
     """The server answers, but does not offer the inspector contract this library speaks."""
 
 
-class Inspector(LifeInspector, BootInspector, InterruptInspector, ChainInspector, ABC):
+class Inspector(
+    LifeInspector, BootInspector, InterruptInspector, ChainInspector, RestartInspector, ABC
+):
     """Everything this library asks of a running simulation."""
 
     @abstractmethod

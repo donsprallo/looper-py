@@ -132,6 +132,29 @@ thousand passes of a polling loop. On your computer that takes a few
 milliseconds.
 ```
 
+How far the clock moves after a pass is the *time model*'s to say. `fixed`,
+the default, moves by the same step every pass; `adaptive` lets a reading of
+the microsecond clock cost time and skips idle stretches in growing steps,
+never past the next event. looper.toml chooses in `[time]`; a test can choose
+another at the start or later, without a build:
+
+```python
+with looper.run("looper.toml", virtual=True, time_model="adaptive",
+                time_params={"max_step_us": 500}) as simulation:
+    print(simulation.time_model.summary_text)
+    # adaptive · min_step_us=1 · max_step_us=500 · time_read_cost_ns=1000
+    simulation.restart(time_model="fixed", time_params={"step_us": 100})
+```
+
+`simulation.time_models` lists what the simulation can run on, with each
+parameter's range and default; `simulation.time_model` is the one in force
+and where it came from. A restart begins again at 0 s; without `time_model`
+it keeps a model a test chose, and `restart(from_definition=True)` goes back
+to looper.toml's. A model or value the server does not take is a
+`SimulationRefusedError` with its sentence, and the simulation runs on as it
+was. Keep `summary_text` beside a measurement: two runs are comparable only
+when it is the same.
+
 ## 4. Expectations are declared first and checked afterwards
 
 ```{figure} images/evaluate-steps.svg

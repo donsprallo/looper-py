@@ -28,6 +28,7 @@ looper.Life, looper.LifeDump, looper.Lives        # the firmware's lives
 looper.ResetMark, looper.FlashMark                # resets and flash operations in the stream
 looper.Retained, looper.Flash, looper.FlashPartition  # what survives a reset
 looper.NodeOutput, looper.SignalModel, looper.ModelParameter
+looper.TimeModel, looper.TimeModelParameter, looper.ActiveTimeModel  # time models
 ```
 
 ## Reaching a simulation

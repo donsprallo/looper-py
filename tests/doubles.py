@@ -37,18 +37,22 @@ from looper.domain.model import (
     Variable,
     Watch,
 )
+from restart_doubles import ScriptedRestarts
 
 #: How many events one page of the stream holds, so that paging is exercised.
 PAGE_SIZE = 2
 
 
-class ScriptedInspector(ScriptedLives, ScriptedInterrupts, ScriptedChains, Inspector):
+class ScriptedInspector(
+    ScriptedLives, ScriptedInterrupts, ScriptedChains, ScriptedRestarts, Inspector
+):
     """Answers from fixed state and writes down every request."""
 
     def __init__(self, clock_mode: ClockMode = ClockMode.HELD) -> None:
         ScriptedLives.__init__(self)
         ScriptedInterrupts.__init__(self)
         ScriptedChains.__init__(self)
+        ScriptedRestarts.__init__(self)
         self.description = Description(contract_version=3, firmware_name="blinky")
         self.run = RunStatus(now_us=0, clock_mode=clock_mode, epoch=1, next_event_seq=0)
         self.samples: tuple[Sample, ...] = ()
@@ -134,6 +138,8 @@ class ScriptedInspector(ScriptedLives, ScriptedInterrupts, ScriptedChains, Inspe
         return self.buses
 
     def run_state(self) -> RunStatus:
+        if self.time_model_now is not None:
+            return replace(self.run, time_model=self.time_model_now)
         return self.run
 
     def run_for(self, microseconds: int) -> RunStatus:

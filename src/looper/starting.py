@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import os
 import warnings
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path
 
 from looper.application.ports import ContractNotServedError
@@ -50,6 +50,8 @@ def run(
     build: bool = True,
     server: str | Sequence[str] | None = None,
     looper_cli: str | Sequence[str] | None = None,
+    time_model: str | None = None,
+    time_params: Mapping[str, int] | None = None,
 ) -> Simulation:
     """Build a simulation, start it, and attach to it.
 
@@ -64,17 +66,25 @@ def run(
             on the ``PATH``.
         looper_cli: Deprecated: the old name of ``server``, from the days of
             looper-core's ``looper-cli``. Still taken, with a warning.
+        time_model: The time model to run on in place of what looper.toml
+            chooses, such as ``"adaptive"``; the run's `time_model` then says
+            it came from here (``command_line``), and a restart keeps it.
+        time_params: Its parameters, whole numbers, such as
+            ``{"max_step_us": 500}``; one left out takes its default.
 
     Raises:
         ServerStartError: If the server could not build, start or serve it.
         ContractMismatchError: If it speaks another contract version.
         TypeError: If both ``server`` and ``looper_cli`` are given.
+        ValueError: For ``time_params`` without ``time_model``.
     """
     command = RunCommand(
         program=program_of(_server_named(server, looper_cli)),
         definition=Path(definition) if definition is not None else None,
         virtual=virtual,
         build=build,
+        time_model=time_model,
+        time_params=_time_params(time_model, time_params),
     )
     process = LooperCliRun.start(command)
     try:
@@ -139,6 +149,15 @@ def _server_named(
         )
         return looper_cli
     return server or _server_from_environment()
+
+
+def _time_params(
+    time_model: str | None, given: Mapping[str, int] | None
+) -> tuple[tuple[str, int], ...]:
+    """The parameters as the command line takes them; only with a model."""
+    if given and time_model is None:
+        raise ValueError("time_params need a time_model to belong to")
+    return tuple((name, int(value)) for name, value in (given or {}).items())
 
 
 def _server_from_environment() -> str:

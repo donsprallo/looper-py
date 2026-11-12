@@ -63,12 +63,17 @@ class RunCommand:
             ``looper.toml`` in the working directory, when none is named.
         virtual: Whether the simulation runs on a virtual clock.
         build: Whether to build before starting, or start what was built.
+        time_model: The time model to run on in place of what looper.toml
+            chooses; None for looper.toml's.
+        time_params: Its parameters as ``(name, value)``, whole numbers.
     """
 
     program: tuple[str, ...]
     definition: Path | None = None
     virtual: bool = False
     build: bool = True
+    time_model: str | None = None
+    time_params: tuple[tuple[str, int], ...] = ()
 
     def arguments(self) -> list[str]:
         """The whole command line."""
@@ -80,6 +85,10 @@ class RunCommand:
             arguments.append("--virtual")
         if not self.build:
             arguments.append("--no-build")
+        if self.time_model is not None:
+            arguments.extend(["--time-model", self.time_model])
+        for name, value in self.time_params:
+            arguments.extend(["--time-param", f"{name}={value}"])
         if is_looper_srv(self.program):
             arguments.extend(["--started-by", "test", "--owner-pid", str(os.getpid())])
         return arguments
