@@ -167,8 +167,87 @@ message Description {
   bool tls = 33;                      // the server speaks TLS; a typed address is dialled so
   string certificate_sha256 = 34;     // the fingerprint of its certificate, when it speaks TLS
 
+  // The time models this simulation can restart with, in the order a client
+  // offers them: looper-rt's own first, then the project's (looper.toml
+  // `time_models`). One the runtime refused is listed with its problem, so
+  // that a client says why it is missing. Empty for a server of code or a
+  // board, and from a server that predates time models.
+  repeated TimeModelView time_models = 40;
+
   reserved 3;
   reserved "time_mode";
+}
+
+// ---- Time models ----
+// How far simulated time moves between passes of the firmware's loop is the
+// time model's to say (looper-rt's looper_time_model.h). Every model is
+// compiled into the simulation, so another one needs a restart, not a build.
+// Every text is the server's.
+
+message TimeModelView {
+  string name = 1;               // "fixed", "adaptive", "bus_load": the key in looper.toml and --time-model
+  string description_text = 2;   // the model's own words
+  string source_text = 3;        // "built in", or the C file as the project names it, e.g. "sim/bus_time.c"
+  string source_path = 4;        // that file on the server's disk; empty for a built-in one
+  bool built_in = 5;
+  repeated TimeModelParameterView parameters = 6;  // in the model's order
+  string problem_text = 7;       // why it cannot be used, with what to do; empty when it can
+}
+
+enum TimeParameterKind {
+  TIME_PARAMETER_KIND_INTEGER = 0;   // a whole number; the only kind so far
+  TIME_PARAMETER_KIND_REAL = 1;
+}
+
+message TimeModelParameterView {
+  string name = 1;               // "max_step_us": the key in [time] and --time-param
+  string title_text = 2;         // "Largest idle step"
+  string description_text = 3;   // the model's sentence, for a hover
+  string unit = 4;               // "µs", "ns"; empty for none
+  TimeParameterKind kind = 5;
+  double default_value = 6;      // the application's pass time already put in where that is the default
+  string default_text = 7;       // "500", "1 000"
+  optional double lowest = 8;    // absent: the model gives no bound
+  optional double highest = 9;
+  string range_text = 10;        // "1 – 1 000 000 µs"; empty when there is no bound
+}
+
+enum TimeModelOrigin {
+  TIME_MODEL_ORIGIN_DEFAULT = 0;       // the project names none; looper uses fixed
+  TIME_MODEL_ORIGIN_DEFINITION = 1;    // from looper.toml [time]
+  TIME_MODEL_ORIGIN_COMMAND_LINE = 2;  // --time-model when the server was started
+  TIME_MODEL_ORIGIN_RESTART = 3;       // chosen in a RestartRequest
+}
+
+message TimeParameterValue {
+  string name = 1;          // as TimeModelParameterView.name
+  double value = 2;
+  string value_text = 3;    // "500 µs"
+}
+
+// The time model a simulation runs with.
+message TimeModelState {
+  string name = 1;
+  string short_text = 2;          // for a header: "fixed 250 µs", "adaptive"
+  // For exports and findings, every parameter written out:
+  // "adaptive · min_step_us=1 · max_step_us=500 · time_read_cost_ns=1000".
+  string summary_text = 3;
+  repeated TimeParameterValue parameters = 4;   // every parameter, defaults included, in the model's order
+  TimeModelOrigin origin = 5;
+  string origin_text = 6;         // "From looper.toml.", "Chosen at a restart. ..."
+  // What looper.toml chooses, "fixed 250 µs"; empty when the model running is it
+  // (origin DEFINITION or DEFAULT).
+  string definition_short_text = 7;
+  // "One pass = 250 µs of simulated time." / "A pass is 1 µs to 500 µs, by what the firmware does."
+  string pass_text = 8;
+  string toml_text = 9;           // the [time] table that keeps exactly this choice
+}
+
+// A time model to restart with.
+message TimeModelChoice {
+  string name = 1;                       // a TimeModelView.name without problem_text
+  map<string, double> parameters = 2;    // a name left out takes its default
+  bool from_definition = 3;              // name and parameters ignored: what looper.toml chooses
 }
 
 // Who started a server, so that a list can say how long it lives.
@@ -324,8 +403,11 @@ message RunState {
   uint64 slipped_us = 5;   // simulated time given up by re-anchoring after stalls, since the pace was last set
   uint64 epoch = 6;
   uint64 next_event_seq = 7;
-  // The pass cost: the simulated time one idle pass takes. A project setting;
-  // every command, poll and AdvanceTime is quantised to it.
+  // The pass cost: the simulated time one idle pass takes, and what
+  // step_pass runs for. Under `fixed` the step after every pass; under
+  // `adaptive` the largest step, which a pass without effect grows to --
+  // commands are no longer quantised to it (time_model.pass_text says it in
+  // words).
   uint32 pass_cost_us = 8;
   // HELD with a run under way: where it ends. Zero when standing.
   uint64 target_us = 9;
@@ -358,6 +440,9 @@ message RunState {
   // after 4096 bytes of a flash write". Empty when none is; its presence is
   // the state, as with hold_reason.
   string power_cut_text = 17;
+  // The time model the simulation runs with. Unset from a server that
+  // predates time models, and on a board.
+  TimeModelState time_model = 18;
 }
 
 // The watchdog of the running life, as the runtime last noted it. Every
@@ -2470,6 +2555,11 @@ message DebugView {
 
 message RestartRequest {
   bool rebuild = 1;
+  // Absent: the model running now, parameters included, when it was chosen
+  // at a restart or on the command line; otherwise what looper.toml
+  // chooses (read again by a rebuild). A choice the server refuses leaves
+  // the simulation running and says why in RestartView.refused_text.
+  TimeModelChoice time_model = 2;
 }
 
 message BuildDiagnostic {
@@ -2502,7 +2592,13 @@ message RestartView {
   string rebuild_unavailable = 5;
   BuildResult last_build = 6;     // unset when no build was asked for here
   uint64 generation = 7;          // restarts so far; tells one from the next
-  string done_text = 8;           // what the last restart did, for a notice
+  string done_text = 8;           // what the last restart did, for a notice; names a new time model and the old one
+  // A time model choice the server refused; the simulation runs on with its
+  // model. Cleared by the next request it takes.
+  string refused_text = 9;        // "max_step_us takes a whole number from 1 to 1 000 000."
+  string refused_parameter = 10;  // the parameter it is about; empty for the choice as a whole
+  // While BUILDING with a model change pending: "Then restarts with time model bus_load."
+  string pending_time_model_text = 11;
 }
 
 // ---- Architecture ----

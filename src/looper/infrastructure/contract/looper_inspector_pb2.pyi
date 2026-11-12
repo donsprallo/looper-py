@@ -25,6 +25,18 @@ class Refusal(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     REFUSAL_OTHER: _ClassVar[Refusal]
     REFUSAL_RESETTING: _ClassVar[Refusal]
 
+class TimeParameterKind(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+    __slots__ = ()
+    TIME_PARAMETER_KIND_INTEGER: _ClassVar[TimeParameterKind]
+    TIME_PARAMETER_KIND_REAL: _ClassVar[TimeParameterKind]
+
+class TimeModelOrigin(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+    __slots__ = ()
+    TIME_MODEL_ORIGIN_DEFAULT: _ClassVar[TimeModelOrigin]
+    TIME_MODEL_ORIGIN_DEFINITION: _ClassVar[TimeModelOrigin]
+    TIME_MODEL_ORIGIN_COMMAND_LINE: _ClassVar[TimeModelOrigin]
+    TIME_MODEL_ORIGIN_RESTART: _ClassVar[TimeModelOrigin]
+
 class StartedBy(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     __slots__ = ()
     STARTED_BY_UNSPECIFIED: _ClassVar[StartedBy]
@@ -425,6 +437,12 @@ REFUSAL_INVALID: Refusal
 REFUSAL_WRONG_MODE: Refusal
 REFUSAL_OTHER: Refusal
 REFUSAL_RESETTING: Refusal
+TIME_PARAMETER_KIND_INTEGER: TimeParameterKind
+TIME_PARAMETER_KIND_REAL: TimeParameterKind
+TIME_MODEL_ORIGIN_DEFAULT: TimeModelOrigin
+TIME_MODEL_ORIGIN_DEFINITION: TimeModelOrigin
+TIME_MODEL_ORIGIN_COMMAND_LINE: TimeModelOrigin
+TIME_MODEL_ORIGIN_RESTART: TimeModelOrigin
 STARTED_BY_UNSPECIFIED: StartedBy
 STARTED_BY_TERMINAL: StartedBy
 STARTED_BY_WINDOW: StartedBy
@@ -701,7 +719,7 @@ class When(_message.Message):
     def __init__(self, at_us: _Optional[int] = ..., after_us: _Optional[int] = ..., allow_late: _Optional[bool] = ...) -> None: ...
 
 class Description(_message.Message):
-    __slots__ = ("contract_version", "firmware_name", "reads_the_build", "definition_path", "capabilities", "retention_us", "max_events_per_batch", "mode", "mode_text", "input_text", "license", "refused_calls", "server_id", "instance_id", "started_at_unix_ms", "started_text", "started_by", "owner_pid", "started_by_text", "started_by_short_text", "lifetime_text", "clients", "clients_text", "clients_short_text", "mode_short_text", "definition_text", "host_text", "server_version_text", "compatible", "compatibility_text", "token_required", "tls", "certificate_sha256")
+    __slots__ = ("contract_version", "firmware_name", "reads_the_build", "definition_path", "capabilities", "retention_us", "max_events_per_batch", "mode", "mode_text", "input_text", "license", "refused_calls", "server_id", "instance_id", "started_at_unix_ms", "started_text", "started_by", "owner_pid", "started_by_text", "started_by_short_text", "lifetime_text", "clients", "clients_text", "clients_short_text", "mode_short_text", "definition_text", "host_text", "server_version_text", "compatible", "compatibility_text", "token_required", "tls", "certificate_sha256", "time_models")
     CONTRACT_VERSION_FIELD_NUMBER: _ClassVar[int]
     FIRMWARE_NAME_FIELD_NUMBER: _ClassVar[int]
     READS_THE_BUILD_FIELD_NUMBER: _ClassVar[int]
@@ -735,6 +753,7 @@ class Description(_message.Message):
     TOKEN_REQUIRED_FIELD_NUMBER: _ClassVar[int]
     TLS_FIELD_NUMBER: _ClassVar[int]
     CERTIFICATE_SHA256_FIELD_NUMBER: _ClassVar[int]
+    TIME_MODELS_FIELD_NUMBER: _ClassVar[int]
     contract_version: ContractVersion
     firmware_name: str
     reads_the_build: bool
@@ -768,7 +787,99 @@ class Description(_message.Message):
     token_required: bool
     tls: bool
     certificate_sha256: str
-    def __init__(self, contract_version: _Optional[_Union[ContractVersion, str]] = ..., firmware_name: _Optional[str] = ..., reads_the_build: _Optional[bool] = ..., definition_path: _Optional[str] = ..., capabilities: _Optional[_Iterable[_Union[Capability, str]]] = ..., retention_us: _Optional[int] = ..., max_events_per_batch: _Optional[int] = ..., mode: _Optional[_Union[ServerMode, str]] = ..., mode_text: _Optional[str] = ..., input_text: _Optional[str] = ..., license: _Optional[_Union[LicenseView, _Mapping]] = ..., refused_calls: _Optional[_Iterable[_Union[RefusedCall, _Mapping]]] = ..., server_id: _Optional[str] = ..., instance_id: _Optional[str] = ..., started_at_unix_ms: _Optional[int] = ..., started_text: _Optional[str] = ..., started_by: _Optional[_Union[StartedBy, str]] = ..., owner_pid: _Optional[int] = ..., started_by_text: _Optional[str] = ..., started_by_short_text: _Optional[str] = ..., lifetime_text: _Optional[str] = ..., clients: _Optional[int] = ..., clients_text: _Optional[str] = ..., clients_short_text: _Optional[str] = ..., mode_short_text: _Optional[str] = ..., definition_text: _Optional[str] = ..., host_text: _Optional[str] = ..., server_version_text: _Optional[str] = ..., compatible: _Optional[bool] = ..., compatibility_text: _Optional[str] = ..., token_required: _Optional[bool] = ..., tls: _Optional[bool] = ..., certificate_sha256: _Optional[str] = ...) -> None: ...
+    time_models: _containers.RepeatedCompositeFieldContainer[TimeModelView]
+    def __init__(self, contract_version: _Optional[_Union[ContractVersion, str]] = ..., firmware_name: _Optional[str] = ..., reads_the_build: _Optional[bool] = ..., definition_path: _Optional[str] = ..., capabilities: _Optional[_Iterable[_Union[Capability, str]]] = ..., retention_us: _Optional[int] = ..., max_events_per_batch: _Optional[int] = ..., mode: _Optional[_Union[ServerMode, str]] = ..., mode_text: _Optional[str] = ..., input_text: _Optional[str] = ..., license: _Optional[_Union[LicenseView, _Mapping]] = ..., refused_calls: _Optional[_Iterable[_Union[RefusedCall, _Mapping]]] = ..., server_id: _Optional[str] = ..., instance_id: _Optional[str] = ..., started_at_unix_ms: _Optional[int] = ..., started_text: _Optional[str] = ..., started_by: _Optional[_Union[StartedBy, str]] = ..., owner_pid: _Optional[int] = ..., started_by_text: _Optional[str] = ..., started_by_short_text: _Optional[str] = ..., lifetime_text: _Optional[str] = ..., clients: _Optional[int] = ..., clients_text: _Optional[str] = ..., clients_short_text: _Optional[str] = ..., mode_short_text: _Optional[str] = ..., definition_text: _Optional[str] = ..., host_text: _Optional[str] = ..., server_version_text: _Optional[str] = ..., compatible: _Optional[bool] = ..., compatibility_text: _Optional[str] = ..., token_required: _Optional[bool] = ..., tls: _Optional[bool] = ..., certificate_sha256: _Optional[str] = ..., time_models: _Optional[_Iterable[_Union[TimeModelView, _Mapping]]] = ...) -> None: ...
+
+class TimeModelView(_message.Message):
+    __slots__ = ("name", "description_text", "source_text", "source_path", "built_in", "parameters", "problem_text")
+    NAME_FIELD_NUMBER: _ClassVar[int]
+    DESCRIPTION_TEXT_FIELD_NUMBER: _ClassVar[int]
+    SOURCE_TEXT_FIELD_NUMBER: _ClassVar[int]
+    SOURCE_PATH_FIELD_NUMBER: _ClassVar[int]
+    BUILT_IN_FIELD_NUMBER: _ClassVar[int]
+    PARAMETERS_FIELD_NUMBER: _ClassVar[int]
+    PROBLEM_TEXT_FIELD_NUMBER: _ClassVar[int]
+    name: str
+    description_text: str
+    source_text: str
+    source_path: str
+    built_in: bool
+    parameters: _containers.RepeatedCompositeFieldContainer[TimeModelParameterView]
+    problem_text: str
+    def __init__(self, name: _Optional[str] = ..., description_text: _Optional[str] = ..., source_text: _Optional[str] = ..., source_path: _Optional[str] = ..., built_in: _Optional[bool] = ..., parameters: _Optional[_Iterable[_Union[TimeModelParameterView, _Mapping]]] = ..., problem_text: _Optional[str] = ...) -> None: ...
+
+class TimeModelParameterView(_message.Message):
+    __slots__ = ("name", "title_text", "description_text", "unit", "kind", "default_value", "default_text", "lowest", "highest", "range_text")
+    NAME_FIELD_NUMBER: _ClassVar[int]
+    TITLE_TEXT_FIELD_NUMBER: _ClassVar[int]
+    DESCRIPTION_TEXT_FIELD_NUMBER: _ClassVar[int]
+    UNIT_FIELD_NUMBER: _ClassVar[int]
+    KIND_FIELD_NUMBER: _ClassVar[int]
+    DEFAULT_VALUE_FIELD_NUMBER: _ClassVar[int]
+    DEFAULT_TEXT_FIELD_NUMBER: _ClassVar[int]
+    LOWEST_FIELD_NUMBER: _ClassVar[int]
+    HIGHEST_FIELD_NUMBER: _ClassVar[int]
+    RANGE_TEXT_FIELD_NUMBER: _ClassVar[int]
+    name: str
+    title_text: str
+    description_text: str
+    unit: str
+    kind: TimeParameterKind
+    default_value: float
+    default_text: str
+    lowest: float
+    highest: float
+    range_text: str
+    def __init__(self, name: _Optional[str] = ..., title_text: _Optional[str] = ..., description_text: _Optional[str] = ..., unit: _Optional[str] = ..., kind: _Optional[_Union[TimeParameterKind, str]] = ..., default_value: _Optional[float] = ..., default_text: _Optional[str] = ..., lowest: _Optional[float] = ..., highest: _Optional[float] = ..., range_text: _Optional[str] = ...) -> None: ...
+
+class TimeParameterValue(_message.Message):
+    __slots__ = ("name", "value", "value_text")
+    NAME_FIELD_NUMBER: _ClassVar[int]
+    VALUE_FIELD_NUMBER: _ClassVar[int]
+    VALUE_TEXT_FIELD_NUMBER: _ClassVar[int]
+    name: str
+    value: float
+    value_text: str
+    def __init__(self, name: _Optional[str] = ..., value: _Optional[float] = ..., value_text: _Optional[str] = ...) -> None: ...
+
+class TimeModelState(_message.Message):
+    __slots__ = ("name", "short_text", "summary_text", "parameters", "origin", "origin_text", "definition_short_text", "pass_text", "toml_text")
+    NAME_FIELD_NUMBER: _ClassVar[int]
+    SHORT_TEXT_FIELD_NUMBER: _ClassVar[int]
+    SUMMARY_TEXT_FIELD_NUMBER: _ClassVar[int]
+    PARAMETERS_FIELD_NUMBER: _ClassVar[int]
+    ORIGIN_FIELD_NUMBER: _ClassVar[int]
+    ORIGIN_TEXT_FIELD_NUMBER: _ClassVar[int]
+    DEFINITION_SHORT_TEXT_FIELD_NUMBER: _ClassVar[int]
+    PASS_TEXT_FIELD_NUMBER: _ClassVar[int]
+    TOML_TEXT_FIELD_NUMBER: _ClassVar[int]
+    name: str
+    short_text: str
+    summary_text: str
+    parameters: _containers.RepeatedCompositeFieldContainer[TimeParameterValue]
+    origin: TimeModelOrigin
+    origin_text: str
+    definition_short_text: str
+    pass_text: str
+    toml_text: str
+    def __init__(self, name: _Optional[str] = ..., short_text: _Optional[str] = ..., summary_text: _Optional[str] = ..., parameters: _Optional[_Iterable[_Union[TimeParameterValue, _Mapping]]] = ..., origin: _Optional[_Union[TimeModelOrigin, str]] = ..., origin_text: _Optional[str] = ..., definition_short_text: _Optional[str] = ..., pass_text: _Optional[str] = ..., toml_text: _Optional[str] = ...) -> None: ...
+
+class TimeModelChoice(_message.Message):
+    __slots__ = ("name", "parameters", "from_definition")
+    class ParametersEntry(_message.Message):
+        __slots__ = ("key", "value")
+        KEY_FIELD_NUMBER: _ClassVar[int]
+        VALUE_FIELD_NUMBER: _ClassVar[int]
+        key: str
+        value: float
+        def __init__(self, key: _Optional[str] = ..., value: _Optional[float] = ...) -> None: ...
+    NAME_FIELD_NUMBER: _ClassVar[int]
+    PARAMETERS_FIELD_NUMBER: _ClassVar[int]
+    FROM_DEFINITION_FIELD_NUMBER: _ClassVar[int]
+    name: str
+    parameters: _containers.ScalarMap[str, float]
+    from_definition: bool
+    def __init__(self, name: _Optional[str] = ..., parameters: _Optional[_Mapping[str, float]] = ..., from_definition: _Optional[bool] = ...) -> None: ...
 
 class DescribeRequest(_message.Message):
     __slots__ = ("client_contract_version", "client_name", "client_kind")
@@ -867,7 +978,7 @@ class RunReply(_message.Message):
     def __init__(self, ack: _Optional[_Union[Ack, _Mapping]] = ..., state: _Optional[_Union[RunState, _Mapping]] = ...) -> None: ...
 
 class RunState(_message.Message):
-    __slots__ = ("now_us", "mode", "pace_ratio", "behind_us", "slipped_us", "epoch", "next_event_seq", "pass_cost_us", "target_us", "queued_commands", "hold_reason", "life", "resets", "life_text", "watchdog", "reset_loop_text", "power_cut_text")
+    __slots__ = ("now_us", "mode", "pace_ratio", "behind_us", "slipped_us", "epoch", "next_event_seq", "pass_cost_us", "target_us", "queued_commands", "hold_reason", "life", "resets", "life_text", "watchdog", "reset_loop_text", "power_cut_text", "time_model")
     NOW_US_FIELD_NUMBER: _ClassVar[int]
     MODE_FIELD_NUMBER: _ClassVar[int]
     PACE_RATIO_FIELD_NUMBER: _ClassVar[int]
@@ -885,6 +996,7 @@ class RunState(_message.Message):
     WATCHDOG_FIELD_NUMBER: _ClassVar[int]
     RESET_LOOP_TEXT_FIELD_NUMBER: _ClassVar[int]
     POWER_CUT_TEXT_FIELD_NUMBER: _ClassVar[int]
+    TIME_MODEL_FIELD_NUMBER: _ClassVar[int]
     now_us: int
     mode: ClockMode
     pace_ratio: float
@@ -902,7 +1014,8 @@ class RunState(_message.Message):
     watchdog: WatchdogState
     reset_loop_text: str
     power_cut_text: str
-    def __init__(self, now_us: _Optional[int] = ..., mode: _Optional[_Union[ClockMode, str]] = ..., pace_ratio: _Optional[float] = ..., behind_us: _Optional[int] = ..., slipped_us: _Optional[int] = ..., epoch: _Optional[int] = ..., next_event_seq: _Optional[int] = ..., pass_cost_us: _Optional[int] = ..., target_us: _Optional[int] = ..., queued_commands: _Optional[int] = ..., hold_reason: _Optional[str] = ..., life: _Optional[int] = ..., resets: _Optional[int] = ..., life_text: _Optional[str] = ..., watchdog: _Optional[_Union[WatchdogState, _Mapping]] = ..., reset_loop_text: _Optional[str] = ..., power_cut_text: _Optional[str] = ...) -> None: ...
+    time_model: TimeModelState
+    def __init__(self, now_us: _Optional[int] = ..., mode: _Optional[_Union[ClockMode, str]] = ..., pace_ratio: _Optional[float] = ..., behind_us: _Optional[int] = ..., slipped_us: _Optional[int] = ..., epoch: _Optional[int] = ..., next_event_seq: _Optional[int] = ..., pass_cost_us: _Optional[int] = ..., target_us: _Optional[int] = ..., queued_commands: _Optional[int] = ..., hold_reason: _Optional[str] = ..., life: _Optional[int] = ..., resets: _Optional[int] = ..., life_text: _Optional[str] = ..., watchdog: _Optional[_Union[WatchdogState, _Mapping]] = ..., reset_loop_text: _Optional[str] = ..., power_cut_text: _Optional[str] = ..., time_model: _Optional[_Union[TimeModelState, _Mapping]] = ...) -> None: ...
 
 class WatchdogState(_message.Message):
     __slots__ = ("running", "timeout_us", "last_kick_us", "deadline_us", "remaining_us", "kicks", "is_close", "remaining_text", "last_kick_text", "text")
@@ -3516,10 +3629,12 @@ class DebugView(_message.Message):
     def __init__(self, available: _Optional[bool] = ..., attached: _Optional[bool] = ..., stopped: _Optional[bool] = ..., status_text: _Optional[str] = ..., stopped_at: _Optional[_Union[DebugFrame, _Mapping]] = ..., breakpoints: _Optional[_Iterable[_Union[BreakpointView, _Mapping]]] = ..., frames: _Optional[_Iterable[_Union[DebugFrame, _Mapping]]] = ..., variables: _Optional[_Iterable[_Union[DebugVariable, _Mapping]]] = ..., note: _Optional[str] = ...) -> None: ...
 
 class RestartRequest(_message.Message):
-    __slots__ = ("rebuild",)
+    __slots__ = ("rebuild", "time_model")
     REBUILD_FIELD_NUMBER: _ClassVar[int]
+    TIME_MODEL_FIELD_NUMBER: _ClassVar[int]
     rebuild: bool
-    def __init__(self, rebuild: _Optional[bool] = ...) -> None: ...
+    time_model: TimeModelChoice
+    def __init__(self, rebuild: _Optional[bool] = ..., time_model: _Optional[_Union[TimeModelChoice, _Mapping]] = ...) -> None: ...
 
 class BuildDiagnostic(_message.Message):
     __slots__ = ("path", "line", "column", "severity", "message")
@@ -3550,7 +3665,7 @@ class BuildResult(_message.Message):
     def __init__(self, failed: _Optional[bool] = ..., title_text: _Optional[str] = ..., summary_text: _Optional[str] = ..., diagnostics: _Optional[_Iterable[_Union[BuildDiagnostic, _Mapping]]] = ..., output: _Optional[str] = ...) -> None: ...
 
 class RestartView(_message.Message):
-    __slots__ = ("phase", "can_restart", "restart_unavailable", "can_rebuild", "rebuild_unavailable", "last_build", "generation", "done_text")
+    __slots__ = ("phase", "can_restart", "restart_unavailable", "can_rebuild", "rebuild_unavailable", "last_build", "generation", "done_text", "refused_text", "refused_parameter", "pending_time_model_text")
     PHASE_FIELD_NUMBER: _ClassVar[int]
     CAN_RESTART_FIELD_NUMBER: _ClassVar[int]
     RESTART_UNAVAILABLE_FIELD_NUMBER: _ClassVar[int]
@@ -3559,6 +3674,9 @@ class RestartView(_message.Message):
     LAST_BUILD_FIELD_NUMBER: _ClassVar[int]
     GENERATION_FIELD_NUMBER: _ClassVar[int]
     DONE_TEXT_FIELD_NUMBER: _ClassVar[int]
+    REFUSED_TEXT_FIELD_NUMBER: _ClassVar[int]
+    REFUSED_PARAMETER_FIELD_NUMBER: _ClassVar[int]
+    PENDING_TIME_MODEL_TEXT_FIELD_NUMBER: _ClassVar[int]
     phase: RestartPhase
     can_restart: bool
     restart_unavailable: str
@@ -3567,7 +3685,10 @@ class RestartView(_message.Message):
     last_build: BuildResult
     generation: int
     done_text: str
-    def __init__(self, phase: _Optional[_Union[RestartPhase, str]] = ..., can_restart: _Optional[bool] = ..., restart_unavailable: _Optional[str] = ..., can_rebuild: _Optional[bool] = ..., rebuild_unavailable: _Optional[str] = ..., last_build: _Optional[_Union[BuildResult, _Mapping]] = ..., generation: _Optional[int] = ..., done_text: _Optional[str] = ...) -> None: ...
+    refused_text: str
+    refused_parameter: str
+    pending_time_model_text: str
+    def __init__(self, phase: _Optional[_Union[RestartPhase, str]] = ..., can_restart: _Optional[bool] = ..., restart_unavailable: _Optional[str] = ..., can_rebuild: _Optional[bool] = ..., rebuild_unavailable: _Optional[str] = ..., last_build: _Optional[_Union[BuildResult, _Mapping]] = ..., generation: _Optional[int] = ..., done_text: _Optional[str] = ..., refused_text: _Optional[str] = ..., refused_parameter: _Optional[str] = ..., pending_time_model_text: _Optional[str] = ...) -> None: ...
 
 class ArchitectureRequest(_message.Message):
     __slots__ = ("known_revision", "path")
