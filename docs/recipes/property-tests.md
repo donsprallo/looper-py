@@ -41,24 +41,27 @@ COMMAND = strategies.with_checksum(
 
 
 @pytest.fixture(scope="module")
-def simulation():
-    with looper.run("looper.toml", virtual=True) as started:
-        started.advance(1.0)  # past start-up
-        yield started
+def can():
+    """The bus, read from a first start that also builds the firmware."""
+    with looper.run("looper.toml", virtual=True) as simulation:
+        yield simulation.bus("CAN2")
 
 
-def test_every_command_is_survived(simulation):
-    can = simulation.bus("CAN2")
-
+def test_every_command_is_survived(can):
     @settings(max_examples=200, deadline=None)
     @given(message=strategies.bus_messages(can, payloads=COMMAND, addresses=[0x6FF]))
     def survives(message):
-        simulation.send_bus_message(message)
-        check = simulation.expect()
-        check.firmware_is_alive()
-        check.bus(can.bus_id, "CAN2").nothing_refused()
-        report = check.evaluate(for_seconds=0.05)
-        assert report, report.summary
+        # A simulation of its own for every message: a fault ends only this
+        # message's simulation, and the message Hypothesis shrinks to is the one
+        # that caused it.
+        with looper.run("looper.toml", virtual=True, build=False) as simulation:
+            simulation.advance(1.0)  # past start-up
+            simulation.send_bus_message(message)
+            check = simulation.expect()
+            check.firmware_is_alive()
+            check.bus(can.bus_id, "CAN2").nothing_refused()
+            report = check.evaluate(for_seconds=0.05)
+            assert report, report.summary
 
     survives()
 ```
@@ -87,15 +90,18 @@ test as a regression.
 
 ## Tips
 
-- One simulation serves every example: starting the firmware once per message
-  would cost seconds each. The firmware's state therefore carries from one
-  message to the next, as it would on the bus. If a failure depends on what
-  came before, Hypothesis cannot shrink it reliably; restart in a fixture and
-  run fewer examples.
+- Every example starts a simulation of its own (`build=False`: the module
+  fixture built the firmware once). With one simulation for all examples, the
+  first fault would end it, every later example would fail as well, and
+  Hypothesis would shrink to a message that has nothing to do with the bug. A
+  start costs a moment, so a few hundred examples take minutes, not seconds.
 - The `given` function lives inside the test so that it can use the
-  `simulation` fixture; Hypothesis warns about function-scoped fixtures used
+  `can` fixture; Hypothesis warns about function-scoped fixtures used
   directly in `@given`.
 - `max_examples` sets how hard it tries. A few hundred is a good start; a
   nightly run can take thousands.
+- Build the firmware with a sanitizer (`sanitizers = ["address", "undefined"]`
+  in `looper.toml`, with clang) to catch a fault the moment it happens rather
+  than when it finally crashes; the failure then names the line.
 - This is black-box testing: Hypothesis does not see which code a message
   reached. Coverage-guided fuzzing of a firmware is planned for looper Pro.
