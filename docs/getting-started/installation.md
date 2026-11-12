@@ -73,7 +73,7 @@ Then check that the import works:
 
 ```console
 $ python -c "import looper; print(looper.__version__)"
-0.1.0
+0.3.0
 ```
 
 ```{note}

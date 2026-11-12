@@ -17,7 +17,7 @@ from sphinx.application import Sphinx
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 project = "looper-py"
-release = "0.1.0"
+release = "0.3.0"
 language = "en"
 
 # No attribution in the footer: the build carries no author or copyright.

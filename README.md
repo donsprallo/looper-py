@@ -88,6 +88,10 @@ waited out -- reads everything back once and checks every expectation against
 it. The clearing reaches every client of the simulation, a window included:
 there is one simulation, and a clear starts a new recording for all of them.
 
+For property tests, `looper.strategies` draws bus messages field by field for
+[Hypothesis](https://hypothesis.readthedocs.io) and shrinks a failure to the
+smallest message. It needs the extra `looper-py[hypothesis]`.
+
 A refusal -- a pin the firmware drives, a clock that is not held asked to
 advance -- raises `looper.SimulationRefusedError` with the server's own words;
 a simulation that stopped answering raises `looper.SimulationUnreachableError`.
