@@ -6,8 +6,8 @@ sensor stick, cuts the power -- inside the simulation, in the same simulated
 microsecond, with no poll between. This guide is the Python side of chains: the
 builders on `looper.SignalGraph`, reading what a chain did, switching a chain,
 the `Sequence` that lets a chain judge a run, and `export_chain`. What a block
-means, what is free and what is Pro is told once, in the {core}`core handbook
-<chains.html>`; for a walk-through on a small firmware see {learn}`Test a chain
+means, what is free and what is Pro is told once, in the {learn}`manual
+<manual/chains.html>`; for a walk-through on a small firmware see {learn}`Test a chain
 on the CAN bus <guides/test-a-chain.html>`.
 
 ```{admonition} What is free and what is Pro
@@ -308,7 +308,7 @@ Interrupts and resets:
 
 A chain goes over a reset **with its state** (clock, delay, counter, a running
 Sequence, a fault); `Start` fires in every life. See
-{core}`Chains and resets <chains.html#chains-and-resets>`. A chain that resets
+{learn}`Chains and resets <manual/chains.html#chains-and-resets>`. A chain that resets
 the firmware at every start is found as a [reset loop](resets-and-memories.md),
 which is reported and does not hold the run unless the project says
 `hold_on_loop = true`.
@@ -363,4 +363,4 @@ say) and `signals`; a `DbcSignal` its `name`, `start_bit`, `length`,
 A chain acts on what the simulation knows: pins, values, signals, interrupts,
 and what is recorded on a bus. What the **firmware** does with a frame is not
 a fact; wait for the pin, the variable or the reply it leaves. See the
-{core}`limits <chains.html#limits>`.
+{learn}`limits <manual/chains.html#limits>`.

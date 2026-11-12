@@ -68,5 +68,5 @@ the very start: no `advance` before `evaluate`.
 
 `looper-srv audit` answers the same question statically, from the headers and
 the contract, without building or running anything -- see
-{core}`Checking a simulation <checking.html>`. The test above answers it for
+{learn}`Checking a simulation <manual/checking.html>`. The test above answers it for
 what the firmware really calls.

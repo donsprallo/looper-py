@@ -5,7 +5,7 @@
 Everything on this page is **looper Pro**, except the partition names, which
 stay free. Without a licence the calls raise `looper.ProFeatureLockedError`,
 and a project with `[[images]]`, `[flash.initial]` or `[otp]` does not build.
-See {core}`Images, the bootloader and the power cut <bootloader.html#what-the-edition-decides>`.
+See {learn}`Images, the bootloader and the power cut <manual/bootloader.html#what-the-edition-decides>`.
 ```
 
 A device with a bootloader is several programs: a first stage, a second stage
@@ -21,7 +21,7 @@ For a walk through on a small board, see
 {learn}`Test an A/B update with a power cut <guides/test-an-update.html>`. What an
 image, a header, a jump and a power cut *are* in a simulation, and how
 `looper.toml` describes them, is in
-{core}`Images, the bootloader and the power cut <bootloader.html>`.
+{learn}`Images, the bootloader and the power cut <manual/bootloader.html>`.
 
 The examples use `examples/boot_chain` of looper-docs: stage 0 in a read-only
 partition, stage 1 in `stage1_a` and `stage1_b`, the application in `app_a` and
@@ -94,7 +94,7 @@ sentence `text`:
 Without a licence there is no state and no text. `no header` is a state like the others: a partition with data is not startable, and `is_invalid()` counts it.
 An image header begins with the four ASCII characters `LIMG`; the `LOOP` of early sketches does not apply. The header is read by the
 server; your test only compares. Both the layout and the sentences are in
-{core}`the handbook of looper-core <bootloader.html#the-image-header>`.
+{learn}`the manual <manual/bootloader.html#the-image-header>`.
 
 ## Which image each life ran
 

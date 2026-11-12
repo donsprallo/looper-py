@@ -8,7 +8,7 @@ and the expectations on interrupts, the lock, DMA and the findings of a run. For
 a walk through with a small firmware, see {learn}`Test an interrupt-driven button
 and a UART receive by DMA <guides/test-an-interrupt.html>`; for what an
 interruption point is, what a lock costs and what each finding means, see
-{core}`Interrupts <interrupts.html>` and {core}`DMA <dma.html>`.
+{learn}`Interrupts <manual/interrupts.html>` and {learn}`DMA <manual/dma.html>`.
 
 The examples use `examples/interrupt_firmware` of looper-docs. Its pins are
 `BUTTON` (1, EXTI0), `LOCK` (2), `PEEK` (3) and `LED` (4); it has the sources
@@ -67,7 +67,7 @@ measured is what waits, locks and other ISRs cause.*
 **Latency and duration are zero unless something waits.** An ISR runs at an
 interruption point and the clock only moves in waits, so a latency above zero
 means a lock, another ISR or a loop without a point held the interrupt back. The
-{core}`time model <interrupts.html#the-time-model>` says why.
+{learn}`time model <manual/interrupts.html#the-time-model>` says why.
 
 ## `simulation.raise_interrupt(name, after_us=0)`
 
@@ -133,7 +133,7 @@ simulation.send_bus_message(looper.BusMessage(2, 0, b"hello"))
 The `guard` of a receive channel is `locked` without a licence for the run
 findings, `precise` with one (on Windows and Linux on x86-64), and `debugger`
 while one is attached. What it catches, and its limits, are in
-{core}`DMA <dma.html#the-guard-pro>`.
+{learn}`DMA <manual/dma.html#the-guard-pro>`.
 
 ## `simulation.race(name)` (Pro)
 

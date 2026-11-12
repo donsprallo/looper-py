@@ -92,7 +92,7 @@ $ ls ../looper-docs/examples/blinky/looper.toml
 ```
 
 How to write a `looper.toml` for your own firmware is described in
-{core}`Building a simulation <building.html>`. For tests it is worth turning
+{learn}`Building a simulation <manual/building.html>`. For tests it is worth turning
 on the instruments that the memory and stack expectations read:
 
 ```toml

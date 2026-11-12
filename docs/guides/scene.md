@@ -216,8 +216,8 @@ room.output("temperature")           # 0
 [(one.name, one.default_value) for one in room.parameters]
 ```
 
-How to write a model is described in {core}`Models of your own
-<signals.html#models-of-your-own>`; the window builds the same graph in its
+How to write a model is described in {learn}`Models of your own
+<manual/signals.html#models-of-your-own>`; the window builds the same graph in its
 {rs}`signal editor <gui/signals.html>`.
 
 (a-value-that-moves-a-parameter)=

@@ -8,7 +8,7 @@ count its boots, start its peripherals again. Does yours?
 millisecond you want, and nobody notices a watchdog that was never started until
 the day the firmware hangs. In a simulation a reset is a call, and the moment of
 a watchdog is exact. See
-{core}`Resets, the watchdog and what survives them <resets.html>`.
+{learn}`Resets, the watchdog and what survives them <manual/resets.html>`.
 
 ## Prerequisite
 

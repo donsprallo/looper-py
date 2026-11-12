@@ -7,7 +7,7 @@ firmware, reaching the **retained memory** and the **flash**, and the
 expectations on resets and on the flash. For a walk through with a small
 firmware, see {learn}`Test a reset and a watchdog <guides/test-a-reset.html>`; for
 what a reset *is* in a simulation, and how the server handles a watchdog, a hang
-and a reset loop, see {core}`Resets, the watchdog and what survives them <resets.html>`.
+and a reset loop, see {learn}`Resets, the watchdog and what survives them <manual/resets.html>`.
 
 The examples use `examples/reset_firmware` of looper-docs. Its pins are
 `LED` (1), `RESET_BUTTON` (2), `STOP_KICKING` (3) and `HANG` (4); it keeps a
@@ -169,7 +169,7 @@ simulation.
 ```{note}
 The server takes and gives messages of up to 64 MiB, so a saved flash of 16 MiB
 loads. The firmware's own access to the flash is by its role
-calls only; see {core}`the limits <resets.html#limits>`.
+calls only; see {learn}`the limits <manual/resets.html#limits>`.
 ```
 
 ## Expecting resets
@@ -210,7 +210,7 @@ FAIL  the resets: expected no reset loop, saw Reset loop: 10 resets within 1 s (
 fails for a loop that began before the window and is still going. A reset loop
 is **found and told, not held**: the run goes on, so a test watches it
 happen. A project that wants the run held at a loop sets `hold_on_loop = true`
-in the `[reset]` section of its `looper.toml`. See {core}`A reset loop <resets.html#a-reset-loop>`.
+in the `[reset]` section of its `looper.toml`. See {learn}`A reset loop <manual/resets.html#a-reset-loop>`.
 
 The resets are also in the event stream: `simulation.read_events(since)`
 returns a page whose `resets` are `ResetMark`s -- `sim_us`, `cause` and the

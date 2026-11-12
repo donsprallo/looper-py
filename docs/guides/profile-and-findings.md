@@ -165,6 +165,6 @@ hand it over in `LOOPER_LICENSE`, which takes a path or the file's content:
 looper-srv reads the licence when it starts, and again at every restart of the
 simulation. A licence that ran out still works for 14 days with a note, then
 its parts are locked again. Where looper looks for a licence, in what order,
-is in {core}`looper Pro and the licence <usage.html#looper-pro-and-the-licence>`.
+is in {learn}`looper Pro and the licence <licence.html>`.
 The `looper-srv audit --architecture` command does the same check in a build
 step, with exit code 3 for a missing licence and 1 for a finding.
