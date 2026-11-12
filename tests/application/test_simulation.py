@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
+
 import pytest
 
 from doubles import ScriptedInspector
@@ -238,3 +240,88 @@ def test_a_build_whose_memory_cannot_be_read_is_refused() -> None:
 
     with pytest.raises(SimulationRefusedError, match="the build cannot be read"):
         Simulation(inspector).memory()
+
+
+# -- letting the clock run by itself ------------------------------------------
+
+
+def test_the_clock_is_paced_at_a_multiple_of_real_time() -> None:
+    """Ten minutes of simulated time at ten times real time cost one."""
+    inspector = ScriptedInspector()
+
+    Simulation(inspector).pace(10.0)
+
+    assert inspector.asked == ["pace 10.0"]
+    assert inspector.run.clock_mode is ClockMode.PACED
+
+
+def test_a_pace_of_one_is_real_time() -> None:
+    inspector = ScriptedInspector()
+
+    Simulation(inspector).pace()
+
+    assert inspector.asked == ["pace 1.0"]
+
+
+def test_a_slower_pace_is_allowed() -> None:
+    """It changes how long the host waits, not what the simulation computes."""
+    inspector = ScriptedInspector()
+
+    Simulation(inspector).pace(0.1)
+
+    assert inspector.run.pace_ratio == 0.1
+
+
+@pytest.mark.parametrize("ratio", [0.0, -1.0])
+def test_a_pace_that_does_not_move_is_refused(ratio: float) -> None:
+    """A pace that does not move is refused before it is sent.
+
+    A clock that stands still is `hold`, and one that runs backwards is
+    nothing - better said here than sent to the server.
+    """
+    inspector = ScriptedInspector()
+
+    with pytest.raises(ValueError, match="hold it"):
+        Simulation(inspector).pace(ratio)
+
+    assert inspector.asked == []
+
+
+def test_the_clock_runs_at_full_speed() -> None:
+    inspector = ScriptedInspector()
+
+    Simulation(inspector).run_at_max()
+
+    assert inspector.asked == ["max speed"]
+    assert inspector.run.clock_mode is ClockMode.MAX
+
+
+def test_a_clock_that_runs_can_be_held_again() -> None:
+    """The way back from a running clock to one moved by hand.
+
+    Without this a client that paced its clock could never advance it by
+    hand again.
+    """
+    inspector = ScriptedInspector(ClockMode.PACED)
+    simulation = Simulation(inspector)
+
+    simulation.hold()
+    simulation.advance_microseconds(100)
+
+    assert inspector.asked == ["hold", "advance 100"]
+    assert inspector.run.now_us == 100
+
+
+def test_what_a_paced_clock_slipped_is_reported() -> None:
+    """What a paced clock gave up is reported.
+
+    A paced clock may slip, and a measurement over simulated time is worth
+    what this number says it is.
+    """
+    inspector = ScriptedInspector()
+    inspector.run = replace(inspector.run, slipped_us=1_500, behind_us=200)
+
+    state = Simulation(inspector).run_state()
+
+    assert state.slipped_us == 1_500
+    assert state.behind_us == 200

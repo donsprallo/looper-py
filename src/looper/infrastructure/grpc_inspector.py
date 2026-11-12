@@ -165,6 +165,28 @@ class GrpcInspector(GrpcBootCalls, GrpcInterruptCalls, GrpcChainCalls, Inspector
             state = self.run_state()
         return state
 
+    def set_pace(self, ratio: float) -> RunStatus:
+        """Let the clock run at `ratio` times real time, and return at once."""
+        return self._switched(contract.RunControl(pace_ratio=ratio))
+
+    def run_at_max(self) -> RunStatus:
+        """Let the clock run as fast as the computer allows, with no pacing."""
+        return self._switched(contract.RunControl(max_speed=EMPTY))
+
+    def hold(self) -> RunStatus:
+        """Stop the clock at the next boundary."""
+        return self._switched(contract.RunControl(hold=EMPTY))
+
+    def _switched(self, control: contract.RunControl) -> RunStatus:
+        """Send one run control and answer with the state it came back with.
+
+        No waiting, unlike `run_for`: these name the mode the clock goes to
+        and do not start a run that has an end to reach.
+        """
+        reply = self._call(self._stub.ControlRun, control)
+        _acknowledged(reply.ack)
+        return translation.run_status_of(reply.state)
+
     def clear_recordings(self, epoch: int) -> None:
         """Discard the recorded events, for every client, and begin the next epoch."""
         _acknowledged(self._call(self._stub.ClearRecordings, contract.ClearRequest(epoch=epoch)))

@@ -144,6 +144,15 @@ class RunStatus:
             debugger stopped at a line; empty while it runs.
         power_cut_text: The power cut armed, in the server's words; empty
             when none is (Pro).
+        pace_ratio: How fast a PACED clock is asked to go, as a multiple of
+            real time; 1.0 is real time. Zero while the clock is held or at
+            full speed.
+        behind_us: PACED only: simulated time owed to the pace right now.
+        slipped_us: PACED only: simulated time given up by re-anchoring
+            after a stall, since the pace was last set. A paced clock *may*
+            slip, and this is the only way a test learns that it did - a
+            measurement over simulated time is worth what this number says
+            it is.
     """
 
     now_us: int
@@ -153,6 +162,9 @@ class RunStatus:
     target_us: int = 0
     hold_reason: str = ""
     power_cut_text: str = ""
+    pace_ratio: float = 0.0
+    behind_us: int = 0
+    slipped_us: int = 0
 
 
 @dataclass(frozen=True)
