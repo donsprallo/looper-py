@@ -143,6 +143,21 @@ class ScriptedInspector(ScriptedLives, ScriptedInterrupts, ScriptedChains, Inspe
         self.run = replace(self.run, now_us=self.run.now_us + microseconds)
         return self.run
 
+    def set_pace(self, ratio: float) -> RunStatus:
+        self.asked.append(f"pace {ratio}")
+        self.run = replace(self.run, clock_mode=ClockMode.PACED, pace_ratio=ratio)
+        return self.run
+
+    def run_at_max(self) -> RunStatus:
+        self.asked.append("max speed")
+        self.run = replace(self.run, clock_mode=ClockMode.MAX, pace_ratio=0.0)
+        return self.run
+
+    def hold(self) -> RunStatus:
+        self.asked.append("hold")
+        self.run = replace(self.run, clock_mode=ClockMode.HELD, pace_ratio=0.0)
+        return self.run
+
     def clear_recordings(self, epoch: int) -> None:
         self.asked.append(f"clear recordings epoch {epoch}")
         if self.refusal is not None:

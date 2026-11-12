@@ -106,6 +106,24 @@ is not held, `advance` is refused: a clock that runs by itself is not
 something a test can steer. The refusal carries the server's words, such as
 `the clock runs in real time and cannot be advanced`.
 
+Sometimes a test wants the other two. `simulation.pace(10.0)` lets the clock
+run by itself at ten times real time, `simulation.run_at_max()` as fast as
+the computer allows, and `simulation.hold()` takes it back so that `advance`
+works again. Reach for them when something outside the simulation has to keep
+talking to the firmware while time passes -- a device scan over a modelled
+bus, a protocol client of your own -- because on a held clock the firmware
+runs only while you are advancing it, and answers nothing in between. A long
+measurement is the other case: ten minutes of simulated time at ten times
+real time cost one minute of waiting.
+
+```{warning}
+A paced clock *may* slip. When the computer cannot keep up, the simulation
+re-anchors and gives the owed time away; `simulation.run_state()` reports how
+much as `slipped_us`, and what it still owes as `behind_us`. A measurement
+that counts on the pace reads those afterwards -- and reads its span from
+`simulated_seconds`, never from your computer's clock.
+```
+
 ```{note}
 Every pass of the firmware's main loop costs a little simulated time -- 250
 microseconds unless the application says otherwise -- and a firmware that

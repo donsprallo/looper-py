@@ -31,6 +31,22 @@ from looper.infrastructure.life_translation import life_of
 from looper.infrastructure.translation import buses_of, description_of, run_status_of
 from looper.starting import connect
 
+
+def _control_said(request: Any) -> str:
+    """Which of the run controls the client sent.
+
+    The message is a `oneof`, so the field that is set is the request: a
+    client that named none, or two, would show up here as something other
+    than what the test expects.
+    """
+    chosen = request.WhichOneof("op")
+    if chosen == "run_for_us":
+        return f"run for {request.run_for_us}"
+    if chosen == "pace_ratio":
+        return f"pace {request.pace_ratio}"
+    return str(chosen).replace("_", " ")
+
+
 A_VARIABLE = contract.VariableView(
     variable_id=7,
     path="config.gain",
@@ -109,10 +125,13 @@ class ScriptedServicer(service.InspectorServicer):  # type: ignore[misc]
             epoch=2,
             next_event_seq=9,
             target_us=600_000 if under_way else 0,
+            pace_ratio=10.0,
+            behind_us=120,
+            slipped_us=4_000,
         )
 
     def ControlRun(self, request: Any, context: Any) -> contract.RunReply:
-        self.asked.append(f"run for {request.run_for_us}")
+        self.asked.append(_control_said(request))
         state = contract.RunState(target_us=600_000 if self.runs_still_under_way else 0)
         return contract.RunReply(ack=self.run_ack, state=state)
 
@@ -520,3 +539,58 @@ def test_a_boot_chain_says_what_started_it_in_the_server_s_word() -> None:
     )
 
     assert [chain.started_by for chain in chains_of(view)] == ["pin"]
+
+
+def test_the_clock_is_paced_at_a_multiple_of_real_time(
+    inspector: GrpcInspector, servicer: ScriptedServicer
+) -> None:
+    inspector.set_pace(10.0)
+
+    assert servicer.asked == ["pace 10.0"]
+
+
+def test_the_clock_is_told_to_run_at_full_speed(
+    inspector: GrpcInspector, servicer: ScriptedServicer
+) -> None:
+    inspector.run_at_max()
+
+    assert servicer.asked == ["max speed"]
+
+
+def test_the_clock_is_held(inspector: GrpcInspector, servicer: ScriptedServicer) -> None:
+    inspector.hold()
+
+    assert servicer.asked == ["hold"]
+
+
+def test_switching_the_mode_does_not_wait_for_a_run(
+    inspector: GrpcInspector, servicer: ScriptedServicer
+) -> None:
+    """Switching the mode returns at once.
+
+    Unlike `run_for`: these name the mode the clock goes to and start no run
+    that has an end to reach, so nothing is polled afterwards.
+    """
+    servicer.runs_still_under_way = 3
+
+    inspector.set_pace(2.0)
+
+    assert servicer.asked == ["pace 2.0"]
+
+
+def test_a_refused_pace_is_a_refusal(inspector: GrpcInspector, servicer: ScriptedServicer) -> None:
+    servicer.run_ack = contract.Ack(refusal=contract.REFUSAL_INVALID, refusal_text="no such pace")
+
+    with pytest.raises(SimulationRefusedError, match="no such pace"):
+        inspector.set_pace(10.0)
+
+
+def test_what_a_paced_clock_slipped_comes_through(inspector: GrpcInspector) -> None:
+    """What a paced clock slipped comes through the translation.
+
+    Without these a client can set a pace and never learn whether the
+    computer kept up with it.
+    """
+    state = inspector.run_state()
+
+    assert (state.pace_ratio, state.behind_us, state.slipped_us) == (10.0, 120, 4_000)

@@ -189,6 +189,59 @@ class Simulation:
         """
         self._inspector.run_for(microseconds)
 
+    def pace(self, ratio: float = 1.0) -> None:
+        """Let the clock run by itself, at `ratio` times real time.
+
+        The counterpart to `advance`: that one moves a held clock by hand,
+        this one hands it back to the simulation and says how fast it
+        should go. Ten minutes of simulated time at `ratio` ten cost one
+        minute of waiting, and the firmware runs on its own meanwhile - so
+        anything that talks to it over a bus, a device scan included, keeps
+        working.
+
+        **A paced clock may slip.** When the computer cannot keep up, the
+        simulation re-anchors and gives the owed time away; how much, it
+        says in `RunStatus.slipped_us`. A measurement that counts on the
+        pace reads that afterwards.
+
+        Args:
+            ratio: Multiple of real time; 1.0 is real time. Values below one
+                run the simulation slower, which does not change what it
+                computes - only how long the host waits for it.
+
+        Raises:
+            ValueError: For a ratio of zero or less. A clock that does not
+                move is `hold`, and one that runs backwards is nothing.
+            SimulationRefusedError: If the server declines the pace.
+        """
+        if ratio <= 0:
+            raise ValueError(f"{ratio} is not a pace; to stop the clock, hold it")
+        self._inspector.set_pace(ratio)
+
+    def run_at_max(self) -> None:
+        """Let the clock run as fast as the computer allows, with no pacing.
+
+        What a long measurement wants when nothing outside the simulation
+        has to keep step with it. Simulated time then runs away from real
+        time by whatever the host manages, so a span is read from
+        `simulated_seconds` and not from the host's clock.
+
+        Raises:
+            SimulationRefusedError: If the server declines.
+        """
+        self._inspector.run_at_max()
+
+    def hold(self) -> None:
+        """Stop the clock, so that it advances only on `advance`.
+
+        The way back from `pace` and `run_at_max`. Without it a client that
+        let the clock run could never use `advance` again.
+
+        Raises:
+            SimulationRefusedError: If the server declines.
+        """
+        self._inspector.hold()
+
     def read_events(self, since: int = 0) -> EventPage:
         """One page of the recorded event stream, from event number `since` on.
 

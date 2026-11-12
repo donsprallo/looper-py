@@ -128,6 +128,30 @@ class Inspector(LifeInspector, BootInspector, InterruptInspector, ChainInspector
         """
 
     @abstractmethod
+    def set_pace(self, ratio: float) -> RunStatus:
+        """Let the clock run at `ratio` times real time, and return at once.
+
+        Raises:
+            SimulationRefusedError: If the server declines the pace.
+        """
+
+    @abstractmethod
+    def run_at_max(self) -> RunStatus:
+        """Let the clock run as fast as the computer allows, with no pacing.
+
+        Raises:
+            SimulationRefusedError: If the server declines.
+        """
+
+    @abstractmethod
+    def hold(self) -> RunStatus:
+        """Stop the clock at the next boundary, so it advances only on demand.
+
+        Raises:
+            SimulationRefusedError: If the server declines.
+        """
+
+    @abstractmethod
     def clear_recordings(self, epoch: int) -> None:
         """Discard the recorded events, for every client, and begin the next epoch.
 
