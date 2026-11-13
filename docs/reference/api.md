@@ -117,6 +117,13 @@ looper.TimeModel, looper.TimeModelParameter, looper.ActiveTimeModel  # time mode
 
 .. autoclass:: looper.RunStatus
 
+.. autoclass:: looper.TimeModel
+
+.. autoclass:: looper.TimeModelParameter
+
+.. autoclass:: looper.ActiveTimeModel
+   :members:
+
 .. autoclass:: looper.CallTiming
    :members:
 

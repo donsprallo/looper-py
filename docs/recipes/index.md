@@ -17,6 +17,7 @@ say.
 | Is the firmware reset when it should be, and does it come back as it should? | [Reset](reset.md) | `reset(...).happened_once`, `no_loop`, `flash().no_violation` |
 | Does an update survive a power cut, and does a bad one get rolled back? (Pro) | [Update](update.md) | `boot_chain().went`, `flash().partition(...).is_valid` |
 | Does a bus carry what it should, and is nothing refused? | [Bus](bus.md) | `nothing_refused`, `carried_at_least` |
+| Does the test mean the same on every time model? | [Time models](time-models.md) | any, with a parametrized fixture |
 | Does it hold across a range of inputs? | [Sweeps](sweeps.md) | any, with `parametrize` |
 | Does the firmware survive every message of a format? | [Property tests](property-tests.md) | `firmware_is_alive`, `nothing_refused`, with Hypothesis |
 

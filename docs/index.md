@@ -185,6 +185,7 @@ recipes/hollow-adapter
 recipes/memory
 recipes/stack
 recipes/periodic-task
+recipes/time-models
 recipes/trigger-reaction
 recipes/reset
 recipes/update

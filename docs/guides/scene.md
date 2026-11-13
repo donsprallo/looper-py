@@ -63,6 +63,17 @@ in real time and cannot be advanced`. Let it run where it matters: after start-u
 before a check that should not see a transient. `evaluate` lets its own
 window pass, so you do not advance for the window itself.
 
+When something outside the simulation has to keep talking to the firmware while
+time passes, hand the clock over and take it back: `simulation.pace(10.0)` runs
+it at ten times real time, `simulation.run_at_max()` as fast as the computer
+allows, and `simulation.hold()` stops it so that `advance` works again.
+`simulation.run_state()` says how a paced clock is doing: `pace_ratio`,
+`behind_us` (what it owes) and `slipped_us` (what it gave up after a stall, so
+that a measurement can tell whether the pace held). How far the clock moves
+between two passes of the firmware's loop is the *time model*'s to say; see
+[How it works](../concepts.md) and the recipe
+[Time models](../recipes/time-models.md).
+
 ## Pins
 
 `toggle_pin(pin_id)` drives the opposite of the level a pin is at and returns

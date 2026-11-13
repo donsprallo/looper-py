@@ -125,11 +125,13 @@ that counts on the pace reads those afterwards -- and reads its span from
 ```
 
 ```{note}
-Every pass of the firmware's main loop costs a little simulated time -- 250
-microseconds unless the application says otherwise -- and a firmware that
-calls a delay costs that delay. So one second of simulated time is about four
+Every pass of the firmware's main loop costs a little simulated time and a
+firmware that calls a delay costs that delay. On the default time model,
+`fixed`, a pass costs the application's own pass time -- 250 microseconds
+unless it says otherwise -- so one second of simulated time is about four
 thousand passes of a polling loop. On your computer that takes a few
-milliseconds.
+milliseconds. The `adaptive` model, below, steps by a microsecond where
+something happens.
 ```
 
 How far the clock moves after a pass is the *time model*'s to say. `fixed`,
