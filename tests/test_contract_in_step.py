@@ -4,8 +4,7 @@ The schema here is a copy, because this library must not import a server.
 A copy can fall behind, and a field that moved on one side only is not an
 import error but a value read into the wrong field. So when a looper-srv
 checkout sits beside this one, the two files have to be identical. looper-srv
-owns the contract since step 1.4 of its plan; looper-core keeps a checked copy
-of its own.
+owns the contract since step 1.4 of its plan.
 
 Without a neighbouring checkout there is nothing to compare against, and the
 test says so rather than failing. Point ``LOOPER_SRV`` at a checkout

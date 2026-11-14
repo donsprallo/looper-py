@@ -19,8 +19,8 @@ Die Grenze ist ein Prozess: `looper-srv` bedient den Inspector-Vertrag
 `src/looper/infrastructure/contract/looper_inspector.proto`, eine geprüfte
 Kopie des Originals in `looper-srv` (`tests/test_contract_in_step.py`).
 `looper-srv` hat `looper-core` abgelöst (M10) und versteht dieselben Befehle
-wie `looper-cli`; core ist eingefroren und nur noch Referenz der
-Konformitätsprüfung (`LOOPER_TEST_SERVER=core`). Der Vertrag ist
+wie `looper-cli`. **looper-core wird hier nicht mehr verwendet**, auch nicht
+als Referenz in Tests: jeder Test startet `looper-srv`. Der Vertrag ist
 Version 3: Zeit ist `sim_us`, ein Ereignisstrom ersetzt die Aufzeichnungen,
 und jede Änderung wird mit einem `Ack` quittiert (eine Ablehnung wird zum
 `SimulationRefusedError`).
@@ -48,7 +48,7 @@ prüft das.
 - Was die Simulation selbst betrifft (Anzeigetexte, Wertebereiche, Regeln
   über Pins und Busse), entscheidet ein Use Case in `looper-srv` und kommt
   als Feld im Vertrag. Fehlt eines, wird es im Schema von `looper-srv`
-  ergänzt, nicht hier nachgebaut. `looper-core` ist eingefroren.
+  ergänzt, nicht hier nachgebaut.
 - Hier zu Hause sind die Erwartungen eines Tests: was ein Kanal erreichen,
   was ein Bus tragen, wie tief der Stack werden darf. Sie lebten früher als
   `looper.testing` in `looper-core` und sind mit dem Wechsel auf gRPC
@@ -89,8 +89,9 @@ src/looper/
 ## 5. Regeln für Claude bei der Code-Generierung
 - **Vertrag nur gemeinsam ändern:** Erst das Schema in `looper-srv`, dann
   die Kopie hier, dann `uv run python scripts/generate_contract.py`.
-- **Kein `looper_core`-Import**, auch nicht in Tests. Ein Integrationstest
-  startet `looper-srv` als Prozess (`server=`, `LOOPER_SRV`); die alten
+- **Kein `looper-core`**: kein Import, kein Start als Prozess, keine
+  Referenz in Tests. Ein Integrationstest startet `looper-srv` als Prozess
+  (`server=`, `LOOPER_SRV`, `LOOPER_SRV_EXE`); die alten
   Namen `looper_cli=` und `LOOPER_CLI` sind veraltet und warnen.
 - **Inkrementelles Arbeiten:** Bei größeren Features erst die Domain, dann
   Rückfrage, dann Use Cases und Infrastruktur.

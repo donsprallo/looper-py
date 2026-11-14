@@ -6,7 +6,7 @@ boot state, resets, and expects slot B to hold that image and to run it.
 
 Needs a looper-docs checkout beside this one and a C compiler, and skips
 without them. ``LOOPER_FIXTURES`` points at the fixtures elsewhere. Pro is
-unlocked by looper-core's development switch, as in its own tests.
+unlocked by looper-srv's development switch (``LOOPER_DEV_EDITION``, debug build).
 """
 
 from __future__ import annotations

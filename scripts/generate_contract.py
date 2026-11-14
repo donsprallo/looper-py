@@ -1,6 +1,6 @@
 """Regenerate the Python bindings of the inspector contract.
 
-The schema is a copy of the one looper-core serves. It is compiled relative
+The schema is a copy of the one looper-srv serves. It is compiled relative
 to the source root so that the generated service module imports the message
 module by its package path.
 """

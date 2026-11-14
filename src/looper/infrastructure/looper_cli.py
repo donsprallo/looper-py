@@ -8,11 +8,10 @@ pipe closes with it, and the server stops the simulation and itself.
 
 Started from here, looper-srv is told that a test started it and which process
 that is, so that a list of servers on this PC shows it as a test's, ending
-with it. Another program that takes the same `run` command (looper-core's
-``looper-cli``, the frozen reference) is started without those two options.
+with it.
 
 The module keeps its old name, from the days when looper-core's ``looper-cli``
-was the only server.
+was the server; looper-srv is the only one now.
 """
 
 from __future__ import annotations
@@ -30,9 +29,6 @@ LISTENING_PREFIX = "listening on "
 
 #: Where the server should listen: this machine, any free port.
 LISTEN_ANYWHERE_LOCAL = "127.0.0.1:0"
-
-#: What looper-srv's program is called, with or without `.exe`.
-LOOPER_SRV = "looper-srv"
 
 #: How long the server is given to stop itself and the simulation.
 STOP_GRACE_SECONDS = 8.0
@@ -89,8 +85,7 @@ class RunCommand:
             arguments.extend(["--time-model", self.time_model])
         for name, value in self.time_params:
             arguments.extend(["--time-param", f"{name}={value}"])
-        if is_looper_srv(self.program):
-            arguments.extend(["--started-by", "test", "--owner-pid", str(os.getpid())])
+        arguments.extend(["--started-by", "test", "--owner-pid", str(os.getpid())])
         return arguments
 
 
@@ -177,11 +172,6 @@ def address_in(line: str) -> str | None:
     if not stripped.startswith(LISTENING_PREFIX):
         return None
     return stripped.removeprefix(LISTENING_PREFIX)
-
-
-def is_looper_srv(program: Sequence[str]) -> bool:
-    """Whether a program is looper-srv, which takes who started it; looper-cli refuses that."""
-    return bool(program) and Path(program[0]).stem == LOOPER_SRV
 
 
 def program_of(command: str | Sequence[str]) -> tuple[str, ...]:

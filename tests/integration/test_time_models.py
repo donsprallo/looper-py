@@ -5,13 +5,11 @@ A restart on another model needs no build; a plain restart keeps a model
 chosen deliberately; a value out of range is refused while the simulation
 runs on.
 
-Needs looper-srv (looper-core knows no time models), a looper-docs checkout
-beside this one and a C compiler, and skips without them.
+Needs a looper-docs checkout beside this one and a C compiler, and skips without them.
 """
 
 from __future__ import annotations
 
-import os
 import shutil
 from collections.abc import Iterator
 
@@ -27,8 +25,6 @@ DEFINITION = FIXTURES / "blinky" / "looper.toml"
 @pytest.fixture(scope="module")
 def simulation() -> Iterator[looper.Simulation]:
     """Blinky on adaptive with a largest step of 250 µs, on a held clock."""
-    if os.environ.get("LOOPER_TEST_SERVER", "srv") == "core":
-        pytest.skip("looper-core knows no time models")
     if not DEFINITION.is_file():
         pytest.skip(f"no fixture at {DEFINITION}")
     if shutil.which("gcc") is None and shutil.which("clang") is None:

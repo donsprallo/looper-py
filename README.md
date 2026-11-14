@@ -120,8 +120,7 @@ The tests under `tests/integration` start looper-srv (`LOOPER_SRV_EXE`, by
 default the debug build of a `looper-srv` checkout beside this one) and build
 and run the test firmware in `fixtures/` of a `looper-docs` checkout beside this
 one (`LOOPER_FIXTURES` points elsewhere); they skip without it or without a C
-compiler. `LOOPER_TEST_SERVER=core` starts the reference, the historical
-looper-core (`LOOPER_CORE`), instead.
+compiler. looper-core is not started, not even as a reference.
 
 The contract is `src/looper/infrastructure/contract/looper_inspector.proto`,
 a copy of the schema in `looper-srv`; `tests/test_contract_in_step.py` fails

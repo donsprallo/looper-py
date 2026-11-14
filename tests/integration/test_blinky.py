@@ -1,6 +1,6 @@
 """The blinky test firmware of looper, run and checked from a test.
 
-The whole path a user takes: looper-cli builds the firmware, starts it on a
+The whole path a user takes: looper-srv builds the firmware, starts it on a
 virtual clock and serves it; this library attaches, sets the scene and
 expects things of it. The firmware blinks every 500 ms, and every 100 ms
 while the button is pressed.
@@ -21,7 +21,7 @@ import pytest
 import looper
 from server_under_test import FIXTURES, server_command
 
-# The findings are part of looper Pro. looper-cli is started from a checkout,
+# The findings are part of looper Pro. looper-srv is a debug build from a checkout,
 # where the development switch unlocks Pro, so no licence is needed here.
 os.environ["LOOPER_DEV_EDITION"] = "pro"
 

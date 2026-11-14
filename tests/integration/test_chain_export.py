@@ -1,4 +1,4 @@
-"""A chain exported by looper-core as a pytest, and the exported test run against blinky.
+"""A chain exported by looper-srv as a pytest, and the exported test run against blinky.
 
 The server writes the test of a chain group from looper-py's builder calls
 (looper Pro); this runs that very text against the simulation it came from,
