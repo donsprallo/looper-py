@@ -126,8 +126,9 @@ from looper.domain.model import (
     Width,
     step_port,
 )
+from looper.domain.model.servers import AnnouncedServer
 from looper.infrastructure.looper_cli import LooperCliError, ServerStartError
-from looper.starting import ContractMismatchError, connect, run
+from looper.starting import ContractMismatchError, connect, run, servers
 
 __version__ = "0.3.0"
 
@@ -218,8 +219,10 @@ __all__ = [
     "Watch",
     "Width",
     "__version__",
+    "AnnouncedServer",
     "connect",
     "run",
+    "servers",
     "sweep_power_cuts",
     "Clock",
     "Start",

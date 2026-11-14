@@ -14,9 +14,13 @@ from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path
 
 from looper.application.ports import ContractNotServedError
+from looper.application.server_list import running_servers
 from looper.application.simulation import Simulation
+from looper.domain.model.servers import AnnouncedServer
 from looper.infrastructure.grpc_inspector import CONTRACT_VERSION, GrpcInspector
 from looper.infrastructure.looper_cli import LooperCliRun, RunCommand, program_of
+from looper.infrastructure.process_table import OsProcessTable
+from looper.infrastructure.registry_dir import RegistryDir
 
 #: Where the command that runs the server can be given without code, for
 #: example ``C:/looper/looper-srv.exe``.
@@ -32,15 +36,43 @@ class ContractMismatchError(RuntimeError):
     """The server speaks a version of the contract this library does not."""
 
 
-def connect(address: str) -> Simulation:
+def servers(directory: str | Path | None = None) -> list[AnnouncedServer]:
+    """The looper-srv that run on this PC, the most recently started first.
+
+    Read from the registry directory every server keeps an entry in, or from
+    `directory`; entries of servers that have gone are left out. A server
+    found here is attached to with `connect`.
+    """
+    registry = RegistryDir(Path(directory) if directory is not None else None)
+    return running_servers(registry, OsProcessTable())
+
+
+def connect(address: str | AnnouncedServer) -> Simulation:
     """Attach to a `looper-srv run` that is already serving at `address`.
+
+    Args:
+        address: ``host:port``, or a server `servers` found.
 
     Raises:
         SimulationUnreachableError: If nothing answers there.
         ContractMismatchError: If it speaks another contract version.
+        ValueError: For a found server that wants TLS or a token, which this
+            library does not speak.
     """
-    inspector = GrpcInspector(address)
+    inspector = GrpcInspector(_dialled(address))
     return _attached(inspector, on_close=None)
+
+
+def _dialled(address: str | AnnouncedServer) -> str:
+    """The address to dial, once a found server is known to take plain gRPC."""
+    if isinstance(address, str):
+        return address
+    if not address.reachable_without_credentials:
+        raise ValueError(
+            f"the server at {address.address} wants TLS or a token, "
+            "which looper-py does not speak yet"
+        )
+    return address.address
 
 
 def run(
