@@ -21,6 +21,9 @@ simulation together.
 
 from __future__ import annotations
 
+from importlib.metadata import PackageNotFoundError
+from importlib.metadata import version as _distribution_version
+
 from looper.application.bootloader import Otp, sweep_power_cuts
 from looper.application.expectations import Expectations
 from looper.application.memories import Flash, FlashPartition, Retained
@@ -130,7 +133,12 @@ from looper.domain.model.servers import AnnouncedServer
 from looper.infrastructure.looper_cli import LooperCliError, ServerStartError
 from looper.starting import ContractMismatchError, connect, run, servers
 
-__version__ = "0.3.0"
+#: The installed version, which the build takes from the Git tag (hatch-vcs).
+#: A checkout that is not installed, as in some test runs, reports "0+unknown".
+try:
+    __version__ = _distribution_version("looper-py")
+except PackageNotFoundError:
+    __version__ = "0+unknown"
 
 __all__ = [
     "BusReceived",
