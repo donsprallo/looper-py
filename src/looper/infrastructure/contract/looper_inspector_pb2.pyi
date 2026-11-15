@@ -88,6 +88,7 @@ class Capability(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     CAPABILITY_DMA_GUARD: _ClassVar[Capability]
     CAPABILITY_CHAINS: _ClassVar[Capability]
     CAPABILITY_HARDWARE: _ClassVar[Capability]
+    CAPABILITY_BUS_WIRES: _ClassVar[Capability]
 
 class ServerMode(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     __slots__ = ()
@@ -268,6 +269,27 @@ class FlashActivity(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     FLASH_ACTIVITY_ANY: _ClassVar[FlashActivity]
     FLASH_ACTIVITY_WRITE: _ClassVar[FlashActivity]
     FLASH_ACTIVITY_ERASE: _ClassVar[FlashActivity]
+
+class WireFieldKind(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+    __slots__ = ()
+    WIRE_FIELD_UNSPECIFIED: _ClassVar[WireFieldKind]
+    WIRE_FIELD_SOF: _ClassVar[WireFieldKind]
+    WIRE_FIELD_ID: _ClassVar[WireFieldKind]
+    WIRE_FIELD_RTR: _ClassVar[WireFieldKind]
+    WIRE_FIELD_IDE: _ClassVar[WireFieldKind]
+    WIRE_FIELD_DLC: _ClassVar[WireFieldKind]
+    WIRE_FIELD_DATA: _ClassVar[WireFieldKind]
+    WIRE_FIELD_CRC: _ClassVar[WireFieldKind]
+    WIRE_FIELD_ACK: _ClassVar[WireFieldKind]
+    WIRE_FIELD_EOF: _ClassVar[WireFieldKind]
+    WIRE_FIELD_SRR: _ClassVar[WireFieldKind]
+    WIRE_FIELD_RESERVED: _ClassVar[WireFieldKind]
+    WIRE_FIELD_DELIMITER: _ClassVar[WireFieldKind]
+    WIRE_FIELD_INTERMISSION: _ClassVar[WireFieldKind]
+    WIRE_FIELD_STUFF: _ClassVar[WireFieldKind]
+    WIRE_FIELD_ERROR_FLAG: _ClassVar[WireFieldKind]
+    WIRE_FIELD_START: _ClassVar[WireFieldKind]
+    WIRE_FIELD_STOP: _ClassVar[WireFieldKind]
 
 class SourceState(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     __slots__ = ()
@@ -487,6 +509,7 @@ CAPABILITY_DMA: Capability
 CAPABILITY_DMA_GUARD: Capability
 CAPABILITY_CHAINS: Capability
 CAPABILITY_HARDWARE: Capability
+CAPABILITY_BUS_WIRES: Capability
 SERVER_MODE_SIMULATION: ServerMode
 SERVER_MODE_STATIC: ServerMode
 SERVER_MODE_HARDWARE: ServerMode
@@ -601,6 +624,24 @@ HEADER_STATE_NO_HEADER: HeaderState
 FLASH_ACTIVITY_ANY: FlashActivity
 FLASH_ACTIVITY_WRITE: FlashActivity
 FLASH_ACTIVITY_ERASE: FlashActivity
+WIRE_FIELD_UNSPECIFIED: WireFieldKind
+WIRE_FIELD_SOF: WireFieldKind
+WIRE_FIELD_ID: WireFieldKind
+WIRE_FIELD_RTR: WireFieldKind
+WIRE_FIELD_IDE: WireFieldKind
+WIRE_FIELD_DLC: WireFieldKind
+WIRE_FIELD_DATA: WireFieldKind
+WIRE_FIELD_CRC: WireFieldKind
+WIRE_FIELD_ACK: WireFieldKind
+WIRE_FIELD_EOF: WireFieldKind
+WIRE_FIELD_SRR: WireFieldKind
+WIRE_FIELD_RESERVED: WireFieldKind
+WIRE_FIELD_DELIMITER: WireFieldKind
+WIRE_FIELD_INTERMISSION: WireFieldKind
+WIRE_FIELD_STUFF: WireFieldKind
+WIRE_FIELD_ERROR_FLAG: WireFieldKind
+WIRE_FIELD_START: WireFieldKind
+WIRE_FIELD_STOP: WireFieldKind
 SOURCE_STATE_AS_BUILT: SourceState
 SOURCE_STATE_CHANGED: SourceState
 SOURCE_STATE_MISSING: SourceState
@@ -3236,7 +3277,7 @@ class MemoryView(_message.Message):
     def __init__(self, static_memory: _Optional[_Union[StaticMemoryView, _Mapping]] = ..., stack: _Optional[_Union[StackUsageView, _Mapping]] = ..., heap: _Optional[_Union[HeapUsageView, _Mapping]] = ..., life: _Optional[int] = ..., counted_since_text: _Optional[str] = ...) -> None: ...
 
 class BusView(_message.Message):
-    __slots__ = ("bus_id", "kind", "name", "bitrate_bps", "display_bitrate", "accepts_messages", "takes_address", "address_label", "takes_extended", "max_payload_bytes", "max_address", "max_extended_address", "takes_line_ending", "supports_fd", "supports_remote", "exchange_unit", "has_time_model", "controller_latency_us", "queue_depth", "queue_unit")
+    __slots__ = ("bus_id", "kind", "name", "bitrate_bps", "display_bitrate", "accepts_messages", "takes_address", "address_label", "takes_extended", "max_payload_bytes", "max_address", "max_extended_address", "takes_line_ending", "supports_fd", "supports_remote", "exchange_unit", "has_time_model", "controller_latency_us", "queue_depth", "queue_unit", "wires", "wires_unavailable_reason", "framing_text")
     BUS_ID_FIELD_NUMBER: _ClassVar[int]
     KIND_FIELD_NUMBER: _ClassVar[int]
     NAME_FIELD_NUMBER: _ClassVar[int]
@@ -3257,6 +3298,9 @@ class BusView(_message.Message):
     CONTROLLER_LATENCY_US_FIELD_NUMBER: _ClassVar[int]
     QUEUE_DEPTH_FIELD_NUMBER: _ClassVar[int]
     QUEUE_UNIT_FIELD_NUMBER: _ClassVar[int]
+    WIRES_FIELD_NUMBER: _ClassVar[int]
+    WIRES_UNAVAILABLE_REASON_FIELD_NUMBER: _ClassVar[int]
+    FRAMING_TEXT_FIELD_NUMBER: _ClassVar[int]
     bus_id: int
     kind: str
     name: str
@@ -3277,7 +3321,94 @@ class BusView(_message.Message):
     controller_latency_us: int
     queue_depth: int
     queue_unit: ExchangeUnit
-    def __init__(self, bus_id: _Optional[int] = ..., kind: _Optional[str] = ..., name: _Optional[str] = ..., bitrate_bps: _Optional[int] = ..., display_bitrate: _Optional[str] = ..., accepts_messages: _Optional[bool] = ..., takes_address: _Optional[bool] = ..., address_label: _Optional[str] = ..., takes_extended: _Optional[bool] = ..., max_payload_bytes: _Optional[int] = ..., max_address: _Optional[int] = ..., max_extended_address: _Optional[int] = ..., takes_line_ending: _Optional[bool] = ..., supports_fd: _Optional[bool] = ..., supports_remote: _Optional[bool] = ..., exchange_unit: _Optional[_Union[ExchangeUnit, str]] = ..., has_time_model: _Optional[bool] = ..., controller_latency_us: _Optional[int] = ..., queue_depth: _Optional[int] = ..., queue_unit: _Optional[_Union[ExchangeUnit, str]] = ...) -> None: ...
+    wires: _containers.RepeatedCompositeFieldContainer[WireDecl]
+    wires_unavailable_reason: str
+    framing_text: str
+    def __init__(self, bus_id: _Optional[int] = ..., kind: _Optional[str] = ..., name: _Optional[str] = ..., bitrate_bps: _Optional[int] = ..., display_bitrate: _Optional[str] = ..., accepts_messages: _Optional[bool] = ..., takes_address: _Optional[bool] = ..., address_label: _Optional[str] = ..., takes_extended: _Optional[bool] = ..., max_payload_bytes: _Optional[int] = ..., max_address: _Optional[int] = ..., max_extended_address: _Optional[int] = ..., takes_line_ending: _Optional[bool] = ..., supports_fd: _Optional[bool] = ..., supports_remote: _Optional[bool] = ..., exchange_unit: _Optional[_Union[ExchangeUnit, str]] = ..., has_time_model: _Optional[bool] = ..., controller_latency_us: _Optional[int] = ..., queue_depth: _Optional[int] = ..., queue_unit: _Optional[_Union[ExchangeUnit, str]] = ..., wires: _Optional[_Iterable[_Union[WireDecl, _Mapping]]] = ..., wires_unavailable_reason: _Optional[str] = ..., framing_text: _Optional[str] = ...) -> None: ...
+
+class WireDecl(_message.Message):
+    __slots__ = ("wire_id", "name", "idle_high", "description")
+    WIRE_ID_FIELD_NUMBER: _ClassVar[int]
+    NAME_FIELD_NUMBER: _ClassVar[int]
+    IDLE_HIGH_FIELD_NUMBER: _ClassVar[int]
+    DESCRIPTION_FIELD_NUMBER: _ClassVar[int]
+    wire_id: int
+    name: str
+    idle_high: bool
+    description: str
+    def __init__(self, wire_id: _Optional[int] = ..., name: _Optional[str] = ..., idle_high: _Optional[bool] = ..., description: _Optional[str] = ...) -> None: ...
+
+class WireRequest(_message.Message):
+    __slots__ = ("bus_id", "wire_ids", "from_us", "to_us", "max_edges", "epoch")
+    BUS_ID_FIELD_NUMBER: _ClassVar[int]
+    WIRE_IDS_FIELD_NUMBER: _ClassVar[int]
+    FROM_US_FIELD_NUMBER: _ClassVar[int]
+    TO_US_FIELD_NUMBER: _ClassVar[int]
+    MAX_EDGES_FIELD_NUMBER: _ClassVar[int]
+    EPOCH_FIELD_NUMBER: _ClassVar[int]
+    bus_id: int
+    wire_ids: _containers.RepeatedScalarFieldContainer[int]
+    from_us: int
+    to_us: int
+    max_edges: int
+    epoch: int
+    def __init__(self, bus_id: _Optional[int] = ..., wire_ids: _Optional[_Iterable[int]] = ..., from_us: _Optional[int] = ..., to_us: _Optional[int] = ..., max_edges: _Optional[int] = ..., epoch: _Optional[int] = ...) -> None: ...
+
+class WireLevel(_message.Message):
+    __slots__ = ("wire_id", "high")
+    WIRE_ID_FIELD_NUMBER: _ClassVar[int]
+    HIGH_FIELD_NUMBER: _ClassVar[int]
+    wire_id: int
+    high: bool
+    def __init__(self, wire_id: _Optional[int] = ..., high: _Optional[bool] = ...) -> None: ...
+
+class WireEdge(_message.Message):
+    __slots__ = ("sim_us", "wire_id", "high")
+    SIM_US_FIELD_NUMBER: _ClassVar[int]
+    WIRE_ID_FIELD_NUMBER: _ClassVar[int]
+    HIGH_FIELD_NUMBER: _ClassVar[int]
+    sim_us: int
+    wire_id: int
+    high: bool
+    def __init__(self, sim_us: _Optional[int] = ..., wire_id: _Optional[int] = ..., high: _Optional[bool] = ...) -> None: ...
+
+class WireField(_message.Message):
+    __slots__ = ("start_us", "end_us", "wire_id", "kind", "value", "text")
+    START_US_FIELD_NUMBER: _ClassVar[int]
+    END_US_FIELD_NUMBER: _ClassVar[int]
+    WIRE_ID_FIELD_NUMBER: _ClassVar[int]
+    KIND_FIELD_NUMBER: _ClassVar[int]
+    VALUE_FIELD_NUMBER: _ClassVar[int]
+    TEXT_FIELD_NUMBER: _ClassVar[int]
+    start_us: int
+    end_us: int
+    wire_id: int
+    kind: WireFieldKind
+    value: int
+    text: str
+    def __init__(self, start_us: _Optional[int] = ..., end_us: _Optional[int] = ..., wire_id: _Optional[int] = ..., kind: _Optional[_Union[WireFieldKind, str]] = ..., value: _Optional[int] = ..., text: _Optional[str] = ...) -> None: ...
+
+class WireReply(_message.Message):
+    __slots__ = ("edges", "fields", "levels", "truncated", "truncated_at_us", "position", "from_us", "to_us", "unavailable_reason")
+    EDGES_FIELD_NUMBER: _ClassVar[int]
+    FIELDS_FIELD_NUMBER: _ClassVar[int]
+    LEVELS_FIELD_NUMBER: _ClassVar[int]
+    TRUNCATED_FIELD_NUMBER: _ClassVar[int]
+    TRUNCATED_AT_US_FIELD_NUMBER: _ClassVar[int]
+    POSITION_FIELD_NUMBER: _ClassVar[int]
+    FROM_US_FIELD_NUMBER: _ClassVar[int]
+    TO_US_FIELD_NUMBER: _ClassVar[int]
+    UNAVAILABLE_REASON_FIELD_NUMBER: _ClassVar[int]
+    edges: _containers.RepeatedCompositeFieldContainer[WireEdge]
+    fields: _containers.RepeatedCompositeFieldContainer[WireField]
+    levels: _containers.RepeatedCompositeFieldContainer[WireLevel]
+    truncated: bool
+    truncated_at_us: int
+    position: ViewPosition
+    from_us: int
+    to_us: int
+    unavailable_reason: str
+    def __init__(self, edges: _Optional[_Iterable[_Union[WireEdge, _Mapping]]] = ..., fields: _Optional[_Iterable[_Union[WireField, _Mapping]]] = ..., levels: _Optional[_Iterable[_Union[WireLevel, _Mapping]]] = ..., truncated: _Optional[bool] = ..., truncated_at_us: _Optional[int] = ..., position: _Optional[_Union[ViewPosition, _Mapping]] = ..., from_us: _Optional[int] = ..., to_us: _Optional[int] = ..., unavailable_reason: _Optional[str] = ...) -> None: ...
 
 class SourceFileView(_message.Message):
     __slots__ = ("path", "display_path", "origin", "is_header", "is_project", "state", "state_text")

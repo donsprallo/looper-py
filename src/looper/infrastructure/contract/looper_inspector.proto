@@ -361,6 +361,7 @@ enum Capability {
   CAPABILITY_DMA_GUARD = 18;       // this platform can tell a read of a buffer a DMA channel still writes
   CAPABILITY_CHAINS = 19;          // chains in ApplySignalGraph, CheckSignalGraph, ObserveChains, SwitchChainGroup, ListChainBlocks, ChainFire
   CAPABILITY_HARDWARE = 20;        // a board at a debug probe: FlashFirmware, ObserveTarget, hold and resume through ControlRun
+  CAPABILITY_BUS_WIRES = 23;       // ReadWires, BusView.wires: CAN and UART as levels
 }
 
 enum ServerMode {
@@ -1154,6 +1155,11 @@ service Inspector {
   rpc ArmTrigger(TriggerSpec) returns (TriggerView);
   rpc DisarmTrigger(TriggerChoice) returns (TriggerView);   // any client, any trigger
   rpc ObserveTriggers(Empty) returns (TriggerList);         // every trigger, armed or not
+
+  // A bus as the levels on its wires (CAPABILITY_BUS_WIRES): computed on
+  // request for a span from the recorded exchanges and the bus's time model,
+  // never part of the stream. BusView.wires says which wires a bus has.
+  rpc ReadWires(WireRequest) returns (WireReply);
 
   // Chains in the signal graph: conditions, logic and actions joined by
   // event links, evaluated inside the simulation. ApplySignalGraph installs
@@ -2324,6 +2330,85 @@ message BusView {
   uint32 controller_latency_us = 18;
   uint32 queue_depth = 19;       // what QUEUE_FULL means in numbers...
   ExchangeUnit queue_unit = 20;  // ...in frames (CAN, 32) or bytes (UART, 256)
+  // The wires ReadWires draws for this bus (CAPABILITY_BUS_WIRES): CAN as
+  // one logical wire "bus", UART as "TX" and "RX". Empty when the bus has
+  // none, and then the reason says why in the server's words.
+  repeated WireDecl wires = 30;
+  string wires_unavailable_reason = 31;
+  // How a UART byte is framed on the wire: "8N1". Empty for other kinds.
+  string framing_text = 32;
+}
+
+// ---- Bus as wires (CAPABILITY_BUS_WIRES) ----
+
+// One wire of a bus. Its level between frames is the idle level.
+message WireDecl {
+  uint32 wire_id = 1;
+  string name = 2;           // "bus" (CAN), "TX", "RX" (UART)
+  bool idle_high = 3;        // CAN recessive and the UART mark are high
+  string description = 4;    // "CAN as one logical wire: high is recessive"
+}
+
+message WireRequest {
+  uint32 bus_id = 1;
+  repeated uint32 wire_ids = 2;  // empty: every wire of the bus
+  uint64 from_us = 3;
+  uint64 to_us = 4;
+  uint32 max_edges = 5;          // 0: the server's limit (200 000); the reply is truncated beyond
+  uint64 epoch = 6;              // 0: the current recording
+}
+
+// What a wire stands at, at WireReply's from_us.
+message WireLevel { uint32 wire_id = 1; bool high = 2; }
+
+// A change of level, in time order; equal sim_us keep the order of the bits.
+message WireEdge { uint64 sim_us = 1; uint32 wire_id = 2; bool high = 3; }
+
+enum WireFieldKind {
+  WIRE_FIELD_UNSPECIFIED = 0;
+  // CAN
+  WIRE_FIELD_SOF = 1;
+  WIRE_FIELD_ID = 2;           // the base identifier, and for a 29-bit one also its extension
+  WIRE_FIELD_RTR = 3;
+  WIRE_FIELD_IDE = 4;
+  WIRE_FIELD_DLC = 5;
+  WIRE_FIELD_DATA = 6;         // one byte: CAN data, or a UART byte's eight data bits
+  WIRE_FIELD_CRC = 7;
+  WIRE_FIELD_ACK = 8;
+  WIRE_FIELD_EOF = 9;
+  WIRE_FIELD_SRR = 10;
+  WIRE_FIELD_RESERVED = 11;    // r0, r1
+  WIRE_FIELD_DELIMITER = 12;   // CRC and ACK delimiters
+  WIRE_FIELD_INTERMISSION = 13;
+  WIRE_FIELD_STUFF = 14;       // a stuff bit: one bit long, value its level
+  WIRE_FIELD_ERROR_FLAG = 15;  // an error frame, a UART break
+  // UART
+  WIRE_FIELD_START = 16;
+  WIRE_FIELD_STOP = 17;
+}
+
+// A stretch of a frame and what it means. `value` is the field's number
+// (identifier, length, byte, CRC); `text` is how the server shows it.
+message WireField {
+  uint64 start_us = 1;
+  uint64 end_us = 2;
+  uint32 wire_id = 3;
+  WireFieldKind kind = 4;
+  uint64 value = 5;
+  string text = 6;             // "ID 0x123", "0x41 'A'", "stuff", "no ACK", "framing error"
+}
+
+message WireReply {
+  repeated WireEdge edges = 1;     // in time order, within [from_us, to_us]
+  repeated WireField fields = 2;   // every field that overlaps the span
+  repeated WireLevel levels = 3;   // each requested wire at from_us
+  bool truncated = 4;              // max_edges reached
+  uint64 truncated_at_us = 5;      // the reply is complete up to here
+  ViewPosition position = 6;
+  uint64 from_us = 7;              // the span answered, as asked
+  uint64 to_us = 8;
+  // Why there are no wires, in the server's words; then nothing else is set.
+  string unavailable_reason = 9;
 }
 
 // ---- Source code ----
