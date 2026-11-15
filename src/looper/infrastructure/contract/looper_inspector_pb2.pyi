@@ -1340,18 +1340,30 @@ class DmaEvent(_message.Message):
     def __init__(self, dma_id: _Optional[int] = ..., kind: _Optional[_Union[DmaEventKind, str]] = ..., address: _Optional[int] = ..., length: _Optional[int] = ..., width: _Optional[int] = ..., position: _Optional[int] = ..., lap: _Optional[int] = ..., access: _Optional[_Union[DmaAccess, str]] = ..., write: _Optional[bool] = ..., pc: _Optional[int] = ..., access_address: _Optional[int] = ..., count: _Optional[int] = ..., on_stack: _Optional[bool] = ..., reason: _Optional[_Union[DmaGuardOff, str]] = ..., place: _Optional[_Union[CodePlace, _Mapping]] = ..., text: _Optional[str] = ...) -> None: ...
 
 class Lost(_message.Message):
-    __slots__ = ("from_event_seq", "to_event_seq", "from_us", "to_us", "reason")
+    __slots__ = ("from_event_seq", "to_event_seq", "from_us", "to_us", "reason", "rings")
     FROM_EVENT_SEQ_FIELD_NUMBER: _ClassVar[int]
     TO_EVENT_SEQ_FIELD_NUMBER: _ClassVar[int]
     FROM_US_FIELD_NUMBER: _ClassVar[int]
     TO_US_FIELD_NUMBER: _ClassVar[int]
     REASON_FIELD_NUMBER: _ClassVar[int]
+    RINGS_FIELD_NUMBER: _ClassVar[int]
     from_event_seq: int
     to_event_seq: int
     from_us: int
     to_us: int
     reason: LossReason
-    def __init__(self, from_event_seq: _Optional[int] = ..., to_event_seq: _Optional[int] = ..., from_us: _Optional[int] = ..., to_us: _Optional[int] = ..., reason: _Optional[_Union[LossReason, str]] = ...) -> None: ...
+    rings: _containers.RepeatedCompositeFieldContainer[RingLossView]
+    def __init__(self, from_event_seq: _Optional[int] = ..., to_event_seq: _Optional[int] = ..., from_us: _Optional[int] = ..., to_us: _Optional[int] = ..., reason: _Optional[_Union[LossReason, str]] = ..., rings: _Optional[_Iterable[_Union[RingLossView, _Mapping]]] = ...) -> None: ...
+
+class RingLossView(_message.Message):
+    __slots__ = ("ring", "dropped", "text")
+    RING_FIELD_NUMBER: _ClassVar[int]
+    DROPPED_FIELD_NUMBER: _ClassVar[int]
+    TEXT_FIELD_NUMBER: _ClassVar[int]
+    ring: str
+    dropped: int
+    text: str
+    def __init__(self, ring: _Optional[str] = ..., dropped: _Optional[int] = ..., text: _Optional[str] = ...) -> None: ...
 
 class Sample(_message.Message):
     __slots__ = ("channel_id", "value")

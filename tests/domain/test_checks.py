@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from looper.domain.checks import BusCarriedAtLeast, ChannelReaches
 from looper.domain.model import Exchange, Observation, Sample
-from looper.domain.model.event_loss import EventLoss
+from looper.domain.model.event_loss import EventLoss, RingCount
 
 
 def a_sample(sim_us: int, value: float) -> Sample:
@@ -65,3 +65,22 @@ def test_the_note_says_where_the_events_were_lost() -> None:
         "simulation's ring, 50 not read in time by this client)"
     )
     assert EventLoss().note() == ""
+
+
+def test_the_note_names_the_rings_that_dropped_events_added_up_over_the_gaps() -> None:
+    interrupts = RingCount(
+        "interrupts", 600, "interrupt events; a larger [interrupts] ring keeps more"
+    )
+    first = EventLoss(in_the_ring=600, rings=(interrupts,))
+    second = EventLoss(
+        in_the_ring=50,
+        rings=(
+            RingCount("interrupts", 40, interrupts.text),
+            RingCount("exchanges", 10, "bus exchanges"),
+        ),
+    )
+
+    assert (first + second).note() == (
+        ", and 650 events the recording could not keep (650 overwritten in the simulation's ring"
+        " – 640 interrupt events; a larger [interrupts] ring keeps more, 10 bus exchanges)"
+    )

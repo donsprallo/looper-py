@@ -27,7 +27,7 @@ from looper.domain.model import (
     Variable,
     Watch,
 )
-from looper.domain.model.event_loss import EventLoss
+from looper.domain.model.event_loss import EventLoss, RingCount
 from looper.infrastructure import interrupt_translation, mark_translation, time_model_translation
 from looper.infrastructure.contract import looper_inspector_pb2 as contract
 
@@ -262,6 +262,9 @@ def _loss_of(ranges: Iterable[contract.Lost]) -> EventLoss:
     for lost in ranges:
         count = lost.to_event_seq - lost.from_event_seq + 1
         loss += _counted_where(lost.reason, count)
+        loss += EventLoss(
+            rings=tuple(RingCount(one.ring, one.dropped, one.text) for one in lost.rings)
+        )
     return loss
 
 

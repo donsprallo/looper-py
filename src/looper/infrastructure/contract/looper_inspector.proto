@@ -743,6 +743,19 @@ message Lost {
   uint64 from_us = 3;
   uint64 to_us = 4;
   LossReason reason = 5;
+  // RING_FULL: which rings of the simulation dropped the events, as far as
+  // it counted them; empty when it did not (a looper-rt from before v0.36.0).
+  repeated RingLossView rings = 6;
+}
+
+// What one ring of the simulation dropped to make room before it was read.
+message RingLossView {
+  string ring = 1;   // interrupts, dma, exchanges, samples, pins, calls, ...
+  uint64 dropped = 2;
+  // What the events are and what keeps more, without the count, so that a
+  // client adding up several gaps writes its sum before it:
+  // "interrupt events; a larger [interrupts] ring keeps more".
+  string text = 3;
 }
 
 enum LossReason {
