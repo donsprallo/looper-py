@@ -2327,7 +2327,7 @@ class SignalView(_message.Message):
     def __init__(self, waveform: _Optional[str] = ..., amplitude: _Optional[float] = ..., offset: _Optional[float] = ..., frequency_hz: _Optional[float] = ..., phase_degrees: _Optional[float] = ...) -> None: ...
 
 class ChannelView(_message.Message):
-    __slots__ = ("channel_id", "name", "unit", "direction", "value", "is_drivable", "signal", "is_silent", "display_value", "is_driven_by_graph", "is_settable", "settable_text", "value_text", "last_writer_text", "last_written_us", "last_writer_node_key")
+    __slots__ = ("channel_id", "name", "unit", "direction", "value", "is_drivable", "signal", "is_silent", "display_value", "is_driven_by_graph", "is_settable", "settable_text", "value_text", "last_writer_text", "last_written_us", "last_writer_node_key", "read_period_us", "read_period_text")
     CHANNEL_ID_FIELD_NUMBER: _ClassVar[int]
     NAME_FIELD_NUMBER: _ClassVar[int]
     UNIT_FIELD_NUMBER: _ClassVar[int]
@@ -2344,6 +2344,8 @@ class ChannelView(_message.Message):
     LAST_WRITER_TEXT_FIELD_NUMBER: _ClassVar[int]
     LAST_WRITTEN_US_FIELD_NUMBER: _ClassVar[int]
     LAST_WRITER_NODE_KEY_FIELD_NUMBER: _ClassVar[int]
+    READ_PERIOD_US_FIELD_NUMBER: _ClassVar[int]
+    READ_PERIOD_TEXT_FIELD_NUMBER: _ClassVar[int]
     channel_id: int
     name: str
     unit: str
@@ -2360,7 +2362,9 @@ class ChannelView(_message.Message):
     last_writer_text: str
     last_written_us: int
     last_writer_node_key: str
-    def __init__(self, channel_id: _Optional[int] = ..., name: _Optional[str] = ..., unit: _Optional[str] = ..., direction: _Optional[str] = ..., value: _Optional[float] = ..., is_drivable: _Optional[bool] = ..., signal: _Optional[_Union[SignalView, _Mapping]] = ..., is_silent: _Optional[bool] = ..., display_value: _Optional[str] = ..., is_driven_by_graph: _Optional[bool] = ..., is_settable: _Optional[bool] = ..., settable_text: _Optional[str] = ..., value_text: _Optional[str] = ..., last_writer_text: _Optional[str] = ..., last_written_us: _Optional[int] = ..., last_writer_node_key: _Optional[str] = ...) -> None: ...
+    read_period_us: int
+    read_period_text: str
+    def __init__(self, channel_id: _Optional[int] = ..., name: _Optional[str] = ..., unit: _Optional[str] = ..., direction: _Optional[str] = ..., value: _Optional[float] = ..., is_drivable: _Optional[bool] = ..., signal: _Optional[_Union[SignalView, _Mapping]] = ..., is_silent: _Optional[bool] = ..., display_value: _Optional[str] = ..., is_driven_by_graph: _Optional[bool] = ..., is_settable: _Optional[bool] = ..., settable_text: _Optional[str] = ..., value_text: _Optional[str] = ..., last_writer_text: _Optional[str] = ..., last_written_us: _Optional[int] = ..., last_writer_node_key: _Optional[str] = ..., read_period_us: _Optional[int] = ..., read_period_text: _Optional[str] = ...) -> None: ...
 
 class ChannelList(_message.Message):
     __slots__ = ("channels",)

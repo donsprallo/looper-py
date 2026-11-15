@@ -1642,6 +1642,13 @@ message ChannelView {
   uint64 last_written_us = 15;
   // The node_key of the Switch signal block that held it; empty otherwise.
   string last_writer_node_key = 16;
+  // How often the simulation reads the channel, in simulated time, and the
+  // sentence a client shows for it, as WatchView has them. 0 for a channel
+  // read or written on demand: "Read when the firmware reads it." for an
+  // input (an ADC the firmware samples itself), "Written when the firmware
+  // writes it." for an output.
+  uint64 read_period_us = 17;
+  string read_period_text = 18;
 }
 
 message ChannelList {
