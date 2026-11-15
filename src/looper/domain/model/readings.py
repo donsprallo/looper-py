@@ -9,9 +9,10 @@ out from the fields alone.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import StrEnum
 
+from looper.domain.model.event_loss import EventLoss
 from looper.domain.model.interrupt_facts import InterruptMark
 from looper.domain.model.marks import FlashMark, ResetMark
 from looper.domain.model.time_models import ActiveTimeModel, TimeModel
@@ -116,7 +117,7 @@ class EventPage:
             this and never by whether the page was empty: a filtered page
             can be empty while more events follow.
         sim_now_us: The simulated time when the server cut the page.
-        lost_events: How many events this reader will not get.
+        lost: The events this reader will not get, by where they were lost.
         epoch_changed: Whether another client cleared the recording since
             the reader's last page.
         resets: The resets on the page.
@@ -127,7 +128,7 @@ class EventPage:
     exchanges: tuple[Exchange, ...] = ()
     next_event_seq: int = 0
     sim_now_us: int = 0
-    lost_events: int = 0
+    lost: EventLoss = field(default_factory=EventLoss)
     epoch_changed: bool = False
     resets: tuple[ResetMark, ...] = ()
     flash_marks: tuple[FlashMark, ...] = ()

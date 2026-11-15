@@ -22,6 +22,7 @@ from looper import (
     SimulationRefusedError,
     SimulationUnreachableError,
 )
+from looper.domain.model.event_loss import EventLoss
 from looper.infrastructure import grpc_inspector
 from looper.infrastructure.boot_translation import chains_of
 from looper.infrastructure.contract import looper_inspector_pb2 as contract
@@ -276,11 +277,13 @@ def test_a_range_the_server_could_not_keep_becomes_a_count_of_events(
     inspector: GrpcInspector, servicer: ScriptedServicer
 ) -> None:
     servicer.lost = [
-        contract.Lost(from_event_seq=3, to_event_seq=5),
-        contract.Lost(from_event_seq=10, to_event_seq=10),
+        contract.Lost(from_event_seq=3, to_event_seq=5, reason=contract.LOSS_REASON_RING_FULL),
+        contract.Lost(
+            from_event_seq=10, to_event_seq=10, reason=contract.LOSS_REASON_CLIENT_TOO_SLOW
+        ),
     ]
 
-    assert inspector.read_events(2, 0).lost_events == 4
+    assert inspector.read_events(2, 0).lost == EventLoss(in_the_ring=3, by_the_client=1)
 
 
 def test_a_held_clock_is_run_for_a_span_and_the_clear_names_its_epoch(

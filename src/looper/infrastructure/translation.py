@@ -7,6 +7,8 @@ message, for whoever wants to draw it.
 
 from __future__ import annotations
 
+from collections.abc import Iterable
+
 from looper.domain.model import (
     Bus,
     BusMessage,
@@ -25,6 +27,7 @@ from looper.domain.model import (
     Variable,
     Watch,
 )
+from looper.domain.model.event_loss import EventLoss
 from looper.infrastructure import interrupt_translation, mark_translation, time_model_translation
 from looper.infrastructure.contract import looper_inspector_pb2 as contract
 
@@ -83,7 +86,7 @@ def event_page_of(message: contract.EventBatch) -> EventPage:
         exchanges=tuple(_exchange_of(one) for one in message.events if one.HasField("exchange")),
         next_event_seq=message.next_event_seq,
         sim_now_us=message.sim_now_us,
-        lost_events=sum(one.to_event_seq - one.from_event_seq + 1 for one in message.lost),
+        lost=_loss_of(message.lost),
         epoch_changed=message.epoch_changed,
         resets=tuple(
             mark_translation.reset_of(one) for one in message.events if one.HasField("reset")
@@ -251,3 +254,23 @@ def _exchange_of(event: contract.Event) -> Exchange:
         accepted=exchange.accepted,
         event_seq=event.event_seq,
     )
+
+
+def _loss_of(ranges: Iterable[contract.Lost]) -> EventLoss:
+    """The lost ranges of a page, counted by where they were lost."""
+    loss = EventLoss()
+    for lost in ranges:
+        count = lost.to_event_seq - lost.from_event_seq + 1
+        loss += _counted_where(lost.reason, count)
+    return loss
+
+
+def _counted_where(reason: int, count: int) -> EventLoss:
+    """A count of lost events under its reason."""
+    if reason == contract.LOSS_REASON_RING_FULL:
+        return EventLoss(in_the_ring=count)
+    if reason == contract.LOSS_REASON_CLIENT_TOO_SLOW:
+        return EventLoss(by_the_client=count)
+    if reason == contract.LOSS_REASON_RETENTION:
+        return EventLoss(by_retention=count)
+    return EventLoss(unexplained=count)

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from looper.domain.checks import BusCarriedAtLeast, ChannelReaches
 from looper.domain.model import Exchange, Observation, Sample
+from looper.domain.model.event_loss import EventLoss
 
 
 def a_sample(sim_us: int, value: float) -> Sample:
@@ -47,10 +48,20 @@ def test_events_the_recording_lost_are_named_but_not_counted_as_exchanges() -> N
         exchanges=(an_exchange(1),),
         timings=(),
         elapsed_seconds=1.0,
-        lost_events=5,
+        lost=EventLoss(in_the_ring=5),
     )
 
     outcome = BusCarriedAtLeast(2, "CAN2", 3).evaluate(observed)
 
     assert not outcome.met
     assert "saw 1, and 5 events the recording could not keep" in outcome.line
+
+
+def test_the_note_says_where_the_events_were_lost() -> None:
+    lost = EventLoss(in_the_ring=650, by_the_client=50)
+
+    assert lost.note() == (
+        ", and 700 events the recording could not keep (650 overwritten in the "
+        "simulation's ring, 50 not read in time by this client)"
+    )
+    assert EventLoss().note() == ""

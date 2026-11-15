@@ -253,7 +253,9 @@ def test_lost_events_are_named_in_the_note(inspector: ScriptedInspector) -> None
 
     line = check.evaluate(for_seconds=1.0).failures[0].line
 
-    assert "and 7 events the recording could not keep" in line
+    assert (
+        "and 7 events the recording could not keep (7 overwritten in the simulation's ring)" in line
+    )
 
 
 def test_a_heap_that_was_used_is_reported_in_bytes(inspector: ScriptedInspector) -> None:

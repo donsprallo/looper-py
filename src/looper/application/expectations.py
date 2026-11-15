@@ -221,7 +221,7 @@ class Expectations:
             exchanges=events.exchanges,
             timings=timings,
             elapsed_seconds=(end.now_us - start.now_us) / MICROSECONDS_PER_SECOND,
-            lost_events=events.lost_events,
+            lost=events.lost,
             memory=self._memory(),
             profile=self._profile(),
             resets=events.resets,

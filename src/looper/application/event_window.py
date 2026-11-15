@@ -17,6 +17,7 @@ from looper.application.ports import (
     SimulationUnreachableError,
 )
 from looper.domain.model import EventPage, Exchange, FlashMark, ResetMark, RunStatus, Sample
+from looper.domain.model.event_loss import EventLoss
 from looper.domain.model.interrupt_facts import InterruptMark
 
 #: How long to wait between two asks while the log is behind the clock.
@@ -33,7 +34,7 @@ class WindowEvents:
 
     samples: tuple[Sample, ...]
     exchanges: tuple[Exchange, ...]
-    lost_events: int
+    lost: EventLoss
     resets: tuple[ResetMark, ...] = ()
     flash_marks: tuple[FlashMark, ...] = ()
     interrupt_marks: tuple[InterruptMark, ...] = ()
@@ -52,7 +53,7 @@ class WindowReader:
         self._resets: list[ResetMark] = []
         self._flash_marks: list[FlashMark] = []
         self._interrupt_marks: list[InterruptMark] = []
-        self._lost_events = 0
+        self._lost = EventLoss()
 
     def read(self) -> WindowEvents:
         """Read until the window's end is in hand.
@@ -71,7 +72,7 @@ class WindowReader:
         return WindowEvents(
             tuple(self._samples),
             tuple(self._exchanges),
-            self._lost_events,
+            self._lost,
             tuple(self._resets),
             tuple(self._flash_marks),
             tuple(self._interrupt_marks),
@@ -91,7 +92,7 @@ class WindowReader:
         page = self._inspector.read_events(self._epoch, self._next_event_seq)
         if page.epoch_changed:
             raise SimulationRefusedError("the recording was cleared during the window")
-        self._lost_events += page.lost_events
+        self._lost += page.lost
         self._keep_what_is_inside(page)
         moved = page.next_event_seq > self._next_event_seq
         self._next_event_seq = max(self._next_event_seq, page.next_event_seq)

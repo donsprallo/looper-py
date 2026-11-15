@@ -37,6 +37,7 @@ from looper.domain.model import (
     Variable,
     Watch,
 )
+from looper.domain.model.event_loss import EventLoss
 from restart_doubles import ScriptedRestarts
 
 #: How many events one page of the stream holds, so that paging is exercised.
@@ -105,7 +106,7 @@ class ScriptedInspector(
             exchanges=tuple(one for one in events if isinstance(one, Exchange)),
             next_event_seq=next_event_seq,
             sim_now_us=self.run.now_us if caught_up else 0,
-            lost_events=self.lost_events if self.reads == 1 else 0,
+            lost=EventLoss(in_the_ring=self.lost_events if self.reads == 1 else 0),
             epoch_changed=self.epoch_changes_while_reading,
         )
 

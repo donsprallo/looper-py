@@ -12,16 +12,12 @@ from dataclasses import dataclass, field
 
 from looper.domain.model.boot import BootChain, PartitionHeader
 from looper.domain.model.dma import DmaChannels
+from looper.domain.model.event_loss import EventLoss
 from looper.domain.model.interrupt_facts import InterruptMark, RunFindingReading
 from looper.domain.model.interrupts import Interrupts
 from looper.domain.model.marks import FlashMark, ResetMark
 from looper.domain.model.profile import Profile
 from looper.domain.model.readings import CallTiming, Exchange, MemoryUsage, Sample
-
-
-def _loss_note(lost: int) -> str:
-    """Say that the recording overflowed, when it did."""
-    return f", and {lost} events the recording could not keep" if lost > 0 else ""
 
 
 @dataclass(frozen=True)
@@ -33,7 +29,7 @@ class Observation:
         exchanges: What crossed the buses over the window.
         timings: What the adapter boundary was asked, since it was reset.
         elapsed_seconds: Simulated time the window covered.
-        lost_events: Events the recording could not keep. A fast channel
+        lost: Events the recording could not keep, by where. A fast channel
             fills a ring faster than any client empties it, and a check
             that pretended otherwise would quietly measure the ring. The
             server does not say whether they were samples or exchanges.
@@ -60,7 +56,7 @@ class Observation:
     exchanges: tuple[Exchange, ...]
     timings: tuple[CallTiming, ...]
     elapsed_seconds: float
-    lost_events: int = 0
+    lost: EventLoss = field(default_factory=EventLoss)
     memory: MemoryUsage = field(default_factory=MemoryUsage)
     profile: Profile = field(default_factory=Profile)
     resets: tuple[ResetMark, ...] = ()
@@ -74,14 +70,19 @@ class Observation:
     dma: DmaChannels = field(default_factory=DmaChannels)
 
     @property
+    def lost_events(self) -> int:
+        """How many events the recording could not keep, wherever they were lost."""
+        return self.lost.total
+
+    @property
     def sample_loss_note(self) -> str:
         """What to add to an observation when events were discarded."""
-        return _loss_note(self.lost_events)
+        return self.lost.note()
 
     @property
     def exchange_loss_note(self) -> str:
         """What to add to an observation when events were discarded."""
-        return _loss_note(self.lost_events)
+        return self.lost.note()
 
     def samples_of(self, channel_id: int) -> tuple[Sample, ...]:
         """The samples of one channel, oldest first."""
