@@ -56,6 +56,19 @@ def test_a_virtual_clock_and_a_skipped_build_are_passed_on() -> None:
     assert "--no-build" in arguments
 
 
+def test_only_the_instrumentation_that_differs_from_looper_toml_is_passed_on() -> None:
+    fast = RunCommand(
+        program=("looper-srv",), record_calls=False, profile=True, optimize="O2"
+    ).arguments()
+    unchanged = RunCommand(program=("looper-srv",)).arguments()
+
+    assert [argument for argument in fast if argument not in unchanged] == [
+        "--no-record-calls",
+        "--profile",
+        "--optimize=O2",
+    ]
+
+
 def test_looper_srv_is_told_that_a_test_started_it() -> None:
     srv = RunCommand(program=("C:/tools/looper-srv.exe",)).arguments()
 

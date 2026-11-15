@@ -84,6 +84,10 @@ def run(
     looper_cli: str | Sequence[str] | None = None,
     time_model: str | None = None,
     time_params: Mapping[str, int] | None = None,
+    record_calls: bool | None = None,
+    profile: bool | None = None,
+    track_allocations: bool | None = None,
+    optimize: str | None = None,
 ) -> Simulation:
     """Build a simulation, start it, and attach to it.
 
@@ -103,6 +107,16 @@ def run(
             it came from here (``command_line``), and a restart keeps it.
         time_params: Its parameters, whole numbers, such as
             ``{"max_step_us": 500}``; one left out takes its default.
+        record_calls: Journal every adapter call, or not: ``False`` is the
+            fastest run. None leaves looper.toml's choice, which is on.
+        profile: Weave every function for the profile, or not; None for
+            looper.toml's choice.
+        track_allocations: Put looper in front of the allocator, or not;
+            None for looper.toml's choice.
+        optimize: The optimisation level, ``"O0"`` to ``"O3"``, ``"Os"``,
+            ``"Og"`` or ``"Oz"``; None for looper.toml's. A run that differs
+            from looper.toml in any of these is built in a folder of its own,
+            so switching back and forth rebuilds neither.
 
     Raises:
         ServerStartError: If the server could not build, start or serve it.
@@ -117,6 +131,10 @@ def run(
         build=build,
         time_model=time_model,
         time_params=_time_params(time_model, time_params),
+        record_calls=record_calls,
+        profile=profile,
+        track_allocations=track_allocations,
+        optimize=optimize,
     )
     process = LooperCliRun.start(command)
     try:

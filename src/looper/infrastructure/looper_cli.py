@@ -62,6 +62,10 @@ class RunCommand:
         time_model: The time model to run on in place of what looper.toml
             chooses; None for looper.toml's.
         time_params: Its parameters as ``(name, value)``, whole numbers.
+        record_calls: Journal every adapter call; None for looper.toml's choice.
+        profile: Weave every function for the profile; None for looper.toml's.
+        track_allocations: Put looper in front of the allocator; None for looper.toml's.
+        optimize: The optimisation level, such as ``"O2"``; None for looper.toml's.
     """
 
     program: tuple[str, ...]
@@ -70,6 +74,10 @@ class RunCommand:
     build: bool = True
     time_model: str | None = None
     time_params: tuple[tuple[str, int], ...] = ()
+    record_calls: bool | None = None
+    profile: bool | None = None
+    track_allocations: bool | None = None
+    optimize: str | None = None
 
     def arguments(self) -> list[str]:
         """The whole command line."""
@@ -85,8 +93,29 @@ class RunCommand:
             arguments.extend(["--time-model", self.time_model])
         for name, value in self.time_params:
             arguments.extend(["--time-param", f"{name}={value}"])
+        arguments.extend(self._instrumentation())
         arguments.extend(["--started-by", "test", "--owner-pid", str(os.getpid())])
         return arguments
+
+    def _instrumentation(self) -> list[str]:
+        """The switches for what differs from looper.toml; the server builds such a run apart."""
+        switches = [
+            _switch(name, chosen)
+            for name, chosen in (
+                ("record-calls", self.record_calls),
+                ("profile", self.profile),
+                ("track-allocations", self.track_allocations),
+            )
+            if chosen is not None
+        ]
+        if self.optimize is not None:
+            switches.append(f"--optimize={self.optimize}")
+        return switches
+
+
+def _switch(name: str, on: bool) -> str:
+    """``--profile`` or ``--no-profile``."""
+    return f"--{name}" if on else f"--no-{name}"
 
 
 class LooperCliRun:
