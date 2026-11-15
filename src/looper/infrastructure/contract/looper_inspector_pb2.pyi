@@ -119,6 +119,7 @@ class EventKind(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     EVENT_KIND_INTERRUPT: _ClassVar[EventKind]
     EVENT_KIND_DMA: _ClassVar[EventKind]
     EVENT_KIND_CHAIN: _ClassVar[EventKind]
+    EVENT_KIND_TASK: _ClassVar[EventKind]
 
 class InterruptEventKind(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     __slots__ = ()
@@ -350,6 +351,7 @@ class ContextKind(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     CONTEXT_KIND_MAIN: _ClassVar[ContextKind]
     CONTEXT_KIND_ISR: _ClassVar[ContextKind]
     CONTEXT_KIND_STARTUP: _ClassVar[ContextKind]
+    CONTEXT_KIND_TASK: _ClassVar[ContextKind]
 
 class IsrOrigin(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     __slots__ = ()
@@ -454,6 +456,25 @@ class DmaGuard(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
 class RaceStrategy(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     __slots__ = ()
     RACE_STRATEGY_ROUND_ROBIN: _ClassVar[RaceStrategy]
+
+class SwitchReason(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+    __slots__ = ()
+    SWITCH_REASON_UNSPECIFIED: _ClassVar[SwitchReason]
+    SWITCH_REASON_YIELD: _ClassVar[SwitchReason]
+    SWITCH_REASON_BLOCK: _ClassVar[SwitchReason]
+    SWITCH_REASON_TICK: _ClassVar[SwitchReason]
+    SWITCH_REASON_ISR: _ClassVar[SwitchReason]
+    SWITCH_REASON_RACE: _ClassVar[SwitchReason]
+    SWITCH_REASON_START: _ClassVar[SwitchReason]
+
+class TaskState(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+    __slots__ = ()
+    TASK_STATE_UNSPECIFIED: _ClassVar[TaskState]
+    TASK_STATE_RUNNING: _ClassVar[TaskState]
+    TASK_STATE_READY: _ClassVar[TaskState]
+    TASK_STATE_BLOCKED: _ClassVar[TaskState]
+    TASK_STATE_SUSPENDED: _ClassVar[TaskState]
+    TASK_STATE_DELETED: _ClassVar[TaskState]
 CONTRACT_VERSION_UNSPECIFIED: ContractVersion
 CONTRACT_VERSION_CURRENT: ContractVersion
 REFUSAL_NONE: Refusal
@@ -531,6 +552,7 @@ EVENT_KIND_FLASH: EventKind
 EVENT_KIND_INTERRUPT: EventKind
 EVENT_KIND_DMA: EventKind
 EVENT_KIND_CHAIN: EventKind
+EVENT_KIND_TASK: EventKind
 INTERRUPT_EVENT_PENDING: InterruptEventKind
 INTERRUPT_EVENT_ENTERED: InterruptEventKind
 INTERRUPT_EVENT_LEFT: InterruptEventKind
@@ -678,6 +700,7 @@ FINDING_EVIDENCE_NO_POINT: FindingEvidence
 CONTEXT_KIND_MAIN: ContextKind
 CONTEXT_KIND_ISR: ContextKind
 CONTEXT_KIND_STARTUP: ContextKind
+CONTEXT_KIND_TASK: ContextKind
 ISR_ORIGIN_UNSPECIFIED: IsrOrigin
 ISR_ORIGIN_CONTRACT: IsrOrigin
 ISR_ORIGIN_VECTOR_TABLE: IsrOrigin
@@ -737,6 +760,19 @@ DMA_GUARD_DEBUGGER: DmaGuard
 DMA_GUARD_STACK: DmaGuard
 DMA_GUARD_LOCKED: DmaGuard
 RACE_STRATEGY_ROUND_ROBIN: RaceStrategy
+SWITCH_REASON_UNSPECIFIED: SwitchReason
+SWITCH_REASON_YIELD: SwitchReason
+SWITCH_REASON_BLOCK: SwitchReason
+SWITCH_REASON_TICK: SwitchReason
+SWITCH_REASON_ISR: SwitchReason
+SWITCH_REASON_RACE: SwitchReason
+SWITCH_REASON_START: SwitchReason
+TASK_STATE_UNSPECIFIED: TaskState
+TASK_STATE_RUNNING: TaskState
+TASK_STATE_READY: TaskState
+TASK_STATE_BLOCKED: TaskState
+TASK_STATE_SUSPENDED: TaskState
+TASK_STATE_DELETED: TaskState
 
 class Empty(_message.Message):
     __slots__ = ()
@@ -1194,7 +1230,7 @@ class ChannelValueSince(_message.Message):
     def __init__(self, channel_id: _Optional[int] = ..., value: _Optional[float] = ..., since_us: _Optional[int] = ...) -> None: ...
 
 class Event(_message.Message):
-    __slots__ = ("event_seq", "sim_us", "sample", "pin", "exchange", "call", "command", "job", "fault", "run", "trigger_fired", "trigger_disarmed", "reset", "life", "flash", "interrupt", "dma", "chain")
+    __slots__ = ("event_seq", "sim_us", "sample", "pin", "exchange", "call", "command", "job", "fault", "run", "trigger_fired", "trigger_disarmed", "reset", "life", "flash", "interrupt", "dma", "chain", "task")
     EVENT_SEQ_FIELD_NUMBER: _ClassVar[int]
     SIM_US_FIELD_NUMBER: _ClassVar[int]
     SAMPLE_FIELD_NUMBER: _ClassVar[int]
@@ -1213,6 +1249,7 @@ class Event(_message.Message):
     INTERRUPT_FIELD_NUMBER: _ClassVar[int]
     DMA_FIELD_NUMBER: _ClassVar[int]
     CHAIN_FIELD_NUMBER: _ClassVar[int]
+    TASK_FIELD_NUMBER: _ClassVar[int]
     event_seq: int
     sim_us: int
     sample: Sample
@@ -1231,7 +1268,8 @@ class Event(_message.Message):
     interrupt: InterruptEvent
     dma: DmaEvent
     chain: ChainFire
-    def __init__(self, event_seq: _Optional[int] = ..., sim_us: _Optional[int] = ..., sample: _Optional[_Union[Sample, _Mapping]] = ..., pin: _Optional[_Union[PinChange, _Mapping]] = ..., exchange: _Optional[_Union[Exchange, _Mapping]] = ..., call: _Optional[_Union[Call, _Mapping]] = ..., command: _Optional[_Union[CommandApplied, _Mapping]] = ..., job: _Optional[_Union[JobEvent, _Mapping]] = ..., fault: _Optional[_Union[Fault, _Mapping]] = ..., run: _Optional[_Union[RunEvent, _Mapping]] = ..., trigger_fired: _Optional[_Union[TriggerFired, _Mapping]] = ..., trigger_disarmed: _Optional[_Union[TriggerDisarmed, _Mapping]] = ..., reset: _Optional[_Union[ResetMark, _Mapping]] = ..., life: _Optional[_Union[LifeMark, _Mapping]] = ..., flash: _Optional[_Union[FlashMark, _Mapping]] = ..., interrupt: _Optional[_Union[InterruptEvent, _Mapping]] = ..., dma: _Optional[_Union[DmaEvent, _Mapping]] = ..., chain: _Optional[_Union[ChainFire, _Mapping]] = ...) -> None: ...
+    task: TaskSwitch
+    def __init__(self, event_seq: _Optional[int] = ..., sim_us: _Optional[int] = ..., sample: _Optional[_Union[Sample, _Mapping]] = ..., pin: _Optional[_Union[PinChange, _Mapping]] = ..., exchange: _Optional[_Union[Exchange, _Mapping]] = ..., call: _Optional[_Union[Call, _Mapping]] = ..., command: _Optional[_Union[CommandApplied, _Mapping]] = ..., job: _Optional[_Union[JobEvent, _Mapping]] = ..., fault: _Optional[_Union[Fault, _Mapping]] = ..., run: _Optional[_Union[RunEvent, _Mapping]] = ..., trigger_fired: _Optional[_Union[TriggerFired, _Mapping]] = ..., trigger_disarmed: _Optional[_Union[TriggerDisarmed, _Mapping]] = ..., reset: _Optional[_Union[ResetMark, _Mapping]] = ..., life: _Optional[_Union[LifeMark, _Mapping]] = ..., flash: _Optional[_Union[FlashMark, _Mapping]] = ..., interrupt: _Optional[_Union[InterruptEvent, _Mapping]] = ..., dma: _Optional[_Union[DmaEvent, _Mapping]] = ..., chain: _Optional[_Union[ChainFire, _Mapping]] = ..., task: _Optional[_Union[TaskSwitch, _Mapping]] = ...) -> None: ...
 
 class ResetMark(_message.Message):
     __slots__ = ("cause", "cause_text", "life", "reason", "jump_target", "text")
@@ -4193,7 +4231,7 @@ class IsrContextRequest(_message.Message):
     def __init__(self, context_id: _Optional[str] = ..., known_revision: _Optional[int] = ...) -> None: ...
 
 class ExecutionContext(_message.Message):
-    __slots__ = ("context_id", "kind", "title", "root_function", "path", "line", "origins", "origin_text", "source_name", "source_id", "priority_text", "functions", "reach_text", "run_text", "critical", "noticeable", "note")
+    __slots__ = ("context_id", "kind", "title", "root_function", "path", "line", "origins", "origin_text", "source_name", "source_id", "priority_text", "functions", "reach_text", "run_text", "critical", "noticeable", "note", "stack_text")
     CONTEXT_ID_FIELD_NUMBER: _ClassVar[int]
     KIND_FIELD_NUMBER: _ClassVar[int]
     TITLE_FIELD_NUMBER: _ClassVar[int]
@@ -4211,6 +4249,7 @@ class ExecutionContext(_message.Message):
     CRITICAL_FIELD_NUMBER: _ClassVar[int]
     NOTICEABLE_FIELD_NUMBER: _ClassVar[int]
     NOTE_FIELD_NUMBER: _ClassVar[int]
+    STACK_TEXT_FIELD_NUMBER: _ClassVar[int]
     context_id: str
     kind: ContextKind
     title: str
@@ -4228,7 +4267,8 @@ class ExecutionContext(_message.Message):
     critical: int
     noticeable: int
     note: str
-    def __init__(self, context_id: _Optional[str] = ..., kind: _Optional[_Union[ContextKind, str]] = ..., title: _Optional[str] = ..., root_function: _Optional[str] = ..., path: _Optional[str] = ..., line: _Optional[int] = ..., origins: _Optional[_Iterable[_Union[IsrOrigin, str]]] = ..., origin_text: _Optional[str] = ..., source_name: _Optional[str] = ..., source_id: _Optional[int] = ..., priority_text: _Optional[str] = ..., functions: _Optional[int] = ..., reach_text: _Optional[str] = ..., run_text: _Optional[str] = ..., critical: _Optional[int] = ..., noticeable: _Optional[int] = ..., note: _Optional[str] = ...) -> None: ...
+    stack_text: str
+    def __init__(self, context_id: _Optional[str] = ..., kind: _Optional[_Union[ContextKind, str]] = ..., title: _Optional[str] = ..., root_function: _Optional[str] = ..., path: _Optional[str] = ..., line: _Optional[int] = ..., origins: _Optional[_Iterable[_Union[IsrOrigin, str]]] = ..., origin_text: _Optional[str] = ..., source_name: _Optional[str] = ..., source_id: _Optional[int] = ..., priority_text: _Optional[str] = ..., functions: _Optional[int] = ..., reach_text: _Optional[str] = ..., run_text: _Optional[str] = ..., critical: _Optional[int] = ..., noticeable: _Optional[int] = ..., note: _Optional[str] = ..., stack_text: _Optional[str] = ...) -> None: ...
 
 class ReachedFunction(_message.Message):
     __slots__ = ("function", "module", "path", "line", "depth", "via", "context_ids", "by_pointer")
@@ -4427,7 +4467,7 @@ class StackPathFrame(_message.Message):
     def __init__(self, function: _Optional[str] = ..., module: _Optional[str] = ..., path: _Optional[str] = ..., line: _Optional[int] = ..., bytes: _Optional[int] = ..., bytes_text: _Optional[str] = ..., bytes_from: _Optional[_Union[FrameBytes, str]] = ..., dynamic: _Optional[bool] = ..., never_ran: _Optional[bool] = ..., by_pointer: _Optional[bool] = ..., note: _Optional[str] = ...) -> None: ...
 
 class StackEntry(_message.Message):
-    __slots__ = ("context_id", "title", "worst_bytes", "worst_text", "bounded", "unbounded_text", "measured_bytes", "measured_text", "worst_path", "measured_path", "gap_text", "kind")
+    __slots__ = ("context_id", "title", "worst_bytes", "worst_text", "bounded", "unbounded_text", "measured_bytes", "measured_text", "worst_path", "measured_path", "gap_text", "kind", "limit_bytes", "limit_text")
     CONTEXT_ID_FIELD_NUMBER: _ClassVar[int]
     TITLE_FIELD_NUMBER: _ClassVar[int]
     WORST_BYTES_FIELD_NUMBER: _ClassVar[int]
@@ -4440,6 +4480,8 @@ class StackEntry(_message.Message):
     MEASURED_PATH_FIELD_NUMBER: _ClassVar[int]
     GAP_TEXT_FIELD_NUMBER: _ClassVar[int]
     KIND_FIELD_NUMBER: _ClassVar[int]
+    LIMIT_BYTES_FIELD_NUMBER: _ClassVar[int]
+    LIMIT_TEXT_FIELD_NUMBER: _ClassVar[int]
     context_id: str
     title: str
     worst_bytes: int
@@ -4452,7 +4494,9 @@ class StackEntry(_message.Message):
     measured_path: _containers.RepeatedCompositeFieldContainer[StackPathFrame]
     gap_text: str
     kind: ContextKind
-    def __init__(self, context_id: _Optional[str] = ..., title: _Optional[str] = ..., worst_bytes: _Optional[int] = ..., worst_text: _Optional[str] = ..., bounded: _Optional[bool] = ..., unbounded_text: _Optional[str] = ..., measured_bytes: _Optional[int] = ..., measured_text: _Optional[str] = ..., worst_path: _Optional[_Iterable[_Union[StackPathFrame, _Mapping]]] = ..., measured_path: _Optional[_Iterable[_Union[StackPathFrame, _Mapping]]] = ..., gap_text: _Optional[str] = ..., kind: _Optional[_Union[ContextKind, str]] = ...) -> None: ...
+    limit_bytes: int
+    limit_text: str
+    def __init__(self, context_id: _Optional[str] = ..., title: _Optional[str] = ..., worst_bytes: _Optional[int] = ..., worst_text: _Optional[str] = ..., bounded: _Optional[bool] = ..., unbounded_text: _Optional[str] = ..., measured_bytes: _Optional[int] = ..., measured_text: _Optional[str] = ..., worst_path: _Optional[_Iterable[_Union[StackPathFrame, _Mapping]]] = ..., measured_path: _Optional[_Iterable[_Union[StackPathFrame, _Mapping]]] = ..., gap_text: _Optional[str] = ..., kind: _Optional[_Union[ContextKind, str]] = ..., limit_bytes: _Optional[int] = ..., limit_text: _Optional[str] = ...) -> None: ...
 
 class StackWorstCaseView(_message.Message):
     __slots__ = ("revision", "unchanged", "progress", "entries", "chosen_id", "worst_bytes_from", "measured_bytes_from", "frames_text", "host_hint", "total_bytes", "total_text", "size_bytes", "size_text", "state_text", "produce_text")
@@ -6255,3 +6299,57 @@ class DbcSignalView(_message.Message):
     minimum: float
     maximum: float
     def __init__(self, name: _Optional[str] = ..., start_bit: _Optional[int] = ..., length: _Optional[int] = ..., big_endian: _Optional[bool] = ..., is_signed: _Optional[bool] = ..., scale: _Optional[float] = ..., offset: _Optional[float] = ..., unit: _Optional[str] = ..., minimum: _Optional[float] = ..., maximum: _Optional[float] = ...) -> None: ...
+
+class TaskSwitch(_message.Message):
+    __slots__ = ("from_context", "from_name", "to_context", "to_name", "reason")
+    FROM_CONTEXT_FIELD_NUMBER: _ClassVar[int]
+    FROM_NAME_FIELD_NUMBER: _ClassVar[int]
+    TO_CONTEXT_FIELD_NUMBER: _ClassVar[int]
+    TO_NAME_FIELD_NUMBER: _ClassVar[int]
+    REASON_FIELD_NUMBER: _ClassVar[int]
+    from_context: int
+    from_name: str
+    to_context: int
+    to_name: str
+    reason: SwitchReason
+    def __init__(self, from_context: _Optional[int] = ..., from_name: _Optional[str] = ..., to_context: _Optional[int] = ..., to_name: _Optional[str] = ..., reason: _Optional[_Union[SwitchReason, str]] = ...) -> None: ...
+
+class TaskView(_message.Message):
+    __slots__ = ("context_id", "name", "state", "state_text", "priority", "priority_text", "stack_words", "stack_text", "entry", "switched_in", "run_text", "host_stack_bytes", "host_deepest_bytes", "host_stack_text")
+    CONTEXT_ID_FIELD_NUMBER: _ClassVar[int]
+    NAME_FIELD_NUMBER: _ClassVar[int]
+    STATE_FIELD_NUMBER: _ClassVar[int]
+    STATE_TEXT_FIELD_NUMBER: _ClassVar[int]
+    PRIORITY_FIELD_NUMBER: _ClassVar[int]
+    PRIORITY_TEXT_FIELD_NUMBER: _ClassVar[int]
+    STACK_WORDS_FIELD_NUMBER: _ClassVar[int]
+    STACK_TEXT_FIELD_NUMBER: _ClassVar[int]
+    ENTRY_FIELD_NUMBER: _ClassVar[int]
+    SWITCHED_IN_FIELD_NUMBER: _ClassVar[int]
+    RUN_TEXT_FIELD_NUMBER: _ClassVar[int]
+    HOST_STACK_BYTES_FIELD_NUMBER: _ClassVar[int]
+    HOST_DEEPEST_BYTES_FIELD_NUMBER: _ClassVar[int]
+    HOST_STACK_TEXT_FIELD_NUMBER: _ClassVar[int]
+    context_id: int
+    name: str
+    state: TaskState
+    state_text: str
+    priority: int
+    priority_text: str
+    stack_words: int
+    stack_text: str
+    entry: CodePlace
+    switched_in: int
+    run_text: str
+    host_stack_bytes: int
+    host_deepest_bytes: int
+    host_stack_text: str
+    def __init__(self, context_id: _Optional[int] = ..., name: _Optional[str] = ..., state: _Optional[_Union[TaskState, str]] = ..., state_text: _Optional[str] = ..., priority: _Optional[int] = ..., priority_text: _Optional[str] = ..., stack_words: _Optional[int] = ..., stack_text: _Optional[str] = ..., entry: _Optional[_Union[CodePlace, _Mapping]] = ..., switched_in: _Optional[int] = ..., run_text: _Optional[str] = ..., host_stack_bytes: _Optional[int] = ..., host_deepest_bytes: _Optional[int] = ..., host_stack_text: _Optional[str] = ...) -> None: ...
+
+class TaskList(_message.Message):
+    __slots__ = ("tasks", "state_text")
+    TASKS_FIELD_NUMBER: _ClassVar[int]
+    STATE_TEXT_FIELD_NUMBER: _ClassVar[int]
+    tasks: _containers.RepeatedCompositeFieldContainer[TaskView]
+    state_text: str
+    def __init__(self, tasks: _Optional[_Iterable[_Union[TaskView, _Mapping]]] = ..., state_text: _Optional[str] = ...) -> None: ...

@@ -526,6 +526,7 @@ enum EventKind {
   EVENT_KIND_DMA = 13;       // a DMA transfer started, reached its half or end, overran, was touched (DmaEvent)
   // 14 is kept for the watchdog's history (WatchdogMark), not served yet.
   EVENT_KIND_CHAIN = 15;     // a block of a chain fired, acted, stepped, ended, failed (ChainFire)
+  EVENT_KIND_TASK = 16;      // an RTOS switched from one task to another (TaskSwitch)
 }
 
 message EventBatch {
@@ -580,6 +581,7 @@ message Event {
     DmaEvent dma = 18;
     // 19 is kept for the watchdog's history (WatchdogMark).
     ChainFire chain = 20;
+    TaskSwitch task = 21;
   }
   // 13 is the simulation's record of a call between lifelines, which the
   // server keeps for ObserveSequence and does not serve as a body.
@@ -1298,6 +1300,11 @@ service Inspector {
   // The guard over a running receive buffer is on only with the licence
   // (RUN_FINDINGS) and CAPABILITY_DMA_GUARD; without it `guard` is LOCKED.
   rpc ObserveDma(Empty) returns (DmaReport);
+  // The tasks of an RTOS the firmware runs (looper_context.h of
+  // looper-rt-contracts), as its port lists them, with what the runtime
+  // measured of each task's context. Empty, with state_text, in a firmware
+  // without an RTOS port. Every switch between tasks is a TaskSwitch event.
+  rpc ObserveTasks(Empty) returns (TaskList);
 
   // ---- Architecture (CAPABILITY_ARCHITECTURE) ----
   // Read from the project's code index, which the server builds in the
@@ -2950,6 +2957,7 @@ enum ContextKind {
   CONTEXT_KIND_MAIN = 0;
   CONTEXT_KIND_ISR = 1;
   CONTEXT_KIND_STARTUP = 2;
+  CONTEXT_KIND_TASK = 3;         // a task of an RTOS: the function handed to xTaskCreate
 }
 
 // Where an ISR root was found.
@@ -2967,7 +2975,7 @@ message IsrContextRequest {
 }
 
 message ExecutionContext {
-  string context_id = 1;         // "main", "startup", "isr/TIM2", "isr/EXTI1_IRQHandler"
+  string context_id = 1;         // "main", "startup", "task/producer", "isr/TIM2", "isr/EXTI1_IRQHandler"
   ContextKind kind = 2;
   string title = 3;              // "Main loop", "ISR TIM2"
   string root_function = 4;
@@ -2984,6 +2992,9 @@ message ExecutionContext {
   uint32 critical = 15;
   uint32 noticeable = 16;
   string note = 17;              // "calls through a pointer: reach may be larger"
+  // A task's stack as the creating call gives it: "128 words (xTaskCreate)";
+  // "" for any other context, and for a task whose stack is no constant.
+  string stack_text = 18;
 }
 
 message ReachedFunction {
@@ -3117,6 +3128,10 @@ message StackEntry {
   repeated StackPathFrame measured_path = 10;  // only of the chosen entry
   string gap_text = 11;          // "The deepest static path never ran – a test is missing."
   ContextKind kind = 12;
+  // A task's stack, as it is created: the bytes and "512 B · task stack";
+  // 0 and "" for any other context, and when the bytes are not known.
+  uint64 limit_bytes = 13;
+  string limit_text = 14;
 }
 
 message StackWorstCaseView {
@@ -4312,4 +4327,62 @@ message DbcSignalView {
   string unit = 8;
   optional double minimum = 9;   // absent: the DBC gives no range
   optional double maximum = 10;
+}
+
+// ---- Tasks of an RTOS ----
+
+// Why the RTOS switched, as its port says (looper_switch_reason_t).
+enum SwitchReason {
+  SWITCH_REASON_UNSPECIFIED = 0;
+  SWITCH_REASON_YIELD = 1;       // the task gave way and stays ready
+  SWITCH_REASON_BLOCK = 2;       // the task waits: a delay, a queue, a semaphore
+  SWITCH_REASON_TICK = 3;        // the tick made another task due
+  SWITCH_REASON_ISR = 4;         // an ISR made another task due
+  SWITCH_REASON_RACE = 5;        // the race mode forced it
+  SWITCH_REASON_START = 6;       // the scheduler started: into the first task
+}
+
+// One switch at Event.sim_us: from_context stops, to_context runs. Contexts
+// are numbered as TaskView.context_id; 0 is the firmware's start before the
+// scheduler ran. The simulation's own record, passed on as it came.
+message TaskSwitch {
+  uint32 from_context = 1;
+  string from_name = 2;
+  uint32 to_context = 3;
+  string to_name = 4;
+  SwitchReason reason = 5;
+}
+
+// What a task is doing, as the port's scheduler says.
+enum TaskState {
+  TASK_STATE_UNSPECIFIED = 0;
+  TASK_STATE_RUNNING = 1;
+  TASK_STATE_READY = 2;
+  TASK_STATE_BLOCKED = 3;
+  TASK_STATE_SUSPENDED = 4;
+  TASK_STATE_DELETED = 5;
+}
+
+// One task. The stack in words is the firmware's (the target's); the host
+// stack is this PC's context, measured at the points the runtime saw.
+message TaskView {
+  uint32 context_id = 1;         // as TaskSwitch names it
+  string name = 2;
+  TaskState state = 3;
+  string state_text = 4;         // "running", "blocked"
+  uint32 priority = 5;
+  string priority_text = 6;      // "priority 1"
+  uint32 stack_words = 7;        // 0 unknown
+  string stack_text = 8;         // "128 words", "" unknown
+  CodePlace entry = 9;           // the entry function; empty when the debug information does not name it
+  uint64 switched_in = 10;
+  string run_text = 11;          // "ran 41 times"
+  uint64 host_stack_bytes = 12;
+  uint64 host_deepest_bytes = 13;
+  string host_stack_text = 14;   // "host stack 3 136 B deepest of 262 144 B"
+}
+
+message TaskList {
+  repeated TaskView tasks = 1;   // in the port's order
+  string state_text = 2;         // the empty state, else ""
 }
