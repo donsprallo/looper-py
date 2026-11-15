@@ -48,6 +48,7 @@ from looper.domain.model import (
     Profile,
     RunStatus,
 )
+from looper.domain.model.event_recording import EventRecording
 
 MICROSECONDS_PER_SECOND = 1_000_000
 
@@ -73,6 +74,7 @@ class Expectations:
         self._reads_run_findings = False
         self._reads_dma = False
         self._reads_chains = False
+        self._recorded_sources: list[str] = []
 
     def add(self, check: Check) -> Expectations:
         """Take one more expectation, and allow another to be chained."""
@@ -132,6 +134,11 @@ class Expectations:
         """Have the window read the run's findings and sources at its end (Pro)."""
         self._reads_run_findings = True
 
+    def records(self, source: str) -> None:
+        """Have the window record a source's ISRs, which the server records only when asked."""
+        if source not in self._recorded_sources:
+            self._recorded_sources.append(source)
+
     def reads_dma(self) -> None:
         """Have the window read the DMA channels at its end, with the findings."""
         self._reads_dma = True
@@ -183,6 +190,10 @@ class Expectations:
         before = self._inspector.run_state()
         if before.hold_reason:
             raise SimulationRefusedError(before.hold_reason)
+        if self._recorded_sources:
+            # At least in summary, so that nothing another client records is taken away.
+            wanted = dict.fromkeys(self._recorded_sources, "summary")
+            self._inspector.set_event_recording(EventRecording(interrupts=wanted, at_least=True))
         self._inspector.clear_recordings(before.epoch)
         self._inspector.clear_measurements()
         return self._inspector.run_state()

@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+
 from looper.domain.model.dma import DmaChannel, DmaChannels
+from looper.domain.model.event_recording import EventRecording
 from looper.domain.model.interrupt_facts import InterruptMark, RunFindingReading
 from looper.domain.model.interrupts import InterruptLock, Interrupts, InterruptSource
 from looper.domain.model.race import RaceCoverage
@@ -63,18 +66,57 @@ SEVERITIES = {
 
 
 def marks_of(message: contract.EventBatch) -> tuple[InterruptMark, ...]:
-    """The interrupt events of a page."""
+    """The interrupt events of a page; an ISR recorded in summary is its entry and its leaving."""
     return tuple(
-        InterruptMark(
-            sim_us=one.sim_us,
-            source_id=one.interrupt.source_id,
-            kind=EVENT_KINDS.get(one.interrupt.kind, "pending"),
-            latency_us=one.interrupt.latency_us,
-            duration_us=one.interrupt.duration_us,
-            by_race=one.interrupt.by_race,
+        mark for one in message.events if one.HasField("interrupt") for mark in _marks_of(one)
+    )
+
+
+def _marks_of(event: contract.Event) -> tuple[InterruptMark, ...]:
+    """One mark, or the entry and the leaving an ISR in summary stands for."""
+    interrupt = event.interrupt
+
+    def mark(kind: str, sim_us: int) -> InterruptMark:
+        return InterruptMark(
+            sim_us=sim_us,
+            source_id=interrupt.source_id,
+            kind=kind,
+            latency_us=interrupt.latency_us,
+            duration_us=interrupt.duration_us,
+            by_race=interrupt.by_race,
         )
-        for one in message.events
-        if one.HasField("interrupt")
+
+    if interrupt.kind == contract.INTERRUPT_EVENT_RAN:
+        return (
+            mark("entered", max(0, event.sim_us - interrupt.duration_us)),
+            mark("left", event.sim_us),
+        )
+    return (mark(EVENT_KINDS.get(interrupt.kind, "pending"), event.sim_us),)
+
+
+#: The contract's words for the modes of recording.
+RECORDING_MODES = {
+    "off": contract.EVENT_RECORDING_OFF,
+    "summary": contract.EVENT_RECORDING_SUMMARY,
+    "detailed": contract.EVENT_RECORDING_DETAILED,
+}
+
+
+def recording_request(recording: EventRecording) -> contract.EventRecordingRequest:
+    """What to record, as the contract asks it."""
+
+    def choices(named: Mapping[str, str]) -> list[contract.EventRecordingChoice]:
+        return [
+            contract.EventRecordingChoice(name=name, mode=RECORDING_MODES[mode])
+            for name, mode in named.items()
+        ]
+
+    return contract.EventRecordingRequest(
+        sources=choices(recording.interrupts),
+        channels=choices(recording.dma),
+        interrupt_ring=recording.interrupt_ring,
+        dma_ring=recording.dma_ring,
+        at_least=recording.at_least,
     )
 
 

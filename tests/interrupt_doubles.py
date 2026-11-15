@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from looper.application.ports import ProFeatureLockedError, SimulationRefusedError
 from looper.domain.model.dma import DmaChannel, DmaChannels
+from looper.domain.model.event_recording import EventRecording
 from looper.domain.model.interrupt_facts import RunFindingReading
 from looper.domain.model.interrupts import Interrupts, InterruptSource
 from looper.domain.model.race import RaceCoverage
@@ -25,6 +26,7 @@ class ScriptedInterrupts:
         self.findings_locked = False
         self.dma_report = DmaChannels(channels=(RX,), installed=True)
         self.races: list[tuple[bool, int]] = []
+        self.recordings: list[EventRecording] = []
 
     def read_interrupts(self) -> Interrupts:
         return self.interrupt_report
@@ -52,3 +54,6 @@ class ScriptedInterrupts:
         if all(source.source_id != source_id for source in self.interrupt_report.sources):
             raise SimulationRefusedError(f"there is no interrupt source {source_id}")
         self.raised.append((source_id, after_us))
+
+    def set_event_recording(self, recording: EventRecording) -> None:
+        self.recordings.append(recording)

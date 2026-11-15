@@ -7,6 +7,7 @@ import pytest
 from doubles import ScriptedInspector
 from looper.application.ports import ProFeatureLockedError
 from looper.application.simulation import Simulation
+from looper.domain.model.event_recording import EventRecording
 from looper.domain.model.interrupt_facts import RunFindingReading
 
 
@@ -116,3 +117,30 @@ def test_the_interrupt_dma_and_race_readings_are_part_of_the_package() -> None:
 
     assert exported <= set(looper.__all__)
     assert all(hasattr(looper, name) for name in exported)
+
+
+def test_a_check_of_a_source_asks_for_its_isrs_at_least_in_summary_before_its_window() -> None:
+    simulation, inspector = _simulation()
+    check = simulation.expect()
+    check.interrupt("TIM2").handled_at_least(1)
+    check.interrupt("TIM2").never_lost()
+
+    check.evaluate(for_seconds=0.01)
+
+    assert inspector.recordings == [EventRecording(interrupts={"TIM2": "summary"}, at_least=True)]
+
+
+def test_what_is_recorded_is_said_by_name_and_a_mode_that_is_none_is_refused() -> None:
+    simulation, inspector = _simulation()
+
+    simulation.record_events(
+        {"*": "summary", "TIM2": "detailed"}, {"USART2_RX": "off"}, dma_ring=4096
+    )
+
+    assert inspector.recordings == [
+        EventRecording(
+            interrupts={"*": "summary", "TIM2": "detailed"}, dma={"USART2_RX": "off"}, dma_ring=4096
+        )
+    ]
+    with pytest.raises(ValueError, match="off, summary and detailed"):
+        simulation.record_events({"TIM2": "all"})

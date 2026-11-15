@@ -641,6 +641,10 @@ enum InterruptEventKind {
   INTERRUPT_EVENT_LOST = 3;    // due again while its pending bit was set
   INTERRUPT_EVENT_LOCKED = 4;  // a section of the global lock ended, from 1 us
   INTERRUPT_EVENT_STORM = 5;   // entered too often at one time: its line is shut
+  // An ISR recorded in summary (EventRecordingMode SUMMARY): one event where
+  // it left, with the cause, latency_us, duration_us, host_ns, point and
+  // by_race of the PENDING, ENTERED and LEFT it stands for.
+  INTERRUPT_EVENT_RAN = 6;
 }
 
 // A DMA channel did something, at Event.sim_us. The numbers are the
@@ -660,7 +664,7 @@ message DmaEvent {
   bool write = 9;              // ACCESS: a write, not a read
   uint64 pc = 10;              // ACCESS: the firmware's instruction
   uint64 access_address = 11;  // ACCESS: what it touched
-  uint64 count = 12;           // UNCLAIMED: bytes nobody took; IDLE: the count the ISR is given
+  uint64 count = 12;           // UNCLAIMED: bytes nobody took; IDLE: the count the ISR is given; OVERRUN: overruns so far
   bool on_stack = 13;          // START: the buffer is on the stack
   DmaGuardOff reason = 14;     // GUARD_OFF
   CodePlace place = 15;        // ACCESS: pc as a place in the code, where the server resolves it; not in the stream
@@ -1251,6 +1255,14 @@ service Inspector {
   // that is not `is_raisable`, or one before the table is installed, is
   // refused with REFUSAL_NOT_ACCEPTED and a sentence.
   rpc RaiseInterrupt(InterruptRaise) returns (Ack);
+  // Which interrupt and DMA events the simulation records from now on, in
+  // this life and the ones after; it takes the place of looper.toml's
+  // [interrupts.record] and [dma.record] until the simulation is started
+  // again. Nothing is recorded of a source or channel not named, except its
+  // findings; the counts of ObserveInterrupts and ObserveDma are complete
+  // whatever is recorded. A name contract.toml lacks, or a ring of more than
+  // 1048576 events, is refused with REFUSAL_INVALID and a sentence.
+  rpc SetEventRecording(EventRecordingRequest) returns (Ack);
   // Pro (RUN_FINDINGS): what the run's interrupt and DMA events amount to,
   // judged by the server against looper.toml's limits; without the licence
   // PERMISSION_DENIED with the sentence. A request naming the revision the
@@ -3552,6 +3564,40 @@ message RecordedSequence {
 message InterruptRaise {
   uint32 source_id = 1;
   When when = 2;
+}
+
+// How the events of one interrupt source or DMA channel are recorded.
+enum EventRecordingMode {
+  // Only its findings and what they are judged by: a storm; a transfer's
+  // start, an overrun, an access the guard caught, bytes nobody took, the
+  // guard going off. Overruns and bytes nobody took come at most once a
+  // simulated second, with how many so far, unless the channel is DETAILED.
+  EVENT_RECORDING_OFF = 0;
+  // An ISR as one event (INTERRUPT_EVENT_RAN) and its losses; a channel's
+  // end of each lap, idle and stop, without its halves.
+  EVENT_RECORDING_SUMMARY = 1;
+  // Every event: pending, entered and left; a channel's halves too.
+  EVENT_RECORDING_DETAILED = 2;
+}
+
+// A source or channel as contract.toml names it, or its number; "*" names
+// every one not named otherwise.
+message EventRecordingChoice {
+  string name = 1;
+  EventRecordingMode mode = 2;
+}
+
+// The whole recording; it replaces the one before, which is looper.toml's
+// until a client asks. A ring size of 0 keeps the one before.
+message EventRecordingRequest {
+  repeated EventRecordingChoice sources = 1;
+  repeated EventRecordingChoice channels = 2;
+  uint32 interrupt_ring = 3;
+  uint32 dma_ring = 4;
+  // Raise the named ones to at least their mode and keep everything else as
+  // it is, in place of replacing the recording: what a check of one source
+  // asks, so that it takes nothing away from another client.
+  bool at_least = 5;
 }
 
 // One interrupt source and what it did in this life. Every text is the

@@ -9,6 +9,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 
 from looper.domain.model.dma import DmaChannels
+from looper.domain.model.event_recording import EventRecording
 from looper.domain.model.interrupt_facts import RunFindingReading
 from looper.domain.model.interrupts import Interrupts
 from looper.domain.model.race import RaceCoverage
@@ -49,6 +50,15 @@ class InterruptInspector(ABC):
         Raises:
             ProFeatureLockedError: Without a licence for run findings.
         """
+
+    def set_event_recording(self, recording: EventRecording) -> None:
+        """Record the interrupt and DMA events as asked; nothing is recorded of what is not named.
+
+        Raises:
+            SimulationRefusedError: If the server refuses it: a name
+                contract.toml does not list, or a ring too large.
+        """
+        raise NotImplementedError
 
     @abstractmethod
     def read_race(self) -> RaceCoverage:

@@ -127,6 +127,7 @@ class InterruptEventKind(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     INTERRUPT_EVENT_LOST: _ClassVar[InterruptEventKind]
     INTERRUPT_EVENT_LOCKED: _ClassVar[InterruptEventKind]
     INTERRUPT_EVENT_STORM: _ClassVar[InterruptEventKind]
+    INTERRUPT_EVENT_RAN: _ClassVar[InterruptEventKind]
 
 class DmaEventKind(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     __slots__ = ()
@@ -411,6 +412,12 @@ class MessageKind(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     MESSAGE_KIND_HAL: _ClassVar[MessageKind]
     MESSAGE_KIND_BUS: _ClassVar[MessageKind]
 
+class EventRecordingMode(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+    __slots__ = ()
+    EVENT_RECORDING_OFF: _ClassVar[EventRecordingMode]
+    EVENT_RECORDING_SUMMARY: _ClassVar[EventRecordingMode]
+    EVENT_RECORDING_DETAILED: _ClassVar[EventRecordingMode]
+
 class DmaGuard(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     __slots__ = ()
     DMA_GUARD_OFF: _ClassVar[DmaGuard]
@@ -507,6 +514,7 @@ INTERRUPT_EVENT_LEFT: InterruptEventKind
 INTERRUPT_EVENT_LOST: InterruptEventKind
 INTERRUPT_EVENT_LOCKED: InterruptEventKind
 INTERRUPT_EVENT_STORM: InterruptEventKind
+INTERRUPT_EVENT_RAN: InterruptEventKind
 DMA_EVENT_START: DmaEventKind
 DMA_EVENT_HALF: DmaEventKind
 DMA_EVENT_COMPLETE: DmaEventKind
@@ -676,6 +684,9 @@ MESSAGE_KIND_RETURN: MessageKind
 MESSAGE_KIND_FOUND: MessageKind
 MESSAGE_KIND_HAL: MessageKind
 MESSAGE_KIND_BUS: MessageKind
+EVENT_RECORDING_OFF: EventRecordingMode
+EVENT_RECORDING_SUMMARY: EventRecordingMode
+EVENT_RECORDING_DETAILED: EventRecordingMode
 DMA_GUARD_OFF: DmaGuard
 DMA_GUARD_PRECISE: DmaGuard
 DMA_GUARD_COARSE: DmaGuard
@@ -5127,6 +5138,28 @@ class InterruptRaise(_message.Message):
     source_id: int
     when: When
     def __init__(self, source_id: _Optional[int] = ..., when: _Optional[_Union[When, _Mapping]] = ...) -> None: ...
+
+class EventRecordingChoice(_message.Message):
+    __slots__ = ("name", "mode")
+    NAME_FIELD_NUMBER: _ClassVar[int]
+    MODE_FIELD_NUMBER: _ClassVar[int]
+    name: str
+    mode: EventRecordingMode
+    def __init__(self, name: _Optional[str] = ..., mode: _Optional[_Union[EventRecordingMode, str]] = ...) -> None: ...
+
+class EventRecordingRequest(_message.Message):
+    __slots__ = ("sources", "channels", "interrupt_ring", "dma_ring", "at_least")
+    SOURCES_FIELD_NUMBER: _ClassVar[int]
+    CHANNELS_FIELD_NUMBER: _ClassVar[int]
+    INTERRUPT_RING_FIELD_NUMBER: _ClassVar[int]
+    DMA_RING_FIELD_NUMBER: _ClassVar[int]
+    AT_LEAST_FIELD_NUMBER: _ClassVar[int]
+    sources: _containers.RepeatedCompositeFieldContainer[EventRecordingChoice]
+    channels: _containers.RepeatedCompositeFieldContainer[EventRecordingChoice]
+    interrupt_ring: int
+    dma_ring: int
+    at_least: bool
+    def __init__(self, sources: _Optional[_Iterable[_Union[EventRecordingChoice, _Mapping]]] = ..., channels: _Optional[_Iterable[_Union[EventRecordingChoice, _Mapping]]] = ..., interrupt_ring: _Optional[int] = ..., dma_ring: _Optional[int] = ..., at_least: _Optional[bool] = ...) -> None: ...
 
 class InterruptSourceView(_message.Message):
     __slots__ = ("source_id", "name", "kind_text", "line", "priority", "enabled", "pending", "handler", "raised", "handled", "lost", "latency_max_us", "latency_text", "duration_max_us", "duration_text", "host_text", "period_us", "is_raisable", "raised_by_race", "state_text", "latency_mean_us", "duration_mean_us")

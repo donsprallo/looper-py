@@ -52,6 +52,7 @@ from looper.domain.model.chain_blocks import ChainBlockState
 from looper.domain.model.chain_runs import ChainExport, ChainRun
 from looper.domain.model.dbc import DbcFile
 from looper.domain.model.dma import DmaChannels
+from looper.domain.model.event_recording import EventRecording
 from looper.domain.model.interrupts import Interrupts
 
 
@@ -605,6 +606,46 @@ class Simulation:
         """
         source_id = self._inspector.read_interrupts().source(source).source_id
         self._inspector.raise_interrupt(source_id, after_us)
+
+    def record_events(
+        self,
+        interrupts: Mapping[str, str] | None = None,
+        dma: Mapping[str, str] | None = None,
+        *,
+        interrupt_ring: int = 0,
+        dma_ring: int = 0,
+    ) -> None:
+        """Say which interrupt and DMA events go into the stream, in place of looper.toml's.
+
+        Nothing of a source or channel is recorded unless it is named, so
+        that a source at bus speed does not flood the stream; its counts are
+        kept anyway. A check of a source (`expect().interrupt(...)`) asks for
+        what it needs itself.
+
+        Args:
+            interrupts: A source's name in contract.toml (or ``"*"`` for the
+                rest) and ``"off"``, ``"summary"`` (one event per ISR) or
+                ``"detailed"`` (pending, entered and left).
+            dma: A channel's name (or ``"*"``) and its mode; ``"summary"``
+                leaves out the halves.
+            interrupt_ring: Events the interrupt ring holds; 0 keeps it.
+            dma_ring: Events the DMA ring holds; 0 keeps it.
+
+        Raises:
+            ValueError: If a mode is none of the three.
+            SimulationRefusedError: If the server refuses it: a name
+                contract.toml does not list, or a ring above 1048576 events.
+
+        Example:
+            simulation.record_events({"*": "summary", "SPI1_RX_TC": "off"}, {"SPI1_RX": "summary"})
+        """
+        recording = EventRecording(
+            interrupts=dict(interrupts or {}),
+            dma=dict(dma or {}),
+            interrupt_ring=interrupt_ring,
+            dma_ring=dma_ring,
+        )
+        self._inspector.set_event_recording(recording)
 
     def retained(self) -> Retained:
         """The retained memory, which survives a reset."""

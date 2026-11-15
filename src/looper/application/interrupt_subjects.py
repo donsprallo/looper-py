@@ -39,6 +39,7 @@ class InterruptExpectation:
         self._expectations = expectations
         self._source = source
         expectations.reads_run_findings()
+        expectations.records(source)
 
     def latency_below(self, amount: float, unit: str = "us") -> Expectations:
         """Expect every ISR of the source to start less than this after it fell due."""

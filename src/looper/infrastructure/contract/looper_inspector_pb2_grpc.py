@@ -394,6 +394,11 @@ class InspectorStub:
                 request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.InterruptRaise.SerializeToString,
                 response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Ack.FromString,
                 _registered_method=True)
+        self.SetEventRecording = channel.unary_unary(
+                '/looper.inspector.v3.Inspector/SetEventRecording',
+                request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.EventRecordingRequest.SerializeToString,
+                response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Ack.FromString,
+                _registered_method=True)
         self.ObserveRunFindings = channel.unary_unary(
                 '/looper.inspector.v3.Inspector/ObserveRunFindings',
                 request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.RunFindingFilter.SerializeToString,
@@ -1051,6 +1056,19 @@ class InspectorServicer:
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def SetEventRecording(self, request, context):
+        """Which interrupt and DMA events the simulation records from now on, in
+        this life and the ones after; it takes the place of looper.toml's
+        [interrupts.record] and [dma.record] until the simulation is started
+        again. Nothing is recorded of a source or channel not named, except its
+        findings; the counts of ObserveInterrupts and ObserveDma are complete
+        whatever is recorded. A name contract.toml lacks, or a ring of more than
+        1048576 events, is refused with REFUSAL_INVALID and a sentence.
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
     def ObserveRunFindings(self, request, context):
         """Pro (RUN_FINDINGS): what the run's interrupt and DMA events amount to,
         judged by the server against looper.toml's limits; without the licence
@@ -1634,6 +1652,11 @@ def add_InspectorServicer_to_server(servicer, server):
             'RaiseInterrupt': grpc.unary_unary_rpc_method_handler(
                     servicer.RaiseInterrupt,
                     request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.InterruptRaise.FromString,
+                    response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Ack.SerializeToString,
+            ),
+            'SetEventRecording': grpc.unary_unary_rpc_method_handler(
+                    servicer.SetEventRecording,
+                    request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.EventRecordingRequest.FromString,
                     response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Ack.SerializeToString,
             ),
             'ObserveRunFindings': grpc.unary_unary_rpc_method_handler(
@@ -3710,6 +3733,33 @@ class Inspector:
             target,
             '/looper.inspector.v3.Inspector/RaiseInterrupt',
             looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.InterruptRaise.SerializeToString,
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Ack.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def SetEventRecording(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/looper.inspector.v3.Inspector/SetEventRecording',
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.EventRecordingRequest.SerializeToString,
             looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Ack.FromString,
             options,
             channel_credentials,

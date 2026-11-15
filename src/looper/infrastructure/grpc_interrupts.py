@@ -12,6 +12,7 @@ from typing import Any
 
 from looper.application.interrupt_port import InterruptInspector
 from looper.domain.model.dma import DmaChannels
+from looper.domain.model.event_recording import EventRecording
 from looper.domain.model.interrupt_facts import RunFindingReading
 from looper.domain.model.interrupts import Interrupts
 from looper.domain.model.race import RaceCoverage
@@ -53,6 +54,11 @@ class GrpcInterruptCalls(InterruptInspector):
         """Switch the race mode."""
         request = contract.RaceRequest(on=on, source_id=source_id)
         return interrupt_translation.race_of(self._call(self._stub.SetRaceMode, request))
+
+    def set_event_recording(self, recording: EventRecording) -> None:
+        """Record as asked."""
+        request = interrupt_translation.recording_request(recording)
+        self._taken(self._call(self._stub.SetEventRecording, request))
 
     def read_race(self) -> RaceCoverage:
         """What the race mode did."""
