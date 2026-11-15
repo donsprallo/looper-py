@@ -1256,9 +1256,9 @@ service Inspector {
   // refused with REFUSAL_NOT_ACCEPTED and a sentence.
   rpc RaiseInterrupt(InterruptRaise) returns (Ack);
   // Which interrupt and DMA events the simulation records from now on, in
-  // this life and the ones after; it takes the place of looper.toml's
-  // [interrupts.record] and [dma.record] until the simulation is started
-  // again. Nothing is recorded of a source or channel not named, except its
+  // this life and the ones after, until the simulation is started again.
+  // Without a holder it takes the place of looper.toml's [interrupts.record]
+  // and [dma.record]; with one it is that client's wish on top of them. Nothing is recorded of a source or channel not named, except its
   // findings; the counts of ObserveInterrupts and ObserveDma are complete
   // whatever is recorded. A name contract.toml lacks, or a ring of more than
   // 1048576 events, is refused with REFUSAL_INVALID and a sentence.
@@ -3598,6 +3598,13 @@ message EventRecordingRequest {
   // it is, in place of replacing the recording: what a check of one source
   // asks, so that it takes nothing away from another client.
   bool at_least = 5;
+  // A client's own wish, under a name of its choosing (a window, a test):
+  // it replaces what this holder asked before, and a request with nothing
+  // in it withdraws it. What is recorded is the ground -- looper.toml's, or
+  // what a request without a holder set -- raised by every holder's wish,
+  // so a client lowers again what it raised and nothing another asked for.
+  // `at_least` does not apply to a holder's wish.
+  string holder = 6;
 }
 
 // One interrupt source and what it did in this life. Every text is the

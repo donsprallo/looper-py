@@ -1058,9 +1058,9 @@ class InspectorServicer:
 
     def SetEventRecording(self, request, context):
         """Which interrupt and DMA events the simulation records from now on, in
-        this life and the ones after; it takes the place of looper.toml's
-        [interrupts.record] and [dma.record] until the simulation is started
-        again. Nothing is recorded of a source or channel not named, except its
+        this life and the ones after, until the simulation is started again.
+        Without a holder it takes the place of looper.toml's [interrupts.record]
+        and [dma.record]; with one it is that client's wish on top of them. Nothing is recorded of a source or channel not named, except its
         findings; the counts of ObserveInterrupts and ObserveDma are complete
         whatever is recorded. A name contract.toml lacks, or a ring of more than
         1048576 events, is refused with REFUSAL_INVALID and a sentence.

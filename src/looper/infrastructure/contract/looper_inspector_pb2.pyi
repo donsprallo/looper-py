@@ -5148,18 +5148,20 @@ class EventRecordingChoice(_message.Message):
     def __init__(self, name: _Optional[str] = ..., mode: _Optional[_Union[EventRecordingMode, str]] = ...) -> None: ...
 
 class EventRecordingRequest(_message.Message):
-    __slots__ = ("sources", "channels", "interrupt_ring", "dma_ring", "at_least")
+    __slots__ = ("sources", "channels", "interrupt_ring", "dma_ring", "at_least", "holder")
     SOURCES_FIELD_NUMBER: _ClassVar[int]
     CHANNELS_FIELD_NUMBER: _ClassVar[int]
     INTERRUPT_RING_FIELD_NUMBER: _ClassVar[int]
     DMA_RING_FIELD_NUMBER: _ClassVar[int]
     AT_LEAST_FIELD_NUMBER: _ClassVar[int]
+    HOLDER_FIELD_NUMBER: _ClassVar[int]
     sources: _containers.RepeatedCompositeFieldContainer[EventRecordingChoice]
     channels: _containers.RepeatedCompositeFieldContainer[EventRecordingChoice]
     interrupt_ring: int
     dma_ring: int
     at_least: bool
-    def __init__(self, sources: _Optional[_Iterable[_Union[EventRecordingChoice, _Mapping]]] = ..., channels: _Optional[_Iterable[_Union[EventRecordingChoice, _Mapping]]] = ..., interrupt_ring: _Optional[int] = ..., dma_ring: _Optional[int] = ..., at_least: _Optional[bool] = ...) -> None: ...
+    holder: str
+    def __init__(self, sources: _Optional[_Iterable[_Union[EventRecordingChoice, _Mapping]]] = ..., channels: _Optional[_Iterable[_Union[EventRecordingChoice, _Mapping]]] = ..., interrupt_ring: _Optional[int] = ..., dma_ring: _Optional[int] = ..., at_least: _Optional[bool] = ..., holder: _Optional[str] = ...) -> None: ...
 
 class InterruptSourceView(_message.Message):
     __slots__ = ("source_id", "name", "kind_text", "line", "priority", "enabled", "pending", "handler", "raised", "handled", "lost", "latency_max_us", "latency_text", "duration_max_us", "duration_text", "host_text", "period_us", "is_raisable", "raised_by_race", "state_text", "latency_mean_us", "duration_mean_us")
