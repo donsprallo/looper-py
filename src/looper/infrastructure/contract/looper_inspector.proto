@@ -781,7 +781,8 @@ message Call { string function = 1; string peripheral = 2; }
 
 message Exchange {
   // `Event.sim_us` is the end of the exchange, so that events stay ordered.
-  // Instantaneous buses give start_us == end_us.
+  // Instantaneous buses give start_us == end_us. start_us is always given:
+  // 0 is a frame that began with the run, not a start nobody knows.
   uint32 bus_id = 1;
   uint64 start_us = 2;
   uint64 end_us = 3;
