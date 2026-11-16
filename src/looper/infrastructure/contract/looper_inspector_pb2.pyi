@@ -89,6 +89,7 @@ class Capability(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     CAPABILITY_CHAINS: _ClassVar[Capability]
     CAPABILITY_HARDWARE: _ClassVar[Capability]
     CAPABILITY_BUS_WIRES: _ClassVar[Capability]
+    CAPABILITY_LANE_SUMMARY: _ClassVar[Capability]
 
 class ServerMode(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     __slots__ = ()
@@ -475,6 +476,13 @@ class TaskState(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     TASK_STATE_BLOCKED: _ClassVar[TaskState]
     TASK_STATE_SUSPENDED: _ClassVar[TaskState]
     TASK_STATE_DELETED: _ClassVar[TaskState]
+
+class LaneEvent(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+    __slots__ = ()
+    LANE_EVENT_DEFAULT: _ClassVar[LaneEvent]
+    LANE_EVENT_RISING: _ClassVar[LaneEvent]
+    LANE_EVENT_FALLING: _ClassVar[LaneEvent]
+    LANE_EVENT_ANY_EDGE: _ClassVar[LaneEvent]
 CONTRACT_VERSION_UNSPECIFIED: ContractVersion
 CONTRACT_VERSION_CURRENT: ContractVersion
 REFUSAL_NONE: Refusal
@@ -531,6 +539,7 @@ CAPABILITY_DMA_GUARD: Capability
 CAPABILITY_CHAINS: Capability
 CAPABILITY_HARDWARE: Capability
 CAPABILITY_BUS_WIRES: Capability
+CAPABILITY_LANE_SUMMARY: Capability
 SERVER_MODE_SIMULATION: ServerMode
 SERVER_MODE_STATIC: ServerMode
 SERVER_MODE_HARDWARE: ServerMode
@@ -773,6 +782,10 @@ TASK_STATE_READY: TaskState
 TASK_STATE_BLOCKED: TaskState
 TASK_STATE_SUSPENDED: TaskState
 TASK_STATE_DELETED: TaskState
+LANE_EVENT_DEFAULT: LaneEvent
+LANE_EVENT_RISING: LaneEvent
+LANE_EVENT_FALLING: LaneEvent
+LANE_EVENT_ANY_EDGE: LaneEvent
 
 class Empty(_message.Message):
     __slots__ = ()
@@ -6353,3 +6366,77 @@ class TaskList(_message.Message):
     tasks: _containers.RepeatedCompositeFieldContainer[TaskView]
     state_text: str
     def __init__(self, tasks: _Optional[_Iterable[_Union[TaskView, _Mapping]]] = ..., state_text: _Optional[str] = ...) -> None: ...
+
+class LaneSourceRef(_message.Message):
+    __slots__ = ("pin_id", "channel_id", "bus_id", "call_function", "event")
+    PIN_ID_FIELD_NUMBER: _ClassVar[int]
+    CHANNEL_ID_FIELD_NUMBER: _ClassVar[int]
+    BUS_ID_FIELD_NUMBER: _ClassVar[int]
+    CALL_FUNCTION_FIELD_NUMBER: _ClassVar[int]
+    EVENT_FIELD_NUMBER: _ClassVar[int]
+    pin_id: int
+    channel_id: int
+    bus_id: int
+    call_function: str
+    event: LaneEvent
+    def __init__(self, pin_id: _Optional[int] = ..., channel_id: _Optional[int] = ..., bus_id: _Optional[int] = ..., call_function: _Optional[str] = ..., event: _Optional[_Union[LaneEvent, str]] = ...) -> None: ...
+
+class LaneSummaryRequest(_message.Message):
+    __slots__ = ("epoch", "from_us", "to_us", "columns", "lanes")
+    EPOCH_FIELD_NUMBER: _ClassVar[int]
+    FROM_US_FIELD_NUMBER: _ClassVar[int]
+    TO_US_FIELD_NUMBER: _ClassVar[int]
+    COLUMNS_FIELD_NUMBER: _ClassVar[int]
+    LANES_FIELD_NUMBER: _ClassVar[int]
+    epoch: int
+    from_us: int
+    to_us: int
+    columns: int
+    lanes: _containers.RepeatedCompositeFieldContainer[LaneSourceRef]
+    def __init__(self, epoch: _Optional[int] = ..., from_us: _Optional[int] = ..., to_us: _Optional[int] = ..., columns: _Optional[int] = ..., lanes: _Optional[_Iterable[_Union[LaneSourceRef, _Mapping]]] = ...) -> None: ...
+
+class ColumnSummary(_message.Message):
+    __slots__ = ("events", "first_high", "last_high", "glitches", "lowest", "highest", "only_value", "lost", "max_gap_us")
+    EVENTS_FIELD_NUMBER: _ClassVar[int]
+    FIRST_HIGH_FIELD_NUMBER: _ClassVar[int]
+    LAST_HIGH_FIELD_NUMBER: _ClassVar[int]
+    GLITCHES_FIELD_NUMBER: _ClassVar[int]
+    LOWEST_FIELD_NUMBER: _ClassVar[int]
+    HIGHEST_FIELD_NUMBER: _ClassVar[int]
+    ONLY_VALUE_FIELD_NUMBER: _ClassVar[int]
+    LOST_FIELD_NUMBER: _ClassVar[int]
+    MAX_GAP_US_FIELD_NUMBER: _ClassVar[int]
+    events: int
+    first_high: bool
+    last_high: bool
+    glitches: int
+    lowest: float
+    highest: float
+    only_value: float
+    lost: bool
+    max_gap_us: int
+    def __init__(self, events: _Optional[int] = ..., first_high: _Optional[bool] = ..., last_high: _Optional[bool] = ..., glitches: _Optional[int] = ..., lowest: _Optional[float] = ..., highest: _Optional[float] = ..., only_value: _Optional[float] = ..., lost: _Optional[bool] = ..., max_gap_us: _Optional[int] = ...) -> None: ...
+
+class LaneSummary(_message.Message):
+    __slots__ = ("source", "high_before", "columns")
+    SOURCE_FIELD_NUMBER: _ClassVar[int]
+    HIGH_BEFORE_FIELD_NUMBER: _ClassVar[int]
+    COLUMNS_FIELD_NUMBER: _ClassVar[int]
+    source: LaneSourceRef
+    high_before: bool
+    columns: _containers.RepeatedCompositeFieldContainer[ColumnSummary]
+    def __init__(self, source: _Optional[_Union[LaneSourceRef, _Mapping]] = ..., high_before: _Optional[bool] = ..., columns: _Optional[_Iterable[_Union[ColumnSummary, _Mapping]]] = ...) -> None: ...
+
+class LaneSummaryView(_message.Message):
+    __slots__ = ("lanes", "position", "from_us", "to_us", "kept_from_us")
+    LANES_FIELD_NUMBER: _ClassVar[int]
+    POSITION_FIELD_NUMBER: _ClassVar[int]
+    FROM_US_FIELD_NUMBER: _ClassVar[int]
+    TO_US_FIELD_NUMBER: _ClassVar[int]
+    KEPT_FROM_US_FIELD_NUMBER: _ClassVar[int]
+    lanes: _containers.RepeatedCompositeFieldContainer[LaneSummary]
+    position: ViewPosition
+    from_us: int
+    to_us: int
+    kept_from_us: int
+    def __init__(self, lanes: _Optional[_Iterable[_Union[LaneSummary, _Mapping]]] = ..., position: _Optional[_Union[ViewPosition, _Mapping]] = ..., from_us: _Optional[int] = ..., to_us: _Optional[int] = ..., kept_from_us: _Optional[int] = ...) -> None: ...

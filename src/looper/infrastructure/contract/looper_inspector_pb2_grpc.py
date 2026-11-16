@@ -229,6 +229,11 @@ class InspectorStub:
                 request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.WireRequest.SerializeToString,
                 response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.WireReply.FromString,
                 _registered_method=True)
+        self.SummarizeLanes = channel.unary_unary(
+                '/looper.inspector.v3.Inspector/SummarizeLanes',
+                request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.LaneSummaryRequest.SerializeToString,
+                response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.LaneSummaryView.FromString,
+                _registered_method=True)
         self.CheckSignalGraph = channel.unary_unary(
                 '/looper.inspector.v3.Inspector/CheckSignalGraph',
                 request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.SignalGraphRequest.SerializeToString,
@@ -807,6 +812,15 @@ class InspectorServicer:
         """A bus as the levels on its wires (CAPABILITY_BUS_WIRES): computed on
         request for a span from the recorded exchanges and the bus's time model,
         never part of the stream. BusView.wires says which wires a bus has.
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def SummarizeLanes(self, request, context):
+        """Lanes summed up per pixel column over srv's whole log, for a span a
+        client no longer keeps itself (CAPABILITY_LANE_SUMMARY): a zoom out
+        beyond its own store, and the worst gap of a cadence there.
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -1517,6 +1531,11 @@ def add_InspectorServicer_to_server(servicer, server):
                     servicer.ReadWires,
                     request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.WireRequest.FromString,
                     response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.WireReply.SerializeToString,
+            ),
+            'SummarizeLanes': grpc.unary_unary_rpc_method_handler(
+                    servicer.SummarizeLanes,
+                    request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.LaneSummaryRequest.FromString,
+                    response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.LaneSummaryView.SerializeToString,
             ),
             'CheckSignalGraph': grpc.unary_unary_rpc_method_handler(
                     servicer.CheckSignalGraph,
@@ -2882,6 +2901,33 @@ class Inspector:
             '/looper.inspector.v3.Inspector/ReadWires',
             looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.WireRequest.SerializeToString,
             looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.WireReply.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def SummarizeLanes(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/looper.inspector.v3.Inspector/SummarizeLanes',
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.LaneSummaryRequest.SerializeToString,
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.LaneSummaryView.FromString,
             options,
             channel_credentials,
             insecure,

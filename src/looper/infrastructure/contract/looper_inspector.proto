@@ -362,6 +362,7 @@ enum Capability {
   CAPABILITY_CHAINS = 19;          // chains in ApplySignalGraph, CheckSignalGraph, ObserveChains, SwitchChainGroup, ListChainBlocks, ChainFire
   CAPABILITY_HARDWARE = 20;        // a board at a debug probe: FlashFirmware, ObserveTarget, hold and resume through ControlRun
   CAPABILITY_BUS_WIRES = 23;       // ReadWires, BusView.wires: CAN and UART as levels
+  CAPABILITY_LANE_SUMMARY = 24;    // SummarizeLanes: lanes per pixel column over the whole log
 }
 
 enum ServerMode {
@@ -1176,6 +1177,10 @@ service Inspector {
   // request for a span from the recorded exchanges and the bus's time model,
   // never part of the stream. BusView.wires says which wires a bus has.
   rpc ReadWires(WireRequest) returns (WireReply);
+  // Lanes summed up per pixel column over srv's whole log, for a span a
+  // client no longer keeps itself (CAPABILITY_LANE_SUMMARY): a zoom out
+  // beyond its own store, and the worst gap of a cadence there.
+  rpc SummarizeLanes(LaneSummaryRequest) returns (LaneSummaryView);
 
   // Chains in the signal graph: conditions, logic and actions joined by
   // event links, evaluated inside the simulation. ApplySignalGraph installs
@@ -4386,4 +4391,68 @@ message TaskView {
 message TaskList {
   repeated TaskView tasks = 1;   // in the port's order
   string state_text = 2;         // the empty state, else ""
+}
+
+// ---- Lanes summed up per column (CAPABILITY_LANE_SUMMARY) ----
+
+// Which events of a lane count for its gaps; the events of every kind count
+// for `ColumnSummary.events`.
+enum LaneEvent {
+  LANE_EVENT_DEFAULT = 0;        // a pin's rising edges; every sample, exchange or call
+  LANE_EVENT_RISING = 1;
+  LANE_EVENT_FALLING = 2;
+  LANE_EVENT_ANY_EDGE = 3;
+}
+
+// One lane to sum up, by what the stream numbers it.
+message LaneSourceRef {
+  oneof source {
+    uint32 pin_id = 1;
+    uint32 channel_id = 2;       // an analog channel or a watch's samples
+    uint32 bus_id = 3;
+    string call_function = 4;
+  }
+  LaneEvent event = 5;
+}
+
+message LaneSummaryRequest {
+  uint64 epoch = 1;              // 0: the one recorded now
+  uint64 from_us = 2;
+  uint64 to_us = 3;              // after from_us
+  uint32 columns = 4;            // 1 to 4096; more are cut to 4096
+  repeated LaneSourceRef lanes = 5;
+}
+
+// What one column of a lane holds: the events with a time in
+// [from_us + i * width, from_us + (i + 1) * width).
+message ColumnSummary {
+  uint32 events = 1;             // edges, samples, exchanges or calls
+  bool first_high = 2;           // pins: the level after the column's first edge
+  bool last_high = 3;            // pins: the level after its last edge
+  uint32 glitches = 4;           // pins: instants with more than one edge
+  double lowest = 5;             // samples
+  double highest = 6;
+  optional double only_value = 7;  // samples: the one value, when the column holds one
+  bool lost = 8;                 // a stretch the stream lost reaches into the column
+  // The largest gap before a counted event (LaneSourceRef.event) of this
+  // column, from the counted event before it; 0 for none. The first counted
+  // event of the span has the gap from the last one before the span, when
+  // the log still keeps that one.
+  uint64 max_gap_us = 9;
+}
+
+message LaneSummary {
+  LaneSourceRef source = 1;
+  optional bool high_before = 2;   // pins: the level at from_us; absent: unknown
+  repeated ColumnSummary columns = 3;
+}
+
+message LaneSummaryView {
+  repeated LaneSummary lanes = 1;  // in the order asked for
+  ViewPosition position = 2;
+  uint64 from_us = 3;              // the span summed up, as asked
+  uint64 to_us = 4;
+  // Where the log's oldest kept event lies: before it the columns are
+  // empty because nothing is kept, not because nothing happened.
+  uint64 kept_from_us = 5;
 }
