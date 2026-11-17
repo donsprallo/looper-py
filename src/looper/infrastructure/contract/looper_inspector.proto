@@ -1624,14 +1624,14 @@ message BootStep {
   EnteredBy entered_by = 4;
   uint64 at_us = 5;
   LifeEndReason ended_by = 6;      // UNSPECIFIED while it runs
-  string text = 7;                 // "stage1_a 1.0"
+  string text = 7;                 // "stage1@1.0 (stage1_a)"; "stage0" in a partition of its name
 }
 
 // The lives between two resets: the boot chain one start went through.
 message BootChain {
   repeated BootStep steps = 1;
   ResetCause started_by = 2;       // what reset the board: power-on for the first
-  string text = 3;                 // "stage0 → stage1_a 1.0 → app_b 2.1"
+  string text = 3;                 // "stage0 → stage1@1.0 (stage1_a) → app@2.1 (app_b)"
   string went = 4;                 // the partitions, as expect().boot_chain().went() takes them: "stage0 stage1_a app_b"
   string started_by_text = 5;      // started_by as a word: "power-on", "watchdog", "pin"
 }

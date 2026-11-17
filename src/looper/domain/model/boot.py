@@ -66,7 +66,7 @@ class BootChain:
     Attributes:
         steps: The lives, in order.
         started_by: What reset the board before the first: ``power-on``, ``pin``, ...
-        text: ``stage0 → stage1_a 1.0 → app_b 2.1``.
+        text: ``stage0 → stage1@1.0 (stage1_a) → app@2.1 (app_b)``.
     """
 
     steps: tuple[BootStep, ...] = ()
