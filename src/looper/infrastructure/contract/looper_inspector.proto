@@ -63,6 +63,25 @@ enum ContractVersion {
 
 message Empty {}
 
+// The request of an image page that asks nothing else (looper-srv#23).
+//
+// A boot chain runs one image after another, each its own executable with
+// its own code. The pages about code -- Source, Variables, Interrupts,
+// Timing, Profile, Memory, Architecture -- show one image: `image` names it
+// by its reference ("app@2.0"), empty for the one that runs now. Every
+// request of such a page carries the field under the same number, 100, so
+// that the server reads which image is meant before it reads the rest.
+//
+// The image that runs is answered live. Another one is answered as it
+// stood at the end of its last life (ObserveProfile, ObserveMemory), from
+// its build (sources, architecture), or with a sentence that says why it
+// cannot be (ListVariables and the other readings of a running process);
+// ImageView.frozen_text says which. A project of one image ignores the
+// field.
+message ImageScope {
+  string image = 100;
+}
+
 // The order a server accepted a change in, and what happened to it.
 message Ack {
   // Global, assigned by the server in arrival order; never reused.
@@ -1123,20 +1142,20 @@ service Inspector {
   rpc ObserveBuses(Empty) returns (BusList);
   rpc ObserveComponents(Empty) returns (ComponentList);
   // The catalogue of globals, read out of the build.
-  rpc ListVariables(Empty) returns (VariableCatalogue);
+  rpc ListVariables(ImageScope) returns (VariableCatalogue);
   // The waveforms a signal generator offers.
   rpc ListWaveforms(Empty) returns (WaveformList);
   // Every recording on one stretch of time, as wide as the client asks for.
   rpc ArrangeTimeline(TimelineRequest) returns (TimelineView);
   // The bus the client names, read as a conversation.
   rpc ObserveLadder(LadderChoice) returns (LadderView);
-  rpc ObserveTimings(Empty) returns (TimingReportView);
-  rpc ObserveProfile(Empty) returns (ProfileView);
+  rpc ObserveTimings(ImageScope) returns (TimingReportView);
+  rpc ObserveProfile(ImageScope) returns (ProfileView);
   // Following the paths costs the simulation something, so it is armed and
   // disarmed explicitly -- for the one simulation, and so for every client.
   rpc FollowCallPaths(Following) returns (Empty);
   rpc ObserveFlame(Empty) returns (FlameView);
-  rpc ObserveMemory(Empty) returns (MemoryView);
+  rpc ObserveMemory(ImageScope) returns (MemoryView);
   // The models the project offers the signal graph, read afresh, with why
   // any of them cannot be used.
   rpc ListModels(Empty) returns (ModelList);
@@ -1201,7 +1220,7 @@ service Inspector {
 
   // ---- Source code: the files the build was made of ----
   // Every file worth showing, with whether it changed since the build.
-  rpc ListSources(Empty) returns (SourceTreeView);
+  rpc ListSources(ImageScope) returns (SourceTreeView);
   // The text of one file; by default the copy the build kept.
   rpc ReadSource(SourceRequest) returns (SourceText);
   // What the names of one file stand for, read with the build's flags.
@@ -1212,12 +1231,12 @@ service Inspector {
   // fetched from the simulation at most once a second.
   rpc ObserveLineCounts(SourceRequest) returns (LineCountView);
   // How much of every counted file ran, and the functions nobody called.
-  rpc ObserveCoverage(Empty) returns (CoverageView);
+  rpc ObserveCoverage(ImageScope) returns (CoverageView);
   // Count from now on; the Ack carries the simulated time counting restarts at.
   rpc ResetLineCounts(Empty) returns (Ack);
   // The lines and functions that ran most, and the functions that cost the
   // host most; a counting build only.
-  rpc ObserveHotspots(Empty) returns (HotspotsView);
+  rpc ObserveHotspots(ImageScope) returns (HotspotsView);
 
   // ---- Debugger: stop the firmware at lines, simulated time standing still ----
   // While the firmware stands, every other call that asks the simulation is
@@ -1267,6 +1286,12 @@ service Inspector {
   rpc CutPower(PowerCutRequest) returns (Ack);
   // The lives between two resets, each the images it went through.
   rpc ObserveBootChain(Empty) returns (BootChainView);
+  // Hold the simulation when a life begins that runs an image the pattern
+  // names, before the image runs (looper-srv#24): what no debugger on a
+  // board can tell, looper knows -- which image starts. The view says where
+  // the jump came from. One break per simulation; setting it again replaces it.
+  rpc SetImageBreak(ImageBreakRequest) returns (ImageBreakView);
+  rpc ObserveImageBreak(Empty) returns (ImageBreakView);
   // The one-time-programmable memory; burning sets bits, nothing clears them.
   rpc ObserveOtp(Empty) returns (OtpView);
   rpc BurnOtp(OtpBurn) returns (Ack);
@@ -1277,7 +1302,7 @@ service Inspector {
   // The sources from contract.toml, with what they did in this life; before
   // the firmware called its first interrupt role every count is 0 and
   // `note` says why.
-  rpc ObserveInterrupts(Empty) returns (InterruptReport);
+  rpc ObserveInterrupts(ImageScope) returns (InterruptReport);
   // Make a source due, now or at a time, as its pin or timer would. A source
   // that is not `is_raisable`, or one before the table is installed, is
   // refused with REFUSAL_NOT_ACCEPTED and a sentence.
@@ -1326,7 +1351,7 @@ service Inspector {
   // The places in the code that make one drawn dependency.
   rpc ObserveDependencyPlaces(PlacesRequest) returns (PlaceList);
   // The rules as they stand: architecture.toml's, or proposed from the folders.
-  rpc ObserveArchitectureRules(Empty) returns (ArchitectureRulesView);
+  rpc ObserveArchitectureRules(ImageScope) returns (ArchitectureRulesView);
   // One small change to the rules, written to architecture.toml at once.
   // Refused (FAILED_PRECONDITION) when the file changed since base_revision;
   // the answer carries the change that undoes it.
@@ -1360,7 +1385,7 @@ service Inspector {
   // commit is new) and per audit, with the series to draw and their labels.
   rpc ObserveArchitectureHistory(HistoryRequest) returns (ArchitectureHistory);
   // The firmware's state machines: a switch over a variable the code sets.
-  rpc ObserveStateMachines(Empty) returns (StateMachineList);
+  rpc ObserveStateMachines(ImageScope) returns (StateMachineList);
   rpc ObserveStateMachine(StateMachineChoice) returns (FirmwareStateMachine);
   // Follow a machine in the run (a simulation only): a watch on its
   // variable, read back as the states it took -- once per loop pass.
@@ -1543,6 +1568,30 @@ message ImageView {
   uint32 last_life = 10;           // the last life that ran it; 0: it has not run in this run
   bool running = 11;               // the life that runs now runs it
   string run_text = 12;            // "runs · life 3", "ran last in life 2", "has not run"
+  // What an image page shows of it while it does not run: "as it stood at
+  // the end of life 2", "has not run: only what its build says". Empty
+  // while it runs.
+  string frozen_text = 13;
+}
+
+message ImageBreakRequest {
+  // "app@2.0" one variant, "app" every variant of app, "app@2.*" the
+  // variants that begin so; empty: no break.
+  string pattern = 1;
+}
+
+message ImageBreakView {
+  string pattern = 1;
+  uint32 hits = 2;           // how often a life began at the break in this run
+  uint32 life = 3;           // the life the last hit held; 0 before the first
+  string image = 4;          // the image that life runs
+  string from_image = 5;     // the image of the life before it
+  uint32 from_life = 6;
+  uint64 jump_target = 7;    // the address jumped to; 0 when a reset began the life
+  // "Held at the start of life 3 (app@2.0): stage1@1.0 jumped to
+  // 0x08006000 in life 2.", "Holds when a life begins that runs app@2.*.",
+  // "No break on the start of an image."
+  string text = 8;
 }
 
 message ImageList {
@@ -2037,6 +2086,14 @@ message WatchView {
   // and an enumeration are watched without a scaling, whatever the client
   // asked; range_text then says "enum, scaling ignored".
   string value_name = 22;
+  // A watch of an image that does not run now rests (looper-srv#22): the
+  // same place in another image's memory is another variable, so it is not
+  // read until its image runs again. resting_text says so for people:
+  // "rests: stage0 does not run". Its value is the last one read.
+  bool resting = 23;
+  string resting_text = 24;
+  // The image it was set in; empty in a project of one image.
+  string image = 25;
 }
 
 message WatchList {
@@ -2473,6 +2530,8 @@ message SourceRequest {
   string path = 1;
   // The file as it is on disk now, rather than the copy the build kept.
   bool from_disk = 2;
+  // The image this page shows, by its reference; empty: the one that runs (see ImageScope).
+  string image = 100;
 }
 
 message SourceText {
@@ -2739,6 +2798,8 @@ message RestartView {
 message ArchitectureRequest {
   uint64 known_revision = 1;  // zero: whatever there is
   string path = 2;            // only this file's functions; empty: all
+  // The image this page shows, by its reference; empty: the one that runs (see ImageScope).
+  string image = 100;
 }
 
 enum Tier {
@@ -2818,6 +2879,8 @@ message ArchitectureFocus {
   uint64 known_revision = 5;
   EdgeWeights weights = 6;     // PLACES the code's uses; RUN_CALLS the calls a run counted (stage 5.2)
   string context_id = 7;       // "" every context; "main", "isr/TIM2": only what that context reaches
+  // The image this page shows, by its reference; empty: the one that runs (see ImageScope).
+  string image = 100;
 }
 
 message ArchitectureCrumb {
@@ -2902,6 +2965,8 @@ message FindingFilter {
   // "context:isr/TIM2" the findings about what that context reaches.
   string node_id = 1;
   uint64 known_revision = 2;
+  // The image this page shows, by its reference; empty: the one that runs (see ImageScope).
+  string image = 100;
 }
 
 message CodePlace {
@@ -2981,6 +3046,8 @@ enum IsrOrigin {
 message IsrContextRequest {
   string context_id = 1;         // "" the main loop
   uint64 known_revision = 2;
+  // The image this page shows, by its reference; empty: the one that runs (see ImageScope).
+  string image = 100;
 }
 
 message ExecutionContext {
@@ -3108,6 +3175,8 @@ message HotspotMatrixView {
 message StackRequest {
   string context_id = 1;         // "" the main loop
   uint64 known_revision = 2;
+  // The image this page shows, by its reference; empty: the one that runs (see ImageScope).
+  string image = 100;
 }
 
 message StackPathFrame {
@@ -3178,6 +3247,8 @@ enum CardTypeKind {
 message HistoryRequest {
   uint32 last = 1;               // how many of the newest runs; 0 for all
   uint64 known_revision = 2;
+  // The image this page shows, by its reference; empty: the one that runs (see ImageScope).
+  string image = 100;
 }
 
 message HistoryValue {
@@ -3216,6 +3287,8 @@ message ModuleCardRequest {
   string module_id = 1;            // "module:app/blinker"
   string path = 2;                 // or the module of this file
   uint64 known_revision = 3;
+  // The image this page shows, by its reference; empty: the one that runs (see ImageScope).
+  string image = 100;
 }
 
 message CardFunction {
@@ -3330,6 +3403,8 @@ message FindingList {
 message PlacesRequest {
   string edge_id = 1;
   repeated string kinds = 2;
+  // The image this page shows, by its reference; empty: the one that runs (see ImageScope).
+  string image = 100;
 }
 
 message PlaceList {
@@ -3382,6 +3457,8 @@ message RuleChangeRequest {
   RuleChange change = 1;
   string base_revision = 2;   // the rules' revision the change was made against
   bool dry_run = 3;           // only say what it would do
+  // The image this page shows, by its reference; empty: the one that runs (see ImageScope).
+  string image = 100;
 }
 
 message RuleChangeReply {
@@ -3394,6 +3471,8 @@ message AcceptFindingsRequest {
   repeated string keys = 1;
   string note = 2;
   bool every = 3;              // every finding found now: take a baseline
+  // The image this page shows, by its reference; empty: the one that runs (see ImageScope).
+  string image = 100;
 }
 
 message MachineSummary {
@@ -3464,6 +3543,8 @@ message StateMachineList {
 
 message StateMachineChoice {
   string machine_id = 1;
+  // The image this page shows, by its reference; empty: the one that runs (see ImageScope).
+  string image = 100;
 }
 
 message MachineState {
@@ -3576,6 +3657,8 @@ message CallTreeRequest {
   string function = 1;          // by name
   uint32 depth = 2;             // how many calls deep, 1 to 6
   LifelineGrouping grouping = 3;  // looper-srv (stage 5.4d): modules or classes as lifelines
+  // The image this page shows, by its reference; empty: the one that runs (see ImageScope).
+  string image = 100;
 }
 
 // What a lifeline of a sequence stands for (looper-srv, stage 5.4d).

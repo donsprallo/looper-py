@@ -91,7 +91,7 @@ class InspectorStub:
                 _registered_method=True)
         self.ListVariables = channel.unary_unary(
                 '/looper.inspector.v3.Inspector/ListVariables',
-                request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
+                request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ImageScope.SerializeToString,
                 response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.VariableCatalogue.FromString,
                 _registered_method=True)
         self.ListWaveforms = channel.unary_unary(
@@ -111,12 +111,12 @@ class InspectorStub:
                 _registered_method=True)
         self.ObserveTimings = channel.unary_unary(
                 '/looper.inspector.v3.Inspector/ObserveTimings',
-                request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
+                request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ImageScope.SerializeToString,
                 response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.TimingReportView.FromString,
                 _registered_method=True)
         self.ObserveProfile = channel.unary_unary(
                 '/looper.inspector.v3.Inspector/ObserveProfile',
-                request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
+                request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ImageScope.SerializeToString,
                 response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ProfileView.FromString,
                 _registered_method=True)
         self.FollowCallPaths = channel.unary_unary(
@@ -131,7 +131,7 @@ class InspectorStub:
                 _registered_method=True)
         self.ObserveMemory = channel.unary_unary(
                 '/looper.inspector.v3.Inspector/ObserveMemory',
-                request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
+                request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ImageScope.SerializeToString,
                 response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.MemoryView.FromString,
                 _registered_method=True)
         self.ListModels = channel.unary_unary(
@@ -266,7 +266,7 @@ class InspectorStub:
                 _registered_method=True)
         self.ListSources = channel.unary_unary(
                 '/looper.inspector.v3.Inspector/ListSources',
-                request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
+                request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ImageScope.SerializeToString,
                 response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.SourceTreeView.FromString,
                 _registered_method=True)
         self.ReadSource = channel.unary_unary(
@@ -286,7 +286,7 @@ class InspectorStub:
                 _registered_method=True)
         self.ObserveCoverage = channel.unary_unary(
                 '/looper.inspector.v3.Inspector/ObserveCoverage',
-                request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
+                request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ImageScope.SerializeToString,
                 response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.CoverageView.FromString,
                 _registered_method=True)
         self.ResetLineCounts = channel.unary_unary(
@@ -296,7 +296,7 @@ class InspectorStub:
                 _registered_method=True)
         self.ObserveHotspots = channel.unary_unary(
                 '/looper.inspector.v3.Inspector/ObserveHotspots',
-                request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
+                request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ImageScope.SerializeToString,
                 response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.HotspotsView.FromString,
                 _registered_method=True)
         self.ObserveDebugger = channel.unary_unary(
@@ -384,6 +384,16 @@ class InspectorStub:
                 request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
                 response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.BootChainView.FromString,
                 _registered_method=True)
+        self.SetImageBreak = channel.unary_unary(
+                '/looper.inspector.v3.Inspector/SetImageBreak',
+                request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ImageBreakRequest.SerializeToString,
+                response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ImageBreakView.FromString,
+                _registered_method=True)
+        self.ObserveImageBreak = channel.unary_unary(
+                '/looper.inspector.v3.Inspector/ObserveImageBreak',
+                request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
+                response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ImageBreakView.FromString,
+                _registered_method=True)
         self.ObserveOtp = channel.unary_unary(
                 '/looper.inspector.v3.Inspector/ObserveOtp',
                 request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
@@ -396,7 +406,7 @@ class InspectorStub:
                 _registered_method=True)
         self.ObserveInterrupts = channel.unary_unary(
                 '/looper.inspector.v3.Inspector/ObserveInterrupts',
-                request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
+                request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ImageScope.SerializeToString,
                 response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.InterruptReport.FromString,
                 _registered_method=True)
         self.RaiseInterrupt = channel.unary_unary(
@@ -461,7 +471,7 @@ class InspectorStub:
                 _registered_method=True)
         self.ObserveArchitectureRules = channel.unary_unary(
                 '/looper.inspector.v3.Inspector/ObserveArchitectureRules',
-                request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
+                request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ImageScope.SerializeToString,
                 response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ArchitectureRulesView.FromString,
                 _registered_method=True)
         self.ChangeArchitectureRules = channel.unary_unary(
@@ -501,7 +511,7 @@ class InspectorStub:
                 _registered_method=True)
         self.ObserveStateMachines = channel.unary_unary(
                 '/looper.inspector.v3.Inspector/ObserveStateMachines',
-                request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
+                request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ImageScope.SerializeToString,
                 response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.StateMachineList.FromString,
                 _registered_method=True)
         self.ObserveStateMachine = channel.unary_unary(
@@ -1055,6 +1065,22 @@ class InspectorServicer:
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def SetImageBreak(self, request, context):
+        """Hold the simulation when a life begins that runs an image the pattern
+        names, before the image runs (looper-srv#24): what no debugger on a
+        board can tell, looper knows -- which image starts. The view says where
+        the jump came from. One break per simulation; setting it again replaces it.
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def ObserveImageBreak(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
     def ObserveOtp(self, request, context):
         """The one-time-programmable memory; burning sets bits, nothing clears them.
         """
@@ -1394,7 +1420,7 @@ def add_InspectorServicer_to_server(servicer, server):
             ),
             'ListVariables': grpc.unary_unary_rpc_method_handler(
                     servicer.ListVariables,
-                    request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.FromString,
+                    request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ImageScope.FromString,
                     response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.VariableCatalogue.SerializeToString,
             ),
             'ListWaveforms': grpc.unary_unary_rpc_method_handler(
@@ -1414,12 +1440,12 @@ def add_InspectorServicer_to_server(servicer, server):
             ),
             'ObserveTimings': grpc.unary_unary_rpc_method_handler(
                     servicer.ObserveTimings,
-                    request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.FromString,
+                    request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ImageScope.FromString,
                     response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.TimingReportView.SerializeToString,
             ),
             'ObserveProfile': grpc.unary_unary_rpc_method_handler(
                     servicer.ObserveProfile,
-                    request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.FromString,
+                    request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ImageScope.FromString,
                     response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ProfileView.SerializeToString,
             ),
             'FollowCallPaths': grpc.unary_unary_rpc_method_handler(
@@ -1434,7 +1460,7 @@ def add_InspectorServicer_to_server(servicer, server):
             ),
             'ObserveMemory': grpc.unary_unary_rpc_method_handler(
                     servicer.ObserveMemory,
-                    request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.FromString,
+                    request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ImageScope.FromString,
                     response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.MemoryView.SerializeToString,
             ),
             'ListModels': grpc.unary_unary_rpc_method_handler(
@@ -1569,7 +1595,7 @@ def add_InspectorServicer_to_server(servicer, server):
             ),
             'ListSources': grpc.unary_unary_rpc_method_handler(
                     servicer.ListSources,
-                    request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.FromString,
+                    request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ImageScope.FromString,
                     response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.SourceTreeView.SerializeToString,
             ),
             'ReadSource': grpc.unary_unary_rpc_method_handler(
@@ -1589,7 +1615,7 @@ def add_InspectorServicer_to_server(servicer, server):
             ),
             'ObserveCoverage': grpc.unary_unary_rpc_method_handler(
                     servicer.ObserveCoverage,
-                    request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.FromString,
+                    request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ImageScope.FromString,
                     response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.CoverageView.SerializeToString,
             ),
             'ResetLineCounts': grpc.unary_unary_rpc_method_handler(
@@ -1599,7 +1625,7 @@ def add_InspectorServicer_to_server(servicer, server):
             ),
             'ObserveHotspots': grpc.unary_unary_rpc_method_handler(
                     servicer.ObserveHotspots,
-                    request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.FromString,
+                    request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ImageScope.FromString,
                     response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.HotspotsView.SerializeToString,
             ),
             'ObserveDebugger': grpc.unary_unary_rpc_method_handler(
@@ -1687,6 +1713,16 @@ def add_InspectorServicer_to_server(servicer, server):
                     request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.FromString,
                     response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.BootChainView.SerializeToString,
             ),
+            'SetImageBreak': grpc.unary_unary_rpc_method_handler(
+                    servicer.SetImageBreak,
+                    request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ImageBreakRequest.FromString,
+                    response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ImageBreakView.SerializeToString,
+            ),
+            'ObserveImageBreak': grpc.unary_unary_rpc_method_handler(
+                    servicer.ObserveImageBreak,
+                    request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.FromString,
+                    response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ImageBreakView.SerializeToString,
+            ),
             'ObserveOtp': grpc.unary_unary_rpc_method_handler(
                     servicer.ObserveOtp,
                     request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.FromString,
@@ -1699,7 +1735,7 @@ def add_InspectorServicer_to_server(servicer, server):
             ),
             'ObserveInterrupts': grpc.unary_unary_rpc_method_handler(
                     servicer.ObserveInterrupts,
-                    request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.FromString,
+                    request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ImageScope.FromString,
                     response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.InterruptReport.SerializeToString,
             ),
             'RaiseInterrupt': grpc.unary_unary_rpc_method_handler(
@@ -1764,7 +1800,7 @@ def add_InspectorServicer_to_server(servicer, server):
             ),
             'ObserveArchitectureRules': grpc.unary_unary_rpc_method_handler(
                     servicer.ObserveArchitectureRules,
-                    request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.FromString,
+                    request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ImageScope.FromString,
                     response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ArchitectureRulesView.SerializeToString,
             ),
             'ChangeArchitectureRules': grpc.unary_unary_rpc_method_handler(
@@ -1804,7 +1840,7 @@ def add_InspectorServicer_to_server(servicer, server):
             ),
             'ObserveStateMachines': grpc.unary_unary_rpc_method_handler(
                     servicer.ObserveStateMachines,
-                    request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.FromString,
+                    request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ImageScope.FromString,
                     response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.StateMachineList.SerializeToString,
             ),
             'ObserveStateMachine': grpc.unary_unary_rpc_method_handler(
@@ -2170,7 +2206,7 @@ class Inspector:
             request,
             target,
             '/looper.inspector.v3.Inspector/ListVariables',
-            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ImageScope.SerializeToString,
             looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.VariableCatalogue.FromString,
             options,
             channel_credentials,
@@ -2278,7 +2314,7 @@ class Inspector:
             request,
             target,
             '/looper.inspector.v3.Inspector/ObserveTimings',
-            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ImageScope.SerializeToString,
             looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.TimingReportView.FromString,
             options,
             channel_credentials,
@@ -2305,7 +2341,7 @@ class Inspector:
             request,
             target,
             '/looper.inspector.v3.Inspector/ObserveProfile',
-            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ImageScope.SerializeToString,
             looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ProfileView.FromString,
             options,
             channel_credentials,
@@ -2386,7 +2422,7 @@ class Inspector:
             request,
             target,
             '/looper.inspector.v3.Inspector/ObserveMemory',
-            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ImageScope.SerializeToString,
             looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.MemoryView.FromString,
             options,
             channel_credentials,
@@ -3115,7 +3151,7 @@ class Inspector:
             request,
             target,
             '/looper.inspector.v3.Inspector/ListSources',
-            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ImageScope.SerializeToString,
             looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.SourceTreeView.FromString,
             options,
             channel_credentials,
@@ -3223,7 +3259,7 @@ class Inspector:
             request,
             target,
             '/looper.inspector.v3.Inspector/ObserveCoverage',
-            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ImageScope.SerializeToString,
             looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.CoverageView.FromString,
             options,
             channel_credentials,
@@ -3277,7 +3313,7 @@ class Inspector:
             request,
             target,
             '/looper.inspector.v3.Inspector/ObserveHotspots',
-            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ImageScope.SerializeToString,
             looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.HotspotsView.FromString,
             options,
             channel_credentials,
@@ -3749,6 +3785,60 @@ class Inspector:
             _registered_method=True)
 
     @staticmethod
+    def SetImageBreak(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/looper.inspector.v3.Inspector/SetImageBreak',
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ImageBreakRequest.SerializeToString,
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ImageBreakView.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def ObserveImageBreak(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/looper.inspector.v3.Inspector/ObserveImageBreak',
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ImageBreakView.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
     def ObserveOtp(request,
             target,
             options=(),
@@ -3817,7 +3907,7 @@ class Inspector:
             request,
             target,
             '/looper.inspector.v3.Inspector/ObserveInterrupts',
-            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ImageScope.SerializeToString,
             looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.InterruptReport.FromString,
             options,
             channel_credentials,
@@ -4168,7 +4258,7 @@ class Inspector:
             request,
             target,
             '/looper.inspector.v3.Inspector/ObserveArchitectureRules',
-            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ImageScope.SerializeToString,
             looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ArchitectureRulesView.FromString,
             options,
             channel_credentials,
@@ -4384,7 +4474,7 @@ class Inspector:
             request,
             target,
             '/looper.inspector.v3.Inspector/ObserveStateMachines',
-            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ImageScope.SerializeToString,
             looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.StateMachineList.FromString,
             options,
             channel_credentials,

@@ -75,6 +75,8 @@ MAX_MESSAGE_BYTES = 64 * 1024 * 1024
 RUN_POLL_SECONDS = 0.02
 
 EMPTY = contract.Empty()
+# The image pages name an image; none names the image that runs (looper-srv#23).
+RUNNING_IMAGE = contract.ImageScope()
 
 #: The kinds of event a test looks at; the stream also carries pin changes,
 #: calls, applied commands and more.
@@ -121,15 +123,15 @@ class GrpcInspector(GrpcBootCalls, GrpcInterruptCalls, GrpcChainCalls, GrpcResta
 
     def read_timings(self) -> tuple[CallTiming, ...]:
         """How often each adapter function was called since the last reset."""
-        return translation.timings_of(self._call(self._stub.ObserveTimings, EMPTY))
+        return translation.timings_of(self._call(self._stub.ObserveTimings, RUNNING_IMAGE))
 
     def read_memory(self) -> MemoryUsage:
         """The heap and the stack."""
-        return translation.memory_of(self._call(self._stub.ObserveMemory, EMPTY))
+        return translation.memory_of(self._call(self._stub.ObserveMemory, RUNNING_IMAGE))
 
     def read_profile(self) -> Profile:
         """Where the simulation spent its time, function by function, since the last clearing."""
-        return analysis_translation.profile_of(self._call(self._stub.ObserveProfile, EMPTY))
+        return analysis_translation.profile_of(self._call(self._stub.ObserveProfile, RUNNING_IMAGE))
 
     def read_findings(self) -> Findings:
         """What the architecture analysis found in the project's code, so far."""
@@ -232,7 +234,7 @@ class GrpcInspector(GrpcBootCalls, GrpcInterruptCalls, GrpcChainCalls, GrpcResta
 
     def list_variables(self) -> tuple[Variable, ...]:
         """The catalogue of the firmware's variables, read out of the build."""
-        catalogue = self._call(self._stub.ListVariables, EMPTY)
+        catalogue = self._call(self._stub.ListVariables, RUNNING_IMAGE)
         if catalogue.unavailable_reason:
             raise SimulationRefusedError(catalogue.unavailable_reason)
         return translation.variables_of(catalogue)

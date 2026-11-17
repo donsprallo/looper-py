@@ -791,6 +791,12 @@ class Empty(_message.Message):
     __slots__ = ()
     def __init__(self) -> None: ...
 
+class ImageScope(_message.Message):
+    __slots__ = ("image",)
+    IMAGE_FIELD_NUMBER: _ClassVar[int]
+    image: str
+    def __init__(self, image: _Optional[str] = ...) -> None: ...
+
 class Ack(_message.Message):
     __slots__ = ("command_seq", "applied_at_us", "pending", "epoch", "refusal", "refusal_text", "late_by_us")
     COMMAND_SEQ_FIELD_NUMBER: _ClassVar[int]
@@ -2265,7 +2271,7 @@ class FlashContent(_message.Message):
     def __init__(self, content: _Optional[bytes] = ...) -> None: ...
 
 class ImageView(_message.Message):
-    __slots__ = ("name", "variant", "identity_hex", "version_text", "payload_size", "built", "text", "ref", "origin_text", "last_life", "running", "run_text")
+    __slots__ = ("name", "variant", "identity_hex", "version_text", "payload_size", "built", "text", "ref", "origin_text", "last_life", "running", "run_text", "frozen_text")
     NAME_FIELD_NUMBER: _ClassVar[int]
     VARIANT_FIELD_NUMBER: _ClassVar[int]
     IDENTITY_HEX_FIELD_NUMBER: _ClassVar[int]
@@ -2278,6 +2284,7 @@ class ImageView(_message.Message):
     LAST_LIFE_FIELD_NUMBER: _ClassVar[int]
     RUNNING_FIELD_NUMBER: _ClassVar[int]
     RUN_TEXT_FIELD_NUMBER: _ClassVar[int]
+    FROZEN_TEXT_FIELD_NUMBER: _ClassVar[int]
     name: str
     variant: str
     identity_hex: str
@@ -2290,7 +2297,34 @@ class ImageView(_message.Message):
     last_life: int
     running: bool
     run_text: str
-    def __init__(self, name: _Optional[str] = ..., variant: _Optional[str] = ..., identity_hex: _Optional[str] = ..., version_text: _Optional[str] = ..., payload_size: _Optional[int] = ..., built: _Optional[bool] = ..., text: _Optional[str] = ..., ref: _Optional[str] = ..., origin_text: _Optional[str] = ..., last_life: _Optional[int] = ..., running: _Optional[bool] = ..., run_text: _Optional[str] = ...) -> None: ...
+    frozen_text: str
+    def __init__(self, name: _Optional[str] = ..., variant: _Optional[str] = ..., identity_hex: _Optional[str] = ..., version_text: _Optional[str] = ..., payload_size: _Optional[int] = ..., built: _Optional[bool] = ..., text: _Optional[str] = ..., ref: _Optional[str] = ..., origin_text: _Optional[str] = ..., last_life: _Optional[int] = ..., running: _Optional[bool] = ..., run_text: _Optional[str] = ..., frozen_text: _Optional[str] = ...) -> None: ...
+
+class ImageBreakRequest(_message.Message):
+    __slots__ = ("pattern",)
+    PATTERN_FIELD_NUMBER: _ClassVar[int]
+    pattern: str
+    def __init__(self, pattern: _Optional[str] = ...) -> None: ...
+
+class ImageBreakView(_message.Message):
+    __slots__ = ("pattern", "hits", "life", "image", "from_image", "from_life", "jump_target", "text")
+    PATTERN_FIELD_NUMBER: _ClassVar[int]
+    HITS_FIELD_NUMBER: _ClassVar[int]
+    LIFE_FIELD_NUMBER: _ClassVar[int]
+    IMAGE_FIELD_NUMBER: _ClassVar[int]
+    FROM_IMAGE_FIELD_NUMBER: _ClassVar[int]
+    FROM_LIFE_FIELD_NUMBER: _ClassVar[int]
+    JUMP_TARGET_FIELD_NUMBER: _ClassVar[int]
+    TEXT_FIELD_NUMBER: _ClassVar[int]
+    pattern: str
+    hits: int
+    life: int
+    image: str
+    from_image: str
+    from_life: int
+    jump_target: int
+    text: str
+    def __init__(self, pattern: _Optional[str] = ..., hits: _Optional[int] = ..., life: _Optional[int] = ..., image: _Optional[str] = ..., from_image: _Optional[str] = ..., from_life: _Optional[int] = ..., jump_target: _Optional[int] = ..., text: _Optional[str] = ...) -> None: ...
 
 class ImageList(_message.Message):
     __slots__ = ("images", "note")
@@ -2826,7 +2860,7 @@ class VariableChoice(_message.Message):
     def __init__(self, variable_id: _Optional[int] = ..., scaling: _Optional[_Union[Scaling, _Mapping]] = ...) -> None: ...
 
 class WatchView(_message.Message):
-    __slots__ = ("channel_id", "path", "name", "encoding", "byte_width", "runtime_address", "is_writable", "value", "bit_offset", "bit_width", "display_value", "range_text", "lowest", "highest", "resolution", "raw_value", "scaling", "read_period_us", "read_period_text", "enumerators", "value_name")
+    __slots__ = ("channel_id", "path", "name", "encoding", "byte_width", "runtime_address", "is_writable", "value", "bit_offset", "bit_width", "display_value", "range_text", "lowest", "highest", "resolution", "raw_value", "scaling", "read_period_us", "read_period_text", "enumerators", "value_name", "resting", "resting_text", "image")
     CHANNEL_ID_FIELD_NUMBER: _ClassVar[int]
     PATH_FIELD_NUMBER: _ClassVar[int]
     NAME_FIELD_NUMBER: _ClassVar[int]
@@ -2848,6 +2882,9 @@ class WatchView(_message.Message):
     READ_PERIOD_TEXT_FIELD_NUMBER: _ClassVar[int]
     ENUMERATORS_FIELD_NUMBER: _ClassVar[int]
     VALUE_NAME_FIELD_NUMBER: _ClassVar[int]
+    RESTING_FIELD_NUMBER: _ClassVar[int]
+    RESTING_TEXT_FIELD_NUMBER: _ClassVar[int]
+    IMAGE_FIELD_NUMBER: _ClassVar[int]
     channel_id: int
     path: str
     name: str
@@ -2869,7 +2906,10 @@ class WatchView(_message.Message):
     read_period_text: str
     enumerators: _containers.RepeatedCompositeFieldContainer[Enumerator]
     value_name: str
-    def __init__(self, channel_id: _Optional[int] = ..., path: _Optional[str] = ..., name: _Optional[str] = ..., encoding: _Optional[str] = ..., byte_width: _Optional[int] = ..., runtime_address: _Optional[int] = ..., is_writable: _Optional[bool] = ..., value: _Optional[float] = ..., bit_offset: _Optional[int] = ..., bit_width: _Optional[int] = ..., display_value: _Optional[str] = ..., range_text: _Optional[str] = ..., lowest: _Optional[float] = ..., highest: _Optional[float] = ..., resolution: _Optional[float] = ..., raw_value: _Optional[float] = ..., scaling: _Optional[_Union[Scaling, _Mapping]] = ..., read_period_us: _Optional[int] = ..., read_period_text: _Optional[str] = ..., enumerators: _Optional[_Iterable[_Union[Enumerator, _Mapping]]] = ..., value_name: _Optional[str] = ...) -> None: ...
+    resting: bool
+    resting_text: str
+    image: str
+    def __init__(self, channel_id: _Optional[int] = ..., path: _Optional[str] = ..., name: _Optional[str] = ..., encoding: _Optional[str] = ..., byte_width: _Optional[int] = ..., runtime_address: _Optional[int] = ..., is_writable: _Optional[bool] = ..., value: _Optional[float] = ..., bit_offset: _Optional[int] = ..., bit_width: _Optional[int] = ..., display_value: _Optional[str] = ..., range_text: _Optional[str] = ..., lowest: _Optional[float] = ..., highest: _Optional[float] = ..., resolution: _Optional[float] = ..., raw_value: _Optional[float] = ..., scaling: _Optional[_Union[Scaling, _Mapping]] = ..., read_period_us: _Optional[int] = ..., read_period_text: _Optional[str] = ..., enumerators: _Optional[_Iterable[_Union[Enumerator, _Mapping]]] = ..., value_name: _Optional[str] = ..., resting: _Optional[bool] = ..., resting_text: _Optional[str] = ..., image: _Optional[str] = ...) -> None: ...
 
 class WatchList(_message.Message):
     __slots__ = ("watches",)
@@ -3506,12 +3546,14 @@ class SourceTreeView(_message.Message):
     def __init__(self, files: _Optional[_Iterable[_Union[SourceFileView, _Mapping]]] = ..., note: _Optional[str] = ...) -> None: ...
 
 class SourceRequest(_message.Message):
-    __slots__ = ("path", "from_disk")
+    __slots__ = ("path", "from_disk", "image")
     PATH_FIELD_NUMBER: _ClassVar[int]
     FROM_DISK_FIELD_NUMBER: _ClassVar[int]
+    IMAGE_FIELD_NUMBER: _ClassVar[int]
     path: str
     from_disk: bool
-    def __init__(self, path: _Optional[str] = ..., from_disk: _Optional[bool] = ...) -> None: ...
+    image: str
+    def __init__(self, path: _Optional[str] = ..., from_disk: _Optional[bool] = ..., image: _Optional[str] = ...) -> None: ...
 
 class SourceText(_message.Message):
     __slots__ = ("path", "as_built", "text", "digest", "state", "state_text", "note")
@@ -3906,12 +3948,14 @@ class RestartView(_message.Message):
     def __init__(self, phase: _Optional[_Union[RestartPhase, str]] = ..., can_restart: _Optional[bool] = ..., restart_unavailable: _Optional[str] = ..., can_rebuild: _Optional[bool] = ..., rebuild_unavailable: _Optional[str] = ..., last_build: _Optional[_Union[BuildResult, _Mapping]] = ..., generation: _Optional[int] = ..., done_text: _Optional[str] = ..., refused_text: _Optional[str] = ..., refused_parameter: _Optional[str] = ..., pending_time_model_text: _Optional[str] = ...) -> None: ...
 
 class ArchitectureRequest(_message.Message):
-    __slots__ = ("known_revision", "path")
+    __slots__ = ("known_revision", "path", "image")
     KNOWN_REVISION_FIELD_NUMBER: _ClassVar[int]
     PATH_FIELD_NUMBER: _ClassVar[int]
+    IMAGE_FIELD_NUMBER: _ClassVar[int]
     known_revision: int
     path: str
-    def __init__(self, known_revision: _Optional[int] = ..., path: _Optional[str] = ...) -> None: ...
+    image: str
+    def __init__(self, known_revision: _Optional[int] = ..., path: _Optional[str] = ..., image: _Optional[str] = ...) -> None: ...
 
 class IndexProgress(_message.Message):
     __slots__ = ("files_read", "files_total", "complete", "text", "unreadable")
@@ -4026,7 +4070,7 @@ class FileMetricsView(_message.Message):
     def __init__(self, revision: _Optional[int] = ..., unchanged: _Optional[bool] = ..., progress: _Optional[_Union[IndexProgress, _Mapping]] = ..., profile: _Optional[str] = ..., measures: _Optional[_Iterable[_Union[MeasureDescription, _Mapping]]] = ..., files: _Optional[_Iterable[_Union[FileMeasures, _Mapping]]] = ...) -> None: ...
 
 class ArchitectureFocus(_message.Message):
-    __slots__ = ("node_id", "focus", "depth", "kinds", "known_revision", "weights", "context_id")
+    __slots__ = ("node_id", "focus", "depth", "kinds", "known_revision", "weights", "context_id", "image")
     NODE_ID_FIELD_NUMBER: _ClassVar[int]
     FOCUS_FIELD_NUMBER: _ClassVar[int]
     DEPTH_FIELD_NUMBER: _ClassVar[int]
@@ -4034,6 +4078,7 @@ class ArchitectureFocus(_message.Message):
     KNOWN_REVISION_FIELD_NUMBER: _ClassVar[int]
     WEIGHTS_FIELD_NUMBER: _ClassVar[int]
     CONTEXT_ID_FIELD_NUMBER: _ClassVar[int]
+    IMAGE_FIELD_NUMBER: _ClassVar[int]
     node_id: str
     focus: str
     depth: int
@@ -4041,7 +4086,8 @@ class ArchitectureFocus(_message.Message):
     known_revision: int
     weights: EdgeWeights
     context_id: str
-    def __init__(self, node_id: _Optional[str] = ..., focus: _Optional[str] = ..., depth: _Optional[int] = ..., kinds: _Optional[_Iterable[str]] = ..., known_revision: _Optional[int] = ..., weights: _Optional[_Union[EdgeWeights, str]] = ..., context_id: _Optional[str] = ...) -> None: ...
+    image: str
+    def __init__(self, node_id: _Optional[str] = ..., focus: _Optional[str] = ..., depth: _Optional[int] = ..., kinds: _Optional[_Iterable[str]] = ..., known_revision: _Optional[int] = ..., weights: _Optional[_Union[EdgeWeights, str]] = ..., context_id: _Optional[str] = ..., image: _Optional[str] = ...) -> None: ...
 
 class ArchitectureCrumb(_message.Message):
     __slots__ = ("node_id", "title", "kind")
@@ -4182,12 +4228,14 @@ class ExecutionContextChoice(_message.Message):
     def __init__(self, context_id: _Optional[str] = ..., title: _Optional[str] = ..., kind: _Optional[_Union[ContextKind, str]] = ...) -> None: ...
 
 class FindingFilter(_message.Message):
-    __slots__ = ("node_id", "known_revision")
+    __slots__ = ("node_id", "known_revision", "image")
     NODE_ID_FIELD_NUMBER: _ClassVar[int]
     KNOWN_REVISION_FIELD_NUMBER: _ClassVar[int]
+    IMAGE_FIELD_NUMBER: _ClassVar[int]
     node_id: str
     known_revision: int
-    def __init__(self, node_id: _Optional[str] = ..., known_revision: _Optional[int] = ...) -> None: ...
+    image: str
+    def __init__(self, node_id: _Optional[str] = ..., known_revision: _Optional[int] = ..., image: _Optional[str] = ...) -> None: ...
 
 class CodePlace(_message.Message):
     __slots__ = ("path", "line", "kind", "what")
@@ -4242,12 +4290,14 @@ class ArchitectureFinding(_message.Message):
     def __init__(self, key: _Optional[str] = ..., kind: _Optional[str] = ..., severity: _Optional[_Union[Tier, str]] = ..., title: _Optional[str] = ..., explanation: _Optional[str] = ..., places: _Optional[_Iterable[_Union[CodePlace, _Mapping]]] = ..., node_ids: _Optional[_Iterable[str]] = ..., edge_ids: _Optional[_Iterable[str]] = ..., function: _Optional[str] = ..., state: _Optional[str] = ..., note: _Optional[str] = ..., evidence: _Optional[_Union[FindingEvidence, str]] = ..., evidence_text: _Optional[str] = ..., interrupt_source_id: _Optional[int] = ..., evidence_event_seq: _Optional[int] = ..., context_ids: _Optional[_Iterable[str]] = ..., evidence_sim_us: _Optional[int] = ..., interrupt_source_name: _Optional[str] = ...) -> None: ...
 
 class IsrContextRequest(_message.Message):
-    __slots__ = ("context_id", "known_revision")
+    __slots__ = ("context_id", "known_revision", "image")
     CONTEXT_ID_FIELD_NUMBER: _ClassVar[int]
     KNOWN_REVISION_FIELD_NUMBER: _ClassVar[int]
+    IMAGE_FIELD_NUMBER: _ClassVar[int]
     context_id: str
     known_revision: int
-    def __init__(self, context_id: _Optional[str] = ..., known_revision: _Optional[int] = ...) -> None: ...
+    image: str
+    def __init__(self, context_id: _Optional[str] = ..., known_revision: _Optional[int] = ..., image: _Optional[str] = ...) -> None: ...
 
 class ExecutionContext(_message.Message):
     __slots__ = ("context_id", "kind", "title", "root_function", "path", "line", "origins", "origin_text", "source_name", "source_id", "priority_text", "functions", "reach_text", "run_text", "critical", "noticeable", "note", "stack_text")
@@ -4452,12 +4502,14 @@ class HotspotMatrixView(_message.Message):
     def __init__(self, revision: _Optional[int] = ..., unchanged: _Optional[bool] = ..., cognitive_limit: _Optional[float] = ..., cognitive_limit_text: _Optional[str] = ..., rate_limit: _Optional[float] = ..., rate_limit_text: _Optional[str] = ..., quadrants: _Optional[_Iterable[_Union[HotspotQuadrant, _Mapping]]] = ..., points: _Optional[_Iterable[_Union[HotspotPoint, _Mapping]]] = ..., source_text: _Optional[str] = ..., state_text: _Optional[str] = ...) -> None: ...
 
 class StackRequest(_message.Message):
-    __slots__ = ("context_id", "known_revision")
+    __slots__ = ("context_id", "known_revision", "image")
     CONTEXT_ID_FIELD_NUMBER: _ClassVar[int]
     KNOWN_REVISION_FIELD_NUMBER: _ClassVar[int]
+    IMAGE_FIELD_NUMBER: _ClassVar[int]
     context_id: str
     known_revision: int
-    def __init__(self, context_id: _Optional[str] = ..., known_revision: _Optional[int] = ...) -> None: ...
+    image: str
+    def __init__(self, context_id: _Optional[str] = ..., known_revision: _Optional[int] = ..., image: _Optional[str] = ...) -> None: ...
 
 class StackPathFrame(_message.Message):
     __slots__ = ("function", "module", "path", "line", "bytes", "bytes_text", "bytes_from", "dynamic", "never_ran", "by_pointer", "note")
@@ -4552,12 +4604,14 @@ class StackWorstCaseView(_message.Message):
     def __init__(self, revision: _Optional[int] = ..., unchanged: _Optional[bool] = ..., progress: _Optional[_Union[IndexProgress, _Mapping]] = ..., entries: _Optional[_Iterable[_Union[StackEntry, _Mapping]]] = ..., chosen_id: _Optional[str] = ..., worst_bytes_from: _Optional[_Union[FrameBytes, str]] = ..., measured_bytes_from: _Optional[_Union[FrameBytes, str]] = ..., frames_text: _Optional[str] = ..., host_hint: _Optional[str] = ..., total_bytes: _Optional[int] = ..., total_text: _Optional[str] = ..., size_bytes: _Optional[int] = ..., size_text: _Optional[str] = ..., state_text: _Optional[str] = ..., produce_text: _Optional[str] = ...) -> None: ...
 
 class HistoryRequest(_message.Message):
-    __slots__ = ("last", "known_revision")
+    __slots__ = ("last", "known_revision", "image")
     LAST_FIELD_NUMBER: _ClassVar[int]
     KNOWN_REVISION_FIELD_NUMBER: _ClassVar[int]
+    IMAGE_FIELD_NUMBER: _ClassVar[int]
     last: int
     known_revision: int
-    def __init__(self, last: _Optional[int] = ..., known_revision: _Optional[int] = ...) -> None: ...
+    image: str
+    def __init__(self, last: _Optional[int] = ..., known_revision: _Optional[int] = ..., image: _Optional[str] = ...) -> None: ...
 
 class HistoryValue(_message.Message):
     __slots__ = ("series", "value", "value_text")
@@ -4616,14 +4670,16 @@ class ArchitectureHistory(_message.Message):
     def __init__(self, revision: _Optional[int] = ..., unchanged: _Optional[bool] = ..., series: _Optional[_Iterable[_Union[HistorySeries, _Mapping]]] = ..., runs: _Optional[_Iterable[_Union[HistoryRun, _Mapping]]] = ..., path_text: _Optional[str] = ..., state_text: _Optional[str] = ...) -> None: ...
 
 class ModuleCardRequest(_message.Message):
-    __slots__ = ("module_id", "path", "known_revision")
+    __slots__ = ("module_id", "path", "known_revision", "image")
     MODULE_ID_FIELD_NUMBER: _ClassVar[int]
     PATH_FIELD_NUMBER: _ClassVar[int]
     KNOWN_REVISION_FIELD_NUMBER: _ClassVar[int]
+    IMAGE_FIELD_NUMBER: _ClassVar[int]
     module_id: str
     path: str
     known_revision: int
-    def __init__(self, module_id: _Optional[str] = ..., path: _Optional[str] = ..., known_revision: _Optional[int] = ...) -> None: ...
+    image: str
+    def __init__(self, module_id: _Optional[str] = ..., path: _Optional[str] = ..., known_revision: _Optional[int] = ..., image: _Optional[str] = ...) -> None: ...
 
 class CardFunction(_message.Message):
     __slots__ = ("name", "signature", "path", "line", "is_public", "access", "marks", "worst_tier", "metrics_text")
@@ -4828,12 +4884,14 @@ class FindingList(_message.Message):
     def __init__(self, revision: _Optional[int] = ..., unchanged: _Optional[bool] = ..., findings: _Optional[_Iterable[_Union[ArchitectureFinding, _Mapping]]] = ..., complete: _Optional[bool] = ..., note: _Optional[str] = ..., fixed: _Optional[_Iterable[str]] = ...) -> None: ...
 
 class PlacesRequest(_message.Message):
-    __slots__ = ("edge_id", "kinds")
+    __slots__ = ("edge_id", "kinds", "image")
     EDGE_ID_FIELD_NUMBER: _ClassVar[int]
     KINDS_FIELD_NUMBER: _ClassVar[int]
+    IMAGE_FIELD_NUMBER: _ClassVar[int]
     edge_id: str
     kinds: _containers.RepeatedScalarFieldContainer[str]
-    def __init__(self, edge_id: _Optional[str] = ..., kinds: _Optional[_Iterable[str]] = ...) -> None: ...
+    image: str
+    def __init__(self, edge_id: _Optional[str] = ..., kinds: _Optional[_Iterable[str]] = ..., image: _Optional[str] = ...) -> None: ...
 
 class PlaceList(_message.Message):
     __slots__ = ("places",)
@@ -4912,14 +4970,16 @@ class RuleChange(_message.Message):
     def __init__(self, operation: _Optional[str] = ..., layer: _Optional[str] = ..., name: _Optional[str] = ..., position: _Optional[int] = ..., folder: _Optional[str] = ..., pattern: _Optional[str] = ..., may_skip: _Optional[bool] = ..., user: _Optional[str] = ..., used: _Optional[str] = ..., reason: _Optional[str] = ..., folders: _Optional[_Iterable[str]] = ..., patterns: _Optional[_Iterable[str]] = ...) -> None: ...
 
 class RuleChangeRequest(_message.Message):
-    __slots__ = ("change", "base_revision", "dry_run")
+    __slots__ = ("change", "base_revision", "dry_run", "image")
     CHANGE_FIELD_NUMBER: _ClassVar[int]
     BASE_REVISION_FIELD_NUMBER: _ClassVar[int]
     DRY_RUN_FIELD_NUMBER: _ClassVar[int]
+    IMAGE_FIELD_NUMBER: _ClassVar[int]
     change: RuleChange
     base_revision: str
     dry_run: bool
-    def __init__(self, change: _Optional[_Union[RuleChange, _Mapping]] = ..., base_revision: _Optional[str] = ..., dry_run: _Optional[bool] = ...) -> None: ...
+    image: str
+    def __init__(self, change: _Optional[_Union[RuleChange, _Mapping]] = ..., base_revision: _Optional[str] = ..., dry_run: _Optional[bool] = ..., image: _Optional[str] = ...) -> None: ...
 
 class RuleChangeReply(_message.Message):
     __slots__ = ("revision", "inverse", "effect")
@@ -4932,14 +4992,16 @@ class RuleChangeReply(_message.Message):
     def __init__(self, revision: _Optional[str] = ..., inverse: _Optional[_Union[RuleChange, _Mapping]] = ..., effect: _Optional[str] = ...) -> None: ...
 
 class AcceptFindingsRequest(_message.Message):
-    __slots__ = ("keys", "note", "every")
+    __slots__ = ("keys", "note", "every", "image")
     KEYS_FIELD_NUMBER: _ClassVar[int]
     NOTE_FIELD_NUMBER: _ClassVar[int]
     EVERY_FIELD_NUMBER: _ClassVar[int]
+    IMAGE_FIELD_NUMBER: _ClassVar[int]
     keys: _containers.RepeatedScalarFieldContainer[str]
     note: str
     every: bool
-    def __init__(self, keys: _Optional[_Iterable[str]] = ..., note: _Optional[str] = ..., every: _Optional[bool] = ...) -> None: ...
+    image: str
+    def __init__(self, keys: _Optional[_Iterable[str]] = ..., note: _Optional[str] = ..., every: _Optional[bool] = ..., image: _Optional[str] = ...) -> None: ...
 
 class MachineSummary(_message.Message):
     __slots__ = ("machine_id", "name", "kind_text", "module", "states", "transitions", "display_name", "carrier_text", "naming_text", "parent_ids", "depth", "nesting_note", "parent_text", "nesting")
@@ -5030,10 +5092,12 @@ class StateMachineList(_message.Message):
     def __init__(self, machines: _Optional[_Iterable[_Union[MachineSummary, _Mapping]]] = ...) -> None: ...
 
 class StateMachineChoice(_message.Message):
-    __slots__ = ("machine_id",)
+    __slots__ = ("machine_id", "image")
     MACHINE_ID_FIELD_NUMBER: _ClassVar[int]
+    IMAGE_FIELD_NUMBER: _ClassVar[int]
     machine_id: str
-    def __init__(self, machine_id: _Optional[str] = ...) -> None: ...
+    image: str
+    def __init__(self, machine_id: _Optional[str] = ..., image: _Optional[str] = ...) -> None: ...
 
 class MachineState(_message.Message):
     __slots__ = ("name", "is_initial", "reached", "dwell_text", "is_current", "value", "path", "line", "do_calls", "submachines", "held", "held_text")
@@ -5194,14 +5258,16 @@ class MachineFollowRequest(_message.Message):
     def __init__(self, machine_id: _Optional[str] = ..., variable_path: _Optional[str] = ..., follow: _Optional[bool] = ..., with_parent: _Optional[bool] = ...) -> None: ...
 
 class CallTreeRequest(_message.Message):
-    __slots__ = ("function", "depth", "grouping")
+    __slots__ = ("function", "depth", "grouping", "image")
     FUNCTION_FIELD_NUMBER: _ClassVar[int]
     DEPTH_FIELD_NUMBER: _ClassVar[int]
     GROUPING_FIELD_NUMBER: _ClassVar[int]
+    IMAGE_FIELD_NUMBER: _ClassVar[int]
     function: str
     depth: int
     grouping: LifelineGrouping
-    def __init__(self, function: _Optional[str] = ..., depth: _Optional[int] = ..., grouping: _Optional[_Union[LifelineGrouping, str]] = ...) -> None: ...
+    image: str
+    def __init__(self, function: _Optional[str] = ..., depth: _Optional[int] = ..., grouping: _Optional[_Union[LifelineGrouping, str]] = ..., image: _Optional[str] = ...) -> None: ...
 
 class SequenceLifeline(_message.Message):
     __slots__ = ("lifeline_id", "name", "caption", "kind", "stereotype")

@@ -21,6 +21,8 @@ from looper.infrastructure.contract import looper_inspector_pb2 as contract
 from looper.infrastructure.contract import looper_inspector_pb2_grpc as service
 
 EMPTY = contract.Empty()
+# The interrupts of the image that runs (looper-srv#23).
+RUNNING_IMAGE = contract.ImageScope()
 
 
 class GrpcInterruptCalls(InterruptInspector):
@@ -38,7 +40,7 @@ class GrpcInterruptCalls(InterruptInspector):
 
     def read_interrupts(self) -> Interrupts:
         """Every source and the lock."""
-        report = self._call(self._stub.ObserveInterrupts, EMPTY)
+        report = self._call(self._stub.ObserveInterrupts, RUNNING_IMAGE)
         return interrupt_translation.interrupts_of(report)
 
     def read_run_findings(self) -> tuple[RunFindingReading, ...]:
