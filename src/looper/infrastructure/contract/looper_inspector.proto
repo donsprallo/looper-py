@@ -1540,6 +1540,9 @@ message ImageView {
   string text = 7;                 // "app@2.1 · built · 96 KiB · 7f3a…e1"
   string ref = 8;                  // "app@2.1", as FlashWrite.image names it
   string origin_text = 9;          // "stand-in" or "target build (build/arm/app.bin)"
+  uint32 last_life = 10;           // the last life that ran it; 0: it has not run in this run
+  bool running = 11;               // the life that runs now runs it
+  string run_text = 12;            // "runs · life 3", "ran last in life 2", "has not run"
 }
 
 message ImageList {

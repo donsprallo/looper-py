@@ -2265,7 +2265,7 @@ class FlashContent(_message.Message):
     def __init__(self, content: _Optional[bytes] = ...) -> None: ...
 
 class ImageView(_message.Message):
-    __slots__ = ("name", "variant", "identity_hex", "version_text", "payload_size", "built", "text", "ref", "origin_text")
+    __slots__ = ("name", "variant", "identity_hex", "version_text", "payload_size", "built", "text", "ref", "origin_text", "last_life", "running", "run_text")
     NAME_FIELD_NUMBER: _ClassVar[int]
     VARIANT_FIELD_NUMBER: _ClassVar[int]
     IDENTITY_HEX_FIELD_NUMBER: _ClassVar[int]
@@ -2275,6 +2275,9 @@ class ImageView(_message.Message):
     TEXT_FIELD_NUMBER: _ClassVar[int]
     REF_FIELD_NUMBER: _ClassVar[int]
     ORIGIN_TEXT_FIELD_NUMBER: _ClassVar[int]
+    LAST_LIFE_FIELD_NUMBER: _ClassVar[int]
+    RUNNING_FIELD_NUMBER: _ClassVar[int]
+    RUN_TEXT_FIELD_NUMBER: _ClassVar[int]
     name: str
     variant: str
     identity_hex: str
@@ -2284,7 +2287,10 @@ class ImageView(_message.Message):
     text: str
     ref: str
     origin_text: str
-    def __init__(self, name: _Optional[str] = ..., variant: _Optional[str] = ..., identity_hex: _Optional[str] = ..., version_text: _Optional[str] = ..., payload_size: _Optional[int] = ..., built: _Optional[bool] = ..., text: _Optional[str] = ..., ref: _Optional[str] = ..., origin_text: _Optional[str] = ...) -> None: ...
+    last_life: int
+    running: bool
+    run_text: str
+    def __init__(self, name: _Optional[str] = ..., variant: _Optional[str] = ..., identity_hex: _Optional[str] = ..., version_text: _Optional[str] = ..., payload_size: _Optional[int] = ..., built: _Optional[bool] = ..., text: _Optional[str] = ..., ref: _Optional[str] = ..., origin_text: _Optional[str] = ..., last_life: _Optional[int] = ..., running: _Optional[bool] = ..., run_text: _Optional[str] = ...) -> None: ...
 
 class ImageList(_message.Message):
     __slots__ = ("images", "note")
