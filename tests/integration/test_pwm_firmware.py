@@ -105,14 +105,6 @@ def test_a_servo_pulse_too_short_for_its_range_fails_with_the_widths(
     )
 
 
-#: Why a duty set before a window is not measured in it, for now.
-FORGETS_ON_CLEAR = (
-    "looper-srv forgets a PWM's state when the recording is cleared: MeasurePwm and "
-    "ObservePwms then start from the contract's state (off) until the next change"
-)
-
-
-@pytest.mark.xfail(strict=True, reason=FORGETS_ON_CLEAR)
 def test_a_duty_set_before_the_window_is_measured_in_it(simulation: looper.Simulation) -> None:
     simulation.advance(0.025)
 
@@ -124,7 +116,6 @@ def test_a_duty_set_before_the_window_is_measured_in_it(simulation: looper.Simul
     assert report, report.summary
 
 
-@pytest.mark.xfail(strict=True, reason=FORGETS_ON_CLEAR)
 def test_the_duty_the_firmware_starts_with_is_measured_in_the_first_window(
     simulation: looper.Simulation,
 ) -> None:

@@ -166,14 +166,11 @@ motor.text                                      # '20.0 kHz · 37.5 % · center'
 
 `simulation.pwms()` lists them all, in the contract's order.
 
-```{warning}
-For now, looper-srv forgets a PWM's state when a window clears the recording:
-until the firmware changes the output again, the server measures it as the
-contract starts it, off. A duty the firmware set before the window -- even
-at its start -- is therefore not part of `duty_between` or `frequency`, and
-a second window's `reaches_duty` starts from that state too. Let the change
-you check happen inside the window.
-```
+A window starts with the state every output stands in: clearing the
+recording changes nothing on the target, so a duty the firmware set before
+the window -- even at its start -- counts from the window's first
+microsecond, in `duty_between`, `frequency` and `reaches_duty` alike. Only a
+new life of the firmware starts an output as the contract does, off.
 
 ## Pulses on a pin
 
