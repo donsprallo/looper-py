@@ -15,6 +15,7 @@ from enum import StrEnum
 from looper.domain.model.event_loss import EventLoss
 from looper.domain.model.interrupt_facts import InterruptMark
 from looper.domain.model.marks import FlashMark, ResetMark
+from looper.domain.model.pwm import PwmChange
 from looper.domain.model.time_models import ActiveTimeModel, TimeModel
 
 
@@ -48,6 +49,9 @@ class Description:
             it cannot use before asking.
         time_models: The time models the simulation can restart with, in
             the server's order; empty from a server that predates them.
+        capabilities: What the server offers beyond the core of the contract,
+            by the contract's names without their prefix, lower case: ``pwm``,
+            ``pin_measure``, ``interrupts``.
     """
 
     contract_version: int
@@ -58,6 +62,7 @@ class Description:
     licence_note: str = ""
     pro_parts: tuple[str, ...] = ()
     time_models: tuple[TimeModel, ...] = ()
+    capabilities: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -122,6 +127,8 @@ class EventPage:
             the reader's last page.
         resets: The resets on the page.
         flash_marks: The flash operations on the page.
+        interrupt_marks: The interrupt events on the page.
+        pwm_changes: The changes of the PWM outputs on the page.
     """
 
     samples: tuple[Sample, ...] = ()
@@ -133,6 +140,7 @@ class EventPage:
     resets: tuple[ResetMark, ...] = ()
     flash_marks: tuple[FlashMark, ...] = ()
     interrupt_marks: tuple[InterruptMark, ...] = ()
+    pwm_changes: tuple[PwmChange, ...] = ()
 
 
 @dataclass(frozen=True)
