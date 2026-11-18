@@ -1046,6 +1046,8 @@ message TriggerCondition {
     StartCondition start = 13;
     InterruptCondition interrupt = 14;
     ResetCondition reset = 15;
+    // 16 is the runtime's own number of a sequence's block, not a condition.
+    PwmCondition pwm = 17;              // a Logic trigger's (CAPABILITY_PWM); refused in a chain for now
   }
 }
 
@@ -1075,6 +1077,27 @@ message SequenceCondition {
   TriggerCondition second = 2;
   uint64 within_us = 3;           // 0: no window
   bool second_absent = 4;         // fire when the window passes without `second`
+}
+
+// What a PWM condition asks of its output.
+enum PwmTest {
+  PWM_TEST_DUTY = 0;              // the duty compared: `op` `duty`; an output that is off drives 0
+  PWM_TEST_ENABLED = 1;           // the output is on
+  PWM_TEST_DISABLED = 2;          // the output is off
+}
+
+// A PWM output's state ("MOTOR:duty>90%", "MOTOR:off"), looked at where it
+// takes effect: at once without preload or while the output is off, with
+// preload at the start of the next period -- the instant its PwmChange
+// carries; a value that still waits fires nothing. Like a pattern it fires
+// when it BECOMES true: armed while it is true, it fires only after it was
+// false again. A sequence takes it as either part.
+message PwmCondition {
+  uint32 pwm_id = 1;              // as PwmView.pwm_id; 0: by `name`
+  string name = 2;                // contract.toml's [pwm.NAME], "MOTOR", when pwm_id is 0
+  PwmTest test = 3;
+  Comparison op = 4;              // PWM_TEST_DUTY: LT, LE, GT, GE (EQ, NE compare exactly)
+  double duty = 5;                // PWM_TEST_DUTY: a share from 0 to 1, 0.9 for 90 %
 }
 
 message TriggerChoice { uint32 trigger_id = 1; string by_client = 2; }

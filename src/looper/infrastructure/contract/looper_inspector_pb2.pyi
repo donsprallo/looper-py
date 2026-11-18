@@ -242,6 +242,12 @@ class Comparison(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     CMP_GT: _ClassVar[Comparison]
     CMP_GE: _ClassVar[Comparison]
 
+class PwmTest(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+    __slots__ = ()
+    PWM_TEST_DUTY: _ClassVar[PwmTest]
+    PWM_TEST_ENABLED: _ClassVar[PwmTest]
+    PWM_TEST_DISABLED: _ClassVar[PwmTest]
+
 class ExchangeUnit(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     __slots__ = ()
     EXCHANGE_UNIT_UNSPECIFIED: _ClassVar[ExchangeUnit]
@@ -650,6 +656,9 @@ CMP_LT: Comparison
 CMP_LE: Comparison
 CMP_GT: Comparison
 CMP_GE: Comparison
+PWM_TEST_DUTY: PwmTest
+PWM_TEST_ENABLED: PwmTest
+PWM_TEST_DISABLED: PwmTest
 EXCHANGE_UNIT_UNSPECIFIED: ExchangeUnit
 EXCHANGE_UNIT_BYTE: ExchangeUnit
 EXCHANGE_UNIT_WRITE: ExchangeUnit
@@ -1839,7 +1848,7 @@ class TriggerSpec(_message.Message):
     def __init__(self, label: _Optional[str] = ..., condition: _Optional[_Union[TriggerCondition, _Mapping]] = ..., mode: _Optional[_Union[TriggerMode, str]] = ..., pre_us: _Optional[int] = ..., post_us: _Optional[int] = ..., capture_us: _Optional[int] = ..., armed_by: _Optional[str] = ..., replaces_trigger_id: _Optional[int] = ..., when: _Optional[_Union[When, _Mapping]] = ...) -> None: ...
 
 class TriggerCondition(_message.Message):
-    __slots__ = ("edge", "pattern", "edge_while", "width", "quiet", "value", "analog", "exchange", "sequence", "bus_received", "bus_timeout", "clock", "start", "interrupt", "reset")
+    __slots__ = ("edge", "pattern", "edge_while", "width", "quiet", "value", "analog", "exchange", "sequence", "bus_received", "bus_timeout", "clock", "start", "interrupt", "reset", "pwm")
     EDGE_FIELD_NUMBER: _ClassVar[int]
     PATTERN_FIELD_NUMBER: _ClassVar[int]
     EDGE_WHILE_FIELD_NUMBER: _ClassVar[int]
@@ -1855,6 +1864,7 @@ class TriggerCondition(_message.Message):
     START_FIELD_NUMBER: _ClassVar[int]
     INTERRUPT_FIELD_NUMBER: _ClassVar[int]
     RESET_FIELD_NUMBER: _ClassVar[int]
+    PWM_FIELD_NUMBER: _ClassVar[int]
     edge: EdgeCondition
     pattern: PatternCondition
     edge_while: EdgeWhileCondition
@@ -1870,7 +1880,8 @@ class TriggerCondition(_message.Message):
     start: StartCondition
     interrupt: InterruptCondition
     reset: ResetCondition
-    def __init__(self, edge: _Optional[_Union[EdgeCondition, _Mapping]] = ..., pattern: _Optional[_Union[PatternCondition, _Mapping]] = ..., edge_while: _Optional[_Union[EdgeWhileCondition, _Mapping]] = ..., width: _Optional[_Union[WidthCondition, _Mapping]] = ..., quiet: _Optional[_Union[QuietCondition, _Mapping]] = ..., value: _Optional[_Union[ValueCondition, _Mapping]] = ..., analog: _Optional[_Union[AnalogCondition, _Mapping]] = ..., exchange: _Optional[_Union[ExchangeCondition, _Mapping]] = ..., sequence: _Optional[_Union[SequenceCondition, _Mapping]] = ..., bus_received: _Optional[_Union[BusReceivedCondition, _Mapping]] = ..., bus_timeout: _Optional[_Union[BusTimeoutCondition, _Mapping]] = ..., clock: _Optional[_Union[ClockCondition, _Mapping]] = ..., start: _Optional[_Union[StartCondition, _Mapping]] = ..., interrupt: _Optional[_Union[InterruptCondition, _Mapping]] = ..., reset: _Optional[_Union[ResetCondition, _Mapping]] = ...) -> None: ...
+    pwm: PwmCondition
+    def __init__(self, edge: _Optional[_Union[EdgeCondition, _Mapping]] = ..., pattern: _Optional[_Union[PatternCondition, _Mapping]] = ..., edge_while: _Optional[_Union[EdgeWhileCondition, _Mapping]] = ..., width: _Optional[_Union[WidthCondition, _Mapping]] = ..., quiet: _Optional[_Union[QuietCondition, _Mapping]] = ..., value: _Optional[_Union[ValueCondition, _Mapping]] = ..., analog: _Optional[_Union[AnalogCondition, _Mapping]] = ..., exchange: _Optional[_Union[ExchangeCondition, _Mapping]] = ..., sequence: _Optional[_Union[SequenceCondition, _Mapping]] = ..., bus_received: _Optional[_Union[BusReceivedCondition, _Mapping]] = ..., bus_timeout: _Optional[_Union[BusTimeoutCondition, _Mapping]] = ..., clock: _Optional[_Union[ClockCondition, _Mapping]] = ..., start: _Optional[_Union[StartCondition, _Mapping]] = ..., interrupt: _Optional[_Union[InterruptCondition, _Mapping]] = ..., reset: _Optional[_Union[ResetCondition, _Mapping]] = ..., pwm: _Optional[_Union[PwmCondition, _Mapping]] = ...) -> None: ...
 
 class EdgeCondition(_message.Message):
     __slots__ = ("pin_id", "polarity")
@@ -1967,6 +1978,20 @@ class SequenceCondition(_message.Message):
     within_us: int
     second_absent: bool
     def __init__(self, first: _Optional[_Union[TriggerCondition, _Mapping]] = ..., second: _Optional[_Union[TriggerCondition, _Mapping]] = ..., within_us: _Optional[int] = ..., second_absent: _Optional[bool] = ...) -> None: ...
+
+class PwmCondition(_message.Message):
+    __slots__ = ("pwm_id", "name", "test", "op", "duty")
+    PWM_ID_FIELD_NUMBER: _ClassVar[int]
+    NAME_FIELD_NUMBER: _ClassVar[int]
+    TEST_FIELD_NUMBER: _ClassVar[int]
+    OP_FIELD_NUMBER: _ClassVar[int]
+    DUTY_FIELD_NUMBER: _ClassVar[int]
+    pwm_id: int
+    name: str
+    test: PwmTest
+    op: Comparison
+    duty: float
+    def __init__(self, pwm_id: _Optional[int] = ..., name: _Optional[str] = ..., test: _Optional[_Union[PwmTest, str]] = ..., op: _Optional[_Union[Comparison, str]] = ..., duty: _Optional[float] = ...) -> None: ...
 
 class TriggerChoice(_message.Message):
     __slots__ = ("trigger_id", "by_client")
