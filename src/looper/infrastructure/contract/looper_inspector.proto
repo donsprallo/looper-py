@@ -384,6 +384,11 @@ enum Capability {
   CAPABILITY_LANE_SUMMARY = 24;    // SummarizeLanes: lanes per pixel column over the whole log
   CAPABILITY_PWM = 25;             // the contract lists [pwm.NAME]: ObservePwms, MeasurePwm, PwmChange in the stream
   CAPABILITY_PIN_MEASURE = 26;     // MeasurePin: pulse widths and frequency of a pin's recorded edges
+  // The runtime plans the signal graph's edges: the kinds "compare", "abs",
+  // "min" and "max", SignalGraphRequest.pin_targets, PinChange SOURCE_GRAPH;
+  // ListSignalBlocks lists them unlocked. Without it they are refused with a
+  // sentence that says to update looper-rt.
+  CAPABILITY_GRAPH_EDGES = 27;
 }
 
 enum ServerMode {
@@ -797,9 +802,11 @@ message Sample { uint32 channel_id = 1; double value = 2; }
 message PinChange {
   uint32 pin_id = 1;
   bool high = 2;                 // the electrical level
-  Source source = 3;             // FIRMWARE, or CLIENT for a driven input, or CHAIN
+  Source source = 3;             // FIRMWARE, or CLIENT for a driven input, or CHAIN, or GRAPH
   uint64 command_seq = 4;        // for CLIENT
-  uint32 source_id = 5;          // for CHAIN: the chain_id, as ChainNodeView.chain_id
+  // For CHAIN: the chain_id, as ChainNodeView.chain_id. For GRAPH: the
+  // position of the pin target in SignalGraphRequest.pin_targets.
+  uint32 source_id = 5;
 }
 
 message Call { string function = 1; string peripheral = 2; }
@@ -844,6 +851,7 @@ enum Source {
   SOURCE_RULE = 3;
   SOURCE_COMPONENT = 4;
   SOURCE_CHAIN = 5;      // an action of a chain: a frame, a pin level, an interrupt
+  SOURCE_GRAPH = 6;      // a pin target of the signal graph (CAPABILITY_GRAPH_EDGES): a pin level
 }
 
 message CanDetail { bool extended = 1; bool remote = 2; uint32 dlc = 3; bool fd = 4; bool brs = 5; bool esi = 6; bool error_frame = 7; }
@@ -904,6 +912,11 @@ message PinDriven {
   Ack ack = 1;
   bool high = 2;      // the level that was set
   bool active = 3;    // whether that level is the active one
+  // Why the pin did not take the level although the drive was accepted, in
+  // words a person is shown: the signal graph drives the pin and comes
+  // first, and the drive is not kept for when it lets go. Empty when the pin
+  // took it.
+  string overridden_text = 4;
 }
 
 message WatchStarted { WatchView watch = 1; Ack ack = 2; }
@@ -1237,6 +1250,10 @@ service Inspector {
   rpc ObserveChains(Empty) returns (ChainList);
   rpc SwitchChainGroup(ChainGroupSwitch) returns (Ack);
   rpc ListChainBlocks(Empty) returns (ChainBlockCatalogue);
+  // The signal blocks the server builds beyond the waveforms -- Comparator,
+  // Abs, Min, Max, Input pin -- with their library texts, ports and search
+  // words; locked with a sentence where the runtime cannot run them.
+  rpc ListSignalBlocks(Empty) returns (SignalBlockCatalogue);
   // One group's chain as a pytest against looper-py, written by the server
   // so that it matches the API; the window only saves it. looper Pro
   // (PRO_FEATURE_SCENARIOS): PERMISSION_DENIED without the licence.
@@ -1725,6 +1742,13 @@ message PinView {
   // The node_key of the action block that set it; empty when a chain did
   // not, or when no block of that chain sets this pin.
   string last_writer_node_key = 11;
+  // Whether a pin target of the signal graph drives this input
+  // (CAPABILITY_GRAPH_EDGES). DrivePin is then accepted and does nothing;
+  // drive_text says so.
+  bool is_driven_by_graph = 12;
+  // Who sets the pin, as a column "Set by" reads: "signal graph" while the
+  // graph drives it; empty otherwise.
+  string set_by_text = 13;
 }
 
 message SimulationView {
@@ -1791,6 +1815,45 @@ message SignalRequest {
   When when = 15;
 }
 
+// The blocks of the signal graph the server builds beyond the waveforms,
+// with the texts a library card shows (ListSignalBlocks).
+message SignalBlockCatalogue {
+  repeated SignalBlockKind kinds = 1;
+}
+
+message SignalBlockKind {
+  // What SignalNodeRequest.kind carries, for example "compare"; "pin_target"
+  // for an input pin the graph drives (SignalGraphRequest.pin_targets).
+  string kind = 1;
+  // Where the library lists it: "math", "compare_select" or "to_firmware",
+  // and the heading a person is shown: "Math", "Compare & select",
+  // "To firmware".
+  string category = 2;
+  string category_text = 3;
+  // "Comparator", "Abs", "Min", "Max", "Input pin".
+  string display_name = 4;
+  // The library card's sentence.
+  string description = 5;
+  // Words a search finds it by besides its name: "zero cross", "schmitt".
+  repeated string search_words = 6;
+  repeated SignalPortView inputs = 7;
+  repeated SignalPortView outputs = 8;
+  bool is_pro = 9;
+  // It cannot be added: the runtime is older than CAPABILITY_GRAPH_EDGES,
+  // or it is Pro without the licence. locked_text says why.
+  bool is_locked = 10;
+  string locked_text = 11;
+}
+
+message SignalPortView {
+  string name = 1;
+  // An output that gives a level, 0 or 1, which a client draws dashed.
+  bool is_level = 2;
+  // An input that appears only when a setting asks for it: a comparator's
+  // "threshold" when CompareSettings.linked.
+  bool is_optional = 3;
+}
+
 message WaveformView {
   // What a SignalView carries, for example "sine".
   string name = 1;
@@ -1816,7 +1879,8 @@ message SignalNodeRequest {
   // What the client calls the node; unique within the graph.
   string key = 1;
   // "generator", "channel", "pin", "watch", "add", "subtract",
-  // "multiply", "divide", "model" or "value".
+  // "multiply", "divide", "model" or "value"; with CAPABILITY_GRAPH_EDGES
+  // also "compare", "abs" (one input), "min" and "max" (two inputs).
   string kind = 2;
   // What a generator produces.
   SignalView signal = 3;
@@ -1853,6 +1917,29 @@ message SignalNodeRequest {
   ChainBlockRequest block = 11;
   // The ChainGroupRequest it belongs to; empty: none.
   string group_key = 12;
+  // A node of kind "compare": its threshold and hysteresis. It reads
+  // `inputs[0]`, and `inputs[1]` as its threshold when `linked`.
+  CompareSettings compare = 13;
+}
+
+// A comparator: one while its input is beyond the threshold, zero otherwise,
+// with the chain Threshold's rule. Above: it goes to one when the input
+// rises above the threshold, and back to zero only when it falls below the
+// threshold minus the hysteresis; below mirrors it. Its edges are planned
+// to the microsecond where the runtime can; SignalGraphView says how exact.
+message CompareSettings {
+  // The threshold, in the unit of the input; unused while `linked`.
+  double level = 1;
+  // How far back past the threshold the input must go before the output
+  // returns; 0 or more, else ApplySignalGraph refuses with REFUSAL_INVALID.
+  double hysteresis = 2;
+  // One while the input is below the threshold, instead of above.
+  bool below = 3;
+  // The threshold is the signal at `inputs[1]`, not `level`.
+  bool linked = 4;
+  // Where no edge can be planned ahead -- noise or a divide upstream -- how
+  // often the input is checked, in microseconds; 0: Auto, every 10 us.
+  uint64 check_us = 5;
 }
 
 message ModelParameterView {
@@ -1866,6 +1953,9 @@ message ModelParameterView {
   // model says nothing.
   optional double lowest = 4;
   optional double highest = 5;
+  // What it does, in the model's words, as a tooltip shows it; empty where
+  // the model says nothing.
+  string description = 6;
 }
 
 // One model a project offers, or one file that offers nothing usable.
@@ -1903,6 +1993,11 @@ message ModelView {
   // when it hides none: "looper-core" for a project's copy of a shipped
   // model, so that the reader sees the copy is the one in use.
   string stands_in_for = 16;
+  // The heading a library lists it under, for example "Power switches";
+  // empty: none. A project's models are headed by origin_label alone.
+  string group = 17;
+  // Words a search finds it by besides its name, for example "dimmer".
+  repeated string keywords = 18;
 }
 
 message ModelNodeChoice {
@@ -1943,6 +2038,56 @@ message SignalGraphView {
   repeated ProbeView probes = 2;
   // The value nodes of the applied graph, each with what it gives now.
   repeated GraphValueView values = 3;
+  // The input pins the applied graph drives, in the order of
+  // SignalGraphRequest.pin_targets (CAPABILITY_GRAPH_EDGES).
+  repeated PinTargetView pin_targets = 4;
+  // The comparators of the applied graph, with what their block shows;
+  // Abs, Min and Max show their symbol alone and are not listed.
+  repeated SignalNodeView nodes = 5;
+}
+
+// One input pin the applied graph drives, as it is now.
+message PinTargetView {
+  uint32 pin_id = 1;
+  // The pin's name, as PinView.name.
+  string pin_name = 2;
+  // What drives it, by the key the client gave the node, and which output.
+  string node = 3;
+  uint32 output = 4;
+  // The level the graph holds the pin at, and as a pill reads it: "high",
+  // "low".
+  bool high = 5;
+  string value_text = 6;
+  // Edges the graph gave the pin since the graph was applied.
+  uint64 edges = 7;
+  // Why the graph does not drive the pin now, in words a person is shown:
+  // the firmware made it an output, or it chatters; empty while it drives
+  // it. The pin keeps its level meanwhile.
+  string fault_text = 8;
+  // How exact its edges are: "exact to 1 µs", "at model steps of 10 µs",
+  // "checked every 10 µs".
+  string resolution_text = 9;
+  // How often the graph looks for an edge, as the block's setting reads it:
+  // "Planned ahead to the microsecond.", "At the steps of the Triac model,
+  // every 100 µs.", "Checked every 10 µs: noise or a divide upstream has no
+  // slope to plan with."
+  string check_text = 10;
+  // How a number is read as a level, with the pin's polarity: "High from
+  // 0.5, low below. Active low in the firmware."
+  string level_text = 11;
+}
+
+// One node of the applied graph as its block shows it.
+message SignalNodeView {
+  // The key the client gave the node.
+  string node = 1;
+  // The card's summary row: "rises above 0 V · hysteresis 10 V".
+  string summary_text = 2;
+  // The pill: "high" or "low" for a comparator that drives a pin; empty
+  // where the simulation does not report the node's value.
+  string value_text = 3;
+  // The hover card's lines, one fact each.
+  repeated string hover_lines = 4;
 }
 
 // Change what one value node of the applied graph gives.
@@ -1993,6 +2138,21 @@ message ModelList {
   string unavailable_reason = 2;
 }
 
+// Which node drives which digital input pin (CAPABILITY_GRAPH_EDGES): high
+// while the node gives 0.5 or more, low below. The edges reach the firmware
+// as a real pin's would, EXTI included. The graph comes first on the pin:
+// DrivePin and a chain's Set pin do nothing while it drives it, and the pin
+// keeps its last level when the graph lets go. An output pin, a pin the
+// simulation does not have and a pin driven twice are refused with
+// REFUSAL_INVALID; the graph may read a pin it drives.
+message SignalPinTargetRequest {
+  uint32 pin_id = 1;
+  string node = 2;
+  // Which of the node's outputs drives the pin; only a model has more than
+  // one.
+  uint32 output = 3;
+}
+
 // Which node drives which analog input.
 message SignalTargetRequest {
   uint32 channel_id = 1;
@@ -2003,9 +2163,10 @@ message SignalTargetRequest {
 }
 
 // A signal inside the graph to record: only a target reaches the firmware,
-// what feeds it exists nowhere else. Recorded whenever the graph is
-// evaluated, which is when the firmware reads an input the graph drives;
-// a graph that drives no input records nothing.
+// what feeds it exists nowhere else. Recorded on its own clock, every
+// `sample_us`, whether or not the firmware reads anything the graph drives;
+// and, as before, wherever the firmware reads an input the graph drives,
+// once per microsecond.
 message SignalProbeRequest {
   // What the client calls it; unique in the graph. The trace channel
   // follows the name, see SignalGraphView.probes.
@@ -2013,6 +2174,13 @@ message SignalProbeRequest {
   string node = 2;
   // Which of the node's outputs; only a model has more than one.
   uint32 output = 3;
+  // Microseconds between two records. 0 is Auto: the smallest step of a
+  // model upstream, else 1/100 of the period of the fastest generator
+  // upstream, kept within 10 us and 10 ms (10 ms with neither). A probe on a
+  // comparator or a pin source is digital: Auto records it at its edges
+  // only, and a sample_us it is given clocks it besides. A runtime older
+  // than CAPABILITY_GRAPH_EDGES ignores it and records as before.
+  uint64 sample_us = 4;
 }
 
 message SignalGraphRequest {
@@ -2022,6 +2190,8 @@ message SignalGraphRequest {
   // The links between event blocks, and the chains they are grouped into.
   repeated EventLinkRequest event_links = 4;
   repeated ChainGroupRequest groups = 5;
+  // The digital input pins the graph drives (CAPABILITY_GRAPH_EDGES).
+  repeated SignalPinTargetRequest pin_targets = 6;
   When when = 15;
 }
 
@@ -4102,7 +4272,11 @@ message ThresholdSettings {
   double level = 1;
   double hysteresis = 2;
   EdgePolarity direction = 3;     // RISE: rises above, FALL: falls below, ANY: either
-  uint64 check_us = 4;            // 0: the server's default
+  // How often the signal is checked where its crossing cannot be planned
+  // ahead (noise or a divide upstream); 0: the server's default. A runtime
+  // with CAPABILITY_GRAPH_EDGES fires on the microsecond the signal crosses
+  // everywhere else.
+  uint64 check_us = 4;
 }
 
 message ChainLogic {
@@ -4299,12 +4473,19 @@ message GraphProblem {
     INVALID = 4;         // a setting out of range
     CAPACITY = 5;        // more blocks than the runtime holds
     NEEDS_PRO = 6;       // kept, but not run without the licence
+    // Kept and run, but something else comes first, so it does nothing for
+    // now: a Set pin on a pin the signal graph drives. Only CheckSignalGraph
+    // reports it.
+    OVERRIDDEN = 7;
   }
   Kind kind = 1;
   string node_key = 2;
   string group_key = 3;
   string link = 4;           // "from:port -> to:port", for a link
   string text = 5;           // the sentence the window shows
+  // The input pin it is at, for a pin target of the signal graph; unset for
+  // anything else.
+  optional uint32 pin_id = 6;
 }
 
 message ChainCapacityView {
@@ -4540,7 +4721,9 @@ enum LaneEvent {
 message LaneSourceRef {
   oneof source {
     uint32 pin_id = 1;
-    uint32 channel_id = 2;       // an analog channel or a watch's samples
+    // An analog channel, a watch's samples, or a probe of the signal graph
+    // (ProbeView.channel_id), which a Logic lane draws as a curve.
+    uint32 channel_id = 2;
     uint32 bus_id = 3;
     string call_function = 4;
   }

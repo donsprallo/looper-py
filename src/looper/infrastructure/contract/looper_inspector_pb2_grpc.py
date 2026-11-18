@@ -254,6 +254,11 @@ class InspectorStub:
                 request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
                 response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ChainBlockCatalogue.FromString,
                 _registered_method=True)
+        self.ListSignalBlocks = channel.unary_unary(
+                '/looper.inspector.v3.Inspector/ListSignalBlocks',
+                request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
+                response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.SignalBlockCatalogue.FromString,
+                _registered_method=True)
         self.ExportChainAsPytest = channel.unary_unary(
                 '/looper.inspector.v3.Inspector/ExportChainAsPytest',
                 request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.PytestExportRequest.SerializeToString,
@@ -875,6 +880,15 @@ class InspectorServicer:
 
     def ListChainBlocks(self, request, context):
         """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def ListSignalBlocks(self, request, context):
+        """The signal blocks the server builds beyond the waveforms -- Comparator,
+        Abs, Min, Max, Input pin -- with their library texts, ports and search
+        words; locked with a sentence where the runtime cannot run them.
+        """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
@@ -1629,6 +1643,11 @@ def add_InspectorServicer_to_server(servicer, server):
                     servicer.ListChainBlocks,
                     request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.FromString,
                     response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ChainBlockCatalogue.SerializeToString,
+            ),
+            'ListSignalBlocks': grpc.unary_unary_rpc_method_handler(
+                    servicer.ListSignalBlocks,
+                    request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.FromString,
+                    response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.SignalBlockCatalogue.SerializeToString,
             ),
             'ExportChainAsPytest': grpc.unary_unary_rpc_method_handler(
                     servicer.ExportChainAsPytest,
@@ -3134,6 +3153,33 @@ class Inspector:
             '/looper.inspector.v3.Inspector/ListChainBlocks',
             looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
             looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ChainBlockCatalogue.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def ListSignalBlocks(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/looper.inspector.v3.Inspector/ListSignalBlocks',
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.SignalBlockCatalogue.FromString,
             options,
             channel_credentials,
             insecure,

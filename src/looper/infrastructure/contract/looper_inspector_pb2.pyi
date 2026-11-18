@@ -92,6 +92,7 @@ class Capability(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     CAPABILITY_LANE_SUMMARY: _ClassVar[Capability]
     CAPABILITY_PWM: _ClassVar[Capability]
     CAPABILITY_PIN_MEASURE: _ClassVar[Capability]
+    CAPABILITY_GRAPH_EDGES: _ClassVar[Capability]
 
 class ServerMode(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     __slots__ = ()
@@ -221,6 +222,7 @@ class Source(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     SOURCE_RULE: _ClassVar[Source]
     SOURCE_COMPONENT: _ClassVar[Source]
     SOURCE_CHAIN: _ClassVar[Source]
+    SOURCE_GRAPH: _ClassVar[Source]
 
 class TriggerMode(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     __slots__ = ()
@@ -561,6 +563,7 @@ CAPABILITY_BUS_WIRES: Capability
 CAPABILITY_LANE_SUMMARY: Capability
 CAPABILITY_PWM: Capability
 CAPABILITY_PIN_MEASURE: Capability
+CAPABILITY_GRAPH_EDGES: Capability
 SERVER_MODE_SIMULATION: ServerMode
 SERVER_MODE_STATIC: ServerMode
 SERVER_MODE_HARDWARE: ServerMode
@@ -645,6 +648,7 @@ SOURCE_JOB: Source
 SOURCE_RULE: Source
 SOURCE_COMPONENT: Source
 SOURCE_CHAIN: Source
+SOURCE_GRAPH: Source
 TRIGGER_MODE_SINGLE: TriggerMode
 TRIGGER_MODE_NORMAL: TriggerMode
 EDGE_RISE: EdgePolarity
@@ -1652,14 +1656,16 @@ class PinDrive(_message.Message):
     def __init__(self, pin_id: _Optional[int] = ..., high: _Optional[bool] = ..., toggle: _Optional[_Union[Empty, _Mapping]] = ..., active: _Optional[bool] = ..., when: _Optional[_Union[When, _Mapping]] = ...) -> None: ...
 
 class PinDriven(_message.Message):
-    __slots__ = ("ack", "high", "active")
+    __slots__ = ("ack", "high", "active", "overridden_text")
     ACK_FIELD_NUMBER: _ClassVar[int]
     HIGH_FIELD_NUMBER: _ClassVar[int]
     ACTIVE_FIELD_NUMBER: _ClassVar[int]
+    OVERRIDDEN_TEXT_FIELD_NUMBER: _ClassVar[int]
     ack: Ack
     high: bool
     active: bool
-    def __init__(self, ack: _Optional[_Union[Ack, _Mapping]] = ..., high: _Optional[bool] = ..., active: _Optional[bool] = ...) -> None: ...
+    overridden_text: str
+    def __init__(self, ack: _Optional[_Union[Ack, _Mapping]] = ..., high: _Optional[bool] = ..., active: _Optional[bool] = ..., overridden_text: _Optional[str] = ...) -> None: ...
 
 class WatchStarted(_message.Message):
     __slots__ = ("watch", "ack")
@@ -2472,7 +2478,7 @@ class LifeDumpView(_message.Message):
     def __init__(self, life: _Optional[_Union[LifeView, _Mapping]] = ..., memory: _Optional[_Union[MemoryView, _Mapping]] = ..., profile: _Optional[_Union[ProfileView, _Mapping]] = ..., note: _Optional[str] = ...) -> None: ...
 
 class PinView(_message.Message):
-    __slots__ = ("pin_id", "name", "direction", "level", "is_active", "is_drivable", "polarity", "drive_text", "last_writer_text", "last_written_us", "last_writer_node_key")
+    __slots__ = ("pin_id", "name", "direction", "level", "is_active", "is_drivable", "polarity", "drive_text", "last_writer_text", "last_written_us", "last_writer_node_key", "is_driven_by_graph", "set_by_text")
     PIN_ID_FIELD_NUMBER: _ClassVar[int]
     NAME_FIELD_NUMBER: _ClassVar[int]
     DIRECTION_FIELD_NUMBER: _ClassVar[int]
@@ -2484,6 +2490,8 @@ class PinView(_message.Message):
     LAST_WRITER_TEXT_FIELD_NUMBER: _ClassVar[int]
     LAST_WRITTEN_US_FIELD_NUMBER: _ClassVar[int]
     LAST_WRITER_NODE_KEY_FIELD_NUMBER: _ClassVar[int]
+    IS_DRIVEN_BY_GRAPH_FIELD_NUMBER: _ClassVar[int]
+    SET_BY_TEXT_FIELD_NUMBER: _ClassVar[int]
     pin_id: int
     name: str
     direction: str
@@ -2495,7 +2503,9 @@ class PinView(_message.Message):
     last_writer_text: str
     last_written_us: int
     last_writer_node_key: str
-    def __init__(self, pin_id: _Optional[int] = ..., name: _Optional[str] = ..., direction: _Optional[str] = ..., level: _Optional[str] = ..., is_active: _Optional[bool] = ..., is_drivable: _Optional[bool] = ..., polarity: _Optional[str] = ..., drive_text: _Optional[str] = ..., last_writer_text: _Optional[str] = ..., last_written_us: _Optional[int] = ..., last_writer_node_key: _Optional[str] = ...) -> None: ...
+    is_driven_by_graph: bool
+    set_by_text: str
+    def __init__(self, pin_id: _Optional[int] = ..., name: _Optional[str] = ..., direction: _Optional[str] = ..., level: _Optional[str] = ..., is_active: _Optional[bool] = ..., is_drivable: _Optional[bool] = ..., polarity: _Optional[str] = ..., drive_text: _Optional[str] = ..., last_writer_text: _Optional[str] = ..., last_written_us: _Optional[int] = ..., last_writer_node_key: _Optional[str] = ..., is_driven_by_graph: _Optional[bool] = ..., set_by_text: _Optional[str] = ...) -> None: ...
 
 class SimulationView(_message.Message):
     __slots__ = ("sim_us", "pins")
@@ -2575,6 +2585,48 @@ class SignalRequest(_message.Message):
     when: When
     def __init__(self, channel_id: _Optional[int] = ..., signal: _Optional[_Union[SignalView, _Mapping]] = ..., when: _Optional[_Union[When, _Mapping]] = ...) -> None: ...
 
+class SignalBlockCatalogue(_message.Message):
+    __slots__ = ("kinds",)
+    KINDS_FIELD_NUMBER: _ClassVar[int]
+    kinds: _containers.RepeatedCompositeFieldContainer[SignalBlockKind]
+    def __init__(self, kinds: _Optional[_Iterable[_Union[SignalBlockKind, _Mapping]]] = ...) -> None: ...
+
+class SignalBlockKind(_message.Message):
+    __slots__ = ("kind", "category", "category_text", "display_name", "description", "search_words", "inputs", "outputs", "is_pro", "is_locked", "locked_text")
+    KIND_FIELD_NUMBER: _ClassVar[int]
+    CATEGORY_FIELD_NUMBER: _ClassVar[int]
+    CATEGORY_TEXT_FIELD_NUMBER: _ClassVar[int]
+    DISPLAY_NAME_FIELD_NUMBER: _ClassVar[int]
+    DESCRIPTION_FIELD_NUMBER: _ClassVar[int]
+    SEARCH_WORDS_FIELD_NUMBER: _ClassVar[int]
+    INPUTS_FIELD_NUMBER: _ClassVar[int]
+    OUTPUTS_FIELD_NUMBER: _ClassVar[int]
+    IS_PRO_FIELD_NUMBER: _ClassVar[int]
+    IS_LOCKED_FIELD_NUMBER: _ClassVar[int]
+    LOCKED_TEXT_FIELD_NUMBER: _ClassVar[int]
+    kind: str
+    category: str
+    category_text: str
+    display_name: str
+    description: str
+    search_words: _containers.RepeatedScalarFieldContainer[str]
+    inputs: _containers.RepeatedCompositeFieldContainer[SignalPortView]
+    outputs: _containers.RepeatedCompositeFieldContainer[SignalPortView]
+    is_pro: bool
+    is_locked: bool
+    locked_text: str
+    def __init__(self, kind: _Optional[str] = ..., category: _Optional[str] = ..., category_text: _Optional[str] = ..., display_name: _Optional[str] = ..., description: _Optional[str] = ..., search_words: _Optional[_Iterable[str]] = ..., inputs: _Optional[_Iterable[_Union[SignalPortView, _Mapping]]] = ..., outputs: _Optional[_Iterable[_Union[SignalPortView, _Mapping]]] = ..., is_pro: _Optional[bool] = ..., is_locked: _Optional[bool] = ..., locked_text: _Optional[str] = ...) -> None: ...
+
+class SignalPortView(_message.Message):
+    __slots__ = ("name", "is_level", "is_optional")
+    NAME_FIELD_NUMBER: _ClassVar[int]
+    IS_LEVEL_FIELD_NUMBER: _ClassVar[int]
+    IS_OPTIONAL_FIELD_NUMBER: _ClassVar[int]
+    name: str
+    is_level: bool
+    is_optional: bool
+    def __init__(self, name: _Optional[str] = ..., is_level: _Optional[bool] = ..., is_optional: _Optional[bool] = ...) -> None: ...
+
 class WaveformView(_message.Message):
     __slots__ = ("name", "display_name", "is_alternating", "is_periodic")
     NAME_FIELD_NUMBER: _ClassVar[int]
@@ -2596,7 +2648,7 @@ class SignalInputRequest(_message.Message):
     def __init__(self, node: _Optional[str] = ..., output: _Optional[int] = ...) -> None: ...
 
 class SignalNodeRequest(_message.Message):
-    __slots__ = ("key", "kind", "signal", "source", "inputs", "model", "parameters", "interpreted", "value", "parameter_sources", "block", "group_key")
+    __slots__ = ("key", "kind", "signal", "source", "inputs", "model", "parameters", "interpreted", "value", "parameter_sources", "block", "group_key", "compare")
     class ParametersEntry(_message.Message):
         __slots__ = ("key", "value")
         KEY_FIELD_NUMBER: _ClassVar[int]
@@ -2623,6 +2675,7 @@ class SignalNodeRequest(_message.Message):
     PARAMETER_SOURCES_FIELD_NUMBER: _ClassVar[int]
     BLOCK_FIELD_NUMBER: _ClassVar[int]
     GROUP_KEY_FIELD_NUMBER: _ClassVar[int]
+    COMPARE_FIELD_NUMBER: _ClassVar[int]
     key: str
     kind: str
     signal: SignalView
@@ -2635,24 +2688,41 @@ class SignalNodeRequest(_message.Message):
     parameter_sources: _containers.ScalarMap[str, str]
     block: ChainBlockRequest
     group_key: str
-    def __init__(self, key: _Optional[str] = ..., kind: _Optional[str] = ..., signal: _Optional[_Union[SignalView, _Mapping]] = ..., source: _Optional[int] = ..., inputs: _Optional[_Iterable[_Union[SignalInputRequest, _Mapping]]] = ..., model: _Optional[str] = ..., parameters: _Optional[_Mapping[str, float]] = ..., interpreted: _Optional[bool] = ..., value: _Optional[float] = ..., parameter_sources: _Optional[_Mapping[str, str]] = ..., block: _Optional[_Union[ChainBlockRequest, _Mapping]] = ..., group_key: _Optional[str] = ...) -> None: ...
+    compare: CompareSettings
+    def __init__(self, key: _Optional[str] = ..., kind: _Optional[str] = ..., signal: _Optional[_Union[SignalView, _Mapping]] = ..., source: _Optional[int] = ..., inputs: _Optional[_Iterable[_Union[SignalInputRequest, _Mapping]]] = ..., model: _Optional[str] = ..., parameters: _Optional[_Mapping[str, float]] = ..., interpreted: _Optional[bool] = ..., value: _Optional[float] = ..., parameter_sources: _Optional[_Mapping[str, str]] = ..., block: _Optional[_Union[ChainBlockRequest, _Mapping]] = ..., group_key: _Optional[str] = ..., compare: _Optional[_Union[CompareSettings, _Mapping]] = ...) -> None: ...
+
+class CompareSettings(_message.Message):
+    __slots__ = ("level", "hysteresis", "below", "linked", "check_us")
+    LEVEL_FIELD_NUMBER: _ClassVar[int]
+    HYSTERESIS_FIELD_NUMBER: _ClassVar[int]
+    BELOW_FIELD_NUMBER: _ClassVar[int]
+    LINKED_FIELD_NUMBER: _ClassVar[int]
+    CHECK_US_FIELD_NUMBER: _ClassVar[int]
+    level: float
+    hysteresis: float
+    below: bool
+    linked: bool
+    check_us: int
+    def __init__(self, level: _Optional[float] = ..., hysteresis: _Optional[float] = ..., below: _Optional[bool] = ..., linked: _Optional[bool] = ..., check_us: _Optional[int] = ...) -> None: ...
 
 class ModelParameterView(_message.Message):
-    __slots__ = ("name", "default_value", "unit", "lowest", "highest")
+    __slots__ = ("name", "default_value", "unit", "lowest", "highest", "description")
     NAME_FIELD_NUMBER: _ClassVar[int]
     DEFAULT_VALUE_FIELD_NUMBER: _ClassVar[int]
     UNIT_FIELD_NUMBER: _ClassVar[int]
     LOWEST_FIELD_NUMBER: _ClassVar[int]
     HIGHEST_FIELD_NUMBER: _ClassVar[int]
+    DESCRIPTION_FIELD_NUMBER: _ClassVar[int]
     name: str
     default_value: float
     unit: str
     lowest: float
     highest: float
-    def __init__(self, name: _Optional[str] = ..., default_value: _Optional[float] = ..., unit: _Optional[str] = ..., lowest: _Optional[float] = ..., highest: _Optional[float] = ...) -> None: ...
+    description: str
+    def __init__(self, name: _Optional[str] = ..., default_value: _Optional[float] = ..., unit: _Optional[str] = ..., lowest: _Optional[float] = ..., highest: _Optional[float] = ..., description: _Optional[str] = ...) -> None: ...
 
 class ModelView(_message.Message):
-    __slots__ = ("name", "description", "inputs", "outputs", "parameters", "step_us", "source", "problem", "kind", "execution", "execution_label", "execution_reason", "state_names", "origin", "origin_label", "stands_in_for")
+    __slots__ = ("name", "description", "inputs", "outputs", "parameters", "step_us", "source", "problem", "kind", "execution", "execution_label", "execution_reason", "state_names", "origin", "origin_label", "stands_in_for", "group", "keywords")
     NAME_FIELD_NUMBER: _ClassVar[int]
     DESCRIPTION_FIELD_NUMBER: _ClassVar[int]
     INPUTS_FIELD_NUMBER: _ClassVar[int]
@@ -2669,6 +2739,8 @@ class ModelView(_message.Message):
     ORIGIN_FIELD_NUMBER: _ClassVar[int]
     ORIGIN_LABEL_FIELD_NUMBER: _ClassVar[int]
     STANDS_IN_FOR_FIELD_NUMBER: _ClassVar[int]
+    GROUP_FIELD_NUMBER: _ClassVar[int]
+    KEYWORDS_FIELD_NUMBER: _ClassVar[int]
     name: str
     description: str
     inputs: _containers.RepeatedScalarFieldContainer[str]
@@ -2685,7 +2757,9 @@ class ModelView(_message.Message):
     origin: str
     origin_label: str
     stands_in_for: str
-    def __init__(self, name: _Optional[str] = ..., description: _Optional[str] = ..., inputs: _Optional[_Iterable[str]] = ..., outputs: _Optional[_Iterable[str]] = ..., parameters: _Optional[_Iterable[_Union[ModelParameterView, _Mapping]]] = ..., step_us: _Optional[int] = ..., source: _Optional[str] = ..., problem: _Optional[str] = ..., kind: _Optional[str] = ..., execution: _Optional[str] = ..., execution_label: _Optional[str] = ..., execution_reason: _Optional[str] = ..., state_names: _Optional[_Iterable[str]] = ..., origin: _Optional[str] = ..., origin_label: _Optional[str] = ..., stands_in_for: _Optional[str] = ...) -> None: ...
+    group: str
+    keywords: _containers.RepeatedScalarFieldContainer[str]
+    def __init__(self, name: _Optional[str] = ..., description: _Optional[str] = ..., inputs: _Optional[_Iterable[str]] = ..., outputs: _Optional[_Iterable[str]] = ..., parameters: _Optional[_Iterable[_Union[ModelParameterView, _Mapping]]] = ..., step_us: _Optional[int] = ..., source: _Optional[str] = ..., problem: _Optional[str] = ..., kind: _Optional[str] = ..., execution: _Optional[str] = ..., execution_label: _Optional[str] = ..., execution_reason: _Optional[str] = ..., state_names: _Optional[_Iterable[str]] = ..., origin: _Optional[str] = ..., origin_label: _Optional[str] = ..., stands_in_for: _Optional[str] = ..., group: _Optional[str] = ..., keywords: _Optional[_Iterable[str]] = ...) -> None: ...
 
 class ModelNodeChoice(_message.Message):
     __slots__ = ("node", "when")
@@ -2731,14 +2805,56 @@ class ModelNodeView(_message.Message):
     def __init__(self, node: _Optional[str] = ..., execution: _Optional[str] = ..., execution_label: _Optional[str] = ..., execution_reason: _Optional[str] = ..., fault: _Optional[str] = ..., state: _Optional[_Iterable[_Union[ModelStateView, _Mapping]]] = ..., parameters: _Optional[_Mapping[str, float]] = ...) -> None: ...
 
 class SignalGraphView(_message.Message):
-    __slots__ = ("models", "probes", "values")
+    __slots__ = ("models", "probes", "values", "pin_targets", "nodes")
     MODELS_FIELD_NUMBER: _ClassVar[int]
     PROBES_FIELD_NUMBER: _ClassVar[int]
     VALUES_FIELD_NUMBER: _ClassVar[int]
+    PIN_TARGETS_FIELD_NUMBER: _ClassVar[int]
+    NODES_FIELD_NUMBER: _ClassVar[int]
     models: _containers.RepeatedCompositeFieldContainer[ModelNodeView]
     probes: _containers.RepeatedCompositeFieldContainer[ProbeView]
     values: _containers.RepeatedCompositeFieldContainer[GraphValueView]
-    def __init__(self, models: _Optional[_Iterable[_Union[ModelNodeView, _Mapping]]] = ..., probes: _Optional[_Iterable[_Union[ProbeView, _Mapping]]] = ..., values: _Optional[_Iterable[_Union[GraphValueView, _Mapping]]] = ...) -> None: ...
+    pin_targets: _containers.RepeatedCompositeFieldContainer[PinTargetView]
+    nodes: _containers.RepeatedCompositeFieldContainer[SignalNodeView]
+    def __init__(self, models: _Optional[_Iterable[_Union[ModelNodeView, _Mapping]]] = ..., probes: _Optional[_Iterable[_Union[ProbeView, _Mapping]]] = ..., values: _Optional[_Iterable[_Union[GraphValueView, _Mapping]]] = ..., pin_targets: _Optional[_Iterable[_Union[PinTargetView, _Mapping]]] = ..., nodes: _Optional[_Iterable[_Union[SignalNodeView, _Mapping]]] = ...) -> None: ...
+
+class PinTargetView(_message.Message):
+    __slots__ = ("pin_id", "pin_name", "node", "output", "high", "value_text", "edges", "fault_text", "resolution_text", "check_text", "level_text")
+    PIN_ID_FIELD_NUMBER: _ClassVar[int]
+    PIN_NAME_FIELD_NUMBER: _ClassVar[int]
+    NODE_FIELD_NUMBER: _ClassVar[int]
+    OUTPUT_FIELD_NUMBER: _ClassVar[int]
+    HIGH_FIELD_NUMBER: _ClassVar[int]
+    VALUE_TEXT_FIELD_NUMBER: _ClassVar[int]
+    EDGES_FIELD_NUMBER: _ClassVar[int]
+    FAULT_TEXT_FIELD_NUMBER: _ClassVar[int]
+    RESOLUTION_TEXT_FIELD_NUMBER: _ClassVar[int]
+    CHECK_TEXT_FIELD_NUMBER: _ClassVar[int]
+    LEVEL_TEXT_FIELD_NUMBER: _ClassVar[int]
+    pin_id: int
+    pin_name: str
+    node: str
+    output: int
+    high: bool
+    value_text: str
+    edges: int
+    fault_text: str
+    resolution_text: str
+    check_text: str
+    level_text: str
+    def __init__(self, pin_id: _Optional[int] = ..., pin_name: _Optional[str] = ..., node: _Optional[str] = ..., output: _Optional[int] = ..., high: _Optional[bool] = ..., value_text: _Optional[str] = ..., edges: _Optional[int] = ..., fault_text: _Optional[str] = ..., resolution_text: _Optional[str] = ..., check_text: _Optional[str] = ..., level_text: _Optional[str] = ...) -> None: ...
+
+class SignalNodeView(_message.Message):
+    __slots__ = ("node", "summary_text", "value_text", "hover_lines")
+    NODE_FIELD_NUMBER: _ClassVar[int]
+    SUMMARY_TEXT_FIELD_NUMBER: _ClassVar[int]
+    VALUE_TEXT_FIELD_NUMBER: _ClassVar[int]
+    HOVER_LINES_FIELD_NUMBER: _ClassVar[int]
+    node: str
+    summary_text: str
+    value_text: str
+    hover_lines: _containers.RepeatedScalarFieldContainer[str]
+    def __init__(self, node: _Optional[str] = ..., summary_text: _Optional[str] = ..., value_text: _Optional[str] = ..., hover_lines: _Optional[_Iterable[str]] = ...) -> None: ...
 
 class GraphValueRequest(_message.Message):
     __slots__ = ("node", "value", "when")
@@ -2792,6 +2908,16 @@ class ModelList(_message.Message):
     unavailable_reason: str
     def __init__(self, models: _Optional[_Iterable[_Union[ModelView, _Mapping]]] = ..., unavailable_reason: _Optional[str] = ...) -> None: ...
 
+class SignalPinTargetRequest(_message.Message):
+    __slots__ = ("pin_id", "node", "output")
+    PIN_ID_FIELD_NUMBER: _ClassVar[int]
+    NODE_FIELD_NUMBER: _ClassVar[int]
+    OUTPUT_FIELD_NUMBER: _ClassVar[int]
+    pin_id: int
+    node: str
+    output: int
+    def __init__(self, pin_id: _Optional[int] = ..., node: _Optional[str] = ..., output: _Optional[int] = ...) -> None: ...
+
 class SignalTargetRequest(_message.Message):
     __slots__ = ("channel_id", "node", "output")
     CHANNEL_ID_FIELD_NUMBER: _ClassVar[int]
@@ -2803,30 +2929,34 @@ class SignalTargetRequest(_message.Message):
     def __init__(self, channel_id: _Optional[int] = ..., node: _Optional[str] = ..., output: _Optional[int] = ...) -> None: ...
 
 class SignalProbeRequest(_message.Message):
-    __slots__ = ("name", "node", "output")
+    __slots__ = ("name", "node", "output", "sample_us")
     NAME_FIELD_NUMBER: _ClassVar[int]
     NODE_FIELD_NUMBER: _ClassVar[int]
     OUTPUT_FIELD_NUMBER: _ClassVar[int]
+    SAMPLE_US_FIELD_NUMBER: _ClassVar[int]
     name: str
     node: str
     output: int
-    def __init__(self, name: _Optional[str] = ..., node: _Optional[str] = ..., output: _Optional[int] = ...) -> None: ...
+    sample_us: int
+    def __init__(self, name: _Optional[str] = ..., node: _Optional[str] = ..., output: _Optional[int] = ..., sample_us: _Optional[int] = ...) -> None: ...
 
 class SignalGraphRequest(_message.Message):
-    __slots__ = ("nodes", "targets", "probes", "event_links", "groups", "when")
+    __slots__ = ("nodes", "targets", "probes", "event_links", "groups", "pin_targets", "when")
     NODES_FIELD_NUMBER: _ClassVar[int]
     TARGETS_FIELD_NUMBER: _ClassVar[int]
     PROBES_FIELD_NUMBER: _ClassVar[int]
     EVENT_LINKS_FIELD_NUMBER: _ClassVar[int]
     GROUPS_FIELD_NUMBER: _ClassVar[int]
+    PIN_TARGETS_FIELD_NUMBER: _ClassVar[int]
     WHEN_FIELD_NUMBER: _ClassVar[int]
     nodes: _containers.RepeatedCompositeFieldContainer[SignalNodeRequest]
     targets: _containers.RepeatedCompositeFieldContainer[SignalTargetRequest]
     probes: _containers.RepeatedCompositeFieldContainer[SignalProbeRequest]
     event_links: _containers.RepeatedCompositeFieldContainer[EventLinkRequest]
     groups: _containers.RepeatedCompositeFieldContainer[ChainGroupRequest]
+    pin_targets: _containers.RepeatedCompositeFieldContainer[SignalPinTargetRequest]
     when: When
-    def __init__(self, nodes: _Optional[_Iterable[_Union[SignalNodeRequest, _Mapping]]] = ..., targets: _Optional[_Iterable[_Union[SignalTargetRequest, _Mapping]]] = ..., probes: _Optional[_Iterable[_Union[SignalProbeRequest, _Mapping]]] = ..., event_links: _Optional[_Iterable[_Union[EventLinkRequest, _Mapping]]] = ..., groups: _Optional[_Iterable[_Union[ChainGroupRequest, _Mapping]]] = ..., when: _Optional[_Union[When, _Mapping]] = ...) -> None: ...
+    def __init__(self, nodes: _Optional[_Iterable[_Union[SignalNodeRequest, _Mapping]]] = ..., targets: _Optional[_Iterable[_Union[SignalTargetRequest, _Mapping]]] = ..., probes: _Optional[_Iterable[_Union[SignalProbeRequest, _Mapping]]] = ..., event_links: _Optional[_Iterable[_Union[EventLinkRequest, _Mapping]]] = ..., groups: _Optional[_Iterable[_Union[ChainGroupRequest, _Mapping]]] = ..., pin_targets: _Optional[_Iterable[_Union[SignalPinTargetRequest, _Mapping]]] = ..., when: _Optional[_Union[When, _Mapping]] = ...) -> None: ...
 
 class WaveformList(_message.Message):
     __slots__ = ("waveforms",)
@@ -6129,7 +6259,7 @@ class GraphCheckView(_message.Message):
     def __init__(self, problems: _Optional[_Iterable[_Union[GraphProblem, _Mapping]]] = ..., capacity: _Optional[_Union[ChainCapacityView, _Mapping]] = ...) -> None: ...
 
 class GraphProblem(_message.Message):
-    __slots__ = ("kind", "node_key", "group_key", "link", "text")
+    __slots__ = ("kind", "node_key", "group_key", "link", "text", "pin_id")
     class Kind(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
         __slots__ = ()
         OPEN: _ClassVar[GraphProblem.Kind]
@@ -6139,6 +6269,7 @@ class GraphProblem(_message.Message):
         INVALID: _ClassVar[GraphProblem.Kind]
         CAPACITY: _ClassVar[GraphProblem.Kind]
         NEEDS_PRO: _ClassVar[GraphProblem.Kind]
+        OVERRIDDEN: _ClassVar[GraphProblem.Kind]
     OPEN: GraphProblem.Kind
     WRONG_PORT: GraphProblem.Kind
     CYCLE: GraphProblem.Kind
@@ -6146,17 +6277,20 @@ class GraphProblem(_message.Message):
     INVALID: GraphProblem.Kind
     CAPACITY: GraphProblem.Kind
     NEEDS_PRO: GraphProblem.Kind
+    OVERRIDDEN: GraphProblem.Kind
     KIND_FIELD_NUMBER: _ClassVar[int]
     NODE_KEY_FIELD_NUMBER: _ClassVar[int]
     GROUP_KEY_FIELD_NUMBER: _ClassVar[int]
     LINK_FIELD_NUMBER: _ClassVar[int]
     TEXT_FIELD_NUMBER: _ClassVar[int]
+    PIN_ID_FIELD_NUMBER: _ClassVar[int]
     kind: GraphProblem.Kind
     node_key: str
     group_key: str
     link: str
     text: str
-    def __init__(self, kind: _Optional[_Union[GraphProblem.Kind, str]] = ..., node_key: _Optional[str] = ..., group_key: _Optional[str] = ..., link: _Optional[str] = ..., text: _Optional[str] = ...) -> None: ...
+    pin_id: int
+    def __init__(self, kind: _Optional[_Union[GraphProblem.Kind, str]] = ..., node_key: _Optional[str] = ..., group_key: _Optional[str] = ..., link: _Optional[str] = ..., text: _Optional[str] = ..., pin_id: _Optional[int] = ...) -> None: ...
 
 class ChainCapacityView(_message.Message):
     __slots__ = ("conditions_used", "conditions_max", "actions_used", "actions_max", "logic_used", "logic_max", "text")
