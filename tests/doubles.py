@@ -38,6 +38,7 @@ from looper.domain.model import (
     Watch,
 )
 from looper.domain.model.event_loss import EventLoss
+from pwm_doubles import ScriptedPwms
 from restart_doubles import ScriptedRestarts
 
 #: How many events one page of the stream holds, so that paging is exercised.
@@ -45,7 +46,7 @@ PAGE_SIZE = 2
 
 
 class ScriptedInspector(
-    ScriptedLives, ScriptedInterrupts, ScriptedChains, ScriptedRestarts, Inspector
+    ScriptedLives, ScriptedInterrupts, ScriptedChains, ScriptedRestarts, ScriptedPwms, Inspector
 ):
     """Answers from fixed state and writes down every request."""
 
@@ -54,7 +55,10 @@ class ScriptedInspector(
         ScriptedInterrupts.__init__(self)
         ScriptedChains.__init__(self)
         ScriptedRestarts.__init__(self)
-        self.description = Description(contract_version=3, firmware_name="blinky")
+        ScriptedPwms.__init__(self)
+        self.description = Description(
+            contract_version=3, firmware_name="blinky", capabilities=("pwm", "pin_measure")
+        )
         self.run = RunStatus(now_us=0, clock_mode=clock_mode, epoch=1, next_event_seq=0)
         self.samples: tuple[Sample, ...] = ()
         self.exchanges: tuple[Exchange, ...] = ()
@@ -108,6 +112,7 @@ class ScriptedInspector(
             sim_now_us=self.run.now_us if caught_up else 0,
             lost=EventLoss(in_the_ring=self.lost_events if self.reads == 1 else 0),
             epoch_changed=self.epoch_changes_while_reading,
+            pwm_changes=self.pwm_changes if self.reads == 1 else (),
         )
 
     def read_timings(self) -> tuple[CallTiming, ...]:

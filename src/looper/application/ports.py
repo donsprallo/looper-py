@@ -20,6 +20,7 @@ from looper.application.boot_port import BootInspector
 from looper.application.chain_port import ChainInspector
 from looper.application.interrupt_port import InterruptInspector
 from looper.application.life_port import LifeInspector
+from looper.application.pwm_port import PwmInspector
 from looper.application.restart_port import RestartInspector
 from looper.domain.model import (
     Bus,
@@ -65,7 +66,13 @@ class ContractNotServedError(SimulationUnreachableError):
 
 
 class Inspector(
-    LifeInspector, BootInspector, InterruptInspector, ChainInspector, RestartInspector, ABC
+    LifeInspector,
+    BootInspector,
+    InterruptInspector,
+    ChainInspector,
+    RestartInspector,
+    PwmInspector,
+    ABC,
 ):
     """Everything this library asks of a running simulation."""
 

@@ -28,7 +28,12 @@ from looper.domain.model import (
     Watch,
 )
 from looper.domain.model.event_loss import EventLoss, RingCount
-from looper.infrastructure import interrupt_translation, mark_translation, time_model_translation
+from looper.infrastructure import (
+    interrupt_translation,
+    mark_translation,
+    pwm_translation,
+    time_model_translation,
+)
 from looper.infrastructure.contract import looper_inspector_pb2 as contract
 
 #: The origin the server gives a function measured at the adapter boundary.
@@ -59,6 +64,17 @@ def description_of(message: contract.Description) -> Description:
         licence_note=message.license.note,
         pro_parts=tuple(part.name for part in message.license.parts if part.unlocked),
         time_models=time_model_translation.time_models_of(message.time_models),
+        capabilities=capabilities_of(message.capabilities),
+    )
+
+
+def capabilities_of(numbers: Iterable[int]) -> tuple[str, ...]:
+    """The capabilities by name, ``pwm`` for CAPABILITY_PWM; an unknown number is left out."""
+    known = set(contract.Capability.values())
+    return tuple(
+        contract.Capability.Name(number).removeprefix("CAPABILITY_").lower()
+        for number in numbers
+        if number in known
     )
 
 
@@ -95,6 +111,7 @@ def event_page_of(message: contract.EventBatch) -> EventPage:
             mark_translation.flash_mark_of(one) for one in message.events if one.HasField("flash")
         ),
         interrupt_marks=interrupt_translation.marks_of(message),
+        pwm_changes=pwm_translation.changes_of(message),
     )
 
 

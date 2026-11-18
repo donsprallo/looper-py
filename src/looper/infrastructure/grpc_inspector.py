@@ -59,6 +59,7 @@ from looper.infrastructure.contract import looper_inspector_pb2_grpc as service
 from looper.infrastructure.grpc_boot import GrpcBootCalls
 from looper.infrastructure.grpc_chains import GrpcChainCalls
 from looper.infrastructure.grpc_interrupts import GrpcInterruptCalls
+from looper.infrastructure.grpc_pwm import GrpcPwmCalls
 from looper.infrastructure.grpc_restart import GrpcRestartCalls
 
 #: How long reaching a server may take before it counts as absent.
@@ -79,17 +80,25 @@ EMPTY = contract.Empty()
 RUNNING_IMAGE = contract.ImageScope()
 
 #: The kinds of event a test looks at; the stream also carries pin changes,
-#: calls, applied commands and more.
+#: calls, applied commands and more. A PWM's changes say when it got to a duty.
 EVENT_KINDS = [
     contract.EVENT_KIND_SAMPLE,
     contract.EVENT_KIND_EXCHANGE,
     contract.EVENT_KIND_RESET,
     contract.EVENT_KIND_FLASH,
     contract.EVENT_KIND_INTERRUPT,
+    contract.EVENT_KIND_PWM,
 ]
 
 
-class GrpcInspector(GrpcBootCalls, GrpcInterruptCalls, GrpcChainCalls, GrpcRestartCalls, Inspector):
+class GrpcInspector(
+    GrpcBootCalls,
+    GrpcInterruptCalls,
+    GrpcChainCalls,
+    GrpcRestartCalls,
+    GrpcPwmCalls,
+    Inspector,
+):
     """The inspector contract, spoken to a server at one address."""
 
     def __init__(self, address: str, timeout_seconds: float = CONNECT_TIMEOUT_SECONDS) -> None:
