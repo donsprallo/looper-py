@@ -92,6 +92,9 @@ Only inputs can be driven -- the firmware drives its own outputs:
 looper.SimulationRefusedError: unknown pin, or the pin is an output
 ```
 
+A pin the signal graph drives is the graph's; `toggle_pin` is refused while it
+drives it (see [Comparators and input pins](#comparators-and-input-pins)).
+
 A level stays until something changes it, also across tests that share a
 simulation. Release what you pressed at the end of a test, or use a fresh
 simulation (see [Tests in pytest](pytest.md#keeping-tests-independent)).
@@ -161,7 +164,7 @@ simulation.channel("FILTERED").display_value   # '4.967 A' -- almost there
 
 `apply_signal` puts one waveform on one input. A **graph** combines them:
 generators, what the firmware itself published, a pin, a watched variable, the
-four operations and **models** -- a motor, a filter, a room -- that the
+operations, comparators and **models** -- a motor, a filter, a room -- that the
 simulation steps on its own clock. A model fed from an output channel and driving
 an input closes the loop around the firmware, which is how a test puts a plant in
 front of a controller.
@@ -193,11 +196,13 @@ def test_the_room_closes_the_loop(simulation):
 | `channel(key, channel_id)` | a node that reads an analog channel; an output closes a loop |
 | `pin(key, pin_id)` | a node that reads a pin as 0 or 1 |
 | `watch(key, channel_id)` | a node that reads a watched variable, by its watch channel |
-| `operation(key, kind, first, second)` | `looper.SignalNodeKind.ADD`, `SUBTRACT`, `MULTIPLY` or `DIVIDE` of two other nodes |
+| `operation(key, kind, first, second)` | `looper.SignalNodeKind.ADD`, `SUBTRACT`, `MULTIPLY`, `DIVIDE`, `MIN` or `MAX` of two other nodes; `ABS` of `first` alone |
+| `compare(key, reads, level=0.0, hysteresis=0.0, below=False, threshold=None, check_us=0)` | a comparator: 1 while `reads` is above `level` (or below it), else 0; see [Comparators and input pins](#comparators-and-input-pins) |
 | `value(key, value)` | a node that gives a number a test sets later with `simulation.set_graph_value`; to an input or to a model's parameter |
 | `model(key, name, inputs, parameters=None, parameter_sources=None)` | a model the simulation steps; `inputs` in the order the model declares them, `parameters` by name, `parameter_sources` the parameters a value node gives, by name |
 | `drive(channel_id, node, output=0)` | the analog **input** that reads one output of a node |
-| `probe(name, node, output=0)` | records an output as a trace of its own, without driving anything |
+| `drive_pin(pin_id, node, output=0)` | the digital **input pin** that reads one output of a node: high from 0.5, low below |
+| `probe(name, node, output=0, sample_us=0)` | records an output as a trace of its own, every `sample_us` (0: the server's Auto), without driving anything |
 
 A bare key stands for the first output of a node; `looper.NodeOutput(node,
 output)` names another one. Applying a graph **replaces** whatever graph ran
@@ -210,7 +215,7 @@ looper.SimulationRefusedError: ...
 ```
 
 comes back for an unknown model, inputs that do not fit it, or a target that is
-not an input.
+not an input. The message is the server's sentence, word for word.
 
 `simulation.models()` lists the models the project offers, read afresh from its
 files, and `simulation.model("Room")` gets one by name -- with its `inputs`,
@@ -270,6 +275,98 @@ moves a panel value; see {rs}`Panel values <gui/signals.html#panel-values>`. Set
 replaces the graph in the runtime, so a loop that sets one many times a second
 costs more than a test needs: set it when the test needs it, and let the
 simulation run in between.
+
+## Comparators and input pins
+
+A comparator turns a signal into a level: 1 while its input is above a
+threshold, 0 otherwise, or the other way round with `below=True`. With a
+`hysteresis` it goes back only once the input has gone that far past the
+threshold the other way -- the rule of the chain Threshold. `drive_pin` puts
+that level on a digital **input pin**, and the firmware sees its edges as it
+would a real pin's, its EXTI included. A mains zero-cross detector, the way an
+opto-coupler on a dimmer gives it:
+
+```python
+def test_the_zero_cross_pin_pulses_once_a_half_cycle(simulation):
+    zc = simulation.pin("ZC")
+
+    graph = (
+        looper.SignalGraph()
+        .generator("mains", looper.Signal("sine", amplitude=325.0, frequency_hz=50.0))
+        .operation("mains_abs", looper.SignalNodeKind.ABS, "mains")
+        .compare("zc", "mains_abs", level=15.0, hysteresis=2.0, below=True)
+        .drive_pin(zc.pin_id, "zc")
+    )
+    simulation.apply_signal_graph(graph)
+    simulation.advance(0.05)
+
+    check = simulation.expect()
+    check.pin("ZC").frequency_between(99.0, 101.0)                 # one pulse a half cycle
+    check.pin("ZC").pulse_width_between(305, 325, unit="us")       # |v| < 15 V .. > 17 V
+    assert check.evaluate(for_seconds=0.2)
+```
+
+`threshold=` names a node to compare with instead of the constant `level`, as
+`threshold=looper.NodeOutput("reference", 1)`. `ABS` takes one input; `MIN` and
+`MAX` two.
+
+**How exact the edges are** is the server's to say. Behind generators, Abs, Min
+and Max the runtime plans each edge ahead to the microsecond. Behind a model
+the signal changes only at the model's steps, so the edges fall on them; behind
+noise or a divide there is no slope to plan with, and the comparator is checked
+every `check_us` (0: Auto, every 10 µs). `simulation.signal_graph()` reads the
+applied graph back, and its `pin_target(pin_id)` says how this one does:
+
+```python
+target = simulation.signal_graph().pin_target(zc.pin_id)
+target.resolution_text      # 'exact to 1 µs', or 'at model steps of 100 µs'
+target.edges                # the edges it gave the pin since it was applied
+target.fault_text           # why it does not drive the pin now; empty while it does
+```
+
+**The graph comes first** on a pin it drives. `simulation.pin("ZC")` says so
+with `is_driven_by_graph` and `set_by_text` (`'signal graph'`), and a
+`toggle_pin` is refused with the server's sentence instead of doing nothing
+quietly:
+
+```text
+looper.SimulationRefusedError: ZC is driven by the signal graph, which comes first: this drive does nothing while the graph drives it.
+```
+
+When the graph lets go -- a new graph without the pin, or `SignalGraph()` --
+the pin keeps its last level; release what the graph left pressed. Only an
+input pin can be a target; an output is refused:
+
+```text
+looper.SimulationRefusedError: GATE is an output of this firmware; the graph cannot drive it. Choose an input pin.
+```
+
+The comparator, Abs, Min, Max and input pins need a server whose runtime plans
+the graph's edges: `"graph_edges" in simulation.description.capabilities`.
+
+### Probes on their own clock
+
+A probe records a node's output as a trace of its own, even where nothing the
+firmware reads depends on it. `sample_us` says how often; 0 lets the server
+choose from what feeds it -- a model's step, else a hundredth of the fastest
+generator's period -- and a comparator is recorded at its edges.
+`simulation.probe(name)` finds the probe's trace channel, which an expectation
+on a channel takes like any other:
+
+```python
+graph = graph.probe("LOAD_RMS", "rms", sample_us=1_000)
+simulation.apply_signal_graph(graph)
+
+rms = simulation.probe("LOAD_RMS")
+check = simulation.expect()
+check.channel(rms.channel_id, rms.name).stays_between(158.0, 166.0)
+```
+
+A name the applied graph has no probe for is refused with the names it has.
+
+`simulation.model(name)` also says where a library lists a model (`group`, such
+as `'Power switches'`), the words that find it (`keywords`) and, for each
+parameter, what it does (`description`).
 
 ## Bus messages
 

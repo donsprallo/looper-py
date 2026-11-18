@@ -28,6 +28,7 @@ looper.Life, looper.LifeDump, looper.Lives        # the firmware's lives
 looper.ResetMark, looper.FlashMark                # resets and flash operations in the stream
 looper.Retained, looper.Flash, looper.FlashPartition  # what survives a reset
 looper.NodeOutput, looper.SignalModel, looper.ModelParameter
+looper.CompareSettings, looper.SignalGraphState, looper.GraphProbe, looper.PinTargetState  # the applied graph
 looper.TimeModel, looper.TimeModelParameter, looper.ActiveTimeModel  # time models
 looper.PwmOutput, looper.PwmOutputs               # the PWM outputs of contract.toml
 ```
@@ -260,20 +261,34 @@ Pro, except for the partition names.
 
 ## Signal graphs
 
-`simulation.apply_signal_graph(graph)` drives analog inputs from a graph and
-`simulation.set_graph_value(node, value)` changes a value node of it;
+`simulation.apply_signal_graph(graph)` drives analog inputs and input pins from a
+graph and `simulation.set_graph_value(node, value)` changes a value node of it;
 `simulation.models()` and `simulation.model(name)` say which models the project
-offers. See [Setting the scene](../guides/scene.md#a-graph-of-signals).
+offers. `simulation.signal_graph()` reads the applied graph back -- its probes,
+the pins it drives, its comparators -- and `simulation.probe(name)` finds a probe's
+trace channel. See [Setting the scene](../guides/scene.md#a-graph-of-signals) and
+[Comparators and input pins](../guides/scene.md#comparators-and-input-pins).
 
 ```{eval-rst}
 .. autoclass:: looper.SignalGraph
-   :members: generator, channel, pin, watch, value, operation, model, drive, probe
+   :members: generator, channel, pin, watch, value, operation, compare, model, drive, drive_pin, probe
 
 .. autoclass:: looper.SignalNodeKind
    :members:
    :undoc-members:
 
 .. autoclass:: looper.NodeOutput
+
+.. autoclass:: looper.CompareSettings
+
+.. autoclass:: looper.SignalGraphState
+   :members: pin_target, node
+
+.. autoclass:: looper.GraphProbe
+
+.. autoclass:: looper.PinTargetState
+
+.. autoclass:: looper.GraphNodeState
 
 .. autoclass:: looper.SignalModel
    :members: output
