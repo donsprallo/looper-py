@@ -19,6 +19,7 @@ from looper.application.ports import (
 from looper.domain.model import EventPage, Exchange, FlashMark, ResetMark, RunStatus, Sample
 from looper.domain.model.event_loss import EventLoss
 from looper.domain.model.interrupt_facts import InterruptMark
+from looper.domain.model.pwm import PwmChange
 
 #: How long to wait between two asks while the log is behind the clock.
 POLL_SECONDS = 0.02
@@ -38,6 +39,7 @@ class WindowEvents:
     resets: tuple[ResetMark, ...] = ()
     flash_marks: tuple[FlashMark, ...] = ()
     interrupt_marks: tuple[InterruptMark, ...] = ()
+    pwm_changes: tuple[PwmChange, ...] = ()
 
 
 class WindowReader:
@@ -53,6 +55,7 @@ class WindowReader:
         self._resets: list[ResetMark] = []
         self._flash_marks: list[FlashMark] = []
         self._interrupt_marks: list[InterruptMark] = []
+        self._pwm_changes: list[PwmChange] = []
         self._lost = EventLoss()
 
     def read(self) -> WindowEvents:
@@ -76,6 +79,7 @@ class WindowReader:
             tuple(self._resets),
             tuple(self._flash_marks),
             tuple(self._interrupt_marks),
+            tuple(self._pwm_changes),
         )
 
     @staticmethod
@@ -109,6 +113,7 @@ class WindowReader:
         self._interrupt_marks.extend(
             one for one in page.interrupt_marks if one.sim_us <= self._end_us
         )
+        self._pwm_changes.extend(one for one in page.pwm_changes if one.sim_us <= self._end_us)
 
     def _has_events_beyond_the_window(self, page: EventPage) -> bool:
         """Whether the stream has gone past the window, so nothing more belongs to it."""

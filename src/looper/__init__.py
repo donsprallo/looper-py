@@ -129,6 +129,7 @@ from looper.domain.model import (
     Width,
     step_port,
 )
+from looper.domain.model.pwm import PinMeasurement, PwmMeasurement, PwmOutput, PwmOutputs
 from looper.domain.model.servers import AnnouncedServer
 from looper.infrastructure.looper_cli import LooperCliError, ServerStartError
 from looper.starting import ContractMismatchError, connect, run, servers
@@ -163,6 +164,10 @@ __all__ = [
     "InterruptSource",
     "Interrupts",
     "RaceCoverage",
+    "PwmOutput",
+    "PwmOutputs",
+    "PwmMeasurement",
+    "PinMeasurement",
     "BootChain",
     "BootStep",
     "Flash",

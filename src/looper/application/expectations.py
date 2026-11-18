@@ -28,6 +28,8 @@ from looper.application.interrupt_subjects import (
     RunFindingsExpectation,
 )
 from looper.application.ports import Inspector, SimulationRefusedError
+from looper.application.pulses import PulseWindow
+from looper.application.pwm_subjects import PinExpectation, PwmExpectation
 from looper.application.subjects import (
     BootChainExpectation,
     BusExpectation,
@@ -75,6 +77,7 @@ class Expectations:
         self._reads_dma = False
         self._reads_chains = False
         self._recorded_sources: list[str] = []
+        self._pulses = PulseWindow(inspector)
 
     def add(self, check: Check) -> Expectations:
         """Take one more expectation, and allow another to be chained."""
@@ -159,6 +162,22 @@ class Expectations:
         """Expect something of the server's findings of the run (Pro)."""
         return RunFindingsExpectation(self)
 
+    def pwm(self, name: str) -> PwmExpectation:
+        """Expect something of one PWM output, by its name in contract.toml."""
+        return PwmExpectation(self, name)
+
+    def pin(self, name: str) -> PinExpectation:
+        """Expect something of the pulses on one pin, by the name the firmware registered."""
+        return PinExpectation(self, name)
+
+    def reads_pwm(self, name: str) -> None:
+        """Have the window read an output at its start and measure it at its end."""
+        self._pulses.wants_pwm(name)
+
+    def measures_pin(self, name: str) -> None:
+        """Have the window measure a pin's pulses at its end."""
+        self._pulses.wants_pin(name)
+
     def firmware_is_alive(self) -> Expectations:
         """Expect the firmware to still be reaching the adapter at all."""
         return self.add(FirmwareIsAlive())
@@ -177,7 +196,9 @@ class Expectations:
 
         Raises:
             SimulationRefusedError: If a debugger holds the firmware, another
-                client cleared the recording meanwhile, or the clock refuses.
+                client cleared the recording meanwhile, the clock refuses, or
+                the server has no PWM outputs or does not measure pins and an
+                expectation is about them.
         """
         start = self._begin_window()
         self._let_time_pass(start.clock_mode, for_seconds)
@@ -190,6 +211,7 @@ class Expectations:
         before = self._inspector.run_state()
         if before.hold_reason:
             raise SimulationRefusedError(before.hold_reason)
+        self._pulses.begin()
         if self._recorded_sources:
             # At least in summary, so that nothing another client records is taken away.
             wanted = dict.fromkeys(self._recorded_sources, "summary")
@@ -230,6 +252,7 @@ class Expectations:
             headers=self._inspector.read_headers() if self._reads_headers else {},
             boot_chains=self._inspector.read_boot_chains() if self._reads_chains else (),
             interrupt_marks=events.interrupt_marks,
+            **self._pulses.observed(start.now_us, end.now_us, events.pwm_changes),
             **self._judged(),
         )
 

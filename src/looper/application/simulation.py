@@ -12,6 +12,7 @@ import os
 from collections.abc import Callable, Iterator, Mapping
 from types import TracebackType
 
+from looper.application import pulses
 from looper.application.bootloader import Otp
 from looper.application.chain_runs import run_until_chain
 from looper.application.event_stream import EventStream
@@ -54,6 +55,7 @@ from looper.domain.model.dbc import DbcFile
 from looper.domain.model.dma import DmaChannels
 from looper.domain.model.event_recording import EventRecording
 from looper.domain.model.interrupts import Interrupts
+from looper.domain.model.pwm import PwmOutput, PwmOutputs
 
 
 class Simulation:
@@ -431,6 +433,23 @@ class Simulation:
             SimulationRefusedError: If there is none; the message lists the names there are.
         """
         return _named(self.buses(), name, "bus")
+
+    def pwms(self) -> PwmOutputs:
+        """Every PWM output of contract.toml with its state now, in the contract's order.
+
+        Raises:
+            SimulationRefusedError: If the simulation has no PWM outputs.
+        """
+        return pulses.read_outputs(self._inspector, self._description)
+
+    def pwm(self, name: str) -> PwmOutput:
+        """The PWM output contract.toml calls `name`, as it is now: ``.duty``, ``.text``, ...
+
+        Raises:
+            SimulationRefusedError: If the simulation has no PWM outputs, or
+                none of that name; the message lists the names there are.
+        """
+        return pulses.output_named(self.pwms(), name)
 
     def toggle_pin(self, pin_id: int) -> str:
         """Drive the opposite of the level a pin is at now, and say which.
