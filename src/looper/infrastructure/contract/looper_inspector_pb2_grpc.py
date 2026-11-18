@@ -269,6 +269,16 @@ class InspectorStub:
                 request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.DbcRequest.SerializeToString,
                 response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.DbcView.FromString,
                 _registered_method=True)
+        self.ReadTable = channel.unary_unary(
+                '/looper.inspector.v3.Inspector/ReadTable',
+                request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.TableRequest.SerializeToString,
+                response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.TableView.FromString,
+                _registered_method=True)
+        self.ListStarters = channel.unary_unary(
+                '/looper.inspector.v3.Inspector/ListStarters',
+                request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
+                response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.StarterList.FromString,
+                _registered_method=True)
         self.ListSources = channel.unary_unary(
                 '/looper.inspector.v3.Inspector/ListSources',
                 request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ImageScope.SerializeToString,
@@ -661,7 +671,9 @@ class InspectorServicer:
         raise NotImplementedError('Method not implemented!')
 
     def ListWaveforms(self, request, context):
-        """The waveforms a signal generator offers.
+        """The waveforms a signal generator offers, each with the fields it shows,
+        those a link may replace, and its library texts; locked with a sentence
+        where the runtime cannot run it.
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -886,8 +898,9 @@ class InspectorServicer:
 
     def ListSignalBlocks(self, request, context):
         """The signal blocks the server builds beyond the waveforms -- Comparator,
-        Abs, Min, Max, Input pin -- with their library texts, ports and search
-        words; locked with a sentence where the runtime cannot run them.
+        Select, Sample & Hold, Abs, Min, Max, Input pin -- with their library
+        texts, ports, settings and search words; locked with a sentence where
+        the runtime cannot run them.
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -906,6 +919,25 @@ class InspectorServicer:
         """A DBC file's CAN messages and signals, so that a bus block can take its
         identifier, length and fields from one message. The server only reads the
         file. Free; fields filled from it are looper Pro as every field is.
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def ReadTable(self, request, context):
+        """A CSV or PWL file's points for a Table generator: the points to send
+        (a long recording simplified, with its error said), a preview, a summary
+        and a hash that tells a changed file. The server only reads the file.
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def ListStarters(self, request, context):
+        """The starters a signal graph can begin with -- "Mains with zero-cross",
+        "Frequency sweep", "Phase-angle dimmer" -- as looper-models defines
+        them: each with its texts, the graph to paste, what it needs, and
+        whether this firmware has it.
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -1658,6 +1690,16 @@ def add_InspectorServicer_to_server(servicer, server):
                     servicer.ReadDbc,
                     request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.DbcRequest.FromString,
                     response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.DbcView.SerializeToString,
+            ),
+            'ReadTable': grpc.unary_unary_rpc_method_handler(
+                    servicer.ReadTable,
+                    request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.TableRequest.FromString,
+                    response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.TableView.SerializeToString,
+            ),
+            'ListStarters': grpc.unary_unary_rpc_method_handler(
+                    servicer.ListStarters,
+                    request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.FromString,
+                    response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.StarterList.SerializeToString,
             ),
             'ListSources': grpc.unary_unary_rpc_method_handler(
                     servicer.ListSources,
@@ -3234,6 +3276,60 @@ class Inspector:
             '/looper.inspector.v3.Inspector/ReadDbc',
             looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.DbcRequest.SerializeToString,
             looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.DbcView.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def ReadTable(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/looper.inspector.v3.Inspector/ReadTable',
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.TableRequest.SerializeToString,
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.TableView.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def ListStarters(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/looper.inspector.v3.Inspector/ListStarters',
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.StarterList.FromString,
             options,
             channel_credentials,
             insecure,

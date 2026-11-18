@@ -389,6 +389,20 @@ enum Capability {
   // ListSignalBlocks lists them unlocked. Without it they are refused with a
   // sentence that says to update looper-rt.
   CAPABILITY_GRAPH_EDGES = 27;
+  // The runtime runs generators that move: the waveforms "pulse",
+  // "rectified_sine", "sweep" and "table", SignalView.duty, and linked
+  // generator fields (SignalNodeRequest.linked_fields); ListWaveforms lists
+  // them unlocked. Without it they are refused with a sentence that says to
+  // update looper-rt.
+  CAPABILITY_MOVING_GENERATORS = 28;
+  // The runtime selects and samples: the kinds "select" and "sample_hold"
+  // and a pin source's hold_pulses (SignalNodeRequest); ListSignalBlocks
+  // lists them unlocked. Without it they are refused with a sentence that
+  // says to update looper-rt.
+  CAPABILITY_SIGNAL_LOGIC = 29;
+  // MeasurePin measures the delay from another pin's edges
+  // (PinMeasureRequest.reference_pin_id, PinMeasurement.delay_*).
+  CAPABILITY_PIN_DELAY = 30;
 }
 
 enum ServerMode {
@@ -1184,7 +1198,9 @@ service Inspector {
   rpc ObserveComponents(Empty) returns (ComponentList);
   // The catalogue of globals, read out of the build.
   rpc ListVariables(ImageScope) returns (VariableCatalogue);
-  // The waveforms a signal generator offers.
+  // The waveforms a signal generator offers, each with the fields it shows,
+  // those a link may replace, and its library texts; locked with a sentence
+  // where the runtime cannot run it.
   rpc ListWaveforms(Empty) returns (WaveformList);
   // Every recording on one stretch of time, as wide as the client asks for.
   rpc ArrangeTimeline(TimelineRequest) returns (TimelineView);
@@ -1251,8 +1267,9 @@ service Inspector {
   rpc SwitchChainGroup(ChainGroupSwitch) returns (Ack);
   rpc ListChainBlocks(Empty) returns (ChainBlockCatalogue);
   // The signal blocks the server builds beyond the waveforms -- Comparator,
-  // Abs, Min, Max, Input pin -- with their library texts, ports and search
-  // words; locked with a sentence where the runtime cannot run them.
+  // Select, Sample & Hold, Abs, Min, Max, Input pin -- with their library
+  // texts, ports, settings and search words; locked with a sentence where
+  // the runtime cannot run them.
   rpc ListSignalBlocks(Empty) returns (SignalBlockCatalogue);
   // One group's chain as a pytest against looper-py, written by the server
   // so that it matches the API; the window only saves it. looper Pro
@@ -1262,6 +1279,15 @@ service Inspector {
   // identifier, length and fields from one message. The server only reads the
   // file. Free; fields filled from it are looper Pro as every field is.
   rpc ReadDbc(DbcRequest) returns (DbcView);
+  // A CSV or PWL file's points for a Table generator: the points to send
+  // (a long recording simplified, with its error said), a preview, a summary
+  // and a hash that tells a changed file. The server only reads the file.
+  rpc ReadTable(TableRequest) returns (TableView);
+  // The starters a signal graph can begin with -- "Mains with zero-cross",
+  // "Frequency sweep", "Phase-angle dimmer" -- as looper-models defines
+  // them: each with its texts, the graph to paste, what it needs, and
+  // whether this firmware has it.
+  rpc ListStarters(Empty) returns (StarterList);
 
   // ---- Source code: the files the build was made of ----
   // Every file worth showing, with whether it changed since the build.
@@ -1758,12 +1784,59 @@ message SimulationView {
   repeated PinView pins = 3;
 }
 
+// A generated signal. Which fields a waveform reads is listed by
+// ListWaveforms (WaveformView.fields); the others are ignored. A choice
+// left empty is its first option. ApplySignal and ApplySignalGraph refuse
+// a signal that cannot be with REFUSAL_INVALID and a sentence.
 message SignalView {
+  // As WaveformView.name: "constant", "sine", "square", "triangle",
+  // "sawtooth", "noise", "pulse", "rectified_sine", "sweep" or "table".
   string waveform = 1;
+  // How far it swings around the offset; never negative. A rectified sine's
+  // peak; what a table's values are multiplied by (its Scale: 1 plays them
+  // as they are).
   double amplitude = 2;
   double offset = 3;
+  // Never negative. With a linked frequency it only says where the phase
+  // stands when the graph is installed.
   double frequency_hz = 4;
   double phase_degrees = 5;
+  // Square and pulse: the share of each period from phase 0 the wave is
+  // high, 0 to 1; outside is refused. Absent is a half.
+  optional double duty = 6;
+  // Pulse: its two levels, as a person sets them. The server reads these,
+  // not offset and amplitude, for a pulse, and gives all four back
+  // (offset = (low + high) / 2, amplitude = (high - low) / 2); high below
+  // low is refused.
+  double low = 7;
+  double high = 8;
+  // Rectified sine: "full" (the negative half folded up, two humps a
+  // period) or "half" (the negative half cut off).
+  string rectification = 9;
+  // Sweep: a sine from sweep_from_hz to sweep_to_hz over sweep_seconds
+  // (more than 0), "linear" or "logarithmic" (both above 0 Hz); at the
+  // end "repeat" (from the start, the phase going on), "hold" (on at
+  // sweep_to_hz) or "stop" (the offset alone).
+  double sweep_from_hz = 10;
+  double sweep_to_hz = 11;
+  double sweep_seconds = 12;
+  string sweep_spacing = 13;
+  string sweep_end = 14;
+  // Table: its points, as ReadTable gives them; as many times as values, at
+  // least two, the times in seconds from 0 on and strictly rising, at most
+  // 16 384 points in one signal and in all the tables of a graph. It plays
+  // offset + amplitude * value. A channel's listing gives its signal back
+  // without the points.
+  repeated double table_times = 15;
+  repeated double table_values = 16;
+  // Table: "linear" (straight lines between points) or "steps" (each value
+  // held until the next point); at the end "repeat" (again from 0 s, the
+  // last time its period) or "hold" (the last value).
+  string table_between = 17;
+  string table_end = 18;
+  // Table: how much slower than its times it plays; 0 is 1, negative is
+  // refused.
+  double table_time_scale = 19;
 }
 
 message ChannelView {
@@ -1839,15 +1912,28 @@ message SignalBlockKind {
   repeated SignalPortView inputs = 7;
   repeated SignalPortView outputs = 8;
   bool is_pro = 9;
-  // It cannot be added: the runtime is older than CAPABILITY_GRAPH_EDGES,
-  // or it is Pro without the licence. locked_text says why.
+  // It cannot be added: the runtime is older than CAPABILITY_GRAPH_EDGES
+  // (CAPABILITY_SIGNAL_LOGIC for Select and Sample & Hold), or it is Pro
+  // without the licence. locked_text says why.
   bool is_locked = 10;
   string locked_text = 11;
+  // The settings its Properties show, in order, as a waveform's fields are
+  // shown: Sample & Hold's "mode" (a choice: "rising", "falling", "track")
+  // and "initial" (a number, "Start value"). A field's name is the
+  // SampleSettings field it sets. Empty for a block without settings, and
+  // for the Comparator, whose settings a client knows (CompareSettings).
+  repeated WaveformFieldView settings = 12;
+  // What the card's summary row says of a new block, before the server
+  // reports it: "select ≥ 0.5 → when 1", "on rising trigger"; empty where
+  // it depends on settings the client shows itself.
+  string summary_text = 13;
 }
 
 message SignalPortView {
   string name = 1;
-  // An output that gives a level, 0 or 1, which a client draws dashed.
+  // An output that gives a level, 0 or 1, which a client draws dashed; an
+  // input that reads what it is fed as a level, high from 0.5: a select's
+  // "select", a Sample & Hold's "trigger".
   bool is_level = 2;
   // An input that appears only when a setting asks for it: a comparator's
   // "threshold" when CompareSettings.linked.
@@ -1864,6 +1950,59 @@ message WaveformView {
   // Whether frequency and phase mean anything for it; noise swings
   // without a period.
   bool is_periodic = 4;
+  // The fields its Properties show, in order; only these, each waveform its
+  // own (signals concept, decision 9).
+  repeated WaveformFieldView fields = 5;
+  // The fields a link may replace (SignalNodeRequest.linked_fields), by
+  // WaveformFieldView.name, in field order. Phase never is one.
+  repeated string linkable_fields = 6;
+  // Words a search finds it by besides its name: "pwm", "chirp", "csv".
+  repeated string search_words = 7;
+  // The library card's sentence.
+  string description = 8;
+  // It cannot be used: the runtime is older than
+  // CAPABILITY_MOVING_GENERATORS. locked_text says why.
+  bool is_locked = 9;
+  string locked_text = 10;
+}
+
+// One field of a waveform, as a Properties row shows it.
+message WaveformFieldView {
+  // The SignalView field it sets: "offset", "low", "duty", "sweep_end";
+  // "table" for a table's points (table_times and table_values).
+  string name = 1;
+  // What the row is labelled: "Offset", "Peak", "Low", "At the end".
+  string label = 2;
+  // What it is measured in, as the row shows it: "Hz", "s", "°", "%";
+  // empty for the unit of what the generator drives, or none.
+  string unit = 3;
+  Kind kind = 4;
+  enum Kind {
+    KIND_NUMBER = 0;
+    // One of `options`, sent as its value.
+    KIND_CHOICE = 1;
+    // Points from a file, read with ReadTable.
+    KIND_TABLE = 2;
+  }
+  repeated WaveformOptionView options = 5;
+  // What a new generator starts with: a number, or a choice's value.
+  double default_value = 6;
+  string default_option = 7;
+  // A number is shown times this: 100 for a duty shown in %, else 1.
+  double shown_scale = 8;
+  // Where it may be linked: the port it opens on the block ("frequency"),
+  // and the word a block's summary has for it while linked ("FM", "AM",
+  // "+ in", "PWM ← in"). Empty where it cannot be linked.
+  string port_name = 9;
+  string linked_word = 10;
+}
+
+// One option of a choice field.
+message WaveformOptionView {
+  // What SignalView carries: "full", "logarithmic", "hold".
+  string value = 1;
+  // What a person is shown: "Full wave", "Logarithmic", "Hold last".
+  string label = 2;
 }
 
 // One output of a node, read by another.
@@ -1880,14 +2019,17 @@ message SignalNodeRequest {
   string key = 1;
   // "generator", "channel", "pin", "watch", "add", "subtract",
   // "multiply", "divide", "model" or "value"; with CAPABILITY_GRAPH_EDGES
-  // also "compare", "abs" (one input), "min" and "max" (two inputs).
+  // also "compare", "abs" (one input), "min" and "max" (two inputs); with
+  // CAPABILITY_SIGNAL_LOGIC also "select" (three inputs: `select`, `when 1`,
+  // `when 0`) and "sample_hold" (two inputs: `in`, `trigger`).
   string kind = 2;
   // What a generator produces.
   SignalView signal = 3;
   // The channel, pin or watch channel a source reads.
   uint32 source = 4;
   // What the node reads, in order: the two inputs of an operation, the
-  // inputs of a model, the signals of a block's message fields. An entry
+  // inputs of a model, the signals of a block's message fields, the
+  // signals a generator's linked_fields take. An entry
   // with an empty `node` keeps the place of an input not linked yet, so
   // that the inputs after it keep theirs; the block then has the problem
   // "Signal input not linked".
@@ -1920,6 +2062,41 @@ message SignalNodeRequest {
   // A node of kind "compare": its threshold and hysteresis. It reads
   // `inputs[0]`, and `inputs[1]` as its threshold when `linked`.
   CompareSettings compare = 13;
+  // A generator's fields that take their value from a signal instead of
+  // from `signal` (CAPABILITY_MOVING_GENERATORS), by
+  // WaveformFieldView.name: `inputs[i]` feeds `linked_fields[i]`. The link
+  // replaces the field: a linked "frequency_hz" is the signal in Hz,
+  // integrated into the phase so that the wave never jumps; a negative one
+  // runs it backwards. A field its waveform does not list in
+  // linkable_fields, or one named twice, is refused with REFUSAL_INVALID.
+  repeated string linked_fields = 14;
+  // A node of kind "sample_hold": when it takes `inputs[0]` and what it
+  // gives before (SampleSettings).
+  SampleSettings sample = 15;
+  // A node of kind "pin" (CAPABILITY_SIGNAL_LOGIC): a model or a linear
+  // system reading it at its step reads 1 when the pin was high at any
+  // instant since its previous step, so a pulse shorter than the step is
+  // not missed ("hold pulses"). Everything else that reads the node -- a
+  // comparator, an Input pin, a probe -- reads the level as it is.
+  bool hold_pulses = 16;
+}
+
+// A select passes `inputs[1]` ("when 1") while `inputs[0]` ("select") gives
+// 0.5 or more, else `inputs[2]` ("when 0"); it has no settings. An analog
+// select switches at 0.5 without hysteresis, at the microsecond it crosses.
+//
+// A sample and hold node holds `inputs[0]` ("in") as it was at the
+// microsecond its `inputs[1]` ("trigger", a level from 0.5 up) rose or
+// fell, or follows it while the trigger is high. It takes its input after
+// everything else that changes at that microsecond.
+message SampleSettings {
+  // "rising" (empty is rising), "falling" or "track" (follows its input
+  // while the trigger is high and holds it from the falling edge on); any
+  // other is refused with REFUSAL_INVALID.
+  string mode = 1;
+  // What it gives before its first sample; a trigger high when the graph is
+  // installed is no edge. A number, else refused with REFUSAL_INVALID.
+  double initial = 2;
 }
 
 // A comparator: one while its input is beyond the threshold, zero otherwise,
@@ -2042,7 +2219,11 @@ message SignalGraphView {
   // SignalGraphRequest.pin_targets (CAPABILITY_GRAPH_EDGES).
   repeated PinTargetView pin_targets = 4;
   // The comparators of the applied graph, with what their block shows;
-  // Abs, Min and Max show their symbol alone and are not listed.
+  // Abs, Min and Max show their symbol alone and are not listed. Then the
+  // generators with a linked field ("sine · FM · AM") or one the runtime
+  // stopped, its sentence among the hover lines. Then the selects and the
+  // sample and hold nodes (CAPABILITY_SIGNAL_LOGIC), with what passes or is
+  // held now.
   repeated SignalNodeView nodes = 5;
 }
 
@@ -2083,11 +2264,23 @@ message SignalNodeView {
   string node = 1;
   // The card's summary row: "rises above 0 V · hysteresis 10 V".
   string summary_text = 2;
-  // The pill: "high" or "low" for a comparator that drives a pin; empty
-  // where the simulation does not report the node's value.
+  // The pill: "high" or "low" for a comparator that drives a pin; what a
+  // select passes or a sample and hold node holds ("3.21"); empty where the
+  // simulation does not report the node's value.
   string value_text = 3;
-  // The hover card's lines, one fact each.
+  // The hover card's lines, one fact each: "when 1 passes", "holds 3.21,
+  // sampled at 1.250000 s".
   repeated string hover_lines = 4;
+  // A select: the input that passes now, by its port's name ("when 1",
+  // "when 0"), which a client draws bright; empty for every other node.
+  string passing_port = 5;
+  // A select or a sample and hold node: what it gives now. Unset for every
+  // other node.
+  optional double value = 6;
+  // A sample and hold node: how many samples it took since the graph was
+  // applied, and the microsecond of the last; 0 and 0 before the first.
+  uint64 samples = 7;
+  uint64 sampled_us = 8;
 }
 
 // Change what one value node of the applied graph gives.
@@ -4648,6 +4841,114 @@ message DbcSignalView {
   optional double maximum = 10;
 }
 
+// A table file to read for a Table generator (ReadTable). The first column
+// is the time in seconds, a later one the value; cells are separated by
+// commas, semicolons (then a decimal comma is read too), tabs or spaces; a
+// header row is skipped, and with it a unit row; empty lines and lines
+// starting with "#" or "*" are passed over.
+message TableRequest {
+  string path = 1;             // on the server's disk, relative to its working directory
+  // Which column after the time holds the values: 0 is the file's second
+  // column, 1 its third.
+  uint32 value_column = 2;
+  // A recording of more than 1 000 points is simplified (Ramer-Douglas-
+  // Peucker) so that no point of it moves further than this, in the unit of
+  // the values; 0: 0.5 % of the values' span. A max_error given simplifies
+  // a shorter table as well.
+  double max_error = 3;
+  // Play every point as it is; one of more than 16 384 is refused then.
+  bool keep_every_point = 4;
+  // What the values are measured in, for the sentences: "V"; empty: none.
+  string unit = 5;
+}
+
+// A table file as ReadTable read it.
+message TableView {
+  string path = 1;
+  // Why it cannot be played, with the file's name and the line:
+  // 'mains_dip.csv, line 14: "abc" is not a number.'; empty when it can.
+  // The other fields are empty then.
+  string problem_text = 2;
+  // "1 024 points · 0 to 2 s · −325 to 325 V".
+  string summary_text = 3;
+  // The names of the file's columns, from its header, else "column 1",
+  // "column 2" ...; the first is the time.
+  repeated string columns = 4;
+  uint32 value_column = 5;
+  // Points in the file.
+  uint32 rows = 6;
+  // The points to play, simplified where it was: what SignalView's
+  // table_times and table_values take.
+  repeated double times = 7;
+  repeated double values = 8;
+  // At most 400 of them for drawing one pass, the extremes kept.
+  repeated double preview_times = 9;
+  repeated double preview_values = 10;
+  // "120 000 → 2 310 points, max error 0.4 mV"; empty when every point is
+  // played. max_error is the largest distance a point was moved, in the
+  // unit of the values.
+  string simplified_text = 11;
+  double max_error = 12;
+  // A hash of the file's bytes (FNV-1a, 16 hex digits): a client that reads
+  // a file again tells a changed one by it.
+  string hash = 13;
+  // What was played of a file too long to read whole: "mains_dip.csv has
+  // 2 000 000 rows; the first 1 000 000 are read."; empty otherwise.
+  string warning_text = 14;
+}
+
+// The starters, as ListStarters gives them.
+message StarterList {
+  repeated StarterView starters = 1;
+  // Why there are none: the model library, which holds them, did not start.
+  // Empty when there are.
+  string unavailable_reason = 2;
+}
+
+// A small graph to begin with, defined in looper-models beside its models.
+// A client inserts graph_text as it pastes copied blocks; the pins and
+// inputs the graph needs are left for the reader to choose.
+message StarterView {
+  // How it is told apart: "mains_zero_cross", "frequency_sweep",
+  // "phase_angle_dimmer".
+  string name = 1;
+  // "Mains with zero-cross".
+  string display_name = 2;
+  // The library card's sentence.
+  string description = 3;
+  // Words a search finds it by besides its name: "mains", "zero", "dimmer".
+  repeated string search_words = 4;
+  // The blocks and links as a client's clipboard holds them: a JSON document
+  // with the marker `looper_graph` (1), `nodes` (each with `id`, `kind` as
+  // the editor names its blocks -- "generator", "abs", "compare",
+  // "pin_target", "target", "pin", "model", "probe" -- `position` relative
+  // to the top left one, `label`, and its settings) and `links` (`from`,
+  // `output`, `to`, `port`). A pin or channel a node leaves to choose has an
+  // empty name.
+  string graph_text = 5;
+  StarterNeeds needs = 6;
+  // What it needs, as a card says it: "an input pin, an output pin and the
+  // models Triac and HalfCycleRms".
+  string needs_text = 7;
+  // Whether this firmware, this runtime and these models have what it needs.
+  bool is_available = 8;
+  // Why not, with its name first: "Mains with zero-cross needs an input
+  // pin; this firmware has none the graph can drive."; empty when it is.
+  string unavailable_text = 9;
+}
+
+// What a starter needs to be inserted: pins and inputs to choose, models.
+message StarterNeeds {
+  // Input pins the firmware reads, which the graph drives.
+  uint32 input_pins = 1;
+  // Output pins the firmware drives, which the graph reads.
+  uint32 output_pins = 2;
+  // Analog inputs the firmware reads, which the graph drives.
+  uint32 analog_inputs = 3;
+  // Models, by name as ListModels lists them.
+  repeated string models = 4;
+}
+
 // ---- Tasks of an RTOS ----
 
 // Why the RTOS switched, as its port says (looper_switch_reason_t).
@@ -4865,6 +5166,13 @@ message PinMeasureRequest {
   uint32 pin_id = 1;
   uint64 from_us = 2;
   uint64 to_us = 3;              // 0: up to now
+  // The delay from another pin's edges to this pin's (CAPABILITY_PIN_DELAY):
+  // for each `reference_edge` of the reference pin in the stretch, the time
+  // to the first `edge` of this pin at or after it and before the reference
+  // pin's next such edge -- ZC↑ → GATE↑. Unset: no delay is measured.
+  optional uint32 reference_pin_id = 4;
+  EdgePolarity reference_edge = 5;  // EDGE_RISE (the default), EDGE_FALL or EDGE_ANY
+  EdgePolarity edge = 6;
 }
 
 // One pin over [from_us, to_us), from its recorded edges in whole
@@ -4895,4 +5203,17 @@ message PinMeasurement {
   string duty_text = 23;
   string text = 24;              // one line of the above
   string note = 25;
+  // The delay from the reference pin, when the request named one; `text`
+  // then starts with delay_text. A reference edge this pin did not answer
+  // before the next one is counted in delays_missed, not measured.
+  optional uint32 reference_pin_id = 26;
+  uint32 delays = 27;
+  uint64 delay_min_us = 28;
+  uint64 delay_max_us = 29;
+  double delay_mean_us = 30;
+  uint32 delays_missed = 31;
+  // "ZC↑ → GATE↑ 2.50 ms (2.40 ms – 2.60 ms, 50 delays)", with
+  // " · 2 ZC↑ without GATE↑" after it where some were missed; why there is
+  // none ("No GATE↑ followed a ZC↑ in the stretch.").
+  string delay_text = 32;
 }

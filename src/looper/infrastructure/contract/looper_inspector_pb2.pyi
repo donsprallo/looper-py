@@ -93,6 +93,9 @@ class Capability(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     CAPABILITY_PWM: _ClassVar[Capability]
     CAPABILITY_PIN_MEASURE: _ClassVar[Capability]
     CAPABILITY_GRAPH_EDGES: _ClassVar[Capability]
+    CAPABILITY_MOVING_GENERATORS: _ClassVar[Capability]
+    CAPABILITY_SIGNAL_LOGIC: _ClassVar[Capability]
+    CAPABILITY_PIN_DELAY: _ClassVar[Capability]
 
 class ServerMode(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     __slots__ = ()
@@ -564,6 +567,9 @@ CAPABILITY_LANE_SUMMARY: Capability
 CAPABILITY_PWM: Capability
 CAPABILITY_PIN_MEASURE: Capability
 CAPABILITY_GRAPH_EDGES: Capability
+CAPABILITY_MOVING_GENERATORS: Capability
+CAPABILITY_SIGNAL_LOGIC: Capability
+CAPABILITY_PIN_DELAY: Capability
 SERVER_MODE_SIMULATION: ServerMode
 SERVER_MODE_STATIC: ServerMode
 SERVER_MODE_HARDWARE: ServerMode
@@ -2516,18 +2522,46 @@ class SimulationView(_message.Message):
     def __init__(self, sim_us: _Optional[int] = ..., pins: _Optional[_Iterable[_Union[PinView, _Mapping]]] = ...) -> None: ...
 
 class SignalView(_message.Message):
-    __slots__ = ("waveform", "amplitude", "offset", "frequency_hz", "phase_degrees")
+    __slots__ = ("waveform", "amplitude", "offset", "frequency_hz", "phase_degrees", "duty", "low", "high", "rectification", "sweep_from_hz", "sweep_to_hz", "sweep_seconds", "sweep_spacing", "sweep_end", "table_times", "table_values", "table_between", "table_end", "table_time_scale")
     WAVEFORM_FIELD_NUMBER: _ClassVar[int]
     AMPLITUDE_FIELD_NUMBER: _ClassVar[int]
     OFFSET_FIELD_NUMBER: _ClassVar[int]
     FREQUENCY_HZ_FIELD_NUMBER: _ClassVar[int]
     PHASE_DEGREES_FIELD_NUMBER: _ClassVar[int]
+    DUTY_FIELD_NUMBER: _ClassVar[int]
+    LOW_FIELD_NUMBER: _ClassVar[int]
+    HIGH_FIELD_NUMBER: _ClassVar[int]
+    RECTIFICATION_FIELD_NUMBER: _ClassVar[int]
+    SWEEP_FROM_HZ_FIELD_NUMBER: _ClassVar[int]
+    SWEEP_TO_HZ_FIELD_NUMBER: _ClassVar[int]
+    SWEEP_SECONDS_FIELD_NUMBER: _ClassVar[int]
+    SWEEP_SPACING_FIELD_NUMBER: _ClassVar[int]
+    SWEEP_END_FIELD_NUMBER: _ClassVar[int]
+    TABLE_TIMES_FIELD_NUMBER: _ClassVar[int]
+    TABLE_VALUES_FIELD_NUMBER: _ClassVar[int]
+    TABLE_BETWEEN_FIELD_NUMBER: _ClassVar[int]
+    TABLE_END_FIELD_NUMBER: _ClassVar[int]
+    TABLE_TIME_SCALE_FIELD_NUMBER: _ClassVar[int]
     waveform: str
     amplitude: float
     offset: float
     frequency_hz: float
     phase_degrees: float
-    def __init__(self, waveform: _Optional[str] = ..., amplitude: _Optional[float] = ..., offset: _Optional[float] = ..., frequency_hz: _Optional[float] = ..., phase_degrees: _Optional[float] = ...) -> None: ...
+    duty: float
+    low: float
+    high: float
+    rectification: str
+    sweep_from_hz: float
+    sweep_to_hz: float
+    sweep_seconds: float
+    sweep_spacing: str
+    sweep_end: str
+    table_times: _containers.RepeatedScalarFieldContainer[float]
+    table_values: _containers.RepeatedScalarFieldContainer[float]
+    table_between: str
+    table_end: str
+    table_time_scale: float
+    def __init__(self, waveform: _Optional[str] = ..., amplitude: _Optional[float] = ..., offset: _Optional[float] = ..., frequency_hz: _Optional[float] = ..., phase_degrees: _Optional[float] = ..., duty: _Optional[float] = ..., low: _Optional[float] = ..., high: _Optional[float] = ..., rectification: _Optional[str] = ..., sweep_from_hz: _Optional[float] = ..., sweep_to_hz: _Optional[float] = ..., sweep_seconds: _Optional[float] = ..., sweep_spacing: _Optional[str] = ..., sweep_end: _Optional[str] = ..., table_times: _Optional[_Iterable[float]] = ..., table_values: _Optional[_Iterable[float]] = ..., table_between: _Optional[str] = ..., table_end: _Optional[str] = ..., table_time_scale: _Optional[float] = ...) -> None: ...
 
 class ChannelView(_message.Message):
     __slots__ = ("channel_id", "name", "unit", "direction", "value", "is_drivable", "signal", "is_silent", "display_value", "is_driven_by_graph", "is_settable", "settable_text", "value_text", "last_writer_text", "last_written_us", "last_writer_node_key", "read_period_us", "read_period_text")
@@ -2592,7 +2626,7 @@ class SignalBlockCatalogue(_message.Message):
     def __init__(self, kinds: _Optional[_Iterable[_Union[SignalBlockKind, _Mapping]]] = ...) -> None: ...
 
 class SignalBlockKind(_message.Message):
-    __slots__ = ("kind", "category", "category_text", "display_name", "description", "search_words", "inputs", "outputs", "is_pro", "is_locked", "locked_text")
+    __slots__ = ("kind", "category", "category_text", "display_name", "description", "search_words", "inputs", "outputs", "is_pro", "is_locked", "locked_text", "settings", "summary_text")
     KIND_FIELD_NUMBER: _ClassVar[int]
     CATEGORY_FIELD_NUMBER: _ClassVar[int]
     CATEGORY_TEXT_FIELD_NUMBER: _ClassVar[int]
@@ -2604,6 +2638,8 @@ class SignalBlockKind(_message.Message):
     IS_PRO_FIELD_NUMBER: _ClassVar[int]
     IS_LOCKED_FIELD_NUMBER: _ClassVar[int]
     LOCKED_TEXT_FIELD_NUMBER: _ClassVar[int]
+    SETTINGS_FIELD_NUMBER: _ClassVar[int]
+    SUMMARY_TEXT_FIELD_NUMBER: _ClassVar[int]
     kind: str
     category: str
     category_text: str
@@ -2615,7 +2651,9 @@ class SignalBlockKind(_message.Message):
     is_pro: bool
     is_locked: bool
     locked_text: str
-    def __init__(self, kind: _Optional[str] = ..., category: _Optional[str] = ..., category_text: _Optional[str] = ..., display_name: _Optional[str] = ..., description: _Optional[str] = ..., search_words: _Optional[_Iterable[str]] = ..., inputs: _Optional[_Iterable[_Union[SignalPortView, _Mapping]]] = ..., outputs: _Optional[_Iterable[_Union[SignalPortView, _Mapping]]] = ..., is_pro: _Optional[bool] = ..., is_locked: _Optional[bool] = ..., locked_text: _Optional[str] = ...) -> None: ...
+    settings: _containers.RepeatedCompositeFieldContainer[WaveformFieldView]
+    summary_text: str
+    def __init__(self, kind: _Optional[str] = ..., category: _Optional[str] = ..., category_text: _Optional[str] = ..., display_name: _Optional[str] = ..., description: _Optional[str] = ..., search_words: _Optional[_Iterable[str]] = ..., inputs: _Optional[_Iterable[_Union[SignalPortView, _Mapping]]] = ..., outputs: _Optional[_Iterable[_Union[SignalPortView, _Mapping]]] = ..., is_pro: _Optional[bool] = ..., is_locked: _Optional[bool] = ..., locked_text: _Optional[str] = ..., settings: _Optional[_Iterable[_Union[WaveformFieldView, _Mapping]]] = ..., summary_text: _Optional[str] = ...) -> None: ...
 
 class SignalPortView(_message.Message):
     __slots__ = ("name", "is_level", "is_optional")
@@ -2628,16 +2666,68 @@ class SignalPortView(_message.Message):
     def __init__(self, name: _Optional[str] = ..., is_level: _Optional[bool] = ..., is_optional: _Optional[bool] = ...) -> None: ...
 
 class WaveformView(_message.Message):
-    __slots__ = ("name", "display_name", "is_alternating", "is_periodic")
+    __slots__ = ("name", "display_name", "is_alternating", "is_periodic", "fields", "linkable_fields", "search_words", "description", "is_locked", "locked_text")
     NAME_FIELD_NUMBER: _ClassVar[int]
     DISPLAY_NAME_FIELD_NUMBER: _ClassVar[int]
     IS_ALTERNATING_FIELD_NUMBER: _ClassVar[int]
     IS_PERIODIC_FIELD_NUMBER: _ClassVar[int]
+    FIELDS_FIELD_NUMBER: _ClassVar[int]
+    LINKABLE_FIELDS_FIELD_NUMBER: _ClassVar[int]
+    SEARCH_WORDS_FIELD_NUMBER: _ClassVar[int]
+    DESCRIPTION_FIELD_NUMBER: _ClassVar[int]
+    IS_LOCKED_FIELD_NUMBER: _ClassVar[int]
+    LOCKED_TEXT_FIELD_NUMBER: _ClassVar[int]
     name: str
     display_name: str
     is_alternating: bool
     is_periodic: bool
-    def __init__(self, name: _Optional[str] = ..., display_name: _Optional[str] = ..., is_alternating: _Optional[bool] = ..., is_periodic: _Optional[bool] = ...) -> None: ...
+    fields: _containers.RepeatedCompositeFieldContainer[WaveformFieldView]
+    linkable_fields: _containers.RepeatedScalarFieldContainer[str]
+    search_words: _containers.RepeatedScalarFieldContainer[str]
+    description: str
+    is_locked: bool
+    locked_text: str
+    def __init__(self, name: _Optional[str] = ..., display_name: _Optional[str] = ..., is_alternating: _Optional[bool] = ..., is_periodic: _Optional[bool] = ..., fields: _Optional[_Iterable[_Union[WaveformFieldView, _Mapping]]] = ..., linkable_fields: _Optional[_Iterable[str]] = ..., search_words: _Optional[_Iterable[str]] = ..., description: _Optional[str] = ..., is_locked: _Optional[bool] = ..., locked_text: _Optional[str] = ...) -> None: ...
+
+class WaveformFieldView(_message.Message):
+    __slots__ = ("name", "label", "unit", "kind", "options", "default_value", "default_option", "shown_scale", "port_name", "linked_word")
+    class Kind(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+        __slots__ = ()
+        KIND_NUMBER: _ClassVar[WaveformFieldView.Kind]
+        KIND_CHOICE: _ClassVar[WaveformFieldView.Kind]
+        KIND_TABLE: _ClassVar[WaveformFieldView.Kind]
+    KIND_NUMBER: WaveformFieldView.Kind
+    KIND_CHOICE: WaveformFieldView.Kind
+    KIND_TABLE: WaveformFieldView.Kind
+    NAME_FIELD_NUMBER: _ClassVar[int]
+    LABEL_FIELD_NUMBER: _ClassVar[int]
+    UNIT_FIELD_NUMBER: _ClassVar[int]
+    KIND_FIELD_NUMBER: _ClassVar[int]
+    OPTIONS_FIELD_NUMBER: _ClassVar[int]
+    DEFAULT_VALUE_FIELD_NUMBER: _ClassVar[int]
+    DEFAULT_OPTION_FIELD_NUMBER: _ClassVar[int]
+    SHOWN_SCALE_FIELD_NUMBER: _ClassVar[int]
+    PORT_NAME_FIELD_NUMBER: _ClassVar[int]
+    LINKED_WORD_FIELD_NUMBER: _ClassVar[int]
+    name: str
+    label: str
+    unit: str
+    kind: WaveformFieldView.Kind
+    options: _containers.RepeatedCompositeFieldContainer[WaveformOptionView]
+    default_value: float
+    default_option: str
+    shown_scale: float
+    port_name: str
+    linked_word: str
+    def __init__(self, name: _Optional[str] = ..., label: _Optional[str] = ..., unit: _Optional[str] = ..., kind: _Optional[_Union[WaveformFieldView.Kind, str]] = ..., options: _Optional[_Iterable[_Union[WaveformOptionView, _Mapping]]] = ..., default_value: _Optional[float] = ..., default_option: _Optional[str] = ..., shown_scale: _Optional[float] = ..., port_name: _Optional[str] = ..., linked_word: _Optional[str] = ...) -> None: ...
+
+class WaveformOptionView(_message.Message):
+    __slots__ = ("value", "label")
+    VALUE_FIELD_NUMBER: _ClassVar[int]
+    LABEL_FIELD_NUMBER: _ClassVar[int]
+    value: str
+    label: str
+    def __init__(self, value: _Optional[str] = ..., label: _Optional[str] = ...) -> None: ...
 
 class SignalInputRequest(_message.Message):
     __slots__ = ("node", "output")
@@ -2648,7 +2738,7 @@ class SignalInputRequest(_message.Message):
     def __init__(self, node: _Optional[str] = ..., output: _Optional[int] = ...) -> None: ...
 
 class SignalNodeRequest(_message.Message):
-    __slots__ = ("key", "kind", "signal", "source", "inputs", "model", "parameters", "interpreted", "value", "parameter_sources", "block", "group_key", "compare")
+    __slots__ = ("key", "kind", "signal", "source", "inputs", "model", "parameters", "interpreted", "value", "parameter_sources", "block", "group_key", "compare", "linked_fields", "sample", "hold_pulses")
     class ParametersEntry(_message.Message):
         __slots__ = ("key", "value")
         KEY_FIELD_NUMBER: _ClassVar[int]
@@ -2676,6 +2766,9 @@ class SignalNodeRequest(_message.Message):
     BLOCK_FIELD_NUMBER: _ClassVar[int]
     GROUP_KEY_FIELD_NUMBER: _ClassVar[int]
     COMPARE_FIELD_NUMBER: _ClassVar[int]
+    LINKED_FIELDS_FIELD_NUMBER: _ClassVar[int]
+    SAMPLE_FIELD_NUMBER: _ClassVar[int]
+    HOLD_PULSES_FIELD_NUMBER: _ClassVar[int]
     key: str
     kind: str
     signal: SignalView
@@ -2689,7 +2782,18 @@ class SignalNodeRequest(_message.Message):
     block: ChainBlockRequest
     group_key: str
     compare: CompareSettings
-    def __init__(self, key: _Optional[str] = ..., kind: _Optional[str] = ..., signal: _Optional[_Union[SignalView, _Mapping]] = ..., source: _Optional[int] = ..., inputs: _Optional[_Iterable[_Union[SignalInputRequest, _Mapping]]] = ..., model: _Optional[str] = ..., parameters: _Optional[_Mapping[str, float]] = ..., interpreted: _Optional[bool] = ..., value: _Optional[float] = ..., parameter_sources: _Optional[_Mapping[str, str]] = ..., block: _Optional[_Union[ChainBlockRequest, _Mapping]] = ..., group_key: _Optional[str] = ..., compare: _Optional[_Union[CompareSettings, _Mapping]] = ...) -> None: ...
+    linked_fields: _containers.RepeatedScalarFieldContainer[str]
+    sample: SampleSettings
+    hold_pulses: bool
+    def __init__(self, key: _Optional[str] = ..., kind: _Optional[str] = ..., signal: _Optional[_Union[SignalView, _Mapping]] = ..., source: _Optional[int] = ..., inputs: _Optional[_Iterable[_Union[SignalInputRequest, _Mapping]]] = ..., model: _Optional[str] = ..., parameters: _Optional[_Mapping[str, float]] = ..., interpreted: _Optional[bool] = ..., value: _Optional[float] = ..., parameter_sources: _Optional[_Mapping[str, str]] = ..., block: _Optional[_Union[ChainBlockRequest, _Mapping]] = ..., group_key: _Optional[str] = ..., compare: _Optional[_Union[CompareSettings, _Mapping]] = ..., linked_fields: _Optional[_Iterable[str]] = ..., sample: _Optional[_Union[SampleSettings, _Mapping]] = ..., hold_pulses: _Optional[bool] = ...) -> None: ...
+
+class SampleSettings(_message.Message):
+    __slots__ = ("mode", "initial")
+    MODE_FIELD_NUMBER: _ClassVar[int]
+    INITIAL_FIELD_NUMBER: _ClassVar[int]
+    mode: str
+    initial: float
+    def __init__(self, mode: _Optional[str] = ..., initial: _Optional[float] = ...) -> None: ...
 
 class CompareSettings(_message.Message):
     __slots__ = ("level", "hysteresis", "below", "linked", "check_us")
@@ -2845,16 +2949,24 @@ class PinTargetView(_message.Message):
     def __init__(self, pin_id: _Optional[int] = ..., pin_name: _Optional[str] = ..., node: _Optional[str] = ..., output: _Optional[int] = ..., high: _Optional[bool] = ..., value_text: _Optional[str] = ..., edges: _Optional[int] = ..., fault_text: _Optional[str] = ..., resolution_text: _Optional[str] = ..., check_text: _Optional[str] = ..., level_text: _Optional[str] = ...) -> None: ...
 
 class SignalNodeView(_message.Message):
-    __slots__ = ("node", "summary_text", "value_text", "hover_lines")
+    __slots__ = ("node", "summary_text", "value_text", "hover_lines", "passing_port", "value", "samples", "sampled_us")
     NODE_FIELD_NUMBER: _ClassVar[int]
     SUMMARY_TEXT_FIELD_NUMBER: _ClassVar[int]
     VALUE_TEXT_FIELD_NUMBER: _ClassVar[int]
     HOVER_LINES_FIELD_NUMBER: _ClassVar[int]
+    PASSING_PORT_FIELD_NUMBER: _ClassVar[int]
+    VALUE_FIELD_NUMBER: _ClassVar[int]
+    SAMPLES_FIELD_NUMBER: _ClassVar[int]
+    SAMPLED_US_FIELD_NUMBER: _ClassVar[int]
     node: str
     summary_text: str
     value_text: str
     hover_lines: _containers.RepeatedScalarFieldContainer[str]
-    def __init__(self, node: _Optional[str] = ..., summary_text: _Optional[str] = ..., value_text: _Optional[str] = ..., hover_lines: _Optional[_Iterable[str]] = ...) -> None: ...
+    passing_port: str
+    value: float
+    samples: int
+    sampled_us: int
+    def __init__(self, node: _Optional[str] = ..., summary_text: _Optional[str] = ..., value_text: _Optional[str] = ..., hover_lines: _Optional[_Iterable[str]] = ..., passing_port: _Optional[str] = ..., value: _Optional[float] = ..., samples: _Optional[int] = ..., sampled_us: _Optional[int] = ...) -> None: ...
 
 class GraphValueRequest(_message.Message):
     __slots__ = ("node", "value", "when")
@@ -6568,6 +6680,94 @@ class DbcSignalView(_message.Message):
     maximum: float
     def __init__(self, name: _Optional[str] = ..., start_bit: _Optional[int] = ..., length: _Optional[int] = ..., big_endian: _Optional[bool] = ..., is_signed: _Optional[bool] = ..., scale: _Optional[float] = ..., offset: _Optional[float] = ..., unit: _Optional[str] = ..., minimum: _Optional[float] = ..., maximum: _Optional[float] = ...) -> None: ...
 
+class TableRequest(_message.Message):
+    __slots__ = ("path", "value_column", "max_error", "keep_every_point", "unit")
+    PATH_FIELD_NUMBER: _ClassVar[int]
+    VALUE_COLUMN_FIELD_NUMBER: _ClassVar[int]
+    MAX_ERROR_FIELD_NUMBER: _ClassVar[int]
+    KEEP_EVERY_POINT_FIELD_NUMBER: _ClassVar[int]
+    UNIT_FIELD_NUMBER: _ClassVar[int]
+    path: str
+    value_column: int
+    max_error: float
+    keep_every_point: bool
+    unit: str
+    def __init__(self, path: _Optional[str] = ..., value_column: _Optional[int] = ..., max_error: _Optional[float] = ..., keep_every_point: _Optional[bool] = ..., unit: _Optional[str] = ...) -> None: ...
+
+class TableView(_message.Message):
+    __slots__ = ("path", "problem_text", "summary_text", "columns", "value_column", "rows", "times", "values", "preview_times", "preview_values", "simplified_text", "max_error", "hash", "warning_text")
+    PATH_FIELD_NUMBER: _ClassVar[int]
+    PROBLEM_TEXT_FIELD_NUMBER: _ClassVar[int]
+    SUMMARY_TEXT_FIELD_NUMBER: _ClassVar[int]
+    COLUMNS_FIELD_NUMBER: _ClassVar[int]
+    VALUE_COLUMN_FIELD_NUMBER: _ClassVar[int]
+    ROWS_FIELD_NUMBER: _ClassVar[int]
+    TIMES_FIELD_NUMBER: _ClassVar[int]
+    VALUES_FIELD_NUMBER: _ClassVar[int]
+    PREVIEW_TIMES_FIELD_NUMBER: _ClassVar[int]
+    PREVIEW_VALUES_FIELD_NUMBER: _ClassVar[int]
+    SIMPLIFIED_TEXT_FIELD_NUMBER: _ClassVar[int]
+    MAX_ERROR_FIELD_NUMBER: _ClassVar[int]
+    HASH_FIELD_NUMBER: _ClassVar[int]
+    WARNING_TEXT_FIELD_NUMBER: _ClassVar[int]
+    path: str
+    problem_text: str
+    summary_text: str
+    columns: _containers.RepeatedScalarFieldContainer[str]
+    value_column: int
+    rows: int
+    times: _containers.RepeatedScalarFieldContainer[float]
+    values: _containers.RepeatedScalarFieldContainer[float]
+    preview_times: _containers.RepeatedScalarFieldContainer[float]
+    preview_values: _containers.RepeatedScalarFieldContainer[float]
+    simplified_text: str
+    max_error: float
+    hash: str
+    warning_text: str
+    def __init__(self, path: _Optional[str] = ..., problem_text: _Optional[str] = ..., summary_text: _Optional[str] = ..., columns: _Optional[_Iterable[str]] = ..., value_column: _Optional[int] = ..., rows: _Optional[int] = ..., times: _Optional[_Iterable[float]] = ..., values: _Optional[_Iterable[float]] = ..., preview_times: _Optional[_Iterable[float]] = ..., preview_values: _Optional[_Iterable[float]] = ..., simplified_text: _Optional[str] = ..., max_error: _Optional[float] = ..., hash: _Optional[str] = ..., warning_text: _Optional[str] = ...) -> None: ...
+
+class StarterList(_message.Message):
+    __slots__ = ("starters", "unavailable_reason")
+    STARTERS_FIELD_NUMBER: _ClassVar[int]
+    UNAVAILABLE_REASON_FIELD_NUMBER: _ClassVar[int]
+    starters: _containers.RepeatedCompositeFieldContainer[StarterView]
+    unavailable_reason: str
+    def __init__(self, starters: _Optional[_Iterable[_Union[StarterView, _Mapping]]] = ..., unavailable_reason: _Optional[str] = ...) -> None: ...
+
+class StarterView(_message.Message):
+    __slots__ = ("name", "display_name", "description", "search_words", "graph_text", "needs", "needs_text", "is_available", "unavailable_text")
+    NAME_FIELD_NUMBER: _ClassVar[int]
+    DISPLAY_NAME_FIELD_NUMBER: _ClassVar[int]
+    DESCRIPTION_FIELD_NUMBER: _ClassVar[int]
+    SEARCH_WORDS_FIELD_NUMBER: _ClassVar[int]
+    GRAPH_TEXT_FIELD_NUMBER: _ClassVar[int]
+    NEEDS_FIELD_NUMBER: _ClassVar[int]
+    NEEDS_TEXT_FIELD_NUMBER: _ClassVar[int]
+    IS_AVAILABLE_FIELD_NUMBER: _ClassVar[int]
+    UNAVAILABLE_TEXT_FIELD_NUMBER: _ClassVar[int]
+    name: str
+    display_name: str
+    description: str
+    search_words: _containers.RepeatedScalarFieldContainer[str]
+    graph_text: str
+    needs: StarterNeeds
+    needs_text: str
+    is_available: bool
+    unavailable_text: str
+    def __init__(self, name: _Optional[str] = ..., display_name: _Optional[str] = ..., description: _Optional[str] = ..., search_words: _Optional[_Iterable[str]] = ..., graph_text: _Optional[str] = ..., needs: _Optional[_Union[StarterNeeds, _Mapping]] = ..., needs_text: _Optional[str] = ..., is_available: _Optional[bool] = ..., unavailable_text: _Optional[str] = ...) -> None: ...
+
+class StarterNeeds(_message.Message):
+    __slots__ = ("input_pins", "output_pins", "analog_inputs", "models")
+    INPUT_PINS_FIELD_NUMBER: _ClassVar[int]
+    OUTPUT_PINS_FIELD_NUMBER: _ClassVar[int]
+    ANALOG_INPUTS_FIELD_NUMBER: _ClassVar[int]
+    MODELS_FIELD_NUMBER: _ClassVar[int]
+    input_pins: int
+    output_pins: int
+    analog_inputs: int
+    models: _containers.RepeatedScalarFieldContainer[str]
+    def __init__(self, input_pins: _Optional[int] = ..., output_pins: _Optional[int] = ..., analog_inputs: _Optional[int] = ..., models: _Optional[_Iterable[str]] = ...) -> None: ...
+
 class TaskSwitch(_message.Message):
     __slots__ = ("from_context", "from_name", "to_context", "to_name", "reason")
     FROM_CONTEXT_FIELD_NUMBER: _ClassVar[int]
@@ -6823,17 +7023,23 @@ class PwmMeasurement(_message.Message):
     def __init__(self, pwm_id: _Optional[int] = ..., from_us: _Optional[int] = ..., to_us: _Optional[int] = ..., measured: _Optional[bool] = ..., duty: _Optional[float] = ..., duty_min: _Optional[float] = ..., duty_max: _Optional[float] = ..., frequency_hz: _Optional[float] = ..., frequency_min_hz: _Optional[float] = ..., frequency_max_hz: _Optional[float] = ..., high_width_ns: _Optional[float] = ..., on_us: _Optional[int] = ..., changes: _Optional[int] = ..., duty_text: _Optional[str] = ..., frequency_text: _Optional[str] = ..., high_width_text: _Optional[str] = ..., on_text: _Optional[str] = ..., text: _Optional[str] = ..., note: _Optional[str] = ...) -> None: ...
 
 class PinMeasureRequest(_message.Message):
-    __slots__ = ("pin_id", "from_us", "to_us")
+    __slots__ = ("pin_id", "from_us", "to_us", "reference_pin_id", "reference_edge", "edge")
     PIN_ID_FIELD_NUMBER: _ClassVar[int]
     FROM_US_FIELD_NUMBER: _ClassVar[int]
     TO_US_FIELD_NUMBER: _ClassVar[int]
+    REFERENCE_PIN_ID_FIELD_NUMBER: _ClassVar[int]
+    REFERENCE_EDGE_FIELD_NUMBER: _ClassVar[int]
+    EDGE_FIELD_NUMBER: _ClassVar[int]
     pin_id: int
     from_us: int
     to_us: int
-    def __init__(self, pin_id: _Optional[int] = ..., from_us: _Optional[int] = ..., to_us: _Optional[int] = ...) -> None: ...
+    reference_pin_id: int
+    reference_edge: EdgePolarity
+    edge: EdgePolarity
+    def __init__(self, pin_id: _Optional[int] = ..., from_us: _Optional[int] = ..., to_us: _Optional[int] = ..., reference_pin_id: _Optional[int] = ..., reference_edge: _Optional[_Union[EdgePolarity, str]] = ..., edge: _Optional[_Union[EdgePolarity, str]] = ...) -> None: ...
 
 class PinMeasurement(_message.Message):
-    __slots__ = ("pin_id", "from_us", "to_us", "measured", "rising_edges", "falling_edges", "pulses", "high_width_min_us", "high_width_max_us", "high_width_mean_us", "low_width_min_us", "low_width_max_us", "periods", "period_min_us", "period_max_us", "period_mean_us", "frequency_hz", "duty", "high_us", "high_width_text", "period_text", "frequency_text", "duty_text", "text", "note")
+    __slots__ = ("pin_id", "from_us", "to_us", "measured", "rising_edges", "falling_edges", "pulses", "high_width_min_us", "high_width_max_us", "high_width_mean_us", "low_width_min_us", "low_width_max_us", "periods", "period_min_us", "period_max_us", "period_mean_us", "frequency_hz", "duty", "high_us", "high_width_text", "period_text", "frequency_text", "duty_text", "text", "note", "reference_pin_id", "delays", "delay_min_us", "delay_max_us", "delay_mean_us", "delays_missed", "delay_text")
     PIN_ID_FIELD_NUMBER: _ClassVar[int]
     FROM_US_FIELD_NUMBER: _ClassVar[int]
     TO_US_FIELD_NUMBER: _ClassVar[int]
@@ -6859,6 +7065,13 @@ class PinMeasurement(_message.Message):
     DUTY_TEXT_FIELD_NUMBER: _ClassVar[int]
     TEXT_FIELD_NUMBER: _ClassVar[int]
     NOTE_FIELD_NUMBER: _ClassVar[int]
+    REFERENCE_PIN_ID_FIELD_NUMBER: _ClassVar[int]
+    DELAYS_FIELD_NUMBER: _ClassVar[int]
+    DELAY_MIN_US_FIELD_NUMBER: _ClassVar[int]
+    DELAY_MAX_US_FIELD_NUMBER: _ClassVar[int]
+    DELAY_MEAN_US_FIELD_NUMBER: _ClassVar[int]
+    DELAYS_MISSED_FIELD_NUMBER: _ClassVar[int]
+    DELAY_TEXT_FIELD_NUMBER: _ClassVar[int]
     pin_id: int
     from_us: int
     to_us: int
@@ -6884,4 +7097,11 @@ class PinMeasurement(_message.Message):
     duty_text: str
     text: str
     note: str
-    def __init__(self, pin_id: _Optional[int] = ..., from_us: _Optional[int] = ..., to_us: _Optional[int] = ..., measured: _Optional[bool] = ..., rising_edges: _Optional[int] = ..., falling_edges: _Optional[int] = ..., pulses: _Optional[int] = ..., high_width_min_us: _Optional[int] = ..., high_width_max_us: _Optional[int] = ..., high_width_mean_us: _Optional[float] = ..., low_width_min_us: _Optional[int] = ..., low_width_max_us: _Optional[int] = ..., periods: _Optional[int] = ..., period_min_us: _Optional[int] = ..., period_max_us: _Optional[int] = ..., period_mean_us: _Optional[float] = ..., frequency_hz: _Optional[float] = ..., duty: _Optional[float] = ..., high_us: _Optional[int] = ..., high_width_text: _Optional[str] = ..., period_text: _Optional[str] = ..., frequency_text: _Optional[str] = ..., duty_text: _Optional[str] = ..., text: _Optional[str] = ..., note: _Optional[str] = ...) -> None: ...
+    reference_pin_id: int
+    delays: int
+    delay_min_us: int
+    delay_max_us: int
+    delay_mean_us: float
+    delays_missed: int
+    delay_text: str
+    def __init__(self, pin_id: _Optional[int] = ..., from_us: _Optional[int] = ..., to_us: _Optional[int] = ..., measured: _Optional[bool] = ..., rising_edges: _Optional[int] = ..., falling_edges: _Optional[int] = ..., pulses: _Optional[int] = ..., high_width_min_us: _Optional[int] = ..., high_width_max_us: _Optional[int] = ..., high_width_mean_us: _Optional[float] = ..., low_width_min_us: _Optional[int] = ..., low_width_max_us: _Optional[int] = ..., periods: _Optional[int] = ..., period_min_us: _Optional[int] = ..., period_max_us: _Optional[int] = ..., period_mean_us: _Optional[float] = ..., frequency_hz: _Optional[float] = ..., duty: _Optional[float] = ..., high_us: _Optional[int] = ..., high_width_text: _Optional[str] = ..., period_text: _Optional[str] = ..., frequency_text: _Optional[str] = ..., duty_text: _Optional[str] = ..., text: _Optional[str] = ..., note: _Optional[str] = ..., reference_pin_id: _Optional[int] = ..., delays: _Optional[int] = ..., delay_min_us: _Optional[int] = ..., delay_max_us: _Optional[int] = ..., delay_mean_us: _Optional[float] = ..., delays_missed: _Optional[int] = ..., delay_text: _Optional[str] = ...) -> None: ...
