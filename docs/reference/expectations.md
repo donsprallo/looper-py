@@ -12,6 +12,31 @@ Every expectation, what it checks, what it needs, and how its outcome reads.
 
 Fails with `saw nothing recorded` when the channel recorded nothing.
 
+## PWM outputs -- `check.pwm(name)`
+
+| Expectation | Met when | Outcome when met |
+| --- | --- | --- |
+| `duty_between(low, high)` | the duty (0 to 1) stays within `low .. high` whenever the output is on, and it is on at all | `saw duty 42.9 % (37.5 % – 50.0 %)` |
+| `frequency(hertz, tol=0.01)` | the lowest and highest frequency while on lie within `hertz` ± `tol` (relative) | `saw 20.0 kHz`; a range when it changed |
+| `reaches_duty(duty, within_s=inf, tolerance=0.001)` | the output is on at `duty` ± `tolerance` no later than `within_s` after the window's start | `saw reached after 0.02 s` |
+| `stays_off()` | the output is off the whole window | `saw off` |
+
+An output the contract does not list fails with `no PWM output named 'X'; the
+contract lists ...`. Without `CAPABILITY_PWM`, `evaluate()` raises
+`SimulationRefusedError`. `simulation.pwm(name)` reads one output now:
+`.duty`, `.frequency_hz`, `.enabled`, `.text`.
+
+## Pulses on a pin -- `check.pin(name)`
+
+| Expectation | Met when | Outcome when met |
+| --- | --- | --- |
+| `pulse_width_between(low, high, unit="us")` | every whole high pulse in the window lasts within `low .. high` | `saw 1500 .. 1500 us over 3 pulses` |
+| `frequency_between(low_hz, high_hz)` | every whole period, rising edge to rising edge, lies within the range | `saw 50 .. 50 Hz over 2 periods` |
+
+Fails with the server's note when the window holds no whole pulse or period,
+and with the registered names when there is no such pin. Without
+`CAPABILITY_PIN_MEASURE`, `evaluate()` raises `SimulationRefusedError`.
+
 ## Adapter calls -- `check.call(function)`
 
 | Expectation | Met when | Outcome when met |

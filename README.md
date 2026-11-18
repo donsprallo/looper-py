@@ -65,6 +65,7 @@ which remains as a deprecated alias).
 | `firmware_name`, `definition_path` | what the server said about it |
 | `clock_mode`, `simulated_seconds`, `advance(seconds)`, `advance_microseconds(us)` | how the clock goes (held, paced or max), where it is, and running a held one for a span |
 | `pins()`, `toggle_pin(pin_id)` | the pins, and driving an input |
+| `pwms()`, `pwm(name)` | the PWM outputs of `contract.toml` with their state now: `.duty`, `.frequency_hz`, `.enabled`, `.text` |
 | `apply_signal(channel_id, looper.Signal(...))` | a generated signal on an analog input |
 | `send_bus_message(looper.BusMessage(...))` | one message onto a bus |
 | `exchanges(since)`, `read_events(since)` | reading the recorded traffic back, exchange by exchange or page by page |
@@ -78,6 +79,8 @@ which remains as a deprecated alias).
 | `check.channel(id, name)` | `stays_between(low, high)`, `reaches(value, tolerance, within_seconds)` |
 | `check.bus(id, name)` | `nothing_refused()`, `carried_at_least(count)` |
 | `check.call(function)` | `was_answered()`, `happened_at_least(count)`, `happened_at(hertz, tolerance)` |
+| `check.pwm(name)` | `duty_between(low, high)`, `frequency(hertz, tol)`, `reaches_duty(duty, within_s)`, `stays_off()` |
+| `check.pin(name)` | `pulse_width_between(low, high, unit="us")`, `frequency_between(low_hz, high_hz)` |
 | `check.memory()` | `never_allocates()`, `peak_below(bytes)`, `nothing_leaked()` |
 | `check.stack()` | `no_deeper_than(frames)`, `stays_below(bytes)` |
 | `check.firmware_is_alive()` | the firmware still reaches the adapter |

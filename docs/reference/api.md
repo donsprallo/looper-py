@@ -29,6 +29,7 @@ looper.ResetMark, looper.FlashMark                # resets and flash operations 
 looper.Retained, looper.Flash, looper.FlashPartition  # what survives a reset
 looper.NodeOutput, looper.SignalModel, looper.ModelParameter
 looper.TimeModel, looper.TimeModelParameter, looper.ActiveTimeModel  # time models
+looper.PwmOutput, looper.PwmOutputs               # the PWM outputs of contract.toml
 ```
 
 ## Reaching a simulation
@@ -187,6 +188,22 @@ memories](../guides/resets-and-memories.md) explains how they are used.
 .. autoclass:: looper.ResetMark
 
 .. autoclass:: looper.FlashMark
+```
+
+## PWM outputs
+
+`simulation.pwms()` reads every PWM output of `contract.toml` with its state
+now, `simulation.pwm(name)` one of them: `.duty` (0 to 1), `.frequency_hz`,
+`.enabled` and the server's `.text`, such as `20.0 kHz · 37.5 % · center`.
+Both raise `SimulationRefusedError` on a simulation without PWM outputs. The
+checks of an output and of a pin's pulses are in the
+[reference of expectations](expectations.md); they are free.
+
+```{eval-rst}
+.. autoclass:: looper.PwmOutputs
+   :members: named
+
+.. autoclass:: looper.PwmOutput
 ```
 
 ## Interrupts and DMA

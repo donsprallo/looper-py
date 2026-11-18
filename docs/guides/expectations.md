@@ -113,6 +113,94 @@ A channel nothing was recorded for **fails**, with `saw nothing recorded`. An
 expectation that could not be tested is not one that was met.
 ```
 
+## PWM outputs
+
+`check.pwm(name)` is about one PWM output of `contract.toml`'s `[pwm.NAME]`,
+by that name. An output is a state -- period, compare, reload, on or off --
+and every change the firmware makes is one event, so the server measures
+duty and frequency exactly, whatever the frequency, and without a pin edge
+per period. The numbers and the texts in the report are the server's, the
+same ones Logic shows.
+
+```python
+check = simulation.expect()
+check.pwm("MOTOR").duty_between(0.1, 0.9)
+check.pwm("MOTOR").frequency(20_000, tol=0.01)
+check.pwm("MOTOR").reaches_duty(0.5, within_s=0.025)
+
+report = check.evaluate(for_seconds=0.035)
+```
+
+```text
+ok    MOTOR: expected duty within 10 % .. 90 %, saw duty 42.9 % (37.5 % – 50.0 %)
+ok    MOTOR: expected 20000 Hz +/- 1%, saw 20.0 kHz
+ok    MOTOR: expected duty 50 % +/- 0.1 % within 0.025 s, saw reached after 0.02 s
+```
+
+- `duty_between(low, high)` -- the duty, 0 to 1, stays within the range
+  whenever the output is on. An output that was off the whole window fails
+  with the server's note.
+- `frequency(hertz, tol=0.01)` -- the lowest and the highest frequency while
+  on lie within `hertz` ± `tol` (relative: 0.01 is 1 %). When the frequency
+  changed in the window, the report gives its mean and range:
+  `saw 15.0 kHz (10.0 kHz – 20.0 kHz)`.
+- `reaches_duty(duty, within_s=inf, tolerance=0.001)` -- the output is on at
+  that duty, within `tolerance`, no later than `within_s` after the window's
+  start: either it starts the window there, or a change brings it there. A
+  duty set while the output is off does not count.
+- `stays_off()` -- the output is off for the whole window; otherwise the
+  report says how long it was on (`on 12.00 ms of 20.00 ms`).
+
+An output the contract does not list fails with the names it does list. A
+simulation without PWM outputs -- a contract with no `[pwm.NAME]`, or a
+server that predates them -- refuses the evaluation with
+`SimulationRefusedError`, naming `CAPABILITY_PWM`.
+
+To read an output as it stands now, without a window:
+
+```python
+motor = simulation.pwm("MOTOR")
+motor.duty, motor.frequency_hz, motor.enabled   # 0.375, 20000.0, True
+motor.text                                      # '20.0 kHz · 37.5 % · center'
+```
+
+`simulation.pwms()` lists them all, in the contract's order.
+
+```{warning}
+For now, looper-srv forgets a PWM's state when a window clears the recording:
+until the firmware changes the output again, the server measures it as the
+contract starts it, off. A duty the firmware set before the window -- even
+at its start -- is therefore not part of `duty_between` or `frequency`, and
+a second window's `reaches_duty` starts from that state too. Let the change
+you check happen inside the window.
+```
+
+## Pulses on a pin
+
+`check.pin(name)` is about the pulses on a pin the firmware registered, by
+its name -- a servo or a software PWM driven from a timer. The server
+measures them from the pin's recorded edges, in whole microseconds, as Logic
+does: a period runs from one rising edge to the next, a width from an edge
+to the next of the other kind, and a pulse the window cuts is not counted.
+
+```python
+check.pin("SERVO").pulse_width_between(1000, 2000, unit="us")
+check.pin("SERVO").frequency_between(49.0, 51.0)
+```
+
+```text
+ok    SERVO: expected every high pulse within 1000 .. 2000 us, saw 1500 .. 1500 us over 3 pulses
+ok    SERVO: expected every period within 49 .. 51 Hz, saw 50 .. 50 Hz over 2 periods
+```
+
+- `pulse_width_between(low, high, unit="us")` -- every whole high pulse lasts
+  within the range; `unit` is `us`, `ms` or `s`.
+- `frequency_between(low_hz, high_hz)` -- every whole period lies within the
+  range, so one stray period fails it.
+
+A window without a whole pulse or period fails with the server's note. Make
+it long enough to hold two rising edges: a 50 Hz servo needs more than 40 ms.
+
 ## Adapter calls
 
 `check.call(function)` is about one function of the adapter -- the boundary
