@@ -35,6 +35,7 @@ from looper.domain.model import (
     EventPage,
     Exchange,
     Findings,
+    GraphProbe,
     Image,
     Life,
     LifeDump,
@@ -44,6 +45,7 @@ from looper.domain.model import (
     RunStatus,
     Signal,
     SignalGraph,
+    SignalGraphState,
     SignalModel,
     TimeModel,
     Variable,
@@ -458,7 +460,9 @@ class Simulation:
         to high.
 
         Raises:
-            SimulationRefusedError: If the pin is unknown or the firmware drives it.
+            SimulationRefusedError: If the pin is unknown or the firmware
+                drives it, or the signal graph drives it: the graph comes
+                first, and the toggle does nothing while it does.
         """
         return self._inspector.toggle_pin(pin_id)
 
@@ -471,16 +475,18 @@ class Simulation:
         self._inspector.apply_signal(channel_id, signal)
 
     def apply_signal_graph(self, graph: SignalGraph) -> None:
-        """Drive analog inputs from a graph of signals, models among them.
+        """Drive analog inputs and input pins from a graph of signals, models among them.
 
         The graph replaces whatever graph ran before, for every client; an
-        input it no longer drives goes back to its own signal. Applying an
-        empty `SignalGraph` removes the graph.
+        input it no longer drives goes back to its own signal, and a pin it
+        no longer drives keeps its last level. Applying an empty
+        `SignalGraph` removes the graph.
 
         Raises:
             SimulationRefusedError: If the graph does not hold together, a
-                model is unknown or does not fit its inputs, or a target is
-                not an input.
+                model is unknown or does not fit its inputs, a target is not
+                an input, or a comparator's hysteresis is negative; the
+                message is the server's sentence.
         """
         self._inspector.apply_signal_graph(graph)
 
@@ -495,6 +501,26 @@ class Simulation:
                 the value is outside the limits of a parameter it gives.
         """
         self._inspector.set_graph_value(node, value)
+
+    def signal_graph(self) -> SignalGraphState:
+        """The applied graph as the simulation reports it now.
+
+        Its probes with their trace channels, the input pins it drives with
+        the level each is held at and how exact its edges are, and its
+        comparators. Empty when no graph is applied.
+        """
+        return self._inspector.read_signal_graph()
+
+    def probe(self, name: str) -> GraphProbe:
+        """The probe of the applied graph that `name` names, with its trace channel.
+
+        An expectation on a channel takes it like any other:
+        ``check.channel(probe.channel_id, probe.name).stays_between(...)``.
+
+        Raises:
+            SimulationRefusedError: If there is none; the message lists the names there are.
+        """
+        return _named(self.signal_graph().probes, name, "probe", "the applied graph has")
 
     def models(self) -> tuple[SignalModel, ...]:
         """The models the project offers the signal graph, read afresh from its files.
@@ -733,7 +759,7 @@ class Simulation:
         self.close()
 
 
-def _named[Named: (Pin, Channel, Bus, SignalModel)](
+def _named[Named: (Pin, Channel, Bus, SignalModel, GraphProbe)](
     things: tuple[Named, ...], name: str, kind: str, whose: str = "the firmware registered"
 ) -> Named:
     """The one thing called `name`, or a refusal that says what there is."""

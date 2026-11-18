@@ -9,12 +9,14 @@ acknowledgement.
 from __future__ import annotations
 
 from looper.domain.model import (
+    EventLink,
     ModelParameter,
     NodeOutput,
     SignalGraph,
     SignalModel,
     SignalNode,
     SignalNodeKind,
+    SignalProbe,
 )
 from looper.infrastructure.chain_translation import block_request_of
 from looper.infrastructure.contract import looper_inspector_pb2 as contract
@@ -27,15 +29,7 @@ def signal_graph_request_of(graph: SignalGraph) -> contract.SignalGraphRequest:
             *(_node_request_of(one) for one in graph.nodes),
             *(block_request_of(one) for one in graph.event_blocks),
         ],
-        event_links=[
-            contract.EventLinkRequest(
-                from_node=one.from_node,
-                from_port=one.from_port,
-                to_node=one.to_node,
-                to_port=one.to_port,
-            )
-            for one in graph.event_links
-        ],
+        event_links=[_link_request_of(one) for one in graph.event_links],
         groups=[
             contract.ChainGroupRequest(group_key=one.key, name=one.name, enabled=one.enabled)
             for one in graph.groups
@@ -46,10 +40,26 @@ def signal_graph_request_of(graph: SignalGraph) -> contract.SignalGraphRequest:
             )
             for one in graph.targets
         ],
-        probes=[
-            contract.SignalProbeRequest(name=one.name, node=one.node, output=one.output)
-            for one in graph.probes
+        probes=[_probe_request_of(one) for one in graph.probes],
+        pin_targets=[
+            contract.SignalPinTargetRequest(pin_id=one.pin_id, node=one.node, output=one.output)
+            for one in graph.pin_targets
         ],
+    )
+
+
+def _link_request_of(link: EventLink) -> contract.EventLinkRequest:
+    return contract.EventLinkRequest(
+        from_node=link.from_node,
+        from_port=link.from_port,
+        to_node=link.to_node,
+        to_port=link.to_port,
+    )
+
+
+def _probe_request_of(probe: SignalProbe) -> contract.SignalProbeRequest:
+    return contract.SignalProbeRequest(
+        name=probe.name, node=probe.node, output=probe.output, sample_us=probe.sample_us
     )
 
 
@@ -59,7 +69,7 @@ def models_of(message: contract.ModelList) -> tuple[SignalModel, ...]:
 
 
 def _node_request_of(node: SignalNode) -> contract.SignalNodeRequest:
-    """One node; a generator carries its signal, the others leave it out."""
+    """One node; a generator carries its signal, a comparator its settings."""
     request = contract.SignalNodeRequest(
         key=node.key,
         kind=node.kind.value,
@@ -73,6 +83,8 @@ def _node_request_of(node: SignalNode) -> contract.SignalNodeRequest:
     )
     if node.kind is SignalNodeKind.GENERATOR:
         request.signal.CopyFrom(_signal_view_of(node))
+    if node.kind is SignalNodeKind.COMPARE:
+        request.compare.CopyFrom(_compare_settings_of(node))
     return request
 
 
@@ -91,6 +103,17 @@ def _signal_view_of(node: SignalNode) -> contract.SignalView:
     )
 
 
+def _compare_settings_of(node: SignalNode) -> contract.CompareSettings:
+    settings = node.compare
+    return contract.CompareSettings(
+        level=settings.level,
+        hysteresis=settings.hysteresis,
+        below=settings.below,
+        linked=settings.linked,
+        check_us=settings.check_us,
+    )
+
+
 def _model_of(message: contract.ModelView) -> SignalModel:
     return SignalModel(
         name=message.name,
@@ -101,6 +124,8 @@ def _model_of(message: contract.ModelView) -> SignalModel:
         kind=message.kind,
         origin=message.origin,
         problem=message.problem,
+        group=message.group,
+        keywords=tuple(message.keywords),
     )
 
 
@@ -112,4 +137,5 @@ def _parameter_of(message: contract.ModelParameterView) -> ModelParameter:
         unit=message.unit,
         lowest=message.lowest if message.HasField("lowest") else None,
         highest=message.highest if message.HasField("highest") else None,
+        description=message.description,
     )

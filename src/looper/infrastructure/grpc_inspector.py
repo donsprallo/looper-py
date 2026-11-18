@@ -58,6 +58,7 @@ from looper.infrastructure.contract import looper_inspector_pb2 as contract
 from looper.infrastructure.contract import looper_inspector_pb2_grpc as service
 from looper.infrastructure.grpc_boot import GrpcBootCalls
 from looper.infrastructure.grpc_chains import GrpcChainCalls
+from looper.infrastructure.grpc_graph import GrpcGraphCalls
 from looper.infrastructure.grpc_interrupts import GrpcInterruptCalls
 from looper.infrastructure.grpc_pwm import GrpcPwmCalls
 from looper.infrastructure.grpc_restart import GrpcRestartCalls
@@ -97,6 +98,7 @@ class GrpcInspector(
     GrpcChainCalls,
     GrpcRestartCalls,
     GrpcPwmCalls,
+    GrpcGraphCalls,
     Inspector,
 ):
     """The inspector contract, spoken to a server at one address."""
@@ -208,10 +210,17 @@ class GrpcInspector(
         self._call(self._stub.ClearMeasurements, EMPTY)
 
     def toggle_pin(self, pin_id: int) -> str:
-        """Drive the opposite of the level a pin is at, and say which."""
+        """Drive the opposite of the level a pin is at, and say which.
+
+        A drive the server takes but the pin does not -- the signal graph
+        drives it and comes first -- is refused with the server's sentence,
+        so that a test does not go on as if the pin had changed.
+        """
         drive = contract.PinDrive(pin_id=pin_id, toggle=EMPTY)
         driven = self._call(self._stub.DrivePin, drive)
         _acknowledged(driven.ack)
+        if driven.overridden_text:
+            raise SimulationRefusedError(driven.overridden_text)
         return "high" if driven.high else "low"
 
     def apply_signal(self, channel_id: int, signal: Signal) -> None:

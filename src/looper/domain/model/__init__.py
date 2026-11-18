@@ -36,6 +36,12 @@ from looper.domain.model.dbc import DbcFile, DbcMessage, DbcSignal
 from looper.domain.model.dma import DmaChannel, DmaChannels
 from looper.domain.model.event_conditions import Interrupt, ResetSeen
 from looper.domain.model.findings import Dependency, Finding, Findings
+from looper.domain.model.graph_state import (
+    GraphNodeState,
+    GraphProbe,
+    PinTargetState,
+    SignalGraphState,
+)
 from looper.domain.model.interrupts import InterruptLock, Interrupts, InterruptSource
 from looper.domain.model.lives import Life, LifeDump, Lives
 from looper.domain.model.marks import FlashMark, ResetMark
@@ -58,13 +64,14 @@ from looper.domain.model.readings import (
     Sample,
 )
 from looper.domain.model.requests import BusMessage, Signal
-from looper.domain.model.signal_graph import (
-    ModelParameter,
+from looper.domain.model.signal_graph import SignalGraph
+from looper.domain.model.signal_models import ModelParameter, SignalModel
+from looper.domain.model.signal_parts import (
+    CompareSettings,
     NodeOutput,
-    SignalGraph,
-    SignalModel,
     SignalNode,
     SignalNodeKind,
+    SignalPinTarget,
     SignalProbe,
     SignalTarget,
 )
@@ -171,6 +178,12 @@ __all__ = [
     "SignalNodeKind",
     "SignalProbe",
     "SignalTarget",
+    "SignalPinTarget",
+    "CompareSettings",
+    "GraphNodeState",
+    "GraphProbe",
+    "PinTargetState",
+    "SignalGraphState",
     "Trigger",
     "TriggerCondition",
     "TriggerMode",

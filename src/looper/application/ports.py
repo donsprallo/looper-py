@@ -18,6 +18,7 @@ from abc import ABC, abstractmethod
 
 from looper.application.boot_port import BootInspector
 from looper.application.chain_port import ChainInspector
+from looper.application.graph_port import GraphInspector
 from looper.application.interrupt_port import InterruptInspector
 from looper.application.life_port import LifeInspector
 from looper.application.pwm_port import PwmInspector
@@ -72,6 +73,7 @@ class Inspector(
     ChainInspector,
     RestartInspector,
     PwmInspector,
+    GraphInspector,
     ABC,
 ):
     """Everything this library asks of a running simulation."""
@@ -178,7 +180,9 @@ class Inspector(
         """Drive the opposite of the level a pin is at, and say which.
 
         Raises:
-            SimulationRefusedError: If the pin is unknown or the firmware drives it.
+            SimulationRefusedError: If the pin is unknown or the firmware
+                drives it, or the signal graph drives it and the drive does
+                nothing; the server's sentence says which.
         """
 
     @abstractmethod

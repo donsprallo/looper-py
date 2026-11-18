@@ -233,12 +233,25 @@ class MemoryUsage:
 
 @dataclass(frozen=True)
 class Pin:
-    """One pin the firmware registered."""
+    """One pin the firmware registered.
+
+    Attributes:
+        pin_id: The number the simulation knows it by.
+        name: What the firmware calls it.
+        level: ``high`` or ``low``.
+        is_drivable: Whether it is an input a test may drive.
+        is_driven_by_graph: Whether a pin target of the signal graph drives
+            it; the graph then comes first, and a drive does nothing.
+        set_by_text: Who sets it, in the server's words: ``signal graph``
+            while the graph drives it; empty otherwise.
+    """
 
     pin_id: int
     name: str
     level: str
     is_drivable: bool
+    is_driven_by_graph: bool = False
+    set_by_text: str = ""
 
 
 @dataclass(frozen=True)

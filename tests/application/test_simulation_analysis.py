@@ -7,9 +7,11 @@ import pytest
 from doubles import ScriptedInspector
 from looper import (
     Findings,
+    GraphProbe,
     Profile,
     ProfileEntry,
     SignalGraph,
+    SignalGraphState,
     SignalModel,
     Simulation,
     SimulationRefusedError,
@@ -128,3 +130,18 @@ def test_a_window_without_an_expectation_on_the_profile_does_not_read_it() -> No
     check.evaluate(for_seconds=0.1)
 
     assert "read profile" not in inspector.asked
+
+
+def test_a_probe_is_found_by_name_with_its_trace_channel() -> None:
+    inspector = ScriptedInspector()
+    inspector.graph_state = SignalGraphState(probes=(GraphProbe("LOAD_RMS", 0x8002, "rms"),))
+    simulation = Simulation(inspector)
+
+    assert simulation.probe("LOAD_RMS").channel_id == 0x8002
+    with pytest.raises(SimulationRefusedError, match="graph has no probe named 'MAINS'.*LOAD_RMS"):
+        simulation.probe("MAINS")
+
+
+def test_a_probe_without_an_applied_graph_is_refused_as_none_at_all() -> None:
+    with pytest.raises(SimulationRefusedError, match="none at all"):
+        Simulation(ScriptedInspector()).probe("LOAD_RMS")

@@ -29,6 +29,7 @@ from looper.domain.model import (
     Sample,
     Signal,
     SignalGraph,
+    SignalGraphState,
     SignalModel,
     Trigger,
     TriggerMode,
@@ -68,6 +69,7 @@ class ScriptedInspector(
         self.findings: list[Findings] | None = [Findings(is_complete=True)]
         self.models: tuple[SignalModel, ...] | None = ()
         self.graphs: list[SignalGraph] = []
+        self.graph_state = SignalGraphState()
         self.graph_values: list[tuple[str, float]] = []
         self.pins: tuple[Pin, ...] = ()
         self.channels: tuple[Channel, ...] = ()
@@ -198,6 +200,9 @@ class ScriptedInspector(
         if self.refusal is not None:
             raise SimulationRefusedError(self.refusal)
         self.graph_values.append((node, value))
+
+    def read_signal_graph(self) -> SignalGraphState:
+        return self.graph_state
 
     def list_models(self) -> tuple[SignalModel, ...]:
         if self.models is None:

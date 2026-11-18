@@ -143,7 +143,14 @@ def memory_of(message: contract.MemoryView) -> MemoryUsage:
 def pins_of(message: contract.SimulationView) -> tuple[Pin, ...]:
     """Every pin the firmware registered."""
     return tuple(
-        Pin(pin_id=one.pin_id, name=one.name, level=one.level, is_drivable=one.is_drivable)
+        Pin(
+            pin_id=one.pin_id,
+            name=one.name,
+            level=one.level,
+            is_drivable=one.is_drivable,
+            is_driven_by_graph=one.is_driven_by_graph,
+            set_by_text=one.set_by_text,
+        )
         for one in message.pins
     )
 
