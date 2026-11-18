@@ -140,13 +140,22 @@ def test_a_motor_model_closes_the_loop_around_the_speed_controller(
     simulation: looper.Simulation,
 ) -> None:
     motor = simulation.model("DcMotor")
-    voltage = simulation.channel("MOTOR_VOLTAGE")
     graph = (
         looper.SignalGraph()
         .generator("setpoint", looper.Signal("constant", offset=100.0))
         .generator("no load", looper.Signal("constant"))
-        .channel("voltage", voltage.channel_id)
-        .model("motor", motor.name, inputs=["voltage", "no load"])
+        # The firmware drives an H bridge: its PWM's mean duty in percent, a direction, an enable.
+        .channel("duty", simulation.channel("MOTOR_DUTY").channel_id)
+        .pin("direction", simulation.pin("MOTOR_DIR").pin_id)
+        .pin("enable", simulation.pin("MOTOR_EN").pin_id)
+        .generator("supply", looper.Signal("constant", offset=24.0))
+        .model(
+            "bridge",
+            "HBridge",
+            inputs=["duty", "direction", "enable", "supply"],
+            parameters={"full_scale": 100.0},
+        )
+        .model("motor", motor.name, inputs=["bridge", "no load"])
         .drive(simulation.channel("SPEED_SETPOINT").channel_id, "setpoint")
         .drive(simulation.channel("MOTOR_SPEED").channel_id, "motor", motor.output("speed"))
     )
