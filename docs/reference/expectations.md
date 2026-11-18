@@ -32,10 +32,14 @@ contract lists ...`. Without `CAPABILITY_PWM`, `evaluate()` raises
 | --- | --- | --- |
 | `pulse_width_between(low, high, unit="us")` | every whole high pulse in the window lasts within `low .. high` | `saw 1500 .. 1500 us over 3 pulses` |
 | `frequency_between(low_hz, high_hz)` | every whole period, rising edge to rising edge, lies within the range | `saw 50 .. 50 Hz over 2 periods` |
+| `after(reference, reference_edge=RISE, edge=RISE).between(low, high, unit="us")` | every edge of `reference` is answered by this pin's first edge at or after it, before the reference's next one, within `low .. high` | `saw ZC↑ → GATE↑ 5.00 ms (4.98 ms – 5.02 ms, 20 delays)` |
 
 Fails with the server's note when the window holds no whole pulse or period,
 and with the registered names when there is no such pin. Without
-`CAPABILITY_PIN_MEASURE`, `evaluate()` raises `SimulationRefusedError`.
+`CAPABILITY_PIN_MEASURE`, `evaluate()` raises `SimulationRefusedError`. A
+delay's subject is `ZC↑ → GATE↑`; a reference edge left unanswered fails it,
+with the server's ` · 2 ZC↑ without GATE↑`. Without `CAPABILITY_PIN_DELAY`,
+`evaluate()` raises `SimulationRefusedError`.
 
 ## Adapter calls -- `check.call(function)`
 

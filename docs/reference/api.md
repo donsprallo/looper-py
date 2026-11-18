@@ -29,6 +29,9 @@ looper.ResetMark, looper.FlashMark                # resets and flash operations 
 looper.Retained, looper.Flash, looper.FlashPartition  # what survives a reset
 looper.NodeOutput, looper.SignalModel, looper.ModelParameter
 looper.CompareSettings, looper.SignalGraphState, looper.GraphProbe, looper.PinTargetState  # the applied graph
+looper.SampleMode, looper.SampleSettings, looper.TableFile  # sample and hold, a table read by the server
+looper.Starters, looper.Starter, looper.StarterNeeds  # the graphs to begin with
+looper.PinDelay                                   # the delay between two pins a window measures
 looper.TimeModel, looper.TimeModelParameter, looper.ActiveTimeModel  # time models
 looper.PwmOutput, looper.PwmOutputs               # the PWM outputs of contract.toml
 ```
@@ -46,6 +49,7 @@ looper.PwmOutput, looper.PwmOutputs               # the PWM outputs of contract.
 ```{eval-rst}
 .. autoclass:: looper.Simulation
    :members:
+   :inherited-members:
    :exclude-members: __init__
 ```
 
@@ -103,6 +107,7 @@ looper.PwmOutput, looper.PwmOutputs               # the PWM outputs of contract.
 
 ```{eval-rst}
 .. autoclass:: looper.Signal
+   :members: pulse, table, from_csv, levels
 
 .. autoclass:: looper.BusMessage
 
@@ -265,13 +270,17 @@ Pro, except for the partition names.
 graph and `simulation.set_graph_value(node, value)` changes a value node of it;
 `simulation.models()` and `simulation.model(name)` say which models the project
 offers. `simulation.signal_graph()` reads the applied graph back -- its probes,
-the pins it drives, its comparators -- and `simulation.probe(name)` finds a probe's
-trace channel. See [Setting the scene](../guides/scene.md#a-graph-of-signals) and
-[Comparators and input pins](../guides/scene.md#comparators-and-input-pins).
+the pins it drives, its comparators, linked generators, selects and sample and
+hold nodes -- and `simulation.probe(name)` finds a probe's trace channel.
+`simulation.read_table(path)` has the server read a CSV or PWL file for a Table
+generator (`Signal.from_csv` does it in one step), and `simulation.starters()`
+lists the graphs to begin with. See [Setting the scene](../guides/scene.md#a-graph-of-signals),
+[Comparators and input pins](../guides/scene.md#comparators-and-input-pins) and
+[Generators that move and signal logic](../guides/scene.md#generators-that-move-and-signal-logic).
 
 ```{eval-rst}
 .. autoclass:: looper.SignalGraph
-   :members: generator, channel, pin, watch, value, operation, compare, model, drive, drive_pin, probe
+   :members: generator, channel, pin, watch, value, operation, compare, select, sample_hold, model, drive, drive_pin, probe
 
 .. autoclass:: looper.SignalNodeKind
    :members:
@@ -281,6 +290,12 @@ trace channel. See [Setting the scene](../guides/scene.md#a-graph-of-signals) an
 
 .. autoclass:: looper.CompareSettings
 
+.. autoclass:: looper.SampleMode
+   :members:
+   :undoc-members:
+
+.. autoclass:: looper.SampleSettings
+
 .. autoclass:: looper.SignalGraphState
    :members: pin_target, node
 
@@ -289,6 +304,16 @@ trace channel. See [Setting the scene](../guides/scene.md#a-graph-of-signals) an
 .. autoclass:: looper.PinTargetState
 
 .. autoclass:: looper.GraphNodeState
+
+.. autoclass:: looper.TableFile
+   :members: signal
+
+.. autoclass:: looper.Starters
+   :members: names, named
+
+.. autoclass:: looper.Starter
+
+.. autoclass:: looper.StarterNeeds
 
 .. autoclass:: looper.SignalModel
    :members: output

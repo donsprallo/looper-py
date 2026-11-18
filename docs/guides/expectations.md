@@ -198,6 +198,11 @@ ok    SERVO: expected every period within 49 .. 51 Hz, saw 50 .. 50 Hz over 2 pe
 A window without a whole pulse or period fails with the server's note. Make
 it long enough to hold two rising edges: a 50 Hz servo needs more than 40 ms.
 
+The delay from another pin's edges is the server's too:
+`check.pin("GATE").after("ZC").between(4.9, 5.1, unit="ms")` expects every
+rising edge of ZC to be answered by GATE within the range, and a ZC left
+unanswered fails it (see [Setting the scene](scene.md#the-delay-between-two-pins)).
+
 ## Adapter calls
 
 `check.call(function)` is about one function of the adapter -- the boundary

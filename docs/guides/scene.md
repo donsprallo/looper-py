@@ -138,11 +138,58 @@ simulation.apply_signal(shunt.channel_id, Signal())
 
 | `Signal` field | Default | Meaning |
 | --- | --- | --- |
-| `waveform` | `"constant"` | `constant`, `sine`, `square`, `triangle` or `sawtooth` |
+| `waveform` | `"constant"` | `constant`, `sine`, `square`, `triangle`, `sawtooth`, `noise`, `pulse`, `rectified_sine`, `sweep` or `table` |
 | `offset` | `0.0` | the level it swings around; the whole value of a constant |
-| `amplitude` | `0.0` | how far it swings either way |
+| `amplitude` | `0.0` | how far it swings either way; a rectified sine's peak; a table's scale |
 | `frequency_hz` | `0.0` | how often it repeats |
 | `phase_degrees` | `0.0` | where in its period it starts |
+| `duty` | `None` | square and pulse: the share of a period that is high, 0 to 1; `None` is a half |
+| `low`, `high` | `None` | pulse: its two levels; `None` takes them from offset and amplitude |
+| `rectification` | `""` | rectified sine: `full` (two humps a period) or `half` |
+| `sweep_from_hz`, `sweep_to_hz`, `sweep_seconds` | `0.0` | sweep: a sine from one frequency to the other over a time |
+| `sweep_spacing`, `sweep_end` | `""` | sweep: `linear` or `logarithmic`; `repeat`, `hold` or `stop` at the end |
+| `table_times`, `table_values` | `()` | table: its points, the times in seconds from 0 on and rising |
+| `table_between`, `table_end`, `table_time_scale` | `""`, `""`, `0.0` | table: `linear` or `steps`; `repeat` or `hold`; how much slower it plays (0 is 1) |
+
+A field belongs to the waveforms that read it; the others ignore it, and a
+choice left empty is the waveform's first option. Two constructors spell the
+newer waveforms the way a bench does:
+
+```python
+# a gate: 0 .. 3.3 V, 100 Hz, high a quarter of each period
+Signal.pulse(0.0, 3.3, 100.0, duty=0.25)
+
+# a supply that dips, from points (seconds, value): 12 V, 7 V for 50 ms, back, and stays
+Signal.table([(0.0, 12.0), (0.1, 7.0), (0.15, 12.0), (1.0, 12.0)], between="steps", end="hold")
+```
+
+A table plays `offset + amplitude * value`, so `Signal.table` starts at
+`amplitude=1.0`. A recording in a CSV or PWL file is read **by the server**,
+as the window reads it -- the time first, a value column, commas, semicolons
+with a decimal comma, tabs or spaces, a header and a unit row skipped -- and a
+long one is simplified so that no point moves further than `max_error`:
+
+```python
+signal = Signal.from_csv("mains_dip.csv", simulation, value_column=0, max_error=0.5)
+
+table = simulation.read_table("mains_dip.csv")     # the same, with what the server says
+table.summary_text      # '1 024 points · 0 to 2 s · −325 to 325'
+table.simplified_text   # '120 000 → 2 310 points, max error 0.4' -- empty when every point is kept
+signal = table.signal(amplitude=1.0, offset=0.0, end="hold")
+```
+
+`Signal.from_csv` needs a simulation at hand: reading and simplifying stay in
+the server, so a test plays exactly the points the window would. The path is
+on the server's disk; one that exists where the test runs is sent as a whole
+path. A file that cannot be played raises `ValueError` with the server's
+sentence, its file and line: `mains_dip.csv, line 14: "abc" is not a number.`
+Without a simulation, read the points yourself and pass them to
+`Signal.table`.
+
+Whatever cannot be -- a duty outside 0 to 1, a pulse's high below its low, a
+sweep of no time, times that do not rise, more than 16 384 points -- is refused
+with the server's sentence. The newer waveforms and `duty` need a server whose
+runtime moves generators: `"moving_generators" in simulation.description.capabilities`.
 
 A signal on an output channel is refused -- outputs are what the firmware
 publishes:
@@ -367,6 +414,110 @@ A name the applied graph has no probe for is refused with the names it has.
 `simulation.model(name)` also says where a library lists a model (`group`, such
 as `'Power switches'`), the words that find it (`keywords`) and, for each
 parameter, what it does (`description`).
+
+## Generators that move and signal logic
+
+### Linked fields
+
+A generator can take a field from another node instead of from its `Signal`:
+`frequency=`, `amplitude=`, `offset=` and `duty=` on `generator` name the node,
+as the server's pytest export writes them. A linked frequency is the signal in
+Hz, integrated into the phase so that the wave never jumps -- FM; a linked
+amplitude is AM. Which fields a waveform lets be linked is the server's to say
+(phase never); one it does not is refused with its sentence.
+
+```python
+graph = (
+    looper.SignalGraph()
+    .value("rate", 200.0)
+    .generator("gate", looper.Signal.pulse(0.0, 1.0, 1.0), frequency="rate")
+    .drive_pin(simulation.pin("TACHO").pin_id, "gate")
+)
+simulation.apply_signal_graph(graph)
+simulation.set_graph_value("rate", 50.0)      # the pulses slow down without a jump
+```
+
+### Select and Sample & Hold
+
+`select(key, select, when_1, when_0)` passes `when_1` while `select` gives 0.5
+or more, else `when_0`; it switches at the microsecond `select` crosses, without
+hysteresis -- a fault injected by a level, a mains that drops out.
+`sample_hold(key, reads, trigger, mode=SampleMode.RISING, initial=0.0)` holds
+`reads` as it was when `trigger` rose (`FALLING`: fell), or follows it while the
+trigger is high and holds it from the falling edge on (`TRACK`); it gives
+`initial` until its first sample.
+
+```python
+graph = (
+    looper.SignalGraph()
+    .generator("mains", looper.Signal("sine", 325.0, frequency_hz=50.0))
+    .pin("zc", simulation.pin("ZC").pin_id)
+    .sample_hold("peak", "mains", "zc", mode=looper.SampleMode.FALLING)
+    .value("healthy", 1.0)
+    .value("dropped", 0.0)
+    .select("supply", "healthy", "mains", "dropped")
+)
+```
+
+`simulation.signal_graph().node(key)` says what each gives now:
+
+```python
+state = simulation.signal_graph()
+state.node("supply").passing_port      # 'when 1'
+state.node("peak").value               # 312.4 -- None for a node that reports no value
+state.node("peak").samples             # samples since the graph was applied
+state.node("peak").hover_lines         # ('holds 312.4, sampled at 1.250000 s', ...)
+```
+
+### Pins that hold pulses
+
+A model reads a pin at its own steps, so a gate pulse shorter than the step can
+fall between two of them. `pin(key, pin_id, hold_pulses=True)` gives a model 1
+at its step when the pin was high at any instant since the step before; a
+comparator, an input pin or a probe still read the level as it is.
+
+```python
+graph = graph.pin("gate", simulation.pin("GATE").pin_id, hold_pulses=True)
+graph = graph.model("triac", "Triac", inputs=["mains", "gate"])
+```
+
+Select, Sample & Hold and `hold_pulses` need a server whose runtime selects and
+samples: `"signal_logic" in simulation.description.capabilities`.
+
+### The delay between two pins
+
+`expect.pin("GATE").after("ZC").between(lo, hi, unit=...)` expects each rising
+edge of ZC to be answered by GATE's first rising edge at or after it, within the
+range. The server measures it from the pins' recorded edges; the report shows
+its sentence:
+
+```python
+check = simulation.expect()
+check.pin("GATE").after("ZC").between(4.9, 5.1, unit="ms")
+report = check.evaluate(for_seconds=0.2)
+report.outcomes[0].observed     # 'ZC↑ → GATE↑ 5.00 ms (4.98 ms – 5.02 ms, 20 delays)'
+```
+
+`after(reference, reference_edge=Polarity.RISE, edge=Polarity.RISE)` takes
+falling or any edges as well. A ZC that GATE did not answer before the next ZC
+fails the check, even when every measured delay is within range: a gate that
+stays away is not in time. It needs a server that measures delays
+(`"pin_delay"` among the capabilities); one that does not refuses the window.
+
+### Starters
+
+`simulation.starters()` lists the small graphs looper-models defines to begin
+with -- *Mains with zero-cross*, *Frequency sweep*, *Phase-angle dimmer* --
+each with what it needs and whether this firmware has it:
+
+```python
+starters = simulation.starters()
+starters.names                                   # ('mains_zero_cross', 'frequency_sweep', 'phase_angle_dimmer')
+dimmer = starters.named("phase_angle_dimmer")
+dimmer.needs_text        # 'an input pin, an output pin and the models Triac and HalfCycleRms'
+dimmer.is_available, dimmer.unavailable_text
+dimmer.graph_text        # the window's clipboard document, to paste in the editor
+```
 
 ## Bus messages
 
