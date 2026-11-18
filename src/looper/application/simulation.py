@@ -22,6 +22,7 @@ from looper.application.memories import Flash, Retained
 from looper.application.ports import Inspector, SimulationRefusedError
 from looper.application.race import Race
 from looper.application.restarting import restart_simulation
+from looper.application.signal_library import SignalLibrary
 from looper.application.triggers import Triggers
 from looper.domain.model import (
     ActiveTimeModel,
@@ -60,7 +61,7 @@ from looper.domain.model.interrupts import Interrupts
 from looper.domain.model.pwm import PwmOutput, PwmOutputs
 
 
-class Simulation:
+class Simulation(SignalLibrary):
     """One running simulation, as a test sees it.
 
     Use it as a context manager, or call `close` when done: closing lets go

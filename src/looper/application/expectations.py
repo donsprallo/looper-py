@@ -51,6 +51,7 @@ from looper.domain.model import (
     RunStatus,
 )
 from looper.domain.model.event_recording import EventRecording
+from looper.domain.model.pwm import PinDelay
 
 MICROSECONDS_PER_SECOND = 1_000_000
 
@@ -177,6 +178,10 @@ class Expectations:
     def measures_pin(self, name: str) -> None:
         """Have the window measure a pin's pulses at its end."""
         self._pulses.wants_pin(name)
+
+    def measures_delay(self, delay: PinDelay) -> None:
+        """Have the window measure the delay from one pin's edges to another's at its end."""
+        self._pulses.wants_delay(delay)
 
     def firmware_is_alive(self) -> Expectations:
         """Expect the firmware to still be reaching the adapter at all."""

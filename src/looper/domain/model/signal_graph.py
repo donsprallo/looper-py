@@ -1,8 +1,9 @@
 """A graph of signals that drives the simulation's analog inputs and input pins.
 
 Where `Signal` puts one generated waveform on one input, a graph combines
-them: generators, the values of channels, pins and watched variables, the
-operations, comparators, and models -- a motor, a filter -- that the
+them: generators -- their frequency or amplitude fed by another node --, the
+values of channels, pins and watched variables, the operations, comparators,
+selects, sample and hold nodes, and models -- a motor, a filter -- that the
 simulation steps on its own clock. A model fed from an output channel and
 driving an input channel closes the loop around the firmware, which is how
 a test puts a plant in front of a controller. A comparator driving an input
@@ -33,11 +34,14 @@ from looper.domain.model.chain_building import ChainBuilding
 from looper.domain.model.requests import Signal
 from looper.domain.model.signal_models import ModelParameter, SignalModel
 from looper.domain.model.signal_parts import (
+    LINKABLE_FIELDS,
     ONE_INPUT_OPERATIONS,
     OPERATIONS,
     CompareSettings,
     InputSpec,
     NodeOutput,
+    SampleMode,
+    SampleSettings,
     SignalNode,
     SignalNodeKind,
     SignalPinTarget,
@@ -52,6 +56,8 @@ __all__ = [
     "InputSpec",
     "ModelParameter",
     "NodeOutput",
+    "SampleMode",
+    "SampleSettings",
     "SignalGraph",
     "SignalModel",
     "SignalNode",
@@ -79,17 +85,47 @@ class SignalGraph(ChainBuilding):
     groups: tuple[ChainGroup, ...] = ()
     pin_targets: tuple[SignalPinTarget, ...] = ()
 
-    def generator(self, key: str, signal: Signal) -> SignalGraph:
-        """Add a node that produces a generated waveform."""
-        return self._with(SignalNode(key, SignalNodeKind.GENERATOR, signal=signal))
+    def generator(
+        self,
+        key: str,
+        signal: Signal,
+        offset: InputSpec | None = None,
+        amplitude: InputSpec | None = None,
+        frequency: InputSpec | None = None,
+        duty: InputSpec | None = None,
+    ) -> SignalGraph:
+        """Add a node that produces a generated waveform, some of its fields from other nodes.
+
+        A field named here takes its value from that node instead of from
+        `signal`: ``frequency="ramp"`` is the ramp in Hz, integrated into the
+        phase so that the wave never jumps (FM); ``amplitude`` is AM. Which
+        fields a waveform lets be linked is the server's to say; phase never.
+        """
+        named = {"offset": offset, "amplitude": amplitude, "frequency": frequency, "duty": duty}
+        links = {LINKABLE_FIELDS[word]: read for word, read in named.items() if read is not None}
+        node = SignalNode(
+            key,
+            SignalNodeKind.GENERATOR,
+            signal=signal,
+            inputs=outputs_of(links.values()),
+            linked_fields=tuple(links),
+        )
+        return self._with(node)
 
     def channel(self, key: str, channel_id: int) -> SignalGraph:
         """Add a node that reads an analog channel -- an output closes a loop."""
         return self._with(SignalNode(key, SignalNodeKind.CHANNEL, source=channel_id))
 
-    def pin(self, key: str, pin_id: int) -> SignalGraph:
-        """Add a node that reads a pin as zero or one."""
-        return self._with(SignalNode(key, SignalNodeKind.PIN, source=pin_id))
+    def pin(self, key: str, pin_id: int, hold_pulses: bool = False) -> SignalGraph:
+        """Add a node that reads a pin as zero or one.
+
+        With `hold_pulses`, a model reads it as 1 at its step when the pin was
+        high at any instant since its step before, so that a gate pulse
+        shorter than the step still reaches it; a comparator, an input pin
+        or a probe read the level as it is.
+        """
+        node = SignalNode(key, SignalNodeKind.PIN, source=pin_id, hold_pulses=hold_pulses)
+        return self._with(node)
 
     def watch(self, key: str, channel_id: int) -> SignalGraph:
         """Add a node that reads a watched variable, by its watch channel."""
@@ -143,6 +179,35 @@ class SignalGraph(ChainBuilding):
         settings = CompareSettings(level, hysteresis, below, threshold is not None, check_us)
         reading = (reads,) if threshold is None else (reads, threshold)
         node = SignalNode(key, SignalNodeKind.COMPARE, inputs=outputs_of(reading), compare=settings)
+        return self._with(node)
+
+    def select(
+        self, key: str, select: InputSpec, when_1: InputSpec, when_0: InputSpec
+    ) -> SignalGraph:
+        """Add a select: `when_1` while `select` gives 0.5 or more, else `when_0`.
+
+        It switches at the microsecond `select` crosses 0.5, without hysteresis.
+        """
+        reading = outputs_of((select, when_1, when_0))
+        return self._with(SignalNode(key, SignalNodeKind.SELECT, inputs=reading))
+
+    def sample_hold(
+        self,
+        key: str,
+        reads: InputSpec,
+        trigger: InputSpec,
+        mode: SampleMode = SampleMode.RISING,
+        initial: float = 0.0,
+    ) -> SignalGraph:
+        """Add a sample and hold node: `reads` as it was when `trigger` rose (or fell).
+
+        With ``SampleMode.TRACK`` it follows `reads` while the trigger is
+        high and holds it from the falling edge on. It gives `initial` until
+        its first sample.
+        """
+        settings = SampleSettings(SampleMode(mode), initial)
+        reading = outputs_of((reads, trigger))
+        node = SignalNode(key, SignalNodeKind.SAMPLE_HOLD, inputs=reading, sample=settings)
         return self._with(node)
 
     def model(

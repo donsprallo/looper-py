@@ -35,6 +35,7 @@ from looper.infrastructure import (
     time_model_translation,
 )
 from looper.infrastructure.contract import looper_inspector_pb2 as contract
+from looper.infrastructure.signal_translation import signal_view_of
 
 #: The origin the server gives a function measured at the adapter boundary.
 #: The timings it answers with also rank the profiled firmware functions,
@@ -231,16 +232,7 @@ def watches_of(message: contract.WatchList) -> tuple[Watch, ...]:
 
 def signal_request_of(channel_id: int, signal: Signal) -> contract.SignalRequest:
     """A signal for an analog input, as the contract carries it."""
-    return contract.SignalRequest(
-        channel_id=channel_id,
-        signal=contract.SignalView(
-            waveform=signal.waveform,
-            amplitude=signal.amplitude,
-            offset=signal.offset,
-            frequency_hz=signal.frequency_hz,
-            phase_degrees=signal.phase_degrees,
-        ),
-    )
+    return contract.SignalRequest(channel_id=channel_id, signal=signal_view_of(signal))
 
 
 def bus_message_request_of(message: BusMessage) -> contract.BusMessageRequest:

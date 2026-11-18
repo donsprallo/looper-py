@@ -20,6 +20,7 @@ from looper.domain.model import (
 )
 from looper.infrastructure.chain_translation import block_request_of
 from looper.infrastructure.contract import looper_inspector_pb2 as contract
+from looper.infrastructure.signal_translation import signal_view_of
 
 
 def signal_graph_request_of(graph: SignalGraph) -> contract.SignalGraphRequest:
@@ -69,7 +70,7 @@ def models_of(message: contract.ModelList) -> tuple[SignalModel, ...]:
 
 
 def _node_request_of(node: SignalNode) -> contract.SignalNodeRequest:
-    """One node; a generator carries its signal, a comparator its settings."""
+    """One node; a generator carries its signal, a comparator or a sample and hold its settings."""
     request = contract.SignalNodeRequest(
         key=node.key,
         kind=node.kind.value,
@@ -80,27 +81,21 @@ def _node_request_of(node: SignalNode) -> contract.SignalNodeRequest:
         interpreted=node.interpreted,
         value=node.value,
         parameter_sources=dict(node.parameter_sources),
+        linked_fields=node.linked_fields,
+        hold_pulses=node.hold_pulses,
     )
     if node.kind is SignalNodeKind.GENERATOR:
-        request.signal.CopyFrom(_signal_view_of(node))
+        request.signal.CopyFrom(signal_view_of(node.signal))
     if node.kind is SignalNodeKind.COMPARE:
         request.compare.CopyFrom(_compare_settings_of(node))
+    if node.kind is SignalNodeKind.SAMPLE_HOLD:
+        sample = node.sample
+        request.sample.CopyFrom(contract.SampleSettings(mode=sample.mode, initial=sample.initial))
     return request
 
 
 def _input_request_of(read: NodeOutput) -> contract.SignalInputRequest:
     return contract.SignalInputRequest(node=read.node, output=read.output)
-
-
-def _signal_view_of(node: SignalNode) -> contract.SignalView:
-    signal = node.signal
-    return contract.SignalView(
-        waveform=signal.waveform,
-        amplitude=signal.amplitude,
-        offset=signal.offset,
-        frequency_hz=signal.frequency_hz,
-        phase_degrees=signal.phase_degrees,
-    )
 
 
 def _compare_settings_of(node: SignalNode) -> contract.CompareSettings:

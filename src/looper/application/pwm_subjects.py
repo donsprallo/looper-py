@@ -11,8 +11,10 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from looper.application.interrupt_subjects import UNITS
-from looper.domain.checks.pin_checks import PinFrequencyBetween, PulseWidthBetween
+from looper.domain.checks.pin_checks import DelayBetween, PinFrequencyBetween, PulseWidthBetween
 from looper.domain.checks.pwm_checks import DutyBetween, PwmFrequency, ReachesDuty, StaysOff
+from looper.domain.model.pwm import PinDelay
+from looper.domain.model.triggers import Polarity
 
 if TYPE_CHECKING:
     from looper.application.expectations import Expectations
@@ -23,7 +25,7 @@ DUTY_TOLERANCE = 0.001
 
 def _microseconds(amount: float, unit: str) -> int:
     if unit not in UNITS:
-        raise ValueError(f"a pulse width is in us, ms or s, not {unit}")
+        raise ValueError(f"a pulse width or a delay is in us, ms or s, not {unit}")
     return round(amount * UNITS[unit])
 
 
@@ -70,3 +72,37 @@ class PinExpectation:
     def frequency_between(self, low_hz: float, high_hz: float) -> Expectations:
         """Expect every whole period, rising edge to rising edge, within a frequency range."""
         return self._expectations.add(PinFrequencyBetween(self._name, low_hz, high_hz))
+
+    def after(
+        self,
+        reference: str,
+        reference_edge: Polarity = Polarity.RISE,
+        edge: Polarity = Polarity.RISE,
+    ) -> PinDelayExpectation:
+        """Expect something of the delay from another pin's edges to this pin's.
+
+        ``expect.pin("GATE").after("ZC").between(4.9, 5.1, unit="ms")``: each
+        rising edge of ZC is answered by GATE's first rising edge at or after
+        it and before ZC's next one. Needs a server that measures delays
+        (capability ``pin_delay``).
+        """
+        delay = PinDelay(self._name, reference, Polarity(reference_edge), Polarity(edge))
+        return PinDelayExpectation(self._expectations, delay)
+
+
+class PinDelayExpectation:
+    """What is expected of the delay from one pin's edges to another's."""
+
+    def __init__(self, expectations: Expectations, delay: PinDelay) -> None:
+        self._expectations = expectations
+        self._delay = delay
+        expectations.measures_delay(delay)
+
+    def between(self, low: float, high: float, unit: str = "us") -> Expectations:
+        """Expect every reference edge answered, each within a range in ``us``, ``ms`` or ``s``.
+
+        A reference edge the pin did not answer before the next one fails
+        it: a gate that stays away is not within range.
+        """
+        low_us, high_us = _microseconds(low, unit), _microseconds(high, unit)
+        return self._expectations.add(DelayBetween(self._delay, low_us, high_us))

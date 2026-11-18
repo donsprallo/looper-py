@@ -31,6 +31,8 @@ from looper.domain.model import (
     SignalGraph,
     SignalGraphState,
     SignalModel,
+    Starters,
+    TableFile,
     Trigger,
     TriggerMode,
     TriggerRequest,
@@ -71,6 +73,9 @@ class ScriptedInspector(
         self.graphs: list[SignalGraph] = []
         self.graph_state = SignalGraphState()
         self.graph_values: list[tuple[str, float]] = []
+        self.tables: dict[str, TableFile] = {}
+        self.table_asks: list[tuple[str, int, float, bool, str]] = []
+        self.starter_list = Starters()
         self.pins: tuple[Pin, ...] = ()
         self.channels: tuple[Channel, ...] = ()
         self.buses: tuple[Bus, ...] = ()
@@ -203,6 +208,15 @@ class ScriptedInspector(
 
     def read_signal_graph(self) -> SignalGraphState:
         return self.graph_state
+
+    def read_table(
+        self, path: str, value_column: int, max_error: float, keep_every_point: bool, unit: str
+    ) -> TableFile:
+        self.table_asks.append((path, value_column, max_error, keep_every_point, unit))
+        return self.tables.get(path, TableFile(path, problem_text=f"{path} does not exist."))
+
+    def list_starters(self) -> Starters:
+        return self.starter_list
 
     def list_models(self) -> tuple[SignalModel, ...]:
         if self.models is None:

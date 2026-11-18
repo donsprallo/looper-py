@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 from looper.domain.model.pwm import (
     PinMeasurement,
     PwmChange,
@@ -117,4 +119,20 @@ def pin_measurement_of(message: contract.PinMeasurement) -> PinMeasurement:
         frequency_text=message.frequency_text,
         text=message.text,
         note=message.note,
+        **_delay_of(message),
     )
+
+
+def _delay_of(message: contract.PinMeasurement) -> dict[str, Any]:
+    """The delay from a reference pin, when the request named one."""
+    if not message.HasField("reference_pin_id"):
+        return {}
+    return {
+        "reference_pin_id": message.reference_pin_id,
+        "delays": message.delays,
+        "delay_min_us": message.delay_min_us,
+        "delay_max_us": message.delay_max_us,
+        "delay_mean_us": message.delay_mean_us,
+        "delays_missed": message.delays_missed,
+        "delay_text": message.delay_text,
+    }

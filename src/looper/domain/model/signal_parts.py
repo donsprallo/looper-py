@@ -19,8 +19,9 @@ class SignalNodeKind(StrEnum):
     """What one node of the graph does, by the name the contract gives it.
 
     ``COMPARE``, ``ABS``, ``MIN`` and ``MAX`` need a server whose runtime
-    plans the graph's edges (capability ``graph_edges``); an older one
-    refuses them with a sentence that says so.
+    plans the graph's edges (capability ``graph_edges``), ``SELECT`` and
+    ``SAMPLE_HOLD`` one whose runtime selects and samples (capability
+    ``signal_logic``); an older one refuses them with a sentence that says so.
     """
 
     GENERATOR = "generator"
@@ -37,6 +38,30 @@ class SignalNodeKind(StrEnum):
     ABS = "abs"
     MIN = "min"
     MAX = "max"
+    SELECT = "select"
+    SAMPLE_HOLD = "sample_hold"
+
+
+class SampleMode(StrEnum):
+    """When a sample and hold node takes its input, by the contract's word."""
+
+    #: At each rising edge of the trigger.
+    RISING = "rising"
+    #: At each falling edge of the trigger.
+    FALLING = "falling"
+    #: It follows its input while the trigger is high and holds it from the falling edge on.
+    TRACK = "track"
+
+
+#: A generator's fields a link may replace, by `SignalGraph.generator`'s
+#: keyword, as the contract names them. Which of them a waveform lets be
+#: linked is the server's to say.
+LINKABLE_FIELDS = {
+    "offset": "offset",
+    "amplitude": "amplitude",
+    "frequency": "frequency_hz",
+    "duty": "duty",
+}
 
 
 #: The kinds that combine two inputs into one value.
@@ -99,6 +124,22 @@ class CompareSettings:
 
 
 @dataclass(frozen=True)
+class SampleSettings:
+    """When a sample and hold node takes its input, and what it gives before.
+
+    A trigger is high from 0.5 up; one high when the graph is installed is
+    no edge.
+
+    Attributes:
+        mode: At the trigger's rising or falling edge, or tracking while it is high.
+        initial: What it gives before its first sample.
+    """
+
+    mode: SampleMode = SampleMode.RISING
+    initial: float = 0.0
+
+
+@dataclass(frozen=True)
 class SignalNode:
     """One node of the graph.
 
@@ -109,7 +150,8 @@ class SignalNode:
         source: The channel, pin or watch channel a source node reads.
         inputs: What the node reads, in order: the operands of an
             operation, the inputs of a model, a comparator's input and its
-            linked threshold.
+            linked threshold, a select's three, a sample and hold node's
+            input and trigger, the signals of a generator's linked fields.
         model: The model a model node stands for, as `SignalModel.name` names it.
         parameters: The values its parameters are given, by name; one left
             out keeps the model's default.
@@ -121,6 +163,13 @@ class SignalNode:
             by parameter name: the key of a value node or a constant
             generator. One given here overrides the same name in `parameters`.
         compare: What a comparator compares with.
+        linked_fields: A generator's fields that take their value from a
+            signal, by the contract's name: ``inputs[i]`` feeds
+            ``linked_fields[i]``.
+        sample: When a sample and hold node samples.
+        hold_pulses: A pin source that a model reads as 1 at its step when
+            the pin was high at any instant since the step before, so that a
+            pulse shorter than the step is not missed.
     """
 
     key: str
@@ -134,6 +183,9 @@ class SignalNode:
     value: float = 0.0
     parameter_sources: tuple[tuple[str, str], ...] = ()
     compare: CompareSettings = CompareSettings()
+    linked_fields: tuple[str, ...] = ()
+    sample: SampleSettings = SampleSettings()
+    hold_pulses: bool = False
 
 
 @dataclass(frozen=True)

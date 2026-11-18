@@ -17,7 +17,7 @@ from looper.domain.model.interrupt_facts import InterruptMark, RunFindingReading
 from looper.domain.model.interrupts import Interrupts
 from looper.domain.model.marks import FlashMark, ResetMark
 from looper.domain.model.profile import Profile
-from looper.domain.model.pwm import PinMeasurement, PwmOutputs, PwmWindow
+from looper.domain.model.pwm import PinDelay, PinMeasurement, PwmOutputs, PwmWindow
 from looper.domain.model.readings import CallTiming, Exchange, MemoryUsage, Sample
 
 
@@ -58,6 +58,8 @@ class Observation:
         pin_measurements: The server's measurement of each pin an expectation
             is about, by its name.
         pin_names: The pins the firmware registered, to name them when one is missing.
+        pin_delays: The server's measurement of each delay between two pins
+            an expectation is about.
     """
 
     samples: tuple[Sample, ...]
@@ -80,6 +82,7 @@ class Observation:
     pwm_windows: dict[str, PwmWindow] = field(default_factory=dict)
     pin_measurements: dict[str, PinMeasurement] = field(default_factory=dict)
     pin_names: tuple[str, ...] = ()
+    pin_delays: dict[PinDelay, PinMeasurement] = field(default_factory=dict)
 
     @property
     def lost_events(self) -> int:

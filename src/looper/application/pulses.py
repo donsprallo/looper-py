@@ -4,7 +4,8 @@ A window's PWM expectations need the outputs as they stood when it began,
 so they are read before the recording is cleared; what each output did in
 the window -- its measurement and its changes -- is read once the window
 is in hand. A pin is measured the same way, by its name, once the window
-has passed, since the firmware registers its pins only when it starts.
+has passed, since the firmware registers its pins only when it starts; so
+is the delay from one pin's edges to another's.
 
 A server says in its description whether it has PWM outputs and whether
 it measures pins. Without that, a test is refused with a sentence that
@@ -18,6 +19,7 @@ from typing import Any
 from looper.application.ports import Inspector, SimulationRefusedError
 from looper.domain.model import Description
 from looper.domain.model.pwm import (
+    PinDelay,
     PinMeasurement,
     PwmChange,
     PwmOutput,
@@ -28,6 +30,7 @@ from looper.domain.model.pwm import (
 #: The capabilities, as `Description.capabilities` names them.
 PWM_CAPABILITY = "pwm"
 PIN_MEASURE_CAPABILITY = "pin_measure"
+PIN_DELAY_CAPABILITY = "pin_delay"
 
 #: Why a test cannot look at a PWM output or measure a pin on this server.
 NO_PWM = (
@@ -37,6 +40,10 @@ NO_PWM = (
 NO_PIN_MEASURE = (
     "this server does not measure a pin's pulses (CAPABILITY_PIN_MEASURE): "
     "run a looper-srv that knows MeasurePin"
+)
+NO_PIN_DELAY = (
+    "this server does not measure the delay between two pins (CAPABILITY_PIN_DELAY): "
+    "run a looper-srv that measures it with MeasurePin"
 )
 
 
@@ -73,6 +80,7 @@ class PulseWindow:
         self._inspector = inspector
         self._pwm_names: list[str] = []
         self._pin_names: list[str] = []
+        self._delays: list[PinDelay] = []
         self._start = PwmOutputs()
 
     def wants_pwm(self, name: str) -> None:
@@ -85,6 +93,11 @@ class PulseWindow:
         if name not in self._pin_names:
             self._pin_names.append(name)
 
+    def wants_delay(self, delay: PinDelay) -> None:
+        """Have the window measure the delay from one pin's edges to another's."""
+        if delay not in self._delays:
+            self._delays.append(delay)
+
     def begin(self) -> None:
         """Check what the server offers, and read the outputs before the recording is cleared.
 
@@ -92,11 +105,13 @@ class PulseWindow:
             SimulationRefusedError: If the server has no PWM outputs or does
                 not measure pins, and an expectation needs them.
         """
-        if not self._pwm_names and not self._pin_names:
+        if not self._pwm_names and not self._pin_names and not self._delays:
             return
         description = self._inspector.describe()
-        if self._pin_names:
+        if self._pin_names or self._delays:
             require(description, PIN_MEASURE_CAPABILITY, NO_PIN_MEASURE)
+        if self._delays:
+            require(description, PIN_DELAY_CAPABILITY, NO_PIN_DELAY)
         if self._pwm_names:
             self._start = read_outputs(self._inspector, description)
 
@@ -108,10 +123,11 @@ class PulseWindow:
         if self._pwm_names:
             observed["pwm_outputs"] = self._start
             observed["pwm_windows"] = self._pwm_windows(start_us, end_us, changes)
-        if self._pin_names:
+        if self._pin_names or self._delays:
             pin_ids = {pin.name: pin.pin_id for pin in self._inspector.read_pins()}
             observed["pin_names"] = tuple(pin_ids)
             observed["pin_measurements"] = self._pin_measurements(pin_ids, start_us, end_us)
+            observed["pin_delays"] = self._pin_delays(pin_ids, start_us, end_us)
         return observed
 
     def _pwm_windows(
@@ -136,4 +152,20 @@ class PulseWindow:
             name: self._inspector.measure_pin(pin_ids[name], start_us, end_us)
             for name in self._pin_names
             if name in pin_ids
+        }
+
+    def _pin_delays(
+        self, pin_ids: dict[str, int], start_us: int, end_us: int
+    ) -> dict[PinDelay, PinMeasurement]:
+        """The measurement of each wanted delay whose two pins the firmware registered."""
+        return {
+            delay: self._inspector.measure_pin_delay(
+                pin_ids[delay.pin],
+                pin_ids[delay.reference],
+                start_us,
+                end_us,
+                (delay.reference_edge, delay.edge),
+            )
+            for delay in self._delays
+            if delay.pin in pin_ids and delay.reference in pin_ids
         }

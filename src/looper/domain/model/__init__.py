@@ -48,6 +48,7 @@ from looper.domain.model.marks import FlashMark, ResetMark
 from looper.domain.model.observation import Observation
 from looper.domain.model.outcome import ExpectationReport, Outcome
 from looper.domain.model.profile import FIRMWARE_ORIGIN, Profile, ProfileEntry
+from looper.domain.model.pwm import PinDelay
 from looper.domain.model.race import RaceCoverage
 from looper.domain.model.readings import (
     Bus,
@@ -69,12 +70,16 @@ from looper.domain.model.signal_models import ModelParameter, SignalModel
 from looper.domain.model.signal_parts import (
     CompareSettings,
     NodeOutput,
+    SampleMode,
+    SampleSettings,
     SignalNode,
     SignalNodeKind,
     SignalPinTarget,
     SignalProbe,
     SignalTarget,
 )
+from looper.domain.model.signal_starters import Starter, StarterNeeds, Starters
+from looper.domain.model.signal_waves import TableFile
 from looper.domain.model.time_models import (
     ActiveTimeModel,
     RestartStep,
@@ -180,6 +185,13 @@ __all__ = [
     "SignalTarget",
     "SignalPinTarget",
     "CompareSettings",
+    "PinDelay",
+    "SampleMode",
+    "SampleSettings",
+    "Starter",
+    "StarterNeeds",
+    "Starters",
+    "TableFile",
     "GraphNodeState",
     "GraphProbe",
     "PinTargetState",

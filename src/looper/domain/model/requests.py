@@ -1,28 +1,16 @@
-"""What a test asks a simulation to do, as values."""
+"""What a test asks a simulation to do, as values.
+
+`Signal` lives with the table files it can play (`signal_waves`) and is
+named here as before.
+"""
 
 from __future__ import annotations
 
 from dataclasses import dataclass
 
+from looper.domain.model.signal_waves import Signal
 
-@dataclass(frozen=True)
-class Signal:
-    """A generated signal for an analog input, evaluated by the simulation.
-
-    Attributes:
-        waveform: One of the waveforms the simulation offers, such as
-            ``constant`` or ``sine``.
-        amplitude: How far the signal swings around the offset.
-        offset: Where it swings around; the whole value of a constant.
-        frequency_hz: How often it repeats.
-        phase_degrees: Where in its period it starts.
-    """
-
-    waveform: str = "constant"
-    amplitude: float = 0.0
-    offset: float = 0.0
-    frequency_hz: float = 0.0
-    phase_degrees: float = 0.0
+__all__ = ["BusMessage", "Signal"]
 
 
 @dataclass(frozen=True)

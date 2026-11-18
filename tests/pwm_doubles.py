@@ -10,6 +10,7 @@ from looper.domain.model.pwm import (
     PwmOutput,
     PwmOutputs,
 )
+from looper.domain.model.triggers import Polarity
 
 #: The outputs a scripted firmware has: a motor at 20 kHz and 37.5 %, and an LED that is off.
 MOTOR = PwmOutput(
@@ -25,6 +26,8 @@ class ScriptedPwms:
         self.pwm_outputs = PwmOutputs(outputs=(MOTOR, LED))
         self.pwm_measurements: dict[int, PwmMeasurement] = {}
         self.pin_measurements: dict[int, PinMeasurement] = {}
+        self.pin_delays: dict[tuple[int, int], PinMeasurement] = {}
+        self.delay_asks: list[tuple[int, int, int, int, tuple[Polarity, Polarity]]] = []
         self.measure_asks: list[tuple[str, int, int, int]] = []
         self.pwm_changes: tuple[PwmChange, ...] = ()
 
@@ -40,3 +43,15 @@ class ScriptedPwms:
     def measure_pin(self, pin_id: int, from_us: int, to_us: int) -> PinMeasurement:
         self.measure_asks.append(("pin", pin_id, from_us, to_us))
         return self.pin_measurements.get(pin_id, PinMeasurement(pin_id, from_us, to_us))
+
+    def measure_pin_delay(
+        self,
+        pin_id: int,
+        reference_pin_id: int,
+        from_us: int,
+        to_us: int,
+        edges: tuple[Polarity, Polarity] = (Polarity.RISE, Polarity.RISE),
+    ) -> PinMeasurement:
+        self.delay_asks.append((pin_id, reference_pin_id, from_us, to_us, edges))
+        unmeasured = PinMeasurement(pin_id, from_us, to_us, reference_pin_id=reference_pin_id)
+        return self.pin_delays.get((pin_id, reference_pin_id), unmeasured)

@@ -11,6 +11,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from looper.domain.model.triggers import Polarity
+
 
 @dataclass(frozen=True)
 class PwmOutput:
@@ -144,7 +146,15 @@ class PinMeasurement:
         periods: Rising edge to rising edge.
         frequency_hz: Of the mean period.
         duty: The mean of each high pulse over its period.
-        text: All of it in one line, ``50.0 Hz · duty 7.5 % · high 1.50 ms, 2 pulses``.
+        text: All of it in one line, ``50.0 Hz · duty 7.5 % · high 1.50 ms, 2 pulses``;
+            with a reference pin it begins with ``delay_text``.
+        reference_pin_id: The pin the delay was measured from; None when none was asked.
+        delays: Reference edges this pin answered, each one delay.
+        delay_min_us: The shortest delay; ``delay_max_us`` the longest.
+        delay_mean_us: Their mean.
+        delays_missed: Reference edges this pin did not answer before the next one.
+        delay_text: ``ZC↑ → GATE↑ 2.50 ms (2.40 ms – 2.60 ms, 50 delays)``, or
+            why there is none.
     """
 
     pin_id: int
@@ -170,6 +180,33 @@ class PinMeasurement:
     frequency_text: str = ""
     text: str = ""
     note: str = ""
+    reference_pin_id: int | None = None
+    delays: int = 0
+    delay_min_us: int = 0
+    delay_max_us: int = 0
+    delay_mean_us: float = 0.0
+    delays_missed: int = 0
+    delay_text: str = ""
+
+
+@dataclass(frozen=True)
+class PinDelay:
+    """The delay from one pin's edges to another's, by the names the firmware registered.
+
+    For each `reference_edge` of `reference`, the time to the first `edge`
+    of `pin` at or after it and before the reference's next such edge.
+
+    Attributes:
+        pin: The pin that answers, ``GATE``.
+        reference: The pin whose edges start each delay, ``ZC``.
+        reference_edge: Which edges of the reference count.
+        edge: Which edges of `pin` answer.
+    """
+
+    pin: str
+    reference: str
+    reference_edge: Polarity = Polarity.RISE
+    edge: Polarity = Polarity.RISE
 
 
 @dataclass(frozen=True)

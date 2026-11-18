@@ -2,7 +2,8 @@
 
 Where `SignalGraph` is what a test asks for, this is what it got: the trace
 channel each probe records on, the level each input pin is held at and how
-exact its edges are, and what each comparator's block shows. Every text is
+exact its edges are, and what each comparator, linked generator, select and
+sample and hold block shows. Every text is
 the server's; a test compares with it or prints it.
 """
 
@@ -64,20 +65,37 @@ class PinTargetState:
 
 @dataclass(frozen=True)
 class GraphNodeState:
-    """One comparator of the applied graph, as its block shows it.
+    """One node of the applied graph whose block shows more than its symbol.
+
+    A comparator, a generator with a linked field (or one the runtime
+    stopped), a select or a sample and hold node.
 
     Attributes:
         node: The key the graph gave it.
-        summary_text: Its settings in a line, such as ``rises above 0 · hysteresis 0.1``.
-        value_text: ``high`` or ``low`` for one that drives a pin; empty where
-            the simulation does not report its value.
-        hover_lines: Further facts, one a line.
+        summary_text: Its settings in a line, such as ``rises above 0 · hysteresis 0.1``,
+            ``sine · FM`` or ``on rising trigger``.
+        value_text: ``high`` or ``low`` for a comparator that drives a pin,
+            what a select passes or a sample and hold node holds (``3.21``);
+            empty where the simulation does not report its value.
+        hover_lines: Further facts, one a line: ``when 1 passes``,
+            ``holds 3.21, sampled at 1.250000 s``.
+        passing_port: A select: the input that passes now, ``when 1`` or
+            ``when 0``; empty for every other node.
+        value: A select or a sample and hold node: what it gives now; None
+            for every other node.
+        samples: A sample and hold node: how many samples it took since the
+            graph was applied.
+        sampled_us: The microsecond of its last sample; 0 before the first.
     """
 
     node: str
     summary_text: str = ""
     value_text: str = ""
     hover_lines: tuple[str, ...] = ()
+    passing_port: str = ""
+    value: float | None = None
+    samples: int = 0
+    sampled_us: int = 0
 
 
 @dataclass(frozen=True)
@@ -87,7 +105,8 @@ class SignalGraphState:
     Attributes:
         probes: Its probes, with their trace channels.
         pin_targets: The input pins it drives, in the order the graph named them.
-        nodes: Its comparators; Abs, Min and Max show nothing beyond their symbol.
+        nodes: Its comparators, linked generators, selects and sample and
+            hold nodes; Abs, Min and Max show nothing beyond their symbol.
     """
 
     probes: tuple[GraphProbe, ...] = ()
@@ -106,7 +125,7 @@ class SignalGraphState:
         raise KeyError(f"the applied graph drives no pin {pin_id}")
 
     def node(self, key: str) -> GraphNodeState:
-        """The comparator of that key.
+        """The reported node of that key, as its block shows it.
 
         Raises:
             KeyError: If the graph reports no node of that key.
