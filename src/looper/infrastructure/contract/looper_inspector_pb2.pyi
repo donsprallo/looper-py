@@ -90,6 +90,8 @@ class Capability(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     CAPABILITY_HARDWARE: _ClassVar[Capability]
     CAPABILITY_BUS_WIRES: _ClassVar[Capability]
     CAPABILITY_LANE_SUMMARY: _ClassVar[Capability]
+    CAPABILITY_PWM: _ClassVar[Capability]
+    CAPABILITY_PIN_MEASURE: _ClassVar[Capability]
 
 class ServerMode(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     __slots__ = ()
@@ -121,6 +123,7 @@ class EventKind(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     EVENT_KIND_DMA: _ClassVar[EventKind]
     EVENT_KIND_CHAIN: _ClassVar[EventKind]
     EVENT_KIND_TASK: _ClassVar[EventKind]
+    EVENT_KIND_PWM: _ClassVar[EventKind]
 
 class InterruptEventKind(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     __slots__ = ()
@@ -483,6 +486,16 @@ class LaneEvent(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     LANE_EVENT_RISING: _ClassVar[LaneEvent]
     LANE_EVENT_FALLING: _ClassVar[LaneEvent]
     LANE_EVENT_ANY_EDGE: _ClassVar[LaneEvent]
+
+class PwmAlignment(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+    __slots__ = ()
+    PWM_ALIGNMENT_EDGE: _ClassVar[PwmAlignment]
+    PWM_ALIGNMENT_CENTER: _ClassVar[PwmAlignment]
+
+class PwmPolarity(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+    __slots__ = ()
+    PWM_POLARITY_ACTIVE_HIGH: _ClassVar[PwmPolarity]
+    PWM_POLARITY_ACTIVE_LOW: _ClassVar[PwmPolarity]
 CONTRACT_VERSION_UNSPECIFIED: ContractVersion
 CONTRACT_VERSION_CURRENT: ContractVersion
 REFUSAL_NONE: Refusal
@@ -540,6 +553,8 @@ CAPABILITY_CHAINS: Capability
 CAPABILITY_HARDWARE: Capability
 CAPABILITY_BUS_WIRES: Capability
 CAPABILITY_LANE_SUMMARY: Capability
+CAPABILITY_PWM: Capability
+CAPABILITY_PIN_MEASURE: Capability
 SERVER_MODE_SIMULATION: ServerMode
 SERVER_MODE_STATIC: ServerMode
 SERVER_MODE_HARDWARE: ServerMode
@@ -562,6 +577,7 @@ EVENT_KIND_INTERRUPT: EventKind
 EVENT_KIND_DMA: EventKind
 EVENT_KIND_CHAIN: EventKind
 EVENT_KIND_TASK: EventKind
+EVENT_KIND_PWM: EventKind
 INTERRUPT_EVENT_PENDING: InterruptEventKind
 INTERRUPT_EVENT_ENTERED: InterruptEventKind
 INTERRUPT_EVENT_LEFT: InterruptEventKind
@@ -786,6 +802,10 @@ LANE_EVENT_DEFAULT: LaneEvent
 LANE_EVENT_RISING: LaneEvent
 LANE_EVENT_FALLING: LaneEvent
 LANE_EVENT_ANY_EDGE: LaneEvent
+PWM_ALIGNMENT_EDGE: PwmAlignment
+PWM_ALIGNMENT_CENTER: PwmAlignment
+PWM_POLARITY_ACTIVE_HIGH: PwmPolarity
+PWM_POLARITY_ACTIVE_LOW: PwmPolarity
 
 class Empty(_message.Message):
     __slots__ = ()
@@ -1179,7 +1199,7 @@ class ReadEventsRequest(_message.Message):
     def __init__(self, epoch: _Optional[int] = ..., from_event_seq: _Optional[int] = ..., max_events: _Optional[int] = ..., filter: _Optional[_Union[EventFilter, _Mapping]] = ..., with_levels: _Optional[bool] = ..., from_us: _Optional[int] = ..., to_us: _Optional[int] = ...) -> None: ...
 
 class EventFilter(_message.Message):
-    __slots__ = ("kinds", "channel_ids", "bus_ids", "sample_stride", "pin_ids", "call_functions", "interrupt_ids", "dma_ids", "chain_ids")
+    __slots__ = ("kinds", "channel_ids", "bus_ids", "sample_stride", "pin_ids", "call_functions", "interrupt_ids", "dma_ids", "chain_ids", "pwm_ids")
     KINDS_FIELD_NUMBER: _ClassVar[int]
     CHANNEL_IDS_FIELD_NUMBER: _ClassVar[int]
     BUS_IDS_FIELD_NUMBER: _ClassVar[int]
@@ -1189,6 +1209,7 @@ class EventFilter(_message.Message):
     INTERRUPT_IDS_FIELD_NUMBER: _ClassVar[int]
     DMA_IDS_FIELD_NUMBER: _ClassVar[int]
     CHAIN_IDS_FIELD_NUMBER: _ClassVar[int]
+    PWM_IDS_FIELD_NUMBER: _ClassVar[int]
     kinds: _containers.RepeatedScalarFieldContainer[EventKind]
     channel_ids: _containers.RepeatedScalarFieldContainer[int]
     bus_ids: _containers.RepeatedScalarFieldContainer[int]
@@ -1198,7 +1219,8 @@ class EventFilter(_message.Message):
     interrupt_ids: _containers.RepeatedScalarFieldContainer[int]
     dma_ids: _containers.RepeatedScalarFieldContainer[int]
     chain_ids: _containers.RepeatedScalarFieldContainer[int]
-    def __init__(self, kinds: _Optional[_Iterable[_Union[EventKind, str]]] = ..., channel_ids: _Optional[_Iterable[int]] = ..., bus_ids: _Optional[_Iterable[int]] = ..., sample_stride: _Optional[int] = ..., pin_ids: _Optional[_Iterable[int]] = ..., call_functions: _Optional[_Iterable[str]] = ..., interrupt_ids: _Optional[_Iterable[int]] = ..., dma_ids: _Optional[_Iterable[int]] = ..., chain_ids: _Optional[_Iterable[int]] = ...) -> None: ...
+    pwm_ids: _containers.RepeatedScalarFieldContainer[int]
+    def __init__(self, kinds: _Optional[_Iterable[_Union[EventKind, str]]] = ..., channel_ids: _Optional[_Iterable[int]] = ..., bus_ids: _Optional[_Iterable[int]] = ..., sample_stride: _Optional[int] = ..., pin_ids: _Optional[_Iterable[int]] = ..., call_functions: _Optional[_Iterable[str]] = ..., interrupt_ids: _Optional[_Iterable[int]] = ..., dma_ids: _Optional[_Iterable[int]] = ..., chain_ids: _Optional[_Iterable[int]] = ..., pwm_ids: _Optional[_Iterable[int]] = ...) -> None: ...
 
 class EventBatch(_message.Message):
     __slots__ = ("epoch", "events", "lost", "next_event_seq", "sim_now_us", "epoch_changed", "levels")
@@ -1249,7 +1271,7 @@ class ChannelValueSince(_message.Message):
     def __init__(self, channel_id: _Optional[int] = ..., value: _Optional[float] = ..., since_us: _Optional[int] = ...) -> None: ...
 
 class Event(_message.Message):
-    __slots__ = ("event_seq", "sim_us", "sample", "pin", "exchange", "call", "command", "job", "fault", "run", "trigger_fired", "trigger_disarmed", "reset", "life", "flash", "interrupt", "dma", "chain", "task")
+    __slots__ = ("event_seq", "sim_us", "sample", "pin", "exchange", "call", "command", "job", "fault", "run", "trigger_fired", "trigger_disarmed", "reset", "life", "flash", "interrupt", "dma", "chain", "task", "pwm")
     EVENT_SEQ_FIELD_NUMBER: _ClassVar[int]
     SIM_US_FIELD_NUMBER: _ClassVar[int]
     SAMPLE_FIELD_NUMBER: _ClassVar[int]
@@ -1269,6 +1291,7 @@ class Event(_message.Message):
     DMA_FIELD_NUMBER: _ClassVar[int]
     CHAIN_FIELD_NUMBER: _ClassVar[int]
     TASK_FIELD_NUMBER: _ClassVar[int]
+    PWM_FIELD_NUMBER: _ClassVar[int]
     event_seq: int
     sim_us: int
     sample: Sample
@@ -1288,7 +1311,8 @@ class Event(_message.Message):
     dma: DmaEvent
     chain: ChainFire
     task: TaskSwitch
-    def __init__(self, event_seq: _Optional[int] = ..., sim_us: _Optional[int] = ..., sample: _Optional[_Union[Sample, _Mapping]] = ..., pin: _Optional[_Union[PinChange, _Mapping]] = ..., exchange: _Optional[_Union[Exchange, _Mapping]] = ..., call: _Optional[_Union[Call, _Mapping]] = ..., command: _Optional[_Union[CommandApplied, _Mapping]] = ..., job: _Optional[_Union[JobEvent, _Mapping]] = ..., fault: _Optional[_Union[Fault, _Mapping]] = ..., run: _Optional[_Union[RunEvent, _Mapping]] = ..., trigger_fired: _Optional[_Union[TriggerFired, _Mapping]] = ..., trigger_disarmed: _Optional[_Union[TriggerDisarmed, _Mapping]] = ..., reset: _Optional[_Union[ResetMark, _Mapping]] = ..., life: _Optional[_Union[LifeMark, _Mapping]] = ..., flash: _Optional[_Union[FlashMark, _Mapping]] = ..., interrupt: _Optional[_Union[InterruptEvent, _Mapping]] = ..., dma: _Optional[_Union[DmaEvent, _Mapping]] = ..., chain: _Optional[_Union[ChainFire, _Mapping]] = ..., task: _Optional[_Union[TaskSwitch, _Mapping]] = ...) -> None: ...
+    pwm: PwmChange
+    def __init__(self, event_seq: _Optional[int] = ..., sim_us: _Optional[int] = ..., sample: _Optional[_Union[Sample, _Mapping]] = ..., pin: _Optional[_Union[PinChange, _Mapping]] = ..., exchange: _Optional[_Union[Exchange, _Mapping]] = ..., call: _Optional[_Union[Call, _Mapping]] = ..., command: _Optional[_Union[CommandApplied, _Mapping]] = ..., job: _Optional[_Union[JobEvent, _Mapping]] = ..., fault: _Optional[_Union[Fault, _Mapping]] = ..., run: _Optional[_Union[RunEvent, _Mapping]] = ..., trigger_fired: _Optional[_Union[TriggerFired, _Mapping]] = ..., trigger_disarmed: _Optional[_Union[TriggerDisarmed, _Mapping]] = ..., reset: _Optional[_Union[ResetMark, _Mapping]] = ..., life: _Optional[_Union[LifeMark, _Mapping]] = ..., flash: _Optional[_Union[FlashMark, _Mapping]] = ..., interrupt: _Optional[_Union[InterruptEvent, _Mapping]] = ..., dma: _Optional[_Union[DmaEvent, _Mapping]] = ..., chain: _Optional[_Union[ChainFire, _Mapping]] = ..., task: _Optional[_Union[TaskSwitch, _Mapping]] = ..., pwm: _Optional[_Union[PwmChange, _Mapping]] = ...) -> None: ...
 
 class ResetMark(_message.Message):
     __slots__ = ("cause", "cause_text", "life", "reason", "jump_target", "text")
@@ -6512,3 +6536,193 @@ class LaneSummaryView(_message.Message):
     to_us: int
     kept_from_us: int
     def __init__(self, lanes: _Optional[_Iterable[_Union[LaneSummary, _Mapping]]] = ..., position: _Optional[_Union[ViewPosition, _Mapping]] = ..., from_us: _Optional[int] = ..., to_us: _Optional[int] = ..., kept_from_us: _Optional[int] = ...) -> None: ...
+
+class PwmChange(_message.Message):
+    __slots__ = ("pwm_id", "name", "period_ns", "compare", "reload", "enabled", "polarity", "duty")
+    PWM_ID_FIELD_NUMBER: _ClassVar[int]
+    NAME_FIELD_NUMBER: _ClassVar[int]
+    PERIOD_NS_FIELD_NUMBER: _ClassVar[int]
+    COMPARE_FIELD_NUMBER: _ClassVar[int]
+    RELOAD_FIELD_NUMBER: _ClassVar[int]
+    ENABLED_FIELD_NUMBER: _ClassVar[int]
+    POLARITY_FIELD_NUMBER: _ClassVar[int]
+    DUTY_FIELD_NUMBER: _ClassVar[int]
+    pwm_id: int
+    name: str
+    period_ns: int
+    compare: int
+    reload: int
+    enabled: bool
+    polarity: PwmPolarity
+    duty: float
+    def __init__(self, pwm_id: _Optional[int] = ..., name: _Optional[str] = ..., period_ns: _Optional[int] = ..., compare: _Optional[int] = ..., reload: _Optional[int] = ..., enabled: _Optional[bool] = ..., polarity: _Optional[_Union[PwmPolarity, str]] = ..., duty: _Optional[float] = ...) -> None: ...
+
+class PwmView(_message.Message):
+    __slots__ = ("pwm_id", "name", "timer", "pin", "output", "alignment", "polarity", "preload", "full_scale", "enabled", "period_ns", "compare", "reload", "duty", "frequency_hz", "mean", "changed_at_us", "text", "state_text", "output_text", "detail_text")
+    PWM_ID_FIELD_NUMBER: _ClassVar[int]
+    NAME_FIELD_NUMBER: _ClassVar[int]
+    TIMER_FIELD_NUMBER: _ClassVar[int]
+    PIN_FIELD_NUMBER: _ClassVar[int]
+    OUTPUT_FIELD_NUMBER: _ClassVar[int]
+    ALIGNMENT_FIELD_NUMBER: _ClassVar[int]
+    POLARITY_FIELD_NUMBER: _ClassVar[int]
+    PRELOAD_FIELD_NUMBER: _ClassVar[int]
+    FULL_SCALE_FIELD_NUMBER: _ClassVar[int]
+    ENABLED_FIELD_NUMBER: _ClassVar[int]
+    PERIOD_NS_FIELD_NUMBER: _ClassVar[int]
+    COMPARE_FIELD_NUMBER: _ClassVar[int]
+    RELOAD_FIELD_NUMBER: _ClassVar[int]
+    DUTY_FIELD_NUMBER: _ClassVar[int]
+    FREQUENCY_HZ_FIELD_NUMBER: _ClassVar[int]
+    MEAN_FIELD_NUMBER: _ClassVar[int]
+    CHANGED_AT_US_FIELD_NUMBER: _ClassVar[int]
+    TEXT_FIELD_NUMBER: _ClassVar[int]
+    STATE_TEXT_FIELD_NUMBER: _ClassVar[int]
+    OUTPUT_TEXT_FIELD_NUMBER: _ClassVar[int]
+    DETAIL_TEXT_FIELD_NUMBER: _ClassVar[int]
+    pwm_id: int
+    name: str
+    timer: str
+    pin: str
+    output: str
+    alignment: PwmAlignment
+    polarity: PwmPolarity
+    preload: bool
+    full_scale: float
+    enabled: bool
+    period_ns: int
+    compare: int
+    reload: int
+    duty: float
+    frequency_hz: float
+    mean: float
+    changed_at_us: int
+    text: str
+    state_text: str
+    output_text: str
+    detail_text: str
+    def __init__(self, pwm_id: _Optional[int] = ..., name: _Optional[str] = ..., timer: _Optional[str] = ..., pin: _Optional[str] = ..., output: _Optional[str] = ..., alignment: _Optional[_Union[PwmAlignment, str]] = ..., polarity: _Optional[_Union[PwmPolarity, str]] = ..., preload: _Optional[bool] = ..., full_scale: _Optional[float] = ..., enabled: _Optional[bool] = ..., period_ns: _Optional[int] = ..., compare: _Optional[int] = ..., reload: _Optional[int] = ..., duty: _Optional[float] = ..., frequency_hz: _Optional[float] = ..., mean: _Optional[float] = ..., changed_at_us: _Optional[int] = ..., text: _Optional[str] = ..., state_text: _Optional[str] = ..., output_text: _Optional[str] = ..., detail_text: _Optional[str] = ...) -> None: ...
+
+class PwmList(_message.Message):
+    __slots__ = ("pwms", "state_text")
+    PWMS_FIELD_NUMBER: _ClassVar[int]
+    STATE_TEXT_FIELD_NUMBER: _ClassVar[int]
+    pwms: _containers.RepeatedCompositeFieldContainer[PwmView]
+    state_text: str
+    def __init__(self, pwms: _Optional[_Iterable[_Union[PwmView, _Mapping]]] = ..., state_text: _Optional[str] = ...) -> None: ...
+
+class PwmMeasureRequest(_message.Message):
+    __slots__ = ("pwm_id", "from_us", "to_us")
+    PWM_ID_FIELD_NUMBER: _ClassVar[int]
+    FROM_US_FIELD_NUMBER: _ClassVar[int]
+    TO_US_FIELD_NUMBER: _ClassVar[int]
+    pwm_id: int
+    from_us: int
+    to_us: int
+    def __init__(self, pwm_id: _Optional[int] = ..., from_us: _Optional[int] = ..., to_us: _Optional[int] = ...) -> None: ...
+
+class PwmMeasurement(_message.Message):
+    __slots__ = ("pwm_id", "from_us", "to_us", "measured", "duty", "duty_min", "duty_max", "frequency_hz", "frequency_min_hz", "frequency_max_hz", "high_width_ns", "on_us", "changes", "duty_text", "frequency_text", "high_width_text", "on_text", "text", "note")
+    PWM_ID_FIELD_NUMBER: _ClassVar[int]
+    FROM_US_FIELD_NUMBER: _ClassVar[int]
+    TO_US_FIELD_NUMBER: _ClassVar[int]
+    MEASURED_FIELD_NUMBER: _ClassVar[int]
+    DUTY_FIELD_NUMBER: _ClassVar[int]
+    DUTY_MIN_FIELD_NUMBER: _ClassVar[int]
+    DUTY_MAX_FIELD_NUMBER: _ClassVar[int]
+    FREQUENCY_HZ_FIELD_NUMBER: _ClassVar[int]
+    FREQUENCY_MIN_HZ_FIELD_NUMBER: _ClassVar[int]
+    FREQUENCY_MAX_HZ_FIELD_NUMBER: _ClassVar[int]
+    HIGH_WIDTH_NS_FIELD_NUMBER: _ClassVar[int]
+    ON_US_FIELD_NUMBER: _ClassVar[int]
+    CHANGES_FIELD_NUMBER: _ClassVar[int]
+    DUTY_TEXT_FIELD_NUMBER: _ClassVar[int]
+    FREQUENCY_TEXT_FIELD_NUMBER: _ClassVar[int]
+    HIGH_WIDTH_TEXT_FIELD_NUMBER: _ClassVar[int]
+    ON_TEXT_FIELD_NUMBER: _ClassVar[int]
+    TEXT_FIELD_NUMBER: _ClassVar[int]
+    NOTE_FIELD_NUMBER: _ClassVar[int]
+    pwm_id: int
+    from_us: int
+    to_us: int
+    measured: bool
+    duty: float
+    duty_min: float
+    duty_max: float
+    frequency_hz: float
+    frequency_min_hz: float
+    frequency_max_hz: float
+    high_width_ns: float
+    on_us: int
+    changes: int
+    duty_text: str
+    frequency_text: str
+    high_width_text: str
+    on_text: str
+    text: str
+    note: str
+    def __init__(self, pwm_id: _Optional[int] = ..., from_us: _Optional[int] = ..., to_us: _Optional[int] = ..., measured: _Optional[bool] = ..., duty: _Optional[float] = ..., duty_min: _Optional[float] = ..., duty_max: _Optional[float] = ..., frequency_hz: _Optional[float] = ..., frequency_min_hz: _Optional[float] = ..., frequency_max_hz: _Optional[float] = ..., high_width_ns: _Optional[float] = ..., on_us: _Optional[int] = ..., changes: _Optional[int] = ..., duty_text: _Optional[str] = ..., frequency_text: _Optional[str] = ..., high_width_text: _Optional[str] = ..., on_text: _Optional[str] = ..., text: _Optional[str] = ..., note: _Optional[str] = ...) -> None: ...
+
+class PinMeasureRequest(_message.Message):
+    __slots__ = ("pin_id", "from_us", "to_us")
+    PIN_ID_FIELD_NUMBER: _ClassVar[int]
+    FROM_US_FIELD_NUMBER: _ClassVar[int]
+    TO_US_FIELD_NUMBER: _ClassVar[int]
+    pin_id: int
+    from_us: int
+    to_us: int
+    def __init__(self, pin_id: _Optional[int] = ..., from_us: _Optional[int] = ..., to_us: _Optional[int] = ...) -> None: ...
+
+class PinMeasurement(_message.Message):
+    __slots__ = ("pin_id", "from_us", "to_us", "measured", "rising_edges", "falling_edges", "pulses", "high_width_min_us", "high_width_max_us", "high_width_mean_us", "low_width_min_us", "low_width_max_us", "periods", "period_min_us", "period_max_us", "period_mean_us", "frequency_hz", "duty", "high_us", "high_width_text", "period_text", "frequency_text", "duty_text", "text", "note")
+    PIN_ID_FIELD_NUMBER: _ClassVar[int]
+    FROM_US_FIELD_NUMBER: _ClassVar[int]
+    TO_US_FIELD_NUMBER: _ClassVar[int]
+    MEASURED_FIELD_NUMBER: _ClassVar[int]
+    RISING_EDGES_FIELD_NUMBER: _ClassVar[int]
+    FALLING_EDGES_FIELD_NUMBER: _ClassVar[int]
+    PULSES_FIELD_NUMBER: _ClassVar[int]
+    HIGH_WIDTH_MIN_US_FIELD_NUMBER: _ClassVar[int]
+    HIGH_WIDTH_MAX_US_FIELD_NUMBER: _ClassVar[int]
+    HIGH_WIDTH_MEAN_US_FIELD_NUMBER: _ClassVar[int]
+    LOW_WIDTH_MIN_US_FIELD_NUMBER: _ClassVar[int]
+    LOW_WIDTH_MAX_US_FIELD_NUMBER: _ClassVar[int]
+    PERIODS_FIELD_NUMBER: _ClassVar[int]
+    PERIOD_MIN_US_FIELD_NUMBER: _ClassVar[int]
+    PERIOD_MAX_US_FIELD_NUMBER: _ClassVar[int]
+    PERIOD_MEAN_US_FIELD_NUMBER: _ClassVar[int]
+    FREQUENCY_HZ_FIELD_NUMBER: _ClassVar[int]
+    DUTY_FIELD_NUMBER: _ClassVar[int]
+    HIGH_US_FIELD_NUMBER: _ClassVar[int]
+    HIGH_WIDTH_TEXT_FIELD_NUMBER: _ClassVar[int]
+    PERIOD_TEXT_FIELD_NUMBER: _ClassVar[int]
+    FREQUENCY_TEXT_FIELD_NUMBER: _ClassVar[int]
+    DUTY_TEXT_FIELD_NUMBER: _ClassVar[int]
+    TEXT_FIELD_NUMBER: _ClassVar[int]
+    NOTE_FIELD_NUMBER: _ClassVar[int]
+    pin_id: int
+    from_us: int
+    to_us: int
+    measured: bool
+    rising_edges: int
+    falling_edges: int
+    pulses: int
+    high_width_min_us: int
+    high_width_max_us: int
+    high_width_mean_us: float
+    low_width_min_us: int
+    low_width_max_us: int
+    periods: int
+    period_min_us: int
+    period_max_us: int
+    period_mean_us: float
+    frequency_hz: float
+    duty: float
+    high_us: int
+    high_width_text: str
+    period_text: str
+    frequency_text: str
+    duty_text: str
+    text: str
+    note: str
+    def __init__(self, pin_id: _Optional[int] = ..., from_us: _Optional[int] = ..., to_us: _Optional[int] = ..., measured: _Optional[bool] = ..., rising_edges: _Optional[int] = ..., falling_edges: _Optional[int] = ..., pulses: _Optional[int] = ..., high_width_min_us: _Optional[int] = ..., high_width_max_us: _Optional[int] = ..., high_width_mean_us: _Optional[float] = ..., low_width_min_us: _Optional[int] = ..., low_width_max_us: _Optional[int] = ..., periods: _Optional[int] = ..., period_min_us: _Optional[int] = ..., period_max_us: _Optional[int] = ..., period_mean_us: _Optional[float] = ..., frequency_hz: _Optional[float] = ..., duty: _Optional[float] = ..., high_us: _Optional[int] = ..., high_width_text: _Optional[str] = ..., period_text: _Optional[str] = ..., frequency_text: _Optional[str] = ..., duty_text: _Optional[str] = ..., text: _Optional[str] = ..., note: _Optional[str] = ...) -> None: ...

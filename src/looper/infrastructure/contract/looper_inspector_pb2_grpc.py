@@ -444,6 +444,21 @@ class InspectorStub:
                 request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
                 response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.TaskList.FromString,
                 _registered_method=True)
+        self.ObservePwms = channel.unary_unary(
+                '/looper.inspector.v3.Inspector/ObservePwms',
+                request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
+                response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.PwmList.FromString,
+                _registered_method=True)
+        self.MeasurePwm = channel.unary_unary(
+                '/looper.inspector.v3.Inspector/MeasurePwm',
+                request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.PwmMeasureRequest.SerializeToString,
+                response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.PwmMeasurement.FromString,
+                _registered_method=True)
+        self.MeasurePin = channel.unary_unary(
+                '/looper.inspector.v3.Inspector/MeasurePin',
+                request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.PinMeasureRequest.SerializeToString,
+                response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.PinMeasurement.FromString,
+                _registered_method=True)
         self.ObserveFunctionMetrics = channel.unary_unary(
                 '/looper.inspector.v3.Inspector/ObserveFunctionMetrics',
                 request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ArchitectureRequest.SerializeToString,
@@ -1174,6 +1189,38 @@ class InspectorServicer:
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def ObservePwms(self, request, context):
+        """---- PWM (CAPABILITY_PWM, CAPABILITY_PIN_MEASURE; free) ----
+        A PWM output of contract.toml's [pwm.NAME] is a state, not a stream of
+        edges: period, compare, reload, on or off. Every change the firmware
+        makes -- by a role pwm.* or a DMA channel into its compare register,
+        with preload at the start of the next period -- is one PwmChange event.
+        The outputs with their state now and the texts a reader sees. Without a
+        simulation the state is the one the contract starts with, and
+        `state_text` says so.
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def MeasurePwm(self, request, context):
+        """Duty, frequency and on time of one output over a stretch of the run,
+        from its PwmChange events: exact, whatever the frequency.
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def MeasurePin(self, request, context):
+        """Pulse widths, period, frequency and duty of one pin over a stretch of
+        the run, from its recorded edges, as Logic measures them: a period runs
+        from one rising edge to the next, a width from an edge to the next of
+        the other kind; what the stretch cuts is not counted.
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
     def ObserveFunctionMetrics(self, request, context):
         """---- Architecture (CAPABILITY_ARCHITECTURE) ----
         Read from the project's code index, which the server builds in the
@@ -1772,6 +1819,21 @@ def add_InspectorServicer_to_server(servicer, server):
                     servicer.ObserveTasks,
                     request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.FromString,
                     response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.TaskList.SerializeToString,
+            ),
+            'ObservePwms': grpc.unary_unary_rpc_method_handler(
+                    servicer.ObservePwms,
+                    request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.FromString,
+                    response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.PwmList.SerializeToString,
+            ),
+            'MeasurePwm': grpc.unary_unary_rpc_method_handler(
+                    servicer.MeasurePwm,
+                    request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.PwmMeasureRequest.FromString,
+                    response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.PwmMeasurement.SerializeToString,
+            ),
+            'MeasurePin': grpc.unary_unary_rpc_method_handler(
+                    servicer.MeasurePin,
+                    request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.PinMeasureRequest.FromString,
+                    response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.PinMeasurement.SerializeToString,
             ),
             'ObserveFunctionMetrics': grpc.unary_unary_rpc_method_handler(
                     servicer.ObserveFunctionMetrics,
@@ -4098,6 +4160,87 @@ class Inspector:
             '/looper.inspector.v3.Inspector/ObserveTasks',
             looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
             looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.TaskList.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def ObservePwms(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/looper.inspector.v3.Inspector/ObservePwms',
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.PwmList.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def MeasurePwm(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/looper.inspector.v3.Inspector/MeasurePwm',
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.PwmMeasureRequest.SerializeToString,
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.PwmMeasurement.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def MeasurePin(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/looper.inspector.v3.Inspector/MeasurePin',
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.PinMeasureRequest.SerializeToString,
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.PinMeasurement.FromString,
             options,
             channel_credentials,
             insecure,

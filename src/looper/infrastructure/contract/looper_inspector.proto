@@ -382,6 +382,8 @@ enum Capability {
   CAPABILITY_HARDWARE = 20;        // a board at a debug probe: FlashFirmware, ObserveTarget, hold and resume through ControlRun
   CAPABILITY_BUS_WIRES = 23;       // ReadWires, BusView.wires: CAN and UART as levels
   CAPABILITY_LANE_SUMMARY = 24;    // SummarizeLanes: lanes per pixel column over the whole log
+  CAPABILITY_PWM = 25;             // the contract lists [pwm.NAME]: ObservePwms, MeasurePwm, PwmChange in the stream
+  CAPABILITY_PIN_MEASURE = 26;     // MeasurePin: pulse widths and frequency of a pin's recorded edges
 }
 
 enum ServerMode {
@@ -527,6 +529,7 @@ message EventFilter {
   repeated uint32 interrupt_ids = 7;    // for interrupt events; empty: every source and the lock
   repeated uint32 dma_ids = 8;          // for DMA events; empty: every channel
   repeated uint32 chain_ids = 9;        // for chain fires; empty: every chain
+  repeated uint32 pwm_ids = 10;         // for PWM changes; empty: every PWM output
 }
 
 enum EventKind {
@@ -547,6 +550,7 @@ enum EventKind {
   // 14 is kept for the watchdog's history (WatchdogMark), not served yet.
   EVENT_KIND_CHAIN = 15;     // a block of a chain fired, acted, stepped, ended, failed (ChainFire)
   EVENT_KIND_TASK = 16;      // an RTOS switched from one task to another (TaskSwitch)
+  EVENT_KIND_PWM = 17;       // a PWM output changed its state (PwmChange)
 }
 
 message EventBatch {
@@ -602,6 +606,7 @@ message Event {
     // 19 is kept for the watchdog's history (WatchdogMark).
     ChainFire chain = 20;
     TaskSwitch task = 21;
+    PwmChange pwm = 22;
   }
   // 13 is the simulation's record of a call between lifelines, which the
   // server keeps for ObserveSequence and does not serve as a body.
@@ -1336,6 +1341,24 @@ service Inspector {
   // measured of each task's context. Empty, with state_text, in a firmware
   // without an RTOS port. Every switch between tasks is a TaskSwitch event.
   rpc ObserveTasks(Empty) returns (TaskList);
+
+  // ---- PWM (CAPABILITY_PWM, CAPABILITY_PIN_MEASURE; free) ----
+  // A PWM output of contract.toml's [pwm.NAME] is a state, not a stream of
+  // edges: period, compare, reload, on or off. Every change the firmware
+  // makes -- by a role pwm.* or a DMA channel into its compare register,
+  // with preload at the start of the next period -- is one PwmChange event.
+  // The outputs with their state now and the texts a reader sees. Without a
+  // simulation the state is the one the contract starts with, and
+  // `state_text` says so.
+  rpc ObservePwms(Empty) returns (PwmList);
+  // Duty, frequency and on time of one output over a stretch of the run,
+  // from its PwmChange events: exact, whatever the frequency.
+  rpc MeasurePwm(PwmMeasureRequest) returns (PwmMeasurement);
+  // Pulse widths, period, frequency and duty of one pin over a stretch of
+  // the run, from its recorded edges, as Logic measures them: a period runs
+  // from one rising edge to the next, a width from an edge to the next of
+  // the other kind; what the stretch cuts is not counted.
+  rpc MeasurePin(PinMeasureRequest) returns (PinMeasurement);
 
   // ---- Architecture (CAPABILITY_ARCHITECTURE) ----
   // Read from the project's code index, which the server builds in the
@@ -4541,4 +4564,129 @@ message LaneSummaryView {
   // Where the log's oldest kept event lies: before it the columns are
   // empty because nothing is kept, not because nothing happened.
   uint64 kept_from_us = 5;
+}
+
+// ---- PWM (CAPABILITY_PWM, CAPABILITY_PIN_MEASURE) ----
+
+// How a PWM's counter runs.
+enum PwmAlignment {
+  PWM_ALIGNMENT_EDGE = 0;        // up, then over: the pulse at the start of the period
+  PWM_ALIGNMENT_CENTER = 1;      // up and down: the pulse in the middle of the period
+}
+
+// Which level is the active part of a period, the duty.
+enum PwmPolarity {
+  PWM_POLARITY_ACTIVE_HIGH = 0;
+  PWM_POLARITY_ACTIVE_LOW = 1;
+}
+
+// A change of a PWM output's state at Event.sim_us: the simulation's own
+// record, passed on as it came. One per change, never one per period; the
+// edges are drawn from it. duty is compare / reload, 1 at or above it.
+message PwmChange {
+  uint32 pwm_id = 1;             // as PwmView.pwm_id
+  string name = 2;
+  uint64 period_ns = 3;
+  uint32 compare = 4;
+  uint32 reload = 5;
+  bool enabled = 6;
+  PwmPolarity polarity = 7;
+  double duty = 8;
+}
+
+// One PWM output: what the contract says of it, and its state now.
+message PwmView {
+  uint32 pwm_id = 1;             // from 1 in the contract's order, as PwmChange names it
+  string name = 2;               // "MOTOR"
+  string timer = 3;              // the contract's timer, e.g. "TIM1"; "" when it names none
+  string pin = 4;                // the pin as the contract names it; "" for none
+  string output = 5;             // the analog channel that carries the mean, as the contract names it; "" for none
+  PwmAlignment alignment = 6;
+  PwmPolarity polarity = 7;
+  bool preload = 8;              // a change waits for the next period
+  double full_scale = 9;         // the mean at a full duty
+  bool enabled = 10;
+  uint64 period_ns = 11;
+  uint32 compare = 12;
+  uint32 reload = 13;
+  double duty = 14;              // 0 to 1
+  double frequency_hz = 15;
+  double mean = 16;              // duty × full_scale while on, 0 while off: what `output` carries
+  uint64 changed_at_us = 17;     // the last change in this life; 0 while the contract's start holds
+  string text = 18;              // "20.0 kHz · 37.5 % · center"
+  string state_text = 19;        // "on", "off", "off – not started yet"
+  string output_text = 20;       // "MOTOR_VOLTAGE: 9.00 of 24.0"; "" without an output
+  string detail_text = 21;       // "TIM1 · pin BOARD_PIN_MOTOR · active high · preload"
+}
+
+message PwmList {
+  repeated PwmView pwms = 1;     // in the contract's order
+  // The empty state, or what the states are without a simulation; else "".
+  string state_text = 2;
+}
+
+message PwmMeasureRequest {
+  uint32 pwm_id = 1;
+  uint64 from_us = 2;
+  uint64 to_us = 3;              // 0: up to now
+}
+
+// One PWM over [from_us, to_us). The duty and the frequency are weighed by
+// the time each state held while the output was on.
+message PwmMeasurement {
+  uint32 pwm_id = 1;
+  uint64 from_us = 2;
+  uint64 to_us = 3;
+  bool measured = 4;             // false: it was off the whole stretch, or the stretch is empty; note says which
+  double duty = 5;               // mean while on
+  double duty_min = 6;
+  double duty_max = 7;
+  double frequency_hz = 8;       // mean while on
+  double frequency_min_hz = 9;
+  double frequency_max_hz = 10;
+  double high_width_ns = 11;     // mean active pulse while on: duty × period
+  uint64 on_us = 12;             // how long it was on within the stretch
+  uint32 changes = 13;           // PwmChange events within it
+  string duty_text = 14;         // "37.5 % (25.0 % – 50.0 %)"
+  string frequency_text = 15;    // "20.0 kHz"
+  string high_width_text = 16;   // "18.8 us"
+  string on_text = 17;           // "on 12.0 ms of 20.0 ms"
+  string text = 18;              // one line of the above
+  string note = 19;              // why nothing was measured, or what the log no longer keeps
+}
+
+message PinMeasureRequest {
+  uint32 pin_id = 1;
+  uint64 from_us = 2;
+  uint64 to_us = 3;              // 0: up to now
+}
+
+// One pin over [from_us, to_us), from its recorded edges in whole
+// microseconds. A field of a kind of pulse that did not occur is 0.
+message PinMeasurement {
+  uint32 pin_id = 1;
+  uint64 from_us = 2;
+  uint64 to_us = 3;
+  bool measured = 4;             // false without a whole high pulse or period; note says why
+  uint32 rising_edges = 5;
+  uint32 falling_edges = 6;
+  uint32 pulses = 7;             // whole high pulses
+  uint64 high_width_min_us = 8;
+  uint64 high_width_max_us = 9;
+  double high_width_mean_us = 10;
+  uint64 low_width_min_us = 11;
+  uint64 low_width_max_us = 12;
+  uint32 periods = 13;           // rising edge to rising edge
+  uint64 period_min_us = 14;
+  uint64 period_max_us = 15;
+  double period_mean_us = 16;
+  double frequency_hz = 17;      // of the mean period
+  double duty = 18;              // mean of each high pulse over its period
+  uint64 high_us = 19;           // how long the pin was high within the stretch
+  string high_width_text = 20;   // "1.50 ms (1.00 ms – 2.00 ms, 50 pulses)"
+  string period_text = 21;
+  string frequency_text = 22;    // "50.0 Hz"
+  string duty_text = 23;
+  string text = 24;              // one line of the above
+  string note = 25;
 }
