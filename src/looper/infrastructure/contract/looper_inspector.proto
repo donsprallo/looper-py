@@ -4638,7 +4638,7 @@ message PwmView {
   uint64 changed_at_us = 17;     // the last change in this life; 0 while the contract's start holds
   string text = 18;              // "20.0 kHz · 37.5 % · center"
   string state_text = 19;        // "on", "off", "off – not started yet"
-  string output_text = 20;       // "MOTOR_VOLTAGE: 9.00 of 24.0"; "" without an output
+  string output_text = 20;       // "MOTOR_VOLTAGE: 9 of 24"; "" without an output
   string detail_text = 21;       // "TIM1 · pin BOARD_PIN_MOTOR · active high · preload"
 }
 
