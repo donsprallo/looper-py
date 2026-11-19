@@ -97,6 +97,7 @@ class Capability(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     CAPABILITY_SIGNAL_LOGIC: _ClassVar[Capability]
     CAPABILITY_PIN_DELAY: _ClassVar[Capability]
     CAPABILITY_GRAPH_GROUPS: _ClassVar[Capability]
+    CAPABILITY_BOARD: _ClassVar[Capability]
 
 class ServerMode(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     __slots__ = ()
@@ -573,6 +574,7 @@ CAPABILITY_MOVING_GENERATORS: Capability
 CAPABILITY_SIGNAL_LOGIC: Capability
 CAPABILITY_PIN_DELAY: Capability
 CAPABILITY_GRAPH_GROUPS: Capability
+CAPABILITY_BOARD: Capability
 SERVER_MODE_SIMULATION: ServerMode
 SERVER_MODE_STATIC: ServerMode
 SERVER_MODE_HARDWARE: ServerMode
@@ -7285,3 +7287,209 @@ class PinMeasurement(_message.Message):
     delays_missed: int
     delay_text: str
     def __init__(self, pin_id: _Optional[int] = ..., from_us: _Optional[int] = ..., to_us: _Optional[int] = ..., measured: _Optional[bool] = ..., rising_edges: _Optional[int] = ..., falling_edges: _Optional[int] = ..., pulses: _Optional[int] = ..., high_width_min_us: _Optional[int] = ..., high_width_max_us: _Optional[int] = ..., high_width_mean_us: _Optional[float] = ..., low_width_min_us: _Optional[int] = ..., low_width_max_us: _Optional[int] = ..., periods: _Optional[int] = ..., period_min_us: _Optional[int] = ..., period_max_us: _Optional[int] = ..., period_mean_us: _Optional[float] = ..., frequency_hz: _Optional[float] = ..., duty: _Optional[float] = ..., high_us: _Optional[int] = ..., high_width_text: _Optional[str] = ..., period_text: _Optional[str] = ..., frequency_text: _Optional[str] = ..., duty_text: _Optional[str] = ..., text: _Optional[str] = ..., note: _Optional[str] = ..., reference_pin_id: _Optional[int] = ..., delays: _Optional[int] = ..., delay_min_us: _Optional[int] = ..., delay_max_us: _Optional[int] = ..., delay_mean_us: _Optional[float] = ..., delays_missed: _Optional[int] = ..., delay_text: _Optional[str] = ...) -> None: ...
+
+class BoardView(_message.Message):
+    __slots__ = ("title", "nodes", "edges", "notes", "revision", "revision_text", "empty_text")
+    TITLE_FIELD_NUMBER: _ClassVar[int]
+    NODES_FIELD_NUMBER: _ClassVar[int]
+    EDGES_FIELD_NUMBER: _ClassVar[int]
+    NOTES_FIELD_NUMBER: _ClassVar[int]
+    REVISION_FIELD_NUMBER: _ClassVar[int]
+    REVISION_TEXT_FIELD_NUMBER: _ClassVar[int]
+    EMPTY_TEXT_FIELD_NUMBER: _ClassVar[int]
+    title: str
+    nodes: _containers.RepeatedCompositeFieldContainer[BoardNode]
+    edges: _containers.RepeatedCompositeFieldContainer[BoardEdge]
+    notes: _containers.RepeatedCompositeFieldContainer[BoardNote]
+    revision: int
+    revision_text: str
+    empty_text: str
+    def __init__(self, title: _Optional[str] = ..., nodes: _Optional[_Iterable[_Union[BoardNode, _Mapping]]] = ..., edges: _Optional[_Iterable[_Union[BoardEdge, _Mapping]]] = ..., notes: _Optional[_Iterable[_Union[BoardNote, _Mapping]]] = ..., revision: _Optional[int] = ..., revision_text: _Optional[str] = ..., empty_text: _Optional[str] = ...) -> None: ...
+
+class BoardNote(_message.Message):
+    __slots__ = ("text", "node_key")
+    TEXT_FIELD_NUMBER: _ClassVar[int]
+    NODE_KEY_FIELD_NUMBER: _ClassVar[int]
+    text: str
+    node_key: str
+    def __init__(self, text: _Optional[str] = ..., node_key: _Optional[str] = ...) -> None: ...
+
+class BoardNode(_message.Message):
+    __slots__ = ("key", "kind", "parent_key", "title", "subtitle", "bus_kind", "runtime_id", "registered", "unregistered_text", "hand_wired", "hand_wired_text", "is_input", "graph_can_drive", "graph_can_read", "drive_text", "hover_text", "driven_by_text", "driven_by_node_key", "read_by", "read_by_text", "reference_text", "reference_node_key", "endpoint_node_keys", "second_driver_text")
+    class Kind(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+        __slots__ = ()
+        MCU: _ClassVar[BoardNode.Kind]
+        PERIPHERAL: _ClassVar[BoardNode.Kind]
+        BUS: _ClassVar[BoardNode.Kind]
+        DEVICE: _ClassVar[BoardNode.Kind]
+        PIN: _ClassVar[BoardNode.Kind]
+        CHANNEL: _ClassVar[BoardNode.Kind]
+        SOURCE: _ClassVar[BoardNode.Kind]
+        DMA: _ClassVar[BoardNode.Kind]
+        PWM: _ClassVar[BoardNode.Kind]
+    MCU: BoardNode.Kind
+    PERIPHERAL: BoardNode.Kind
+    BUS: BoardNode.Kind
+    DEVICE: BoardNode.Kind
+    PIN: BoardNode.Kind
+    CHANNEL: BoardNode.Kind
+    SOURCE: BoardNode.Kind
+    DMA: BoardNode.Kind
+    PWM: BoardNode.Kind
+    KEY_FIELD_NUMBER: _ClassVar[int]
+    KIND_FIELD_NUMBER: _ClassVar[int]
+    PARENT_KEY_FIELD_NUMBER: _ClassVar[int]
+    TITLE_FIELD_NUMBER: _ClassVar[int]
+    SUBTITLE_FIELD_NUMBER: _ClassVar[int]
+    BUS_KIND_FIELD_NUMBER: _ClassVar[int]
+    RUNTIME_ID_FIELD_NUMBER: _ClassVar[int]
+    REGISTERED_FIELD_NUMBER: _ClassVar[int]
+    UNREGISTERED_TEXT_FIELD_NUMBER: _ClassVar[int]
+    HAND_WIRED_FIELD_NUMBER: _ClassVar[int]
+    HAND_WIRED_TEXT_FIELD_NUMBER: _ClassVar[int]
+    IS_INPUT_FIELD_NUMBER: _ClassVar[int]
+    GRAPH_CAN_DRIVE_FIELD_NUMBER: _ClassVar[int]
+    GRAPH_CAN_READ_FIELD_NUMBER: _ClassVar[int]
+    DRIVE_TEXT_FIELD_NUMBER: _ClassVar[int]
+    HOVER_TEXT_FIELD_NUMBER: _ClassVar[int]
+    DRIVEN_BY_TEXT_FIELD_NUMBER: _ClassVar[int]
+    DRIVEN_BY_NODE_KEY_FIELD_NUMBER: _ClassVar[int]
+    READ_BY_FIELD_NUMBER: _ClassVar[int]
+    READ_BY_TEXT_FIELD_NUMBER: _ClassVar[int]
+    REFERENCE_TEXT_FIELD_NUMBER: _ClassVar[int]
+    REFERENCE_NODE_KEY_FIELD_NUMBER: _ClassVar[int]
+    ENDPOINT_NODE_KEYS_FIELD_NUMBER: _ClassVar[int]
+    SECOND_DRIVER_TEXT_FIELD_NUMBER: _ClassVar[int]
+    key: str
+    kind: BoardNode.Kind
+    parent_key: str
+    title: str
+    subtitle: str
+    bus_kind: str
+    runtime_id: int
+    registered: bool
+    unregistered_text: str
+    hand_wired: bool
+    hand_wired_text: str
+    is_input: bool
+    graph_can_drive: bool
+    graph_can_read: bool
+    drive_text: str
+    hover_text: str
+    driven_by_text: str
+    driven_by_node_key: str
+    read_by: _containers.RepeatedCompositeFieldContainer[BoardGraphRef]
+    read_by_text: str
+    reference_text: str
+    reference_node_key: str
+    endpoint_node_keys: _containers.RepeatedScalarFieldContainer[str]
+    second_driver_text: str
+    def __init__(self, key: _Optional[str] = ..., kind: _Optional[_Union[BoardNode.Kind, str]] = ..., parent_key: _Optional[str] = ..., title: _Optional[str] = ..., subtitle: _Optional[str] = ..., bus_kind: _Optional[str] = ..., runtime_id: _Optional[int] = ..., registered: _Optional[bool] = ..., unregistered_text: _Optional[str] = ..., hand_wired: _Optional[bool] = ..., hand_wired_text: _Optional[str] = ..., is_input: _Optional[bool] = ..., graph_can_drive: _Optional[bool] = ..., graph_can_read: _Optional[bool] = ..., drive_text: _Optional[str] = ..., hover_text: _Optional[str] = ..., driven_by_text: _Optional[str] = ..., driven_by_node_key: _Optional[str] = ..., read_by: _Optional[_Iterable[_Union[BoardGraphRef, _Mapping]]] = ..., read_by_text: _Optional[str] = ..., reference_text: _Optional[str] = ..., reference_node_key: _Optional[str] = ..., endpoint_node_keys: _Optional[_Iterable[str]] = ..., second_driver_text: _Optional[str] = ...) -> None: ...
+
+class BoardGraphRef(_message.Message):
+    __slots__ = ("text", "node_key", "probe")
+    TEXT_FIELD_NUMBER: _ClassVar[int]
+    NODE_KEY_FIELD_NUMBER: _ClassVar[int]
+    PROBE_FIELD_NUMBER: _ClassVar[int]
+    text: str
+    node_key: str
+    probe: str
+    def __init__(self, text: _Optional[str] = ..., node_key: _Optional[str] = ..., probe: _Optional[str] = ...) -> None: ...
+
+class BoardEdge(_message.Message):
+    __slots__ = ("from_key", "to_key", "kind", "text", "dashed", "hover_text")
+    class Kind(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+        __slots__ = ()
+        ON_BUS: _ClassVar[BoardEdge.Kind]
+        LINE_TO_PIN: _ClassVar[BoardEdge.Kind]
+        LINE_TO_SOURCE: _ClassVar[BoardEdge.Kind]
+        INPUT_FROM_PIN: _ClassVar[BoardEdge.Kind]
+        ANALOG_OUT: _ClassVar[BoardEdge.Kind]
+        SAMPLES: _ClassVar[BoardEdge.Kind]
+        STREAM: _ClassVar[BoardEdge.Kind]
+        DMA_ON_BUS: _ClassVar[BoardEdge.Kind]
+        SOURCE_ON_PIN: _ClassVar[BoardEdge.Kind]
+        PWM_ON_PIN: _ClassVar[BoardEdge.Kind]
+    ON_BUS: BoardEdge.Kind
+    LINE_TO_PIN: BoardEdge.Kind
+    LINE_TO_SOURCE: BoardEdge.Kind
+    INPUT_FROM_PIN: BoardEdge.Kind
+    ANALOG_OUT: BoardEdge.Kind
+    SAMPLES: BoardEdge.Kind
+    STREAM: BoardEdge.Kind
+    DMA_ON_BUS: BoardEdge.Kind
+    SOURCE_ON_PIN: BoardEdge.Kind
+    PWM_ON_PIN: BoardEdge.Kind
+    FROM_KEY_FIELD_NUMBER: _ClassVar[int]
+    TO_KEY_FIELD_NUMBER: _ClassVar[int]
+    KIND_FIELD_NUMBER: _ClassVar[int]
+    TEXT_FIELD_NUMBER: _ClassVar[int]
+    DASHED_FIELD_NUMBER: _ClassVar[int]
+    HOVER_TEXT_FIELD_NUMBER: _ClassVar[int]
+    from_key: str
+    to_key: str
+    kind: BoardEdge.Kind
+    text: str
+    dashed: bool
+    hover_text: str
+    def __init__(self, from_key: _Optional[str] = ..., to_key: _Optional[str] = ..., kind: _Optional[_Union[BoardEdge.Kind, str]] = ..., text: _Optional[str] = ..., dashed: _Optional[bool] = ..., hover_text: _Optional[str] = ...) -> None: ...
+
+class BoardState(_message.Message):
+    __slots__ = ("revision", "sim_us", "nodes", "edges")
+    REVISION_FIELD_NUMBER: _ClassVar[int]
+    SIM_US_FIELD_NUMBER: _ClassVar[int]
+    NODES_FIELD_NUMBER: _ClassVar[int]
+    EDGES_FIELD_NUMBER: _ClassVar[int]
+    revision: int
+    sim_us: int
+    nodes: _containers.RepeatedCompositeFieldContainer[BoardNodeState]
+    edges: _containers.RepeatedCompositeFieldContainer[BoardEdgeState]
+    def __init__(self, revision: _Optional[int] = ..., sim_us: _Optional[int] = ..., nodes: _Optional[_Iterable[_Union[BoardNodeState, _Mapping]]] = ..., edges: _Optional[_Iterable[_Union[BoardEdgeState, _Mapping]]] = ...) -> None: ...
+
+class BoardNodeState(_message.Message):
+    __slots__ = ("key", "state_text", "active", "fault", "fault_text", "driver_off", "reference_state_text", "value", "exchanges", "last_us")
+    KEY_FIELD_NUMBER: _ClassVar[int]
+    STATE_TEXT_FIELD_NUMBER: _ClassVar[int]
+    ACTIVE_FIELD_NUMBER: _ClassVar[int]
+    FAULT_FIELD_NUMBER: _ClassVar[int]
+    FAULT_TEXT_FIELD_NUMBER: _ClassVar[int]
+    DRIVER_OFF_FIELD_NUMBER: _ClassVar[int]
+    REFERENCE_STATE_TEXT_FIELD_NUMBER: _ClassVar[int]
+    VALUE_FIELD_NUMBER: _ClassVar[int]
+    EXCHANGES_FIELD_NUMBER: _ClassVar[int]
+    LAST_US_FIELD_NUMBER: _ClassVar[int]
+    key: str
+    state_text: str
+    active: bool
+    fault: bool
+    fault_text: str
+    driver_off: bool
+    reference_state_text: str
+    value: float
+    exchanges: int
+    last_us: int
+    def __init__(self, key: _Optional[str] = ..., state_text: _Optional[str] = ..., active: _Optional[bool] = ..., fault: _Optional[bool] = ..., fault_text: _Optional[str] = ..., driver_off: _Optional[bool] = ..., reference_state_text: _Optional[str] = ..., value: _Optional[float] = ..., exchanges: _Optional[int] = ..., last_us: _Optional[int] = ...) -> None: ...
+
+class BoardEdgeState(_message.Message):
+    __slots__ = ("from_key", "to_key", "state_text", "active", "fault", "fault_text", "hover_text", "exchanges", "unanswered", "last_us")
+    FROM_KEY_FIELD_NUMBER: _ClassVar[int]
+    TO_KEY_FIELD_NUMBER: _ClassVar[int]
+    STATE_TEXT_FIELD_NUMBER: _ClassVar[int]
+    ACTIVE_FIELD_NUMBER: _ClassVar[int]
+    FAULT_FIELD_NUMBER: _ClassVar[int]
+    FAULT_TEXT_FIELD_NUMBER: _ClassVar[int]
+    HOVER_TEXT_FIELD_NUMBER: _ClassVar[int]
+    EXCHANGES_FIELD_NUMBER: _ClassVar[int]
+    UNANSWERED_FIELD_NUMBER: _ClassVar[int]
+    LAST_US_FIELD_NUMBER: _ClassVar[int]
+    from_key: str
+    to_key: str
+    state_text: str
+    active: bool
+    fault: bool
+    fault_text: str
+    hover_text: str
+    exchanges: int
+    unanswered: int
+    last_us: int
+    def __init__(self, from_key: _Optional[str] = ..., to_key: _Optional[str] = ..., state_text: _Optional[str] = ..., active: _Optional[bool] = ..., fault: _Optional[bool] = ..., fault_text: _Optional[str] = ..., hover_text: _Optional[str] = ..., exchanges: _Optional[int] = ..., unanswered: _Optional[int] = ..., last_us: _Optional[int] = ...) -> None: ...

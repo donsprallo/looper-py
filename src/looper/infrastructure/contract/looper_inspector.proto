@@ -411,6 +411,9 @@ enum Capability {
   // them unlocked. Without it they are refused with a sentence that says to
   // update looper-rt.
   CAPABILITY_GRAPH_GROUPS = 31;
+  // DescribeBoard and ObserveBoard: the device as a block diagram, with
+  // what drives and reads each port in the signal graph. In a simulation.
+  CAPABILITY_BOARD = 32;
 }
 
 enum ServerMode {
@@ -1452,6 +1455,20 @@ service Inspector {
   // from one rising edge to the next, a width from an edge to the next of
   // the other kind; what the stretch cuts is not counted.
   rpc MeasurePin(PinMeasureRequest) returns (PinMeasurement);
+
+  // ---- The device: the board as a block diagram (CAPABILITY_BOARD) ----
+  // Derived, never written back: the MCU, its pins and channels, the buses
+  // and the chips on them, the contract's interrupt sources, DMA channels
+  // and PWM outputs, from looper.toml, component.toml, contract.toml and
+  // what the board code registered. Per port what drives and what reads it
+  // in the applied signal graph. Answered in a simulation; a project's code
+  // without one and a board at a probe are refused with a sentence (stage 1).
+  // The image is the running one's; `image` is not used yet. Free.
+  rpc DescribeBoard(ImageScope) returns (BoardView);
+  // The board's live state: pin levels and analog values, the exchanges per
+  // tap and per rail, a chip's last value, and the ports whose driver is
+  // off. `revision` differing from the BoardView's: describe it again.
+  rpc ObserveBoard(ImageScope) returns (BoardState);
 
   // ---- Architecture (CAPABILITY_ARCHITECTURE) ----
   // Read from the project's code index, which the server builds in the
@@ -5436,4 +5453,217 @@ message PinMeasurement {
   // " · 2 ZC↑ without GATE↑" after it where some were missed; why there is
   // none ("No GATE↑ followed a ZC↑ in the stretch.").
   string delay_text = 32;
+}
+
+// ---- The device: the board as a block diagram (CAPABILITY_BOARD) ----
+
+// The board as the files and the runtime describe it together. Keys are
+// names, not positions: a window keeps what it placed by key across a
+// rebuild, a restart and a reordering of [[devices]].
+message BoardView {
+  // "dimmer", "blinky · stm32l152": [simulation] name, then [mcu] profile.
+  string title = 1;
+  // The MCU first, then pins, channels, buses, devices, then the
+  // contract's sources, DMA channels, timers and PWM outputs, each in the
+  // order of where it is declared.
+  repeated BoardNode nodes = 2;
+  repeated BoardEdge edges = 3;
+  // What the picture cannot show, one sentence each, with the node it is
+  // about: "AS8510 on SPI1, chip select 0, is wired in board code: its
+  // lines are not known."
+  repeated BoardNote notes = 4;
+  // Changes whenever anything above changes: a rebuild, a restart, a new
+  // image, and a signal graph that drives or reads the ports otherwise.
+  // Starts at 1.
+  uint64 revision = 5;
+  // What changed since the revision before: "SPI2 and flash are new; GATE
+  // is gone.", "ZC is driven by Comparator now."; empty on the first.
+  string revision_text = 6;
+  // "The firmware registers no pins, channels or buses yet. They appear
+  // once the board code registers them."; empty once it does.
+  string empty_text = 7;
+}
+
+message BoardNote {
+  string text = 1;
+  // The node it names; empty for one about the whole board.
+  string node_key = 2;
+}
+
+// One part of the board.
+message BoardNode {
+  // "mcu", "bus:SPI1", "device:store", "device:SPI1:0" (wired in board
+  // code), "pin:ZC", "channel:POT", "source:EXTI0", "dma:SPI1_RX",
+  // "pwm:GATE", "periph:TIM2".
+  string key = 1;
+  enum Kind {
+    MCU = 0;
+    // A timer a PWM output runs on.
+    PERIPHERAL = 1;
+    BUS = 2;
+    DEVICE = 3;
+    PIN = 4;
+    CHANNEL = 5;
+    // An interrupt source of the contract.
+    SOURCE = 6;
+    DMA = 7;
+    PWM = 8;
+  }
+  Kind kind = 2;
+  // What it lies on: "mcu" for its pins, channels, buses, sources and DMA
+  // channels, a timer's key for its PWM outputs; empty for the MCU and the
+  // devices.
+  string parent_key = 3;
+  // "MCU" or the [mcu] profile, "SPI1", "store", "ZC".
+  string title = 4;
+  // "SPI · 1 Mbit/s", "spi_flash · CS 1", "input · active high", "input ·
+  // %", "pin · rising", "PWM on TIM2".
+  string subtitle = 5;
+  // "spi", "i2c", "uart", "can" for a bus; empty otherwise.
+  string bus_kind = 6;
+  // The runtime's bus_id, pin_id or channel_id; 0 when it has none.
+  uint32 runtime_id = 7;
+  // False for what only a file names: drawn hollow.
+  bool registered = 8;
+  // Why it is not registered: "SPI2 is not registered by the board code."
+  string unregistered_text = 9;
+  // A chip the board code attached by hand.
+  bool hand_wired = 10;
+  // "wired in board code – its lines are not known"
+  string hand_wired_text = 11;
+  // A port the firmware reads: an input pin or channel, drawn on the MCU's
+  // left; false for an output, drawn on its right.
+  bool is_input = 12;
+  // What the signal graph may do with a pin or channel: drive an input
+  // (an Input pin or Input block), read any registered one (a Pin or
+  // Channel source block).
+  bool graph_can_drive = 13;
+  bool graph_can_read = 14;
+  // Why the graph cannot drive a pin or channel: "GATE is an output: the
+  // firmware drives it."; empty where it can.
+  string drive_text = 15;
+  // "ZC · input · active high · ZC on the rising edge"
+  string hover_text = 16;
+  // What drives it in the applied graph: the block's words ("Comparator",
+  // 'Panel value "Pot"', "Sine") and its key; empty while nothing does.
+  string driven_by_text = 17;
+  string driven_by_node_key = 18;
+  // What reads it, in the graph's order; and as one text: "Model ·
+  // Triac", "2 blocks"; empty while nothing does.
+  repeated BoardGraphRef read_by = 19;
+  string read_by_text = 20;
+  // The reference the port's row shows, muted: an input "◁ Comparator" or
+  // "not driven", an output "▷ Model · Triac", "▷ 2 blocks" or "not read".
+  // Empty where the graph can do nothing with the port. The window adds
+  // the sheet ("· Sheet 1"), which the server does not know.
+  string reference_text = 21;
+  // The block a click on the reference shows: the driver, or the one
+  // reader; empty for several.
+  string reference_node_key = 22;
+  // The graph's source blocks that stand for this port (kind "pin" or
+  // "channel" reading it), by key.
+  repeated string endpoint_node_keys = 23;
+  // Why a second driver is not made from here, for a driven input: "ZC is
+  // driven by Comparator. For variants, let both write a label and link
+  // the label to the Input pin."
+  string second_driver_text = 24;
+}
+
+// A block or probe of the applied signal graph.
+message BoardGraphRef {
+  // 'Model · Triac', 'Probe "Led"'.
+  string text = 1;
+  // The node's key; empty for a probe.
+  string node_key = 2;
+  // The probe's name; empty for a node.
+  string probe = 3;
+}
+
+// One wire between two parts.
+message BoardEdge {
+  string from_key = 1;
+  string to_key = 2;
+  enum Kind {
+    // device → bus; text "CS 1", "0x20", "port 2", "id 0x123".
+    ON_BUS = 0;
+    // device line → input pin ("BUSY").
+    LINE_TO_PIN = 1;
+    // device line → interrupt source ("READY").
+    LINE_TO_SOURCE = 2;
+    // output pin → device input ("CS").
+    INPUT_FROM_PIN = 3;
+    // device output → channel.
+    ANALOG_OUT = 4;
+    // channel → sampled device ("in 0").
+    SAMPLES = 5;
+    // device stream → DMA channel.
+    STREAM = 6;
+    // DMA channel → bus.
+    DMA_ON_BUS = 7;
+    // pin → interrupt source, with its edges ("rising").
+    SOURCE_ON_PIN = 8;
+    // PWM output → pin.
+    PWM_ON_PIN = 9;
+  }
+  Kind kind = 3;
+  string text = 4;
+  // A digital line: drawn dashed; analog and bus wires are solid.
+  bool dashed = 5;
+  // "store · spi_flash on SPI1, chip select 1"
+  string hover_text = 6;
+}
+
+// The board's live state, computed from what srv records. Only nodes and
+// edges with a state are listed.
+message BoardState {
+  // The BoardView it belongs to; another than the client's: describe again.
+  uint64 revision = 1;
+  uint64 sim_us = 2;
+  repeated BoardNodeState nodes = 3;
+  repeated BoardEdgeState edges = 4;
+}
+
+message BoardNodeState {
+  string key = 1;
+  // A pin "high", "low"; a channel "1.82 A", "no data"; a bus "412
+  // exchanges · last 0.2 ms ago", "no exchanges yet"; a chip its published
+  // values "SHUNT 1.82 A · BUS_V 12.1 V".
+  string state_text = 2;
+  // A pin at its active level; a bus with an exchange in the last second.
+  bool active = 3;
+  // A bus with exchanges no device answered.
+  bool fault = 4;
+  string fault_text = 5;
+  // The block that drives this port is not live: its group or itself is
+  // switched off, or what feeds it is.
+  bool driver_off = 6;
+  // What the port does meanwhile: a pin "released · low", a channel "own
+  // signal · Sensor A is off"; empty while the driver is live.
+  string reference_state_text = 7;
+  // A channel's value, a pin's level as 1 or 0; unset for the rest and for
+  // a channel without data.
+  optional double value = 8;
+  // A bus: its exchanges, and when the last one ended; 0 and 0 before the
+  // first.
+  uint64 exchanges = 9;
+  uint64 last_us = 10;
+}
+
+// The state of a tap: a device on its bus (BoardEdge.Kind.ON_BUS).
+message BoardEdgeState {
+  string from_key = 1;
+  string to_key = 2;
+  // "412"; empty before the first exchange.
+  string state_text = 3;
+  // An exchange in the last second.
+  bool active = 4;
+  // Exchanges with this place that no device answered.
+  bool fault = 5;
+  // "3 not answered"
+  string fault_text = 6;
+  // "AS8510 on SPI1, chip select 0 · 412 exchanges · last at 1.204000 s"
+  string hover_text = 7;
+  uint64 exchanges = 8;
+  uint64 unanswered = 9;
+  uint64 last_us = 10;
 }

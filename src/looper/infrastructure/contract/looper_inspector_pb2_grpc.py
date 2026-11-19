@@ -479,6 +479,16 @@ class InspectorStub:
                 request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.PinMeasureRequest.SerializeToString,
                 response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.PinMeasurement.FromString,
                 _registered_method=True)
+        self.DescribeBoard = channel.unary_unary(
+                '/looper.inspector.v3.Inspector/DescribeBoard',
+                request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ImageScope.SerializeToString,
+                response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.BoardView.FromString,
+                _registered_method=True)
+        self.ObserveBoard = channel.unary_unary(
+                '/looper.inspector.v3.Inspector/ObserveBoard',
+                request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ImageScope.SerializeToString,
+                response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.BoardState.FromString,
+                _registered_method=True)
         self.ObserveFunctionMetrics = channel.unary_unary(
                 '/looper.inspector.v3.Inspector/ObserveFunctionMetrics',
                 request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ArchitectureRequest.SerializeToString,
@@ -1289,6 +1299,29 @@ class InspectorServicer:
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def DescribeBoard(self, request, context):
+        """---- The device: the board as a block diagram (CAPABILITY_BOARD) ----
+        Derived, never written back: the MCU, its pins and channels, the buses
+        and the chips on them, the contract's interrupt sources, DMA channels
+        and PWM outputs, from looper.toml, component.toml, contract.toml and
+        what the board code registered. Per port what drives and what reads it
+        in the applied signal graph. Answered in a simulation; a project's code
+        without one and a board at a probe are refused with a sentence (stage 1).
+        The image is the running one's; `image` is not used yet. Free.
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def ObserveBoard(self, request, context):
+        """The board's live state: pin levels and analog values, the exchanges per
+        tap and per rail, a chip's last value, and the ports whose driver is
+        off. `revision` differing from the BoardView's: describe it again.
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
     def ObserveFunctionMetrics(self, request, context):
         """---- Architecture (CAPABILITY_ARCHITECTURE) ----
         Read from the project's code index, which the server builds in the
@@ -1922,6 +1955,16 @@ def add_InspectorServicer_to_server(servicer, server):
                     servicer.MeasurePin,
                     request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.PinMeasureRequest.FromString,
                     response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.PinMeasurement.SerializeToString,
+            ),
+            'DescribeBoard': grpc.unary_unary_rpc_method_handler(
+                    servicer.DescribeBoard,
+                    request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ImageScope.FromString,
+                    response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.BoardView.SerializeToString,
+            ),
+            'ObserveBoard': grpc.unary_unary_rpc_method_handler(
+                    servicer.ObserveBoard,
+                    request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ImageScope.FromString,
+                    response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.BoardState.SerializeToString,
             ),
             'ObserveFunctionMetrics': grpc.unary_unary_rpc_method_handler(
                     servicer.ObserveFunctionMetrics,
@@ -4437,6 +4480,60 @@ class Inspector:
             '/looper.inspector.v3.Inspector/MeasurePin',
             looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.PinMeasureRequest.SerializeToString,
             looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.PinMeasurement.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def DescribeBoard(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/looper.inspector.v3.Inspector/DescribeBoard',
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ImageScope.SerializeToString,
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.BoardView.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def ObserveBoard(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/looper.inspector.v3.Inspector/ObserveBoard',
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ImageScope.SerializeToString,
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.BoardState.FromString,
             options,
             channel_credentials,
             insecure,
