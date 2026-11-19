@@ -90,6 +90,8 @@ class BoardNode:
         reference_node_key: The block a click on the reference shows.
         endpoint_node_keys: The graph's source blocks that read this port.
         second_driver_text: Why a second driver is not made from here.
+        empty_text: What the rail of a bus without a device says instead of
+            taps, ``no devices on CAN1``; empty for every other node.
     """
 
     key: str
@@ -116,6 +118,7 @@ class BoardNode:
     reference_node_key: str = ""
     endpoint_node_keys: tuple[str, ...] = ()
     second_driver_text: str = ""
+    empty_text: str = ""
 
     @property
     def is_port(self) -> bool:

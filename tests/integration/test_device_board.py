@@ -51,6 +51,14 @@ def test_the_mcp23008_hangs_on_i2c1_at_0x20(simulation: looper.Simulation) -> No
     assert any(note.node_key == tap.device.key for note in board.notes)
 
 
+def test_a_bus_without_a_device_says_so(simulation: looper.Simulation) -> None:
+    board = simulation.board()
+
+    assert board.bus("CAN1").taps == ()
+    assert board.bus("CAN1").node.empty_text == "no devices on CAN1"
+    assert board.bus("I2C1").node.empty_text == ""
+
+
 def test_a_value_the_graph_drives_onto_a_pin_is_its_driver(simulation: looper.Simulation) -> None:
     button = simulation.pin("BUTTON_MODE")
     before = simulation.board()

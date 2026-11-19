@@ -55,6 +55,7 @@ def node_of(node: contract.BoardNode) -> BoardNode:
         reference_node_key=node.reference_node_key,
         endpoint_node_keys=tuple(node.endpoint_node_keys),
         second_driver_text=node.second_driver_text,
+        empty_text=node.empty_text,
     )
 
 
