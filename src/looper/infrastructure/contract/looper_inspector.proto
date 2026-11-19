@@ -5661,7 +5661,7 @@ message BoardEdgeState {
   bool fault = 5;
   // "3 not answered"
   string fault_text = 6;
-  // "AS8510 on SPI1, chip select 0 · 412 exchanges · last at 1.204000 s"
+  // "AS8510 on SPI1, chip select 0 · 412 exchanges · last 0.2 ms ago"
   string hover_text = 7;
   uint64 exchanges = 8;
   uint64 unanswered = 9;
