@@ -32,6 +32,8 @@ looper.CompareSettings, looper.SignalGraphState, looper.GraphProbe, looper.PinTa
 looper.SampleMode, looper.SampleSettings, looper.TableFile  # sample and hold, a table read by the server
 looper.Starters, looper.Starter, looper.StarterNeeds  # the graphs to begin with
 looper.PinDelay                                   # the delay between two pins a window measures
+looper.SignalLabel, looper.LabelState, looper.BlockState, looper.GraphCapacity  # labels and what runs
+looper.SwitchGroup, looper.GroupDo, looper.ChainGroupState, looper.GraphSwitchMark  # switching groups
 looper.TimeModel, looper.TimeModelParameter, looper.ActiveTimeModel  # time models
 looper.PwmOutput, looper.PwmOutputs               # the PWM outputs of contract.toml
 ```
@@ -274,13 +276,18 @@ the pins it drives, its comparators, linked generators, selects and sample and
 hold nodes -- and `simulation.probe(name)` finds a probe's trace channel.
 `simulation.read_table(path)` has the server read a CSV or PWL file for a Table
 generator (`Signal.from_csv` does it in one step), and `simulation.starters()`
-lists the graphs to begin with. See [Setting the scene](../guides/scene.md#a-graph-of-signals),
-[Comparators and input pins](../guides/scene.md#comparators-and-input-pins) and
-[Generators that move and signal logic](../guides/scene.md#generators-that-move-and-signal-logic).
+lists the graphs to begin with. `simulation.switch_groups(groups, blocks)`,
+`switch_group(key, on)` and `switch_block(key, on)` switch groups and blocks of
+the applied graph in one step, `simulation.graph_switches(since)` walks the
+switches the stream recorded, and `simulation.chain_groups()` and
+`chain_group(key)` read the groups. See [Setting the scene](../guides/scene.md#a-graph-of-signals),
+[Comparators and input pins](../guides/scene.md#comparators-and-input-pins),
+[Generators that move and signal logic](../guides/scene.md#generators-that-move-and-signal-logic) and
+[Groups, labels and sums](../guides/scene.md#groups-labels-and-sums).
 
 ```{eval-rst}
 .. autoclass:: looper.SignalGraph
-   :members: generator, channel, pin, watch, value, operation, compare, select, sample_hold, model, drive, drive_pin, probe
+   :members: generator, channel, pin, watch, value, operation, sum, compare, select, sample_hold, model, label, set_signal, read_signal, switched_off, title, drive, drive_pin, probe
 
 .. autoclass:: looper.SignalNodeKind
    :members:
@@ -297,7 +304,26 @@ lists the graphs to begin with. See [Setting the scene](../guides/scene.md#a-gra
 .. autoclass:: looper.SampleSettings
 
 .. autoclass:: looper.SignalGraphState
-   :members: pin_target, node
+   :members: pin_target, node, node_state, label, value
+
+.. autoclass:: looper.SignalLabel
+
+.. autoclass:: looper.LabelState
+
+.. autoclass:: looper.BlockState
+   :members: is_live
+
+.. autoclass:: looper.BlockLiveness
+   :members:
+   :undoc-members:
+
+.. autoclass:: looper.GraphCapacity
+
+.. autoclass:: looper.GraphValueState
+
+.. autoclass:: looper.ChainGroupState
+
+.. autoclass:: looper.GraphSwitchMark
 
 .. autoclass:: looper.GraphProbe
 
@@ -325,7 +351,7 @@ lists the graphs to begin with. See [Setting the scene](../guides/scene.md#a-gra
 
 The event half of a graph: conditions, logic and actions that run inside the
 simulation. The guide [Chains from a test](../guides/chains.md) explains them;
-`simulation.chains()`, `simulation.switch_chain(group, on)`,
+`simulation.chains()`, `simulation.chain_groups()`, `simulation.switch_chain(group, on)`,
 `simulation.run_until_chain(name, timeout_s)` and
 `simulation.export_chain(group, run_for_s)` read, switch, run and export them;
 `simulation.read_dbc(path)` reads a DBC file's messages for the fields of a
@@ -333,7 +359,7 @@ message.
 
 ```{eval-rst}
 .. autoclass:: looper.SignalGraph
-   :members: when, threshold, delay, counter, once, any_of, all_of, gate, logic, sequence, switch_signal, inject_fault, raise_interrupt, reset_firmware, send, reply, set_pin, mark, hold, link, group
+   :members: when, threshold, delay, counter, once, any_of, all_of, gate, logic, sequence, switch_signal, switch_group, inject_fault, raise_interrupt, reset_firmware, send, reply, set_pin, mark, hold, link, group
    :noindex:
 
 .. autoclass:: looper.DbcFile
@@ -398,6 +424,12 @@ message.
 .. autoclass:: looper.SwitchSignal
 
 .. autoclass:: looper.SignalDo
+   :members:
+   :undoc-members:
+
+.. autoclass:: looper.SwitchGroup
+
+.. autoclass:: looper.GroupDo
    :members:
    :undoc-members:
 

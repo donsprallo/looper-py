@@ -243,7 +243,8 @@ def test_the_room_closes_the_loop(simulation):
 | `channel(key, channel_id)` | a node that reads an analog channel; an output closes a loop |
 | `pin(key, pin_id)` | a node that reads a pin as 0 or 1 |
 | `watch(key, channel_id)` | a node that reads a watched variable, by its watch channel |
-| `operation(key, kind, first, second)` | `looper.SignalNodeKind.ADD`, `SUBTRACT`, `MULTIPLY`, `DIVIDE`, `MIN` or `MAX` of two other nodes; `ABS` of `first` alone |
+| `operation(key, kind, *inputs)` | `looper.SignalNodeKind.ADD`, `MULTIPLY`, `MIN` or `MAX` of two to eight other nodes, `SUBTRACT` or `DIVIDE` of two, `ABS` of one; see [Groups, labels and sums](#groups-labels-and-sums) |
+| `sum(key, (input, +1), (input, -1), ...)` | a sum that adds or subtracts each input by its sign |
 | `compare(key, reads, level=0.0, hysteresis=0.0, below=False, threshold=None, check_us=0)` | a comparator: 1 while `reads` is above `level` (or below it), else 0; see [Comparators and input pins](#comparators-and-input-pins) |
 | `value(key, value)` | a node that gives a number a test sets later with `simulation.set_graph_value`; to an input or to a model's parameter |
 | `model(key, name, inputs, parameters=None, parameter_sources=None)` | a model the simulation steps; `inputs` in the order the model declares them, `parameters` by name, `parameter_sources` the parameters a value node gives, by name |
@@ -518,6 +519,134 @@ dimmer.needs_text        # 'an input pin, an output pin and the models Triac and
 dimmer.is_available, dimmer.unavailable_text
 dimmer.graph_text        # the window's clipboard document, to paste in the editor
 ```
+
+## Groups, labels and sums
+
+### Groups of signal blocks
+
+A group has a name and a switch, and holds signal blocks as well as chain
+blocks: every node step takes `group=`. While a group is off its blocks are
+left out, and so is whatever they feed over plain links; a block is in one group
+at most, and groups do not nest. `switched_off(key)` saves one block as off on
+its own, and `title(key, text)` gives it the name the server's sentences use.
+
+```python
+graph = (
+    looper.SignalGraph()
+    .group("plant", "Plant")
+    .group("ideal", "Ideal plant", enabled=False)       # saved as off
+    .channel("duty", simulation.channel("MOTOR_DUTY").channel_id, group="plant")
+    .model("motor", "DcMotor", inputs=["duty"], group="plant")
+)
+```
+
+### Labels: variants of one input
+
+A **label** is an internal signal with a name. `set_signal(key, label,
+source=...)` writes a node's output to it, `read_signal(key, label)` reads it
+anywhere in the graph, across groups. Its readers get the writer that is on and,
+while none is, the label's fallback, `label(name, fallback=...)`; without a
+fallback they are left out. Variants of an input go through a label: each
+variant group writes the same label, and one block reads it.
+
+```python
+graph = (
+    looper.SignalGraph()
+    .group("plant", "Plant")
+    .group("ideal", "Ideal plant", enabled=False)
+    .label("SPEED", fallback=0.0)
+    .model("motor", "DcMotor", inputs=["duty"], group="plant")
+    .set_signal("motor_out", "SPEED", source=looper.NodeOutput("motor", 0), group="plant")
+    .value("ideal_speed", 1500.0, group="ideal")
+    .set_signal("ideal_out", "SPEED", source="ideal_speed", group="ideal")
+    .read_signal("speed", "SPEED")
+    .drive(simulation.channel("TACHO").channel_id, "speed")
+)
+simulation.apply_signal_graph(graph)
+```
+
+Two writers of one label may both be in the graph, as long as only one is on.
+With both on, the first in the graph's order gives the value and the other is
+ignored; a switch that would leave both on is refused.
+
+### Switching
+
+`simulation.switch_groups({"plant": False, "ideal": True})` switches groups --
+and with a second mapping single blocks -- in **one step at one microsecond**:
+a swap never passes through a moment with both variants on or with neither, so
+the readers of `SPEED` see no fallback and no gap. `switch_group(key, on)` and
+`switch_block(key, on)` switch one part; each takes `at_s=` (a simulated second)
+or `after_s=` (seconds from now). Nothing is sent again, and a model of a group
+switched on starts afresh.
+
+```python
+simulation.switch_groups({"plant": False, "ideal": True})       # atomic: never two writers
+simulation.switch_group("plant", True, at_s=3.0)                # refused: SPEED would have two writers
+simulation.switch_block("lowpass", True, after_s=0.5)
+```
+
+A refused switch changes nothing and raises `SimulationRefusedError` with the
+server's sentence:
+
+```text
+looper.SimulationRefusedError: SPEED would have two writers on: Plant and Ideal plant. Switch both in one request.
+```
+
+A chain switches a group at its event's microsecond with the action
+`switch_group(key, group_key, do="off" | "on" | "toggle", after=...)`, as the
+server's pytest export writes it:
+
+```python
+graph = (
+    graph.group("faults", "Plant fails")
+    .when("at_2s", looper.Clock(10_000_000, 2_000_000), group="faults")
+    .switch_group("cut", group_key="plant", do="off", after="at_2s", group="faults")
+)
+```
+
+`simulation.graph_switches(since)` walks the switches the stream recorded, each
+with its `sim_us` and who switched it (`'chain "Plant fails"'`, `'a client'`);
+a switch shares its `event_seq` with the record before it. `simulation.chain_group(key)`
+says who switched a group last (`switched_by_text`, `switched_at_us`) and what
+its being off does (`off_text`).
+
+### What runs
+
+`simulation.signal_graph()` says what of the graph runs, in the server's words:
+
+```python
+state = simulation.signal_graph()
+state.label("SPEED").writer_node        # 'ideal_out'
+state.label("SPEED").state_text         # 'set by Ideal plant'
+state.label("SPEED").on_fallback        # True while no writer is on
+state.node_state("motor").state_text    # 'Off – Plant is off.'
+state.capacity.text                     # 'signal nodes 12 of 128 (4 switched off, 1 for labels) · ...'
+simulation.probe("SPEED").is_live       # False while the node it records is not live
+```
+
+A block `node_states` does not list runs. Switched-off blocks count towards the
+capacity, because they stay installed.
+
+### Operations of more inputs
+
+`ADD`, `MULTIPLY`, `MIN` and `MAX` read two to eight inputs; a ninth is refused
+with the server's sentence. A **sum** adds or subtracts each input by its sign;
+`SUBTRACT` stays as the sum `a - b`:
+
+```python
+graph = (
+    looper.SignalGraph()
+    .sum("error", ("setpoint", +1), ("speed", -1), ("offset", +1))
+    .operation("peak", looper.SignalNodeKind.MAX, "a", "b", "c", "d")
+)
+simulation.signal_graph().node("error").summary_text   # 'setpoint − speed + offset'
+```
+
+The server's export writes a sum's signs as
+`.operation(key, SignalNodeKind.SUM, "a", "b", negated=(False, True))`, which
+builds the same node. Groups, labels, sums and operations of more than two
+inputs need a server whose runtime switches groups:
+`"graph_groups" in simulation.description.capabilities`.
 
 ## Bus messages
 
