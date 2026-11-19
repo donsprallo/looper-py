@@ -7315,7 +7315,7 @@ class BoardNote(_message.Message):
     def __init__(self, text: _Optional[str] = ..., node_key: _Optional[str] = ...) -> None: ...
 
 class BoardNode(_message.Message):
-    __slots__ = ("key", "kind", "parent_key", "title", "subtitle", "bus_kind", "runtime_id", "registered", "unregistered_text", "hand_wired", "hand_wired_text", "is_input", "graph_can_drive", "graph_can_read", "drive_text", "hover_text", "driven_by_text", "driven_by_node_key", "read_by", "read_by_text", "reference_text", "reference_node_key", "endpoint_node_keys", "second_driver_text")
+    __slots__ = ("key", "kind", "parent_key", "title", "subtitle", "bus_kind", "runtime_id", "registered", "unregistered_text", "hand_wired", "hand_wired_text", "is_input", "graph_can_drive", "graph_can_read", "drive_text", "hover_text", "driven_by_text", "driven_by_node_key", "read_by", "read_by_text", "reference_text", "reference_node_key", "endpoint_node_keys", "second_driver_text", "empty_text")
     class Kind(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
         __slots__ = ()
         MCU: _ClassVar[BoardNode.Kind]
@@ -7360,6 +7360,7 @@ class BoardNode(_message.Message):
     REFERENCE_NODE_KEY_FIELD_NUMBER: _ClassVar[int]
     ENDPOINT_NODE_KEYS_FIELD_NUMBER: _ClassVar[int]
     SECOND_DRIVER_TEXT_FIELD_NUMBER: _ClassVar[int]
+    EMPTY_TEXT_FIELD_NUMBER: _ClassVar[int]
     key: str
     kind: BoardNode.Kind
     parent_key: str
@@ -7384,7 +7385,8 @@ class BoardNode(_message.Message):
     reference_node_key: str
     endpoint_node_keys: _containers.RepeatedScalarFieldContainer[str]
     second_driver_text: str
-    def __init__(self, key: _Optional[str] = ..., kind: _Optional[_Union[BoardNode.Kind, str]] = ..., parent_key: _Optional[str] = ..., title: _Optional[str] = ..., subtitle: _Optional[str] = ..., bus_kind: _Optional[str] = ..., runtime_id: _Optional[int] = ..., registered: _Optional[bool] = ..., unregistered_text: _Optional[str] = ..., hand_wired: _Optional[bool] = ..., hand_wired_text: _Optional[str] = ..., is_input: _Optional[bool] = ..., graph_can_drive: _Optional[bool] = ..., graph_can_read: _Optional[bool] = ..., drive_text: _Optional[str] = ..., hover_text: _Optional[str] = ..., driven_by_text: _Optional[str] = ..., driven_by_node_key: _Optional[str] = ..., read_by: _Optional[_Iterable[_Union[BoardGraphRef, _Mapping]]] = ..., read_by_text: _Optional[str] = ..., reference_text: _Optional[str] = ..., reference_node_key: _Optional[str] = ..., endpoint_node_keys: _Optional[_Iterable[str]] = ..., second_driver_text: _Optional[str] = ...) -> None: ...
+    empty_text: str
+    def __init__(self, key: _Optional[str] = ..., kind: _Optional[_Union[BoardNode.Kind, str]] = ..., parent_key: _Optional[str] = ..., title: _Optional[str] = ..., subtitle: _Optional[str] = ..., bus_kind: _Optional[str] = ..., runtime_id: _Optional[int] = ..., registered: _Optional[bool] = ..., unregistered_text: _Optional[str] = ..., hand_wired: _Optional[bool] = ..., hand_wired_text: _Optional[str] = ..., is_input: _Optional[bool] = ..., graph_can_drive: _Optional[bool] = ..., graph_can_read: _Optional[bool] = ..., drive_text: _Optional[str] = ..., hover_text: _Optional[str] = ..., driven_by_text: _Optional[str] = ..., driven_by_node_key: _Optional[str] = ..., read_by: _Optional[_Iterable[_Union[BoardGraphRef, _Mapping]]] = ..., read_by_text: _Optional[str] = ..., reference_text: _Optional[str] = ..., reference_node_key: _Optional[str] = ..., endpoint_node_keys: _Optional[_Iterable[str]] = ..., second_driver_text: _Optional[str] = ..., empty_text: _Optional[str] = ...) -> None: ...
 
 class BoardGraphRef(_message.Message):
     __slots__ = ("text", "node_key", "probe")

@@ -5567,6 +5567,9 @@ message BoardNode {
   // driven by Comparator. For variants, let both write a label and link
   // the label to the Input pin."
   string second_driver_text = 24;
+  // A bus without a device on it: what its rail says instead of taps,
+  // "no devices on CAN1". Empty for every other node.
+  string empty_text = 25;
 }
 
 // A block or probe of the applied signal graph.
