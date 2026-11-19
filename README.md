@@ -68,6 +68,7 @@ which remains as a deprecated alias).
 | `pwms()`, `pwm(name)` | the PWM outputs of `contract.toml` with their state now: `.duty`, `.frequency_hz`, `.enabled`, `.text` |
 | `board()`, `board_state()` | the device as a block diagram -- MCU, ports with what drives and reads them, buses with their taps, devices, notes, `revision` -- and its live state: levels, values, exchanges per tap and per bus |
 | `apply_signal(channel_id, looper.Signal(...))` | a generated signal on an analog input |
+| `apply_signal_graph(looper.SignalGraph()...)`, `signal_graph()` | a graph of generators, operations, comparators, limits (`.limit(key, in, low=..., high=...)`, each limit a number or a node it links) and slew rates (`.slew_rate(key, in, rise=..., fall=...)`, in units per second) on inputs and pins, and what each block gives now, a limit's `fault_text` among it |
 | `send_bus_message(looper.BusMessage(...))` | one message onto a bus |
 | `exchanges(since)`, `read_events(since)` | reading the recorded traffic back, exchange by exchange or page by page |
 | `clear_recordings()`, `clear_measurements()` | throwing away what was recorded and counted, between two phases of a test |

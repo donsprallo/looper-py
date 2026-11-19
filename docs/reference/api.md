@@ -30,6 +30,7 @@ looper.Retained, looper.Flash, looper.FlashPartition  # what survives a reset
 looper.NodeOutput, looper.SignalModel, looper.ModelParameter
 looper.CompareSettings, looper.SignalGraphState, looper.GraphProbe, looper.PinTargetState  # the applied graph
 looper.SampleMode, looper.SampleSettings, looper.TableFile  # sample and hold, a table read by the server
+looper.LimitSettings, looper.SlewSettings          # a limit's limits, a slew rate's rates
 looper.Starters, looper.Starter, looper.StarterNeeds  # the graphs to begin with
 looper.PinDelay                                   # the delay between two pins a window measures
 looper.SignalLabel, looper.LabelState, looper.BlockState, looper.GraphCapacity  # labels and what runs
@@ -319,8 +320,9 @@ Pro, except for the partition names.
 graph and `simulation.set_graph_value(node, value)` changes a value node of it;
 `simulation.models()` and `simulation.model(name)` say which models the project
 offers. `simulation.signal_graph()` reads the applied graph back -- its probes,
-the pins it drives, its comparators, linked generators, selects and sample and
-hold nodes -- and `simulation.probe(name)` finds a probe's trace channel.
+the pins it drives, its comparators, linked generators, selects, sample and
+hold nodes, limits and slew rates, with a limit's `fault_text` -- and
+`simulation.probe(name)` finds a probe's trace channel.
 `simulation.read_table(path)` has the server read a CSV or PWL file for a Table
 generator (`Signal.from_csv` does it in one step), and `simulation.starters()`
 lists the graphs to begin with. `simulation.switch_groups(groups, blocks)`,
@@ -334,7 +336,7 @@ switches the stream recorded, and `simulation.chain_groups()` and
 
 ```{eval-rst}
 .. autoclass:: looper.SignalGraph
-   :members: generator, channel, pin, watch, value, operation, sum, compare, select, sample_hold, model, label, set_signal, read_signal, switched_off, title, drive, drive_pin, probe
+   :members: generator, channel, pin, watch, value, operation, sum, compare, select, sample_hold, limit, slew_rate, model, label, set_signal, read_signal, switched_off, title, drive, drive_pin, probe
 
 .. autoclass:: looper.SignalNodeKind
    :members:
@@ -349,6 +351,10 @@ switches the stream recorded, and `simulation.chain_groups()` and
    :undoc-members:
 
 .. autoclass:: looper.SampleSettings
+
+.. autoclass:: looper.LimitSettings
+
+.. autoclass:: looper.SlewSettings
 
 .. autoclass:: looper.SignalGraphState
    :members: pin_target, node, node_state, label, value
