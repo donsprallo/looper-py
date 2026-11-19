@@ -84,8 +84,9 @@ def test_a_variant_swap_in_one_switch_gives_the_pin_no_edge(
     assert report, report.summary
     state = simulation.signal_graph()
     assert state.pin_target(button.pin_id).edges == edges, "neither the fallback nor a gap"
-    assert state.label("LEVEL").writer_node == "b_out"
-    assert state.label("LEVEL").state_text == "set by Sensor B"
+    level = state.label("LEVEL")
+    assert (level.writer_node, level.value) == ("b_out", 0.25), "the writer's value while it is on"
+    assert level.state_text == "now 0.25 · set by Sensor B"
     assert state.node_state("a_out").state_text == "Off – Sensor A is off."
     assert state.capacity.text.startswith("signal nodes 5 of 128 (2 switched off, 1 for labels)")
 
