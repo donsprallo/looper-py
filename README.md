@@ -66,6 +66,7 @@ which remains as a deprecated alias).
 | `clock_mode`, `simulated_seconds`, `advance(seconds)`, `advance_microseconds(us)` | how the clock goes (held, paced or max), where it is, and running a held one for a span |
 | `pins()`, `toggle_pin(pin_id)` | the pins, and driving an input |
 | `pwms()`, `pwm(name)` | the PWM outputs of `contract.toml` with their state now: `.duty`, `.frequency_hz`, `.enabled`, `.text` |
+| `board()`, `board_state()` | the device as a block diagram -- MCU, ports with what drives and reads them, buses with their taps, devices, notes, `revision` -- and its live state: levels, values, exchanges per tap and per bus |
 | `apply_signal(channel_id, looper.Signal(...))` | a generated signal on an analog input |
 | `send_bus_message(looper.BusMessage(...))` | one message onto a bus |
 | `exchanges(since)`, `read_events(since)` | reading the recorded traffic back, exchange by exchange or page by page |

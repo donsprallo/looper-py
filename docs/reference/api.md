@@ -214,6 +214,53 @@ checks of an output and of a pin's pulses are in the
 .. autoclass:: looper.PwmOutput
 ```
 
+## The board
+
+`simulation.board()` reads the device as a block diagram, as looper-srv
+describes it: the MCU, its ports (pins and analog channels), the buses with
+the devices on them, the contract's sources, DMA channels and PWM outputs, the
+wires between them and the notes about what the picture cannot show. Every
+text and key is the server's. `board.port("ZC")` is a port by its name, with
+what drives it in the applied signal graph (`.driven_by_text`,
+`.driven_by_node_key`) and what reads it (`.read_by`, `.read_by_text`);
+`board.bus("SPI1").tap("AS8510").text` is where a chip hangs, `CS 0`. The
+board has a `revision` and a `revision_text` that says what changed since the
+one before.
+
+`simulation.board_state()` reads its live state: `state.pin("ZC")` and
+`state.channel("POT")` a port's `.state_text` and `.value`,
+`state.tap("device:SPI1:0")` a chip's `.exchanges` and `.unanswered`,
+`state.rail("SPI1")` a bus's exchanges and its last one, `.last_us`. A state of
+another `revision` than the board's means the board is to be read again.
+
+Both are free. Where the server shows no board -- a project's code without a
+simulation -- they raise `SimulationRefusedError` with the server's sentence.
+
+```{eval-rst}
+.. autoclass:: looper.Board
+   :members: port, bus, node, of_kind, mcu, devices, ports, buses
+
+.. autoclass:: looper.BoardNode
+
+.. autoclass:: looper.BoardBus
+   :members: tap
+
+.. autoclass:: looper.BoardTap
+
+.. autoclass:: looper.BoardEdge
+
+.. autoclass:: looper.BoardNote
+
+.. autoclass:: looper.BoardGraphRef
+
+.. autoclass:: looper.BoardState
+   :members: node, pin, channel, rail, tap
+
+.. autoclass:: looper.BoardNodeState
+
+.. autoclass:: looper.BoardTapState
+```
+
 ## Interrupts and DMA
 
 `simulation.interrupts()` reads the interrupt sources and the lock,
