@@ -96,6 +96,7 @@ class Capability(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     CAPABILITY_MOVING_GENERATORS: _ClassVar[Capability]
     CAPABILITY_SIGNAL_LOGIC: _ClassVar[Capability]
     CAPABILITY_PIN_DELAY: _ClassVar[Capability]
+    CAPABILITY_GRAPH_GROUPS: _ClassVar[Capability]
 
 class ServerMode(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     __slots__ = ()
@@ -128,6 +129,7 @@ class EventKind(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     EVENT_KIND_CHAIN: _ClassVar[EventKind]
     EVENT_KIND_TASK: _ClassVar[EventKind]
     EVENT_KIND_PWM: _ClassVar[EventKind]
+    EVENT_KIND_GRAPH_SWITCH: _ClassVar[EventKind]
 
 class InterruptEventKind(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     __slots__ = ()
@@ -570,6 +572,7 @@ CAPABILITY_GRAPH_EDGES: Capability
 CAPABILITY_MOVING_GENERATORS: Capability
 CAPABILITY_SIGNAL_LOGIC: Capability
 CAPABILITY_PIN_DELAY: Capability
+CAPABILITY_GRAPH_GROUPS: Capability
 SERVER_MODE_SIMULATION: ServerMode
 SERVER_MODE_STATIC: ServerMode
 SERVER_MODE_HARDWARE: ServerMode
@@ -593,6 +596,7 @@ EVENT_KIND_DMA: EventKind
 EVENT_KIND_CHAIN: EventKind
 EVENT_KIND_TASK: EventKind
 EVENT_KIND_PWM: EventKind
+EVENT_KIND_GRAPH_SWITCH: EventKind
 INTERRUPT_EVENT_PENDING: InterruptEventKind
 INTERRUPT_EVENT_ENTERED: InterruptEventKind
 INTERRUPT_EVENT_LEFT: InterruptEventKind
@@ -1290,7 +1294,7 @@ class ChannelValueSince(_message.Message):
     def __init__(self, channel_id: _Optional[int] = ..., value: _Optional[float] = ..., since_us: _Optional[int] = ...) -> None: ...
 
 class Event(_message.Message):
-    __slots__ = ("event_seq", "sim_us", "sample", "pin", "exchange", "call", "command", "job", "fault", "run", "trigger_fired", "trigger_disarmed", "reset", "life", "flash", "interrupt", "dma", "chain", "task", "pwm")
+    __slots__ = ("event_seq", "sim_us", "sample", "pin", "exchange", "call", "command", "job", "fault", "run", "trigger_fired", "trigger_disarmed", "reset", "life", "flash", "interrupt", "dma", "chain", "task", "pwm", "graph_switch")
     EVENT_SEQ_FIELD_NUMBER: _ClassVar[int]
     SIM_US_FIELD_NUMBER: _ClassVar[int]
     SAMPLE_FIELD_NUMBER: _ClassVar[int]
@@ -1311,6 +1315,7 @@ class Event(_message.Message):
     CHAIN_FIELD_NUMBER: _ClassVar[int]
     TASK_FIELD_NUMBER: _ClassVar[int]
     PWM_FIELD_NUMBER: _ClassVar[int]
+    GRAPH_SWITCH_FIELD_NUMBER: _ClassVar[int]
     event_seq: int
     sim_us: int
     sample: Sample
@@ -1331,7 +1336,8 @@ class Event(_message.Message):
     chain: ChainFire
     task: TaskSwitch
     pwm: PwmChange
-    def __init__(self, event_seq: _Optional[int] = ..., sim_us: _Optional[int] = ..., sample: _Optional[_Union[Sample, _Mapping]] = ..., pin: _Optional[_Union[PinChange, _Mapping]] = ..., exchange: _Optional[_Union[Exchange, _Mapping]] = ..., call: _Optional[_Union[Call, _Mapping]] = ..., command: _Optional[_Union[CommandApplied, _Mapping]] = ..., job: _Optional[_Union[JobEvent, _Mapping]] = ..., fault: _Optional[_Union[Fault, _Mapping]] = ..., run: _Optional[_Union[RunEvent, _Mapping]] = ..., trigger_fired: _Optional[_Union[TriggerFired, _Mapping]] = ..., trigger_disarmed: _Optional[_Union[TriggerDisarmed, _Mapping]] = ..., reset: _Optional[_Union[ResetMark, _Mapping]] = ..., life: _Optional[_Union[LifeMark, _Mapping]] = ..., flash: _Optional[_Union[FlashMark, _Mapping]] = ..., interrupt: _Optional[_Union[InterruptEvent, _Mapping]] = ..., dma: _Optional[_Union[DmaEvent, _Mapping]] = ..., chain: _Optional[_Union[ChainFire, _Mapping]] = ..., task: _Optional[_Union[TaskSwitch, _Mapping]] = ..., pwm: _Optional[_Union[PwmChange, _Mapping]] = ...) -> None: ...
+    graph_switch: GraphSwitchEvent
+    def __init__(self, event_seq: _Optional[int] = ..., sim_us: _Optional[int] = ..., sample: _Optional[_Union[Sample, _Mapping]] = ..., pin: _Optional[_Union[PinChange, _Mapping]] = ..., exchange: _Optional[_Union[Exchange, _Mapping]] = ..., call: _Optional[_Union[Call, _Mapping]] = ..., command: _Optional[_Union[CommandApplied, _Mapping]] = ..., job: _Optional[_Union[JobEvent, _Mapping]] = ..., fault: _Optional[_Union[Fault, _Mapping]] = ..., run: _Optional[_Union[RunEvent, _Mapping]] = ..., trigger_fired: _Optional[_Union[TriggerFired, _Mapping]] = ..., trigger_disarmed: _Optional[_Union[TriggerDisarmed, _Mapping]] = ..., reset: _Optional[_Union[ResetMark, _Mapping]] = ..., life: _Optional[_Union[LifeMark, _Mapping]] = ..., flash: _Optional[_Union[FlashMark, _Mapping]] = ..., interrupt: _Optional[_Union[InterruptEvent, _Mapping]] = ..., dma: _Optional[_Union[DmaEvent, _Mapping]] = ..., chain: _Optional[_Union[ChainFire, _Mapping]] = ..., task: _Optional[_Union[TaskSwitch, _Mapping]] = ..., pwm: _Optional[_Union[PwmChange, _Mapping]] = ..., graph_switch: _Optional[_Union[GraphSwitchEvent, _Mapping]] = ...) -> None: ...
 
 class ResetMark(_message.Message):
     __slots__ = ("cause", "cause_text", "life", "reason", "jump_target", "text")
@@ -2626,7 +2632,7 @@ class SignalBlockCatalogue(_message.Message):
     def __init__(self, kinds: _Optional[_Iterable[_Union[SignalBlockKind, _Mapping]]] = ...) -> None: ...
 
 class SignalBlockKind(_message.Message):
-    __slots__ = ("kind", "category", "category_text", "display_name", "description", "search_words", "inputs", "outputs", "is_pro", "is_locked", "locked_text", "settings", "summary_text")
+    __slots__ = ("kind", "category", "category_text", "display_name", "description", "search_words", "inputs", "outputs", "is_pro", "is_locked", "locked_text", "settings", "summary_text", "recipe", "negated_inputs")
     KIND_FIELD_NUMBER: _ClassVar[int]
     CATEGORY_FIELD_NUMBER: _ClassVar[int]
     CATEGORY_TEXT_FIELD_NUMBER: _ClassVar[int]
@@ -2640,6 +2646,8 @@ class SignalBlockKind(_message.Message):
     LOCKED_TEXT_FIELD_NUMBER: _ClassVar[int]
     SETTINGS_FIELD_NUMBER: _ClassVar[int]
     SUMMARY_TEXT_FIELD_NUMBER: _ClassVar[int]
+    RECIPE_FIELD_NUMBER: _ClassVar[int]
+    NEGATED_INPUTS_FIELD_NUMBER: _ClassVar[int]
     kind: str
     category: str
     category_text: str
@@ -2653,17 +2661,21 @@ class SignalBlockKind(_message.Message):
     locked_text: str
     settings: _containers.RepeatedCompositeFieldContainer[WaveformFieldView]
     summary_text: str
-    def __init__(self, kind: _Optional[str] = ..., category: _Optional[str] = ..., category_text: _Optional[str] = ..., display_name: _Optional[str] = ..., description: _Optional[str] = ..., search_words: _Optional[_Iterable[str]] = ..., inputs: _Optional[_Iterable[_Union[SignalPortView, _Mapping]]] = ..., outputs: _Optional[_Iterable[_Union[SignalPortView, _Mapping]]] = ..., is_pro: _Optional[bool] = ..., is_locked: _Optional[bool] = ..., locked_text: _Optional[str] = ..., settings: _Optional[_Iterable[_Union[WaveformFieldView, _Mapping]]] = ..., summary_text: _Optional[str] = ...) -> None: ...
+    recipe: str
+    negated_inputs: _containers.RepeatedScalarFieldContainer[bool]
+    def __init__(self, kind: _Optional[str] = ..., category: _Optional[str] = ..., category_text: _Optional[str] = ..., display_name: _Optional[str] = ..., description: _Optional[str] = ..., search_words: _Optional[_Iterable[str]] = ..., inputs: _Optional[_Iterable[_Union[SignalPortView, _Mapping]]] = ..., outputs: _Optional[_Iterable[_Union[SignalPortView, _Mapping]]] = ..., is_pro: _Optional[bool] = ..., is_locked: _Optional[bool] = ..., locked_text: _Optional[str] = ..., settings: _Optional[_Iterable[_Union[WaveformFieldView, _Mapping]]] = ..., summary_text: _Optional[str] = ..., recipe: _Optional[str] = ..., negated_inputs: _Optional[_Iterable[bool]] = ...) -> None: ...
 
 class SignalPortView(_message.Message):
-    __slots__ = ("name", "is_level", "is_optional")
+    __slots__ = ("name", "is_level", "is_optional", "grows")
     NAME_FIELD_NUMBER: _ClassVar[int]
     IS_LEVEL_FIELD_NUMBER: _ClassVar[int]
     IS_OPTIONAL_FIELD_NUMBER: _ClassVar[int]
+    GROWS_FIELD_NUMBER: _ClassVar[int]
     name: str
     is_level: bool
     is_optional: bool
-    def __init__(self, name: _Optional[str] = ..., is_level: _Optional[bool] = ..., is_optional: _Optional[bool] = ...) -> None: ...
+    grows: bool
+    def __init__(self, name: _Optional[str] = ..., is_level: _Optional[bool] = ..., is_optional: _Optional[bool] = ..., grows: _Optional[bool] = ...) -> None: ...
 
 class WaveformView(_message.Message):
     __slots__ = ("name", "display_name", "is_alternating", "is_periodic", "fields", "linkable_fields", "search_words", "description", "is_locked", "locked_text")
@@ -2738,7 +2750,7 @@ class SignalInputRequest(_message.Message):
     def __init__(self, node: _Optional[str] = ..., output: _Optional[int] = ...) -> None: ...
 
 class SignalNodeRequest(_message.Message):
-    __slots__ = ("key", "kind", "signal", "source", "inputs", "model", "parameters", "interpreted", "value", "parameter_sources", "block", "group_key", "compare", "linked_fields", "sample", "hold_pulses")
+    __slots__ = ("key", "kind", "signal", "source", "inputs", "model", "parameters", "interpreted", "value", "parameter_sources", "block", "group_key", "compare", "linked_fields", "sample", "hold_pulses", "label", "switched_off", "title", "negated_inputs")
     class ParametersEntry(_message.Message):
         __slots__ = ("key", "value")
         KEY_FIELD_NUMBER: _ClassVar[int]
@@ -2769,6 +2781,10 @@ class SignalNodeRequest(_message.Message):
     LINKED_FIELDS_FIELD_NUMBER: _ClassVar[int]
     SAMPLE_FIELD_NUMBER: _ClassVar[int]
     HOLD_PULSES_FIELD_NUMBER: _ClassVar[int]
+    LABEL_FIELD_NUMBER: _ClassVar[int]
+    SWITCHED_OFF_FIELD_NUMBER: _ClassVar[int]
+    TITLE_FIELD_NUMBER: _ClassVar[int]
+    NEGATED_INPUTS_FIELD_NUMBER: _ClassVar[int]
     key: str
     kind: str
     signal: SignalView
@@ -2785,7 +2801,19 @@ class SignalNodeRequest(_message.Message):
     linked_fields: _containers.RepeatedScalarFieldContainer[str]
     sample: SampleSettings
     hold_pulses: bool
-    def __init__(self, key: _Optional[str] = ..., kind: _Optional[str] = ..., signal: _Optional[_Union[SignalView, _Mapping]] = ..., source: _Optional[int] = ..., inputs: _Optional[_Iterable[_Union[SignalInputRequest, _Mapping]]] = ..., model: _Optional[str] = ..., parameters: _Optional[_Mapping[str, float]] = ..., interpreted: _Optional[bool] = ..., value: _Optional[float] = ..., parameter_sources: _Optional[_Mapping[str, str]] = ..., block: _Optional[_Union[ChainBlockRequest, _Mapping]] = ..., group_key: _Optional[str] = ..., compare: _Optional[_Union[CompareSettings, _Mapping]] = ..., linked_fields: _Optional[_Iterable[str]] = ..., sample: _Optional[_Union[SampleSettings, _Mapping]] = ..., hold_pulses: _Optional[bool] = ...) -> None: ...
+    label: str
+    switched_off: bool
+    title: str
+    negated_inputs: _containers.RepeatedScalarFieldContainer[bool]
+    def __init__(self, key: _Optional[str] = ..., kind: _Optional[str] = ..., signal: _Optional[_Union[SignalView, _Mapping]] = ..., source: _Optional[int] = ..., inputs: _Optional[_Iterable[_Union[SignalInputRequest, _Mapping]]] = ..., model: _Optional[str] = ..., parameters: _Optional[_Mapping[str, float]] = ..., interpreted: _Optional[bool] = ..., value: _Optional[float] = ..., parameter_sources: _Optional[_Mapping[str, str]] = ..., block: _Optional[_Union[ChainBlockRequest, _Mapping]] = ..., group_key: _Optional[str] = ..., compare: _Optional[_Union[CompareSettings, _Mapping]] = ..., linked_fields: _Optional[_Iterable[str]] = ..., sample: _Optional[_Union[SampleSettings, _Mapping]] = ..., hold_pulses: _Optional[bool] = ..., label: _Optional[str] = ..., switched_off: _Optional[bool] = ..., title: _Optional[str] = ..., negated_inputs: _Optional[_Iterable[bool]] = ...) -> None: ...
+
+class SignalLabelRequest(_message.Message):
+    __slots__ = ("name", "fallback")
+    NAME_FIELD_NUMBER: _ClassVar[int]
+    FALLBACK_FIELD_NUMBER: _ClassVar[int]
+    name: str
+    fallback: float
+    def __init__(self, name: _Optional[str] = ..., fallback: _Optional[float] = ...) -> None: ...
 
 class SampleSettings(_message.Message):
     __slots__ = ("mode", "initial")
@@ -2909,18 +2937,90 @@ class ModelNodeView(_message.Message):
     def __init__(self, node: _Optional[str] = ..., execution: _Optional[str] = ..., execution_label: _Optional[str] = ..., execution_reason: _Optional[str] = ..., fault: _Optional[str] = ..., state: _Optional[_Iterable[_Union[ModelStateView, _Mapping]]] = ..., parameters: _Optional[_Mapping[str, float]] = ...) -> None: ...
 
 class SignalGraphView(_message.Message):
-    __slots__ = ("models", "probes", "values", "pin_targets", "nodes")
+    __slots__ = ("models", "probes", "values", "pin_targets", "nodes", "node_states", "labels", "capacity", "liveness_fault")
     MODELS_FIELD_NUMBER: _ClassVar[int]
     PROBES_FIELD_NUMBER: _ClassVar[int]
     VALUES_FIELD_NUMBER: _ClassVar[int]
     PIN_TARGETS_FIELD_NUMBER: _ClassVar[int]
     NODES_FIELD_NUMBER: _ClassVar[int]
+    NODE_STATES_FIELD_NUMBER: _ClassVar[int]
+    LABELS_FIELD_NUMBER: _ClassVar[int]
+    CAPACITY_FIELD_NUMBER: _ClassVar[int]
+    LIVENESS_FAULT_FIELD_NUMBER: _ClassVar[int]
     models: _containers.RepeatedCompositeFieldContainer[ModelNodeView]
     probes: _containers.RepeatedCompositeFieldContainer[ProbeView]
     values: _containers.RepeatedCompositeFieldContainer[GraphValueView]
     pin_targets: _containers.RepeatedCompositeFieldContainer[PinTargetView]
     nodes: _containers.RepeatedCompositeFieldContainer[SignalNodeView]
-    def __init__(self, models: _Optional[_Iterable[_Union[ModelNodeView, _Mapping]]] = ..., probes: _Optional[_Iterable[_Union[ProbeView, _Mapping]]] = ..., values: _Optional[_Iterable[_Union[GraphValueView, _Mapping]]] = ..., pin_targets: _Optional[_Iterable[_Union[PinTargetView, _Mapping]]] = ..., nodes: _Optional[_Iterable[_Union[SignalNodeView, _Mapping]]] = ...) -> None: ...
+    node_states: _containers.RepeatedCompositeFieldContainer[SignalNodeStateView]
+    labels: _containers.RepeatedCompositeFieldContainer[SignalLabelView]
+    capacity: SignalCapacityView
+    liveness_fault: str
+    def __init__(self, models: _Optional[_Iterable[_Union[ModelNodeView, _Mapping]]] = ..., probes: _Optional[_Iterable[_Union[ProbeView, _Mapping]]] = ..., values: _Optional[_Iterable[_Union[GraphValueView, _Mapping]]] = ..., pin_targets: _Optional[_Iterable[_Union[PinTargetView, _Mapping]]] = ..., nodes: _Optional[_Iterable[_Union[SignalNodeView, _Mapping]]] = ..., node_states: _Optional[_Iterable[_Union[SignalNodeStateView, _Mapping]]] = ..., labels: _Optional[_Iterable[_Union[SignalLabelView, _Mapping]]] = ..., capacity: _Optional[_Union[SignalCapacityView, _Mapping]] = ..., liveness_fault: _Optional[str] = ...) -> None: ...
+
+class SignalNodeStateView(_message.Message):
+    __slots__ = ("node", "state", "state_text")
+    class State(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+        __slots__ = ()
+        LIVE: _ClassVar[SignalNodeStateView.State]
+        SWITCHED_OFF: _ClassVar[SignalNodeStateView.State]
+        LEFT_OUT: _ClassVar[SignalNodeStateView.State]
+    LIVE: SignalNodeStateView.State
+    SWITCHED_OFF: SignalNodeStateView.State
+    LEFT_OUT: SignalNodeStateView.State
+    NODE_FIELD_NUMBER: _ClassVar[int]
+    STATE_FIELD_NUMBER: _ClassVar[int]
+    STATE_TEXT_FIELD_NUMBER: _ClassVar[int]
+    node: str
+    state: SignalNodeStateView.State
+    state_text: str
+    def __init__(self, node: _Optional[str] = ..., state: _Optional[_Union[SignalNodeStateView.State, str]] = ..., state_text: _Optional[str] = ...) -> None: ...
+
+class SignalLabelView(_message.Message):
+    __slots__ = ("name", "writer_node", "on_fallback", "is_live", "value", "unit", "writer_nodes", "reader_nodes", "state_text", "fallback")
+    NAME_FIELD_NUMBER: _ClassVar[int]
+    WRITER_NODE_FIELD_NUMBER: _ClassVar[int]
+    ON_FALLBACK_FIELD_NUMBER: _ClassVar[int]
+    IS_LIVE_FIELD_NUMBER: _ClassVar[int]
+    VALUE_FIELD_NUMBER: _ClassVar[int]
+    UNIT_FIELD_NUMBER: _ClassVar[int]
+    WRITER_NODES_FIELD_NUMBER: _ClassVar[int]
+    READER_NODES_FIELD_NUMBER: _ClassVar[int]
+    STATE_TEXT_FIELD_NUMBER: _ClassVar[int]
+    FALLBACK_FIELD_NUMBER: _ClassVar[int]
+    name: str
+    writer_node: str
+    on_fallback: bool
+    is_live: bool
+    value: float
+    unit: str
+    writer_nodes: _containers.RepeatedScalarFieldContainer[str]
+    reader_nodes: _containers.RepeatedScalarFieldContainer[str]
+    state_text: str
+    fallback: float
+    def __init__(self, name: _Optional[str] = ..., writer_node: _Optional[str] = ..., on_fallback: _Optional[bool] = ..., is_live: _Optional[bool] = ..., value: _Optional[float] = ..., unit: _Optional[str] = ..., writer_nodes: _Optional[_Iterable[str]] = ..., reader_nodes: _Optional[_Iterable[str]] = ..., state_text: _Optional[str] = ..., fallback: _Optional[float] = ...) -> None: ...
+
+class SignalCapacityView(_message.Message):
+    __slots__ = ("nodes_used", "nodes_max", "models_used", "models_max", "linear_used", "linear_max", "probes_used", "probes_max", "text")
+    NODES_USED_FIELD_NUMBER: _ClassVar[int]
+    NODES_MAX_FIELD_NUMBER: _ClassVar[int]
+    MODELS_USED_FIELD_NUMBER: _ClassVar[int]
+    MODELS_MAX_FIELD_NUMBER: _ClassVar[int]
+    LINEAR_USED_FIELD_NUMBER: _ClassVar[int]
+    LINEAR_MAX_FIELD_NUMBER: _ClassVar[int]
+    PROBES_USED_FIELD_NUMBER: _ClassVar[int]
+    PROBES_MAX_FIELD_NUMBER: _ClassVar[int]
+    TEXT_FIELD_NUMBER: _ClassVar[int]
+    nodes_used: int
+    nodes_max: int
+    models_used: int
+    models_max: int
+    linear_used: int
+    linear_max: int
+    probes_used: int
+    probes_max: int
+    text: str
+    def __init__(self, nodes_used: _Optional[int] = ..., nodes_max: _Optional[int] = ..., models_used: _Optional[int] = ..., models_max: _Optional[int] = ..., linear_used: _Optional[int] = ..., linear_max: _Optional[int] = ..., probes_used: _Optional[int] = ..., probes_max: _Optional[int] = ..., text: _Optional[str] = ...) -> None: ...
 
 class PinTargetView(_message.Message):
     __slots__ = ("pin_id", "pin_name", "node", "output", "high", "value_text", "edges", "fault_text", "resolution_text", "check_text", "level_text")
@@ -2979,7 +3079,7 @@ class GraphValueRequest(_message.Message):
     def __init__(self, node: _Optional[str] = ..., value: _Optional[float] = ..., when: _Optional[_Union[When, _Mapping]] = ...) -> None: ...
 
 class GraphValueView(_message.Message):
-    __slots__ = ("node", "value", "unit", "lowest", "highest", "feeds_text", "last_writer_text", "last_written_us", "last_writer_node_key")
+    __slots__ = ("node", "value", "unit", "lowest", "highest", "feeds_text", "last_writer_text", "last_written_us", "last_writer_node_key", "state_text")
     NODE_FIELD_NUMBER: _ClassVar[int]
     VALUE_FIELD_NUMBER: _ClassVar[int]
     UNIT_FIELD_NUMBER: _ClassVar[int]
@@ -2989,6 +3089,7 @@ class GraphValueView(_message.Message):
     LAST_WRITER_TEXT_FIELD_NUMBER: _ClassVar[int]
     LAST_WRITTEN_US_FIELD_NUMBER: _ClassVar[int]
     LAST_WRITER_NODE_KEY_FIELD_NUMBER: _ClassVar[int]
+    STATE_TEXT_FIELD_NUMBER: _ClassVar[int]
     node: str
     value: float
     unit: str
@@ -2998,19 +3099,22 @@ class GraphValueView(_message.Message):
     last_writer_text: str
     last_written_us: int
     last_writer_node_key: str
-    def __init__(self, node: _Optional[str] = ..., value: _Optional[float] = ..., unit: _Optional[str] = ..., lowest: _Optional[float] = ..., highest: _Optional[float] = ..., feeds_text: _Optional[str] = ..., last_writer_text: _Optional[str] = ..., last_written_us: _Optional[int] = ..., last_writer_node_key: _Optional[str] = ...) -> None: ...
+    state_text: str
+    def __init__(self, node: _Optional[str] = ..., value: _Optional[float] = ..., unit: _Optional[str] = ..., lowest: _Optional[float] = ..., highest: _Optional[float] = ..., feeds_text: _Optional[str] = ..., last_writer_text: _Optional[str] = ..., last_written_us: _Optional[int] = ..., last_writer_node_key: _Optional[str] = ..., state_text: _Optional[str] = ...) -> None: ...
 
 class ProbeView(_message.Message):
-    __slots__ = ("name", "channel_id", "node", "output")
+    __slots__ = ("name", "channel_id", "node", "output", "is_live")
     NAME_FIELD_NUMBER: _ClassVar[int]
     CHANNEL_ID_FIELD_NUMBER: _ClassVar[int]
     NODE_FIELD_NUMBER: _ClassVar[int]
     OUTPUT_FIELD_NUMBER: _ClassVar[int]
+    IS_LIVE_FIELD_NUMBER: _ClassVar[int]
     name: str
     channel_id: int
     node: str
     output: int
-    def __init__(self, name: _Optional[str] = ..., channel_id: _Optional[int] = ..., node: _Optional[str] = ..., output: _Optional[int] = ...) -> None: ...
+    is_live: bool
+    def __init__(self, name: _Optional[str] = ..., channel_id: _Optional[int] = ..., node: _Optional[str] = ..., output: _Optional[int] = ..., is_live: _Optional[bool] = ...) -> None: ...
 
 class ModelList(_message.Message):
     __slots__ = ("models", "unavailable_reason")
@@ -3053,13 +3157,14 @@ class SignalProbeRequest(_message.Message):
     def __init__(self, name: _Optional[str] = ..., node: _Optional[str] = ..., output: _Optional[int] = ..., sample_us: _Optional[int] = ...) -> None: ...
 
 class SignalGraphRequest(_message.Message):
-    __slots__ = ("nodes", "targets", "probes", "event_links", "groups", "pin_targets", "when")
+    __slots__ = ("nodes", "targets", "probes", "event_links", "groups", "pin_targets", "labels", "when")
     NODES_FIELD_NUMBER: _ClassVar[int]
     TARGETS_FIELD_NUMBER: _ClassVar[int]
     PROBES_FIELD_NUMBER: _ClassVar[int]
     EVENT_LINKS_FIELD_NUMBER: _ClassVar[int]
     GROUPS_FIELD_NUMBER: _ClassVar[int]
     PIN_TARGETS_FIELD_NUMBER: _ClassVar[int]
+    LABELS_FIELD_NUMBER: _ClassVar[int]
     WHEN_FIELD_NUMBER: _ClassVar[int]
     nodes: _containers.RepeatedCompositeFieldContainer[SignalNodeRequest]
     targets: _containers.RepeatedCompositeFieldContainer[SignalTargetRequest]
@@ -3067,8 +3172,9 @@ class SignalGraphRequest(_message.Message):
     event_links: _containers.RepeatedCompositeFieldContainer[EventLinkRequest]
     groups: _containers.RepeatedCompositeFieldContainer[ChainGroupRequest]
     pin_targets: _containers.RepeatedCompositeFieldContainer[SignalPinTargetRequest]
+    labels: _containers.RepeatedCompositeFieldContainer[SignalLabelRequest]
     when: When
-    def __init__(self, nodes: _Optional[_Iterable[_Union[SignalNodeRequest, _Mapping]]] = ..., targets: _Optional[_Iterable[_Union[SignalTargetRequest, _Mapping]]] = ..., probes: _Optional[_Iterable[_Union[SignalProbeRequest, _Mapping]]] = ..., event_links: _Optional[_Iterable[_Union[EventLinkRequest, _Mapping]]] = ..., groups: _Optional[_Iterable[_Union[ChainGroupRequest, _Mapping]]] = ..., pin_targets: _Optional[_Iterable[_Union[SignalPinTargetRequest, _Mapping]]] = ..., when: _Optional[_Union[When, _Mapping]] = ...) -> None: ...
+    def __init__(self, nodes: _Optional[_Iterable[_Union[SignalNodeRequest, _Mapping]]] = ..., targets: _Optional[_Iterable[_Union[SignalTargetRequest, _Mapping]]] = ..., probes: _Optional[_Iterable[_Union[SignalProbeRequest, _Mapping]]] = ..., event_links: _Optional[_Iterable[_Union[EventLinkRequest, _Mapping]]] = ..., groups: _Optional[_Iterable[_Union[ChainGroupRequest, _Mapping]]] = ..., pin_targets: _Optional[_Iterable[_Union[SignalPinTargetRequest, _Mapping]]] = ..., labels: _Optional[_Iterable[_Union[SignalLabelRequest, _Mapping]]] = ..., when: _Optional[_Union[When, _Mapping]] = ...) -> None: ...
 
 class WaveformList(_message.Message):
     __slots__ = ("waveforms",)
@@ -6143,7 +6249,7 @@ class SequenceStepRequest(_message.Message):
     def __init__(self, kind: _Optional[_Union[SequenceStepRequest.Kind, str]] = ..., label: _Optional[str] = ..., duration_us: _Optional[int] = ...) -> None: ...
 
 class ChainAction(_message.Message):
-    __slots__ = ("send", "reply", "pin", "mark", "hold", "signal", "fault", "interrupt", "reset")
+    __slots__ = ("send", "reply", "pin", "mark", "hold", "signal", "fault", "interrupt", "reset", "group")
     SEND_FIELD_NUMBER: _ClassVar[int]
     REPLY_FIELD_NUMBER: _ClassVar[int]
     PIN_FIELD_NUMBER: _ClassVar[int]
@@ -6153,6 +6259,7 @@ class ChainAction(_message.Message):
     FAULT_FIELD_NUMBER: _ClassVar[int]
     INTERRUPT_FIELD_NUMBER: _ClassVar[int]
     RESET_FIELD_NUMBER: _ClassVar[int]
+    GROUP_FIELD_NUMBER: _ClassVar[int]
     send: BusMessageAction
     reply: BusMessageAction
     pin: PinAction
@@ -6162,7 +6269,8 @@ class ChainAction(_message.Message):
     fault: FaultAction
     interrupt: InterruptRaiseAction
     reset: ResetAction
-    def __init__(self, send: _Optional[_Union[BusMessageAction, _Mapping]] = ..., reply: _Optional[_Union[BusMessageAction, _Mapping]] = ..., pin: _Optional[_Union[PinAction, _Mapping]] = ..., mark: _Optional[_Union[MarkAction, _Mapping]] = ..., hold: _Optional[_Union[HoldAction, _Mapping]] = ..., signal: _Optional[_Union[SignalSwitchAction, _Mapping]] = ..., fault: _Optional[_Union[FaultAction, _Mapping]] = ..., interrupt: _Optional[_Union[InterruptRaiseAction, _Mapping]] = ..., reset: _Optional[_Union[ResetAction, _Mapping]] = ...) -> None: ...
+    group: GroupSwitchAction
+    def __init__(self, send: _Optional[_Union[BusMessageAction, _Mapping]] = ..., reply: _Optional[_Union[BusMessageAction, _Mapping]] = ..., pin: _Optional[_Union[PinAction, _Mapping]] = ..., mark: _Optional[_Union[MarkAction, _Mapping]] = ..., hold: _Optional[_Union[HoldAction, _Mapping]] = ..., signal: _Optional[_Union[SignalSwitchAction, _Mapping]] = ..., fault: _Optional[_Union[FaultAction, _Mapping]] = ..., interrupt: _Optional[_Union[InterruptRaiseAction, _Mapping]] = ..., reset: _Optional[_Union[ResetAction, _Mapping]] = ..., group: _Optional[_Union[GroupSwitchAction, _Mapping]] = ...) -> None: ...
 
 class BusMessageAction(_message.Message):
     __slots__ = ("message", "fields", "answer_after_us", "text", "length")
@@ -6320,6 +6428,22 @@ class InterruptRaiseAction(_message.Message):
     source_id: int
     def __init__(self, source_id: _Optional[int] = ...) -> None: ...
 
+class GroupSwitchAction(_message.Message):
+    __slots__ = ("group_key", "action")
+    class Do(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+        __slots__ = ()
+        OFF: _ClassVar[GroupSwitchAction.Do]
+        ON: _ClassVar[GroupSwitchAction.Do]
+        TOGGLE: _ClassVar[GroupSwitchAction.Do]
+    OFF: GroupSwitchAction.Do
+    ON: GroupSwitchAction.Do
+    TOGGLE: GroupSwitchAction.Do
+    GROUP_KEY_FIELD_NUMBER: _ClassVar[int]
+    ACTION_FIELD_NUMBER: _ClassVar[int]
+    group_key: str
+    action: GroupSwitchAction.Do
+    def __init__(self, group_key: _Optional[str] = ..., action: _Optional[_Union[GroupSwitchAction.Do, str]] = ...) -> None: ...
+
 class ResetAction(_message.Message):
     __slots__ = ("cause",)
     CAUSE_FIELD_NUMBER: _ClassVar[int]
@@ -6371,7 +6495,7 @@ class GraphCheckView(_message.Message):
     def __init__(self, problems: _Optional[_Iterable[_Union[GraphProblem, _Mapping]]] = ..., capacity: _Optional[_Union[ChainCapacityView, _Mapping]] = ...) -> None: ...
 
 class GraphProblem(_message.Message):
-    __slots__ = ("kind", "node_key", "group_key", "link", "text", "pin_id")
+    __slots__ = ("kind", "node_key", "group_key", "link", "text", "pin_id", "severity", "label")
     class Kind(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
         __slots__ = ()
         OPEN: _ClassVar[GraphProblem.Kind]
@@ -6382,6 +6506,8 @@ class GraphProblem(_message.Message):
         CAPACITY: _ClassVar[GraphProblem.Kind]
         NEEDS_PRO: _ClassVar[GraphProblem.Kind]
         OVERRIDDEN: _ClassVar[GraphProblem.Kind]
+        CONFLICT: _ClassVar[GraphProblem.Kind]
+        CROSSING: _ClassVar[GraphProblem.Kind]
     OPEN: GraphProblem.Kind
     WRONG_PORT: GraphProblem.Kind
     CYCLE: GraphProblem.Kind
@@ -6390,19 +6516,33 @@ class GraphProblem(_message.Message):
     CAPACITY: GraphProblem.Kind
     NEEDS_PRO: GraphProblem.Kind
     OVERRIDDEN: GraphProblem.Kind
+    CONFLICT: GraphProblem.Kind
+    CROSSING: GraphProblem.Kind
+    class Severity(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+        __slots__ = ()
+        ERROR: _ClassVar[GraphProblem.Severity]
+        WARNING: _ClassVar[GraphProblem.Severity]
+        NOTE: _ClassVar[GraphProblem.Severity]
+    ERROR: GraphProblem.Severity
+    WARNING: GraphProblem.Severity
+    NOTE: GraphProblem.Severity
     KIND_FIELD_NUMBER: _ClassVar[int]
     NODE_KEY_FIELD_NUMBER: _ClassVar[int]
     GROUP_KEY_FIELD_NUMBER: _ClassVar[int]
     LINK_FIELD_NUMBER: _ClassVar[int]
     TEXT_FIELD_NUMBER: _ClassVar[int]
     PIN_ID_FIELD_NUMBER: _ClassVar[int]
+    SEVERITY_FIELD_NUMBER: _ClassVar[int]
+    LABEL_FIELD_NUMBER: _ClassVar[int]
     kind: GraphProblem.Kind
     node_key: str
     group_key: str
     link: str
     text: str
     pin_id: int
-    def __init__(self, kind: _Optional[_Union[GraphProblem.Kind, str]] = ..., node_key: _Optional[str] = ..., group_key: _Optional[str] = ..., link: _Optional[str] = ..., text: _Optional[str] = ..., pin_id: _Optional[int] = ...) -> None: ...
+    severity: GraphProblem.Severity
+    label: str
+    def __init__(self, kind: _Optional[_Union[GraphProblem.Kind, str]] = ..., node_key: _Optional[str] = ..., group_key: _Optional[str] = ..., link: _Optional[str] = ..., text: _Optional[str] = ..., pin_id: _Optional[int] = ..., severity: _Optional[_Union[GraphProblem.Severity, str]] = ..., label: _Optional[str] = ...) -> None: ...
 
 class ChainCapacityView(_message.Message):
     __slots__ = ("conditions_used", "conditions_max", "actions_used", "actions_max", "logic_used", "logic_max", "text")
@@ -6497,7 +6637,7 @@ class ChainNodeView(_message.Message):
     def __init__(self, node_key: _Optional[str] = ..., group_key: _Optional[str] = ..., chain_id: _Optional[int] = ..., block: _Optional[int] = ..., installed: _Optional[bool] = ..., state: _Optional[_Union[ChainNodeView.State, str]] = ..., state_text: _Optional[str] = ..., summary_text: _Optional[str] = ..., refusal_text: _Optional[str] = ..., fire_count: _Optional[int] = ..., last_fire_us: _Optional[int] = ..., detail_text: _Optional[str] = ..., interval_text: _Optional[str] = ..., is_locked: _Optional[bool] = ..., kind: _Optional[str] = ..., settings: _Optional[_Union[ChainBlockRequest, _Mapping]] = ..., writes_also: _Optional[_Iterable[str]] = ...) -> None: ...
 
 class ChainGroupView(_message.Message):
-    __slots__ = ("group_key", "name", "enabled", "state_text", "event_blocks", "signal_blocks", "needs_pro", "problem_text", "trigger_id", "links")
+    __slots__ = ("group_key", "name", "enabled", "state_text", "event_blocks", "signal_blocks", "needs_pro", "problem_text", "trigger_id", "links", "switched_by_text", "switched_at_us", "off_text")
     GROUP_KEY_FIELD_NUMBER: _ClassVar[int]
     NAME_FIELD_NUMBER: _ClassVar[int]
     ENABLED_FIELD_NUMBER: _ClassVar[int]
@@ -6508,6 +6648,9 @@ class ChainGroupView(_message.Message):
     PROBLEM_TEXT_FIELD_NUMBER: _ClassVar[int]
     TRIGGER_ID_FIELD_NUMBER: _ClassVar[int]
     LINKS_FIELD_NUMBER: _ClassVar[int]
+    SWITCHED_BY_TEXT_FIELD_NUMBER: _ClassVar[int]
+    SWITCHED_AT_US_FIELD_NUMBER: _ClassVar[int]
+    OFF_TEXT_FIELD_NUMBER: _ClassVar[int]
     group_key: str
     name: str
     enabled: bool
@@ -6518,7 +6661,10 @@ class ChainGroupView(_message.Message):
     problem_text: str
     trigger_id: int
     links: _containers.RepeatedCompositeFieldContainer[EventLinkRequest]
-    def __init__(self, group_key: _Optional[str] = ..., name: _Optional[str] = ..., enabled: _Optional[bool] = ..., state_text: _Optional[str] = ..., event_blocks: _Optional[int] = ..., signal_blocks: _Optional[int] = ..., needs_pro: _Optional[bool] = ..., problem_text: _Optional[str] = ..., trigger_id: _Optional[int] = ..., links: _Optional[_Iterable[_Union[EventLinkRequest, _Mapping]]] = ...) -> None: ...
+    switched_by_text: str
+    switched_at_us: int
+    off_text: str
+    def __init__(self, group_key: _Optional[str] = ..., name: _Optional[str] = ..., enabled: _Optional[bool] = ..., state_text: _Optional[str] = ..., event_blocks: _Optional[int] = ..., signal_blocks: _Optional[int] = ..., needs_pro: _Optional[bool] = ..., problem_text: _Optional[str] = ..., trigger_id: _Optional[int] = ..., links: _Optional[_Iterable[_Union[EventLinkRequest, _Mapping]]] = ..., switched_by_text: _Optional[str] = ..., switched_at_us: _Optional[int] = ..., off_text: _Optional[str] = ...) -> None: ...
 
 class SequenceStateView(_message.Message):
     __slots__ = ("node_key", "step_index", "step_count", "state", "step_text", "failure_text", "step_times_us")
@@ -6547,6 +6693,36 @@ class SequenceStateView(_message.Message):
     failure_text: str
     step_times_us: _containers.RepeatedScalarFieldContainer[int]
     def __init__(self, node_key: _Optional[str] = ..., step_index: _Optional[int] = ..., step_count: _Optional[int] = ..., state: _Optional[_Union[SequenceStateView.State, str]] = ..., step_text: _Optional[str] = ..., failure_text: _Optional[str] = ..., step_times_us: _Optional[_Iterable[int]] = ...) -> None: ...
+
+class GraphPartSwitch(_message.Message):
+    __slots__ = ("group_key", "node_key", "enabled")
+    GROUP_KEY_FIELD_NUMBER: _ClassVar[int]
+    NODE_KEY_FIELD_NUMBER: _ClassVar[int]
+    ENABLED_FIELD_NUMBER: _ClassVar[int]
+    group_key: str
+    node_key: str
+    enabled: bool
+    def __init__(self, group_key: _Optional[str] = ..., node_key: _Optional[str] = ..., enabled: _Optional[bool] = ...) -> None: ...
+
+class GraphPartsSwitch(_message.Message):
+    __slots__ = ("parts", "when")
+    PARTS_FIELD_NUMBER: _ClassVar[int]
+    WHEN_FIELD_NUMBER: _ClassVar[int]
+    parts: _containers.RepeatedCompositeFieldContainer[GraphPartSwitch]
+    when: When
+    def __init__(self, parts: _Optional[_Iterable[_Union[GraphPartSwitch, _Mapping]]] = ..., when: _Optional[_Union[When, _Mapping]] = ...) -> None: ...
+
+class GraphSwitchEvent(_message.Message):
+    __slots__ = ("group_key", "node_key", "enabled", "by_text")
+    GROUP_KEY_FIELD_NUMBER: _ClassVar[int]
+    NODE_KEY_FIELD_NUMBER: _ClassVar[int]
+    ENABLED_FIELD_NUMBER: _ClassVar[int]
+    BY_TEXT_FIELD_NUMBER: _ClassVar[int]
+    group_key: str
+    node_key: str
+    enabled: bool
+    by_text: str
+    def __init__(self, group_key: _Optional[str] = ..., node_key: _Optional[str] = ..., enabled: _Optional[bool] = ..., by_text: _Optional[str] = ...) -> None: ...
 
 class ChainGroupSwitch(_message.Message):
     __slots__ = ("group_key", "enabled", "when")

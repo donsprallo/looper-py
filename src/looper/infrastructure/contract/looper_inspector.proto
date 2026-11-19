@@ -403,6 +403,14 @@ enum Capability {
   // MeasurePin measures the delay from another pin's edges
   // (PinMeasureRequest.reference_pin_id, PinMeasurement.delay_*).
   CAPABILITY_PIN_DELAY = 30;
+  // The runtime switches groups of the signal graph and gives labels: the
+  // kinds "set_signal", "read_signal" and "sum", operations of up to 8
+  // inputs, SignalNodeRequest.switched_off, signal nodes in a
+  // ChainGroupRequest, SignalGraphRequest.labels, SwitchGraphParts and the
+  // chain action Switch group (ChainAction.group); ListSignalBlocks lists
+  // them unlocked. Without it they are refused with a sentence that says to
+  // update looper-rt.
+  CAPABILITY_GRAPH_GROUPS = 31;
 }
 
 enum ServerMode {
@@ -570,6 +578,7 @@ enum EventKind {
   EVENT_KIND_CHAIN = 15;     // a block of a chain fired, acted, stepped, ended, failed (ChainFire)
   EVENT_KIND_TASK = 16;      // an RTOS switched from one task to another (TaskSwitch)
   EVENT_KIND_PWM = 17;       // a PWM output changed its state (PwmChange)
+  EVENT_KIND_GRAPH_SWITCH = 18; // a group or a block of the graph switched (GraphSwitchEvent)
 }
 
 message EventBatch {
@@ -604,7 +613,10 @@ message PinLevelSince { uint32 pin_id = 1; bool high = 2; uint64 since_us = 3; }
 message ChannelValueSince { uint32 channel_id = 1; double value = 2; uint64 since_us = 3; }
 
 message Event {
-  uint64 event_seq = 1;  // total order, never reused
+  // Total order, never reused -- except by a GraphSwitchEvent, which the
+  // server words from the runtime's record of the switch (the chain's ACTED
+  // fire, or the command) and puts right after it under the same number.
+  uint64 event_seq = 1;
   uint64 sim_us = 2;
   oneof body {
     Sample sample = 3;
@@ -626,6 +638,9 @@ message Event {
     ChainFire chain = 20;
     TaskSwitch task = 21;
     PwmChange pwm = 22;
+    // A group of the graph or a single block switched on or off
+    // (CAPABILITY_GRAPH_GROUPS), by a client or by a chain's Switch group.
+    GraphSwitchEvent graph_switch = 23;
   }
   // 13 is the simulation's record of a call between lifelines, which the
   // server keeps for ObserveSequence and does not serve as a body.
@@ -1264,7 +1279,19 @@ service Inspector {
   // one group, and list the blocks this server builds.
   rpc CheckSignalGraph(SignalGraphRequest) returns (GraphCheckView);
   rpc ObserveChains(Empty) returns (ChainList);
+  // One group on or off: the one-group form of SwitchGraphParts, answered
+  // by the same use case, so that a group holding signal blocks switches
+  // them too.
   rpc SwitchChainGroup(ChainGroupSwitch) returns (Ack);
+  // Groups and single blocks of the applied graph on or off, all in one step
+  // at one time, without the graph being sent again
+  // (CAPABILITY_GRAPH_GROUPS). A swap -- one group off, another on -- never
+  // passes through a state with both or with neither. Refused as a whole
+  // with REFUSAL_INVALID: a key the applied graph does not have, two writers
+  // of one label on afterwards ("switch both in one request"), chains that
+  // do not fit; PERMISSION_DENIED for a Pro part the licence does not
+  // unlock.
+  rpc SwitchGraphParts(GraphPartsSwitch) returns (Ack);
   rpc ListChainBlocks(Empty) returns (ChainBlockCatalogue);
   // The signal blocks the server builds beyond the waveforms -- Comparator,
   // Select, Sample & Hold, Abs, Min, Max, Input pin -- with their library
@@ -1927,6 +1954,13 @@ message SignalBlockKind {
   // reports it: "select ≥ 0.5 → when 1", "on rising trigger"; empty where
   // it depends on settings the client shows itself.
   string summary_text = 13;
+  // A recipe: an entry that adds a block of `kind` set up in a way of its
+  // own, e.g. "subtract", a "sum" whose second input is subtracted. Empty
+  // for a plain block. Quick add finds it by its display_name.
+  string recipe = 14;
+  // A sum (or a recipe of one): the signs a new block starts with, as
+  // SignalNodeRequest.negated_inputs.
+  repeated bool negated_inputs = 15;
 }
 
 message SignalPortView {
@@ -1938,6 +1972,9 @@ message SignalPortView {
   // An input that appears only when a setting asks for it: a comparator's
   // "threshold" when CompareSettings.linked.
   bool is_optional = 3;
+  // Another input like it appears when the last is linked, up to 8: Add,
+  // Multiply, Min, Max and Sum (CAPABILITY_GRAPH_GROUPS).
+  bool grows = 4;
 }
 
 message WaveformView {
@@ -2021,7 +2058,12 @@ message SignalNodeRequest {
   // "multiply", "divide", "model" or "value"; with CAPABILITY_GRAPH_EDGES
   // also "compare", "abs" (one input), "min" and "max" (two inputs); with
   // CAPABILITY_SIGNAL_LOGIC also "select" (three inputs: `select`, `when 1`,
-  // `when 0`) and "sample_hold" (two inputs: `in`, `trigger`).
+  // `when 0`) and "sample_hold" (two inputs: `in`, `trigger`). With
+  // CAPABILITY_GRAPH_GROUPS also "sum" (2 to 8 inputs, each added or
+  // subtracted by negated_inputs), "set_signal" (one input: what it writes
+  // to `label`) and "read_signal" (no input: what `label` gives); "add",
+  // "multiply", "min" and "max" then take 2 to 8 inputs. "subtract" stays
+  // two inputs, as a sum "+ -" is; "divide" takes two and "abs" one.
   string kind = 2;
   // What a generator produces.
   SignalView signal = 3;
@@ -2079,6 +2121,32 @@ message SignalNodeRequest {
   // not missed ("hold pulses"). Everything else that reads the node -- a
   // comparator, an Input pin, a probe -- reads the level as it is.
   bool hold_pulses = 16;
+  // A node of kind "set_signal" or "read_signal": the label it writes or
+  // reads, by SignalLabelRequest.name (CAPABILITY_GRAPH_GROUPS).
+  string label = 17;
+  // This block alone is switched off: left out like a part not finished,
+  // and whatever reads it with it. The saved state; SwitchGraphParts
+  // switches it without the graph being sent again.
+  bool switched_off = 18;
+  // What the person called the block, if anything: only for sentences that
+  // name it ('"Load step"'), never for anything else.
+  string title = 19;
+  // A node of kind "sum": per input, true where it is subtracted. Empty
+  // adds every input; otherwise one per input. Any other kind with a sign
+  // is refused with REFUSAL_INVALID.
+  repeated bool negated_inputs = 20;
+}
+
+// A label: an internal signal, written by "set_signal" blocks and read by
+// "read_signal" blocks anywhere in the graph, across groups
+// (CAPABILITY_GRAPH_GROUPS). Its readers get the writer that is on; while
+// none is, its fallback, and without a fallback they are left out. A label
+// a block names that is not listed here has no fallback. A name takes
+// letters, digits and _, starts with a letter and has at most 32
+// characters; a label takes at most 8 writers.
+message SignalLabelRequest {
+  string name = 1;
+  optional double fallback = 2;
 }
 
 // A select passes `inputs[1]` ("when 1") while `inputs[0]` ("select") gives
@@ -2225,6 +2293,71 @@ message SignalGraphView {
   // sample and hold nodes (CAPABILITY_SIGNAL_LOGIC), with what passes or is
   // held now.
   repeated SignalNodeView nodes = 5;
+  // Every block of the applied graph that is not live, with why; empty
+  // while all are (CAPABILITY_GRAPH_GROUPS).
+  repeated SignalNodeStateView node_states = 6;
+  // Every label of the applied graph, as it stands now.
+  repeated SignalLabelView labels = 7;
+  // How full the runtime's graph is.
+  SignalCapacityView capacity = 8;
+  // Where the server's reckoning of what runs differs from the runtime's --
+  // a block left out by one of them only, a label given otherwise: an
+  // internal fault, said so that it is seen. Empty while they agree, and
+  // from a runtime that cannot say (CAPABILITY_GRAPH_GROUPS).
+  string liveness_fault = 9;
+}
+
+// One block of the applied graph that is not live.
+message SignalNodeStateView {
+  string node = 1;
+  enum State {
+    LIVE = 0;
+    // Its own switch or its group is off.
+    SWITCHED_OFF = 1;
+    // It is on, but something it reads is not live.
+    LEFT_OUT = 2;
+  }
+  State state = 2;
+  // "Off – Sensor A is off." / "Off – switched off on its own." / "Off –
+  // fed by Sensor A, which is off."
+  string state_text = 3;
+}
+
+// One label of the applied graph, as it stands now.
+message SignalLabelView {
+  string name = 1;
+  // The set_signal block that gives it now; empty while none does.
+  string writer_node = 2;
+  // No writer is on: its readers get its fallback.
+  bool on_fallback = 3;
+  // Its readers get a value: a writer is on, or it has a fallback.
+  bool is_live = 4;
+  // What its readers read now; unset while it is not live.
+  optional double value = 5;
+  string unit = 6;
+  repeated string writer_nodes = 7;
+  repeated string reader_nodes = 8;
+  // "now 2.31 · set by Sensor A" / "fallback 0 · Sensor A, which sets
+  // LOAD, is off" / "LOAD has two writers: Sensor A and Sensor B. Its
+  // readers get the fallback 0 until one is switched off."
+  string state_text = 9;
+  optional double fallback = 10;
+}
+
+// How full the runtime's graph is: switched-off blocks count, because they
+// stay installed.
+message SignalCapacityView {
+  uint32 nodes_used = 1;
+  uint32 nodes_max = 2;
+  uint32 models_used = 3;
+  uint32 models_max = 4;
+  uint32 linear_used = 5;
+  uint32 linear_max = 6;
+  uint32 probes_used = 7;
+  uint32 probes_max = 8;
+  // "signal nodes 58 of 128 (12 switched off, 4 for labels) · models 5 of
+  // 16 · linear 1 of 16 · probes 3 of 32"
+  string text = 9;
 }
 
 // One input pin the applied graph drives, as it is now.
@@ -2312,6 +2445,9 @@ message GraphValueView {
   uint64 last_written_us = 8;
   // The node_key of the Switch signal block that set it; empty otherwise.
   string last_writer_node_key = 9;
+  // Why what it gives does not reach anything now: "group Plant is off:
+  // takes effect when it is switched on"; empty otherwise.
+  string state_text = 10;
 }
 
 // A signal inside the applied graph that is recorded like a channel.
@@ -2322,6 +2458,8 @@ message ProbeView {
   // The node it records, by the key the client gave it, and which output.
   string node = 3;
   uint32 output = 4;
+  // False while the node it records is not live: a gap in its samples.
+  bool is_live = 5;
 }
 
 message ModelList {
@@ -2385,6 +2523,9 @@ message SignalGraphRequest {
   repeated ChainGroupRequest groups = 5;
   // The digital input pins the graph drives (CAPABILITY_GRAPH_EDGES).
   repeated SignalPinTargetRequest pin_targets = 6;
+  // The labels set_signal and read_signal blocks name, with their fallback
+  // (CAPABILITY_GRAPH_GROUPS).
+  repeated SignalLabelRequest labels = 7;
   When when = 15;
 }
 
@@ -4403,8 +4544,13 @@ message EventLinkRequest {
   bool is_state = 5;         // a state link (a level that holds); otherwise an event link
 }
 
-// A named chain round some blocks. `enabled` is the saved state; a click
-// switches it with SwitchChainGroup without sending the graph again.
+// A group of blocks with a name and a switch; it is a chain in Logic when it
+// holds event blocks. Signal blocks name it by SignalNodeRequest.group_key as
+// event blocks do (CAPABILITY_GRAPH_GROUPS); a block is in one group at most,
+// and groups do not nest. `enabled` is the saved state; a click switches it
+// with SwitchGraphParts (or SwitchChainGroup) without sending the graph
+// again. While it is off its blocks are left out, and so is what they feed
+// over plain links; a label gives its fallback instead.
 message ChainGroupRequest {
   string group_key = 1;
   string name = 2;           // unique among groups; the chain's name in Logic
@@ -4527,6 +4673,9 @@ message ChainAction {
     FaultAction fault = 7;        // Pro
     InterruptRaiseAction interrupt = 8;
     ResetAction reset = 9;
+    // Switch a group of the graph on or off at the event's microsecond
+    // (CAPABILITY_GRAPH_GROUPS). Free.
+    GroupSwitchAction group = 10;
   }
 }
 
@@ -4624,6 +4773,18 @@ message InterruptRaiseAction {
   uint32 source_id = 1;
 }
 
+// A group switched by a chain, as a client's switch would: its signal blocks
+// and its chain blocks together. Switching its own group off is allowed.
+message GroupSwitchAction {
+  string group_key = 1;
+  enum Do {
+    OFF = 0;
+    ON = 1;
+    TOGGLE = 2;
+  }
+  Do action = 2;
+}
+
 message ResetAction {
   ResetCause cause = 1;      // PIN, POWER_ON, BROWN_OUT
 }
@@ -4670,6 +4831,13 @@ message GraphProblem {
     // now: a Set pin on a pin the signal graph drives. Only CheckSignalGraph
     // reports it.
     OVERRIDDEN = 7;
+    // Two writers of a label are on under the saved states
+    // (CAPABILITY_GRAPH_GROUPS): the first in order gives it, the other is
+    // ignored.
+    CONFLICT = 8;
+    // A note: a plain link leaves a group, so that while the group is off
+    // the reader and what it feeds are left out.
+    CROSSING = 9;
   }
   Kind kind = 1;
   string node_key = 2;
@@ -4679,6 +4847,17 @@ message GraphProblem {
   // The input pin it is at, for a pin target of the signal graph; unset for
   // anything else.
   optional uint32 pin_id = 6;
+  enum Severity {
+    // It stops the block: a client shows it as an error.
+    ERROR = 0;
+    // It runs, but not as drawn: "Nothing sets LOAD", a Set pin overridden.
+    WARNING = 1;
+    // Something to know that changes nothing: a link across a group's edge.
+    NOTE = 2;
+  }
+  Severity severity = 7;
+  // The label it is about, when it is about a label rather than a block.
+  string label = 8;
 }
 
 message ChainCapacityView {
@@ -4745,6 +4924,13 @@ message ChainGroupView {
   // node_key, so that a client can copy it as a chain of its own. Empty for
   // a group of the graph, whose links are the client's.
   repeated EventLinkRequest links = 10;
+  // Who switched it last, when that was not the applied graph: 'chain "Mains
+  // loss" at 2.500000 s', "you at 1.200000 s"; empty as applied.
+  string switched_by_text = 11;
+  uint64 switched_at_us = 12;
+  // What its being off does: "4 blocks off · SPEED gives its fallback 0 rpm ·
+  // 1 block left out in group Control"; empty while it is on.
+  string off_text = 13;
 }
 
 message SequenceStateView {
@@ -4761,6 +4947,35 @@ message SequenceStateView {
   string step_text = 5;      // "▸ step 3 of 6"
   string failure_text = 6;   // "Failed at step 3: mode is BOOST did not come within 2 s · 4.200000 s"
   repeated uint64 step_times_us = 7;   // when each step was reached
+}
+
+// One part of the graph to switch: a group, or a single block.
+message GraphPartSwitch {
+  oneof part {
+    string group_key = 1;
+    string node_key = 2;
+  }
+  bool enabled = 3;
+}
+
+// Parts of the applied graph switched together, at one time.
+message GraphPartsSwitch {
+  repeated GraphPartSwitch parts = 1;
+  When when = 15;
+}
+
+// A group of the graph or a single block switched on or off, at
+// Event.sim_us (CAPABILITY_GRAPH_GROUPS). It follows the runtime's record
+// of the switch under the same event_seq: a chain's Switch group after its
+// ACTED fire, a client's SwitchGraphParts or SwitchChainGroup after the
+// command applied (one event per part).
+message GraphSwitchEvent {
+  // The group, or with node_key the block switched alone.
+  string group_key = 1;
+  string node_key = 2;
+  bool enabled = 3;
+  // Who switched it: 'chain "Mains loss"', "a client".
+  string by_text = 4;
 }
 
 message ChainGroupSwitch {

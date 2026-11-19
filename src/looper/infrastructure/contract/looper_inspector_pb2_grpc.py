@@ -249,6 +249,11 @@ class InspectorStub:
                 request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ChainGroupSwitch.SerializeToString,
                 response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Ack.FromString,
                 _registered_method=True)
+        self.SwitchGraphParts = channel.unary_unary(
+                '/looper.inspector.v3.Inspector/SwitchGraphParts',
+                request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.GraphPartsSwitch.SerializeToString,
+                response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Ack.FromString,
+                _registered_method=True)
         self.ListChainBlocks = channel.unary_unary(
                 '/looper.inspector.v3.Inspector/ListChainBlocks',
                 request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
@@ -885,7 +890,24 @@ class InspectorServicer:
         raise NotImplementedError('Method not implemented!')
 
     def SwitchChainGroup(self, request, context):
-        """Missing associated documentation comment in .proto file."""
+        """One group on or off: the one-group form of SwitchGraphParts, answered
+        by the same use case, so that a group holding signal blocks switches
+        them too.
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def SwitchGraphParts(self, request, context):
+        """Groups and single blocks of the applied graph on or off, all in one step
+        at one time, without the graph being sent again
+        (CAPABILITY_GRAPH_GROUPS). A swap -- one group off, another on -- never
+        passes through a state with both or with neither. Refused as a whole
+        with REFUSAL_INVALID: a key the applied graph does not have, two writers
+        of one label on afterwards ("switch both in one request"), chains that
+        do not fit; PERMISSION_DENIED for a Pro part the licence does not
+        unlock.
+        """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
@@ -1669,6 +1691,11 @@ def add_InspectorServicer_to_server(servicer, server):
             'SwitchChainGroup': grpc.unary_unary_rpc_method_handler(
                     servicer.SwitchChainGroup,
                     request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ChainGroupSwitch.FromString,
+                    response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Ack.SerializeToString,
+            ),
+            'SwitchGraphParts': grpc.unary_unary_rpc_method_handler(
+                    servicer.SwitchGraphParts,
+                    request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.GraphPartsSwitch.FromString,
                     response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Ack.SerializeToString,
             ),
             'ListChainBlocks': grpc.unary_unary_rpc_method_handler(
@@ -3167,6 +3194,33 @@ class Inspector:
             target,
             '/looper.inspector.v3.Inspector/SwitchChainGroup',
             looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ChainGroupSwitch.SerializeToString,
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Ack.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def SwitchGraphParts(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/looper.inspector.v3.Inspector/SwitchGraphParts',
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.GraphPartsSwitch.SerializeToString,
             looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Ack.FromString,
             options,
             channel_credentials,
