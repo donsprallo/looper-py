@@ -414,6 +414,11 @@ enum Capability {
   // DescribeBoard and ObserveBoard: the device as a block diagram, with
   // what drives and reads each port in the signal graph. In a simulation.
   CAPABILITY_BOARD = 32;
+  // The runtime limits signals: the kinds "limit" (SignalNodeRequest.limit,
+  // each limit a number or linked) and "slew_rate" (SignalNodeRequest.slew);
+  // ListSignalBlocks lists Limit and Slew rate unlocked. Without it they are
+  // refused with a sentence that says to update looper-rt.
+  CAPABILITY_SIGNAL_LIMITS = 33;
 }
 
 enum ServerMode {
@@ -1947,7 +1952,7 @@ message SignalBlockKind {
   // "To firmware".
   string category = 2;
   string category_text = 3;
-  // "Comparator", "Abs", "Min", "Max", "Input pin".
+  // "Comparator", "Abs", "Min", "Max", "Limit", "Slew rate", "Input pin".
   string display_name = 4;
   // The library card's sentence.
   string description = 5;
@@ -1957,15 +1962,20 @@ message SignalBlockKind {
   repeated SignalPortView outputs = 8;
   bool is_pro = 9;
   // It cannot be added: the runtime is older than CAPABILITY_GRAPH_EDGES
-  // (CAPABILITY_SIGNAL_LOGIC for Select and Sample & Hold), or it is Pro
+  // (CAPABILITY_SIGNAL_LOGIC for Select and Sample & Hold,
+  // CAPABILITY_SIGNAL_LIMITS for Limit and Slew rate), or it is Pro
   // without the licence. locked_text says why.
   bool is_locked = 10;
   string locked_text = 11;
   // The settings its Properties show, in order, as a waveform's fields are
   // shown: Sample & Hold's "mode" (a choice: "rising", "falling", "track")
-  // and "initial" (a number, "Start value"). A field's name is the
-  // SampleSettings field it sets. Empty for a block without settings, and
-  // for the Comparator, whose settings a client knows (CompareSettings).
+  // and "initial" (a number, "Start value"); Limit's "low" and "high",
+  // each with its port to link; Slew rate's "rise" and "fall". A field's
+  // name is the SampleSettings, LimitSettings or SlewSettings field it sets;
+  // a limit linked at its port_name sets low_linked or high_linked instead.
+  // Empty for a block
+  // without settings, and for the Comparator, whose settings a client knows
+  // (CompareSettings).
   repeated WaveformFieldView settings = 12;
   // What the card's summary row says of a new block, before the server
   // reports it: "select ≥ 0.5 → when 1", "on rising trigger"; empty where
@@ -1987,7 +1997,8 @@ message SignalPortView {
   // "select", a Sample & Hold's "trigger".
   bool is_level = 2;
   // An input that appears only when a setting asks for it: a comparator's
-  // "threshold" when CompareSettings.linked.
+  // "threshold" when CompareSettings.linked, a limit's "low" and "high" when
+  // LimitSettings links them.
   bool is_optional = 3;
   // Another input like it appears when the last is linked, up to 8: Add,
   // Multiply, Min, Max and Sum (CAPABILITY_GRAPH_GROUPS).
@@ -2028,7 +2039,9 @@ message WaveformFieldView {
   // What the row is labelled: "Offset", "Peak", "Low", "At the end".
   string label = 2;
   // What it is measured in, as the row shows it: "Hz", "s", "°", "%";
-  // empty for the unit of what the generator drives, or none.
+  // empty for the unit of what the generator drives, or none. One that
+  // starts with "/" follows that unit: a slew rate's "/s" reads "V/s" on
+  // a signal in V.
   string unit = 3;
   Kind kind = 4;
   enum Kind {
@@ -2049,6 +2062,9 @@ message WaveformFieldView {
   // "+ in", "PWM ← in"). Empty where it cannot be linked.
   string port_name = 9;
   string linked_word = 10;
+  // What the field does, as its row's tooltip says it: "The output never
+  // rises faster than this."; empty where the label says enough.
+  string description = 11;
 }
 
 // One option of a choice field.
@@ -2080,7 +2096,9 @@ message SignalNodeRequest {
   // subtracted by negated_inputs), "set_signal" (one input: what it writes
   // to `label`) and "read_signal" (no input: what `label` gives); "add",
   // "multiply", "min" and "max" then take 2 to 8 inputs. "subtract" stays
-  // two inputs, as a sum "+ -" is; "divide" takes two and "abs" one.
+  // two inputs, as a sum "+ -" is; "divide" takes two and "abs" one. With
+  // CAPABILITY_SIGNAL_LIMITS also "limit" (`in`, then its linked limits, see
+  // LimitSettings) and "slew_rate" (one input, `in`).
   string kind = 2;
   // What a generator produces.
   SignalView signal = 3;
@@ -2152,6 +2170,44 @@ message SignalNodeRequest {
   // adds every input; otherwise one per input. Any other kind with a sign
   // is refused with REFUSAL_INVALID.
   repeated bool negated_inputs = 20;
+  // A node of kind "limit": where it holds its input
+  // (CAPABILITY_SIGNAL_LIMITS).
+  LimitSettings limit = 21;
+  // A node of kind "slew_rate": how fast it may follow its input
+  // (CAPABILITY_SIGNAL_LIMITS).
+  SlewSettings slew = 22;
+}
+
+// A limit: `inputs[0]` ("in") held between the low and the high limit,
+// min(max(in, low), high). Each limit is a number or linked, as a
+// comparator's threshold is: a linked limit is the signal at the next input,
+// the low one first -- `inputs[1]` is "low" while `low_linked`, the input
+// after it "high" while `high_linked`. A low limit above the high one is no
+// refusal: the limit gives the low one, CheckSignalGraph warns of it while
+// both are numbers, and SignalNodeView.fault_text says so while it runs.
+// Its edges into a comparator are planned as exactly as those of what it
+// reads and of its linked limits.
+message LimitSettings {
+  // In the unit of the input; each unused while its link is set. A limit
+  // that is no number is refused with REFUSAL_INVALID.
+  double low = 1;
+  double high = 2;
+  bool low_linked = 3;
+  bool high_linked = 4;
+}
+
+// A slew rate: it follows `inputs[0]` ("in"), never faster than `rise`
+// upwards and `fall` downwards, in units of the input per second. It starts
+// at its input when the graph is applied and when its group is switched on;
+// left out because something it reads is off, it holds and goes on from
+// there. A comparator behind it plans its edges to the microsecond: a step
+// of D is crossed D / rise after it.
+message SlewSettings {
+  // Above zero, else refused with REFUSAL_INVALID.
+  double rise = 1;
+  // Zero or more, where zero falls as fast as it rises; a negative one is
+  // refused with REFUSAL_INVALID.
+  double fall = 2;
 }
 
 // A label: an internal signal, written by "set_signal" blocks and read by
@@ -2308,7 +2364,8 @@ message SignalGraphView {
   // generators with a linked field ("sine · FM · AM") or one the runtime
   // stopped, its sentence among the hover lines. Then the selects and the
   // sample and hold nodes (CAPABILITY_SIGNAL_LOGIC), with what passes or is
-  // held now.
+  // held now; the limits and slew rates (CAPABILITY_SIGNAL_LIMITS), with what
+  // they give now.
   repeated SignalNodeView nodes = 5;
   // Every block of the applied graph that is not live, with why; empty
   // while all are (CAPABILITY_GRAPH_GROUPS).
@@ -2412,11 +2469,14 @@ message PinTargetView {
 message SignalNodeView {
   // The key the client gave the node.
   string node = 1;
-  // The card's summary row: "rises above 0 V · hysteresis 10 V".
+  // The card's summary row: "rises above 0 V · hysteresis 10 V", "limit 0 …
+  // 3.3 V", "limit ▷Ref … 3.3", "slew ↑2 V/ms ↓1 V/ms"; a unit where the
+  // server knows it from the analog input the node feeds.
   string summary_text = 2;
   // The pill: "high" or "low" for a comparator that drives a pin; what a
-  // select passes or a sample and hold node holds ("3.21"); empty where the
-  // simulation does not report the node's value.
+  // select passes, a sample and hold node holds, a limit or a slew rate
+  // gives ("3.21"); empty where the simulation does not report the node's
+  // value.
   string value_text = 3;
   // The hover card's lines, one fact each: "when 1 passes", "holds 3.21,
   // sampled at 1.250000 s".
@@ -2424,13 +2484,17 @@ message SignalNodeView {
   // A select: the input that passes now, by its port's name ("when 1",
   // "when 0"), which a client draws bright; empty for every other node.
   string passing_port = 5;
-  // A select or a sample and hold node: what it gives now. Unset for every
-  // other node.
+  // A select, a sample and hold node, a limit or a slew rate: what it gives
+  // now. Unset for every other node.
   optional double value = 6;
   // A sample and hold node: how many samples it took since the graph was
   // applied, and the microsecond of the last; 0 and 0 before the first.
   uint64 samples = 7;
   uint64 sampled_us = 8;
+  // Why it does not do what it is drawn to, as the runtime finds it now: "The
+  // low limit 2 is above the high limit 1: it gives the low limit." Empty
+  // while it does.
+  string fault_text = 9;
 }
 
 // Change what one value node of the applied graph gives.
