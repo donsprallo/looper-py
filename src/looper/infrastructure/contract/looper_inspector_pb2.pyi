@@ -3103,18 +3103,22 @@ class GraphValueView(_message.Message):
     def __init__(self, node: _Optional[str] = ..., value: _Optional[float] = ..., unit: _Optional[str] = ..., lowest: _Optional[float] = ..., highest: _Optional[float] = ..., feeds_text: _Optional[str] = ..., last_writer_text: _Optional[str] = ..., last_written_us: _Optional[int] = ..., last_writer_node_key: _Optional[str] = ..., state_text: _Optional[str] = ...) -> None: ...
 
 class ProbeView(_message.Message):
-    __slots__ = ("name", "channel_id", "node", "output", "is_live")
+    __slots__ = ("name", "channel_id", "node", "output", "is_live", "last_value", "last_value_text")
     NAME_FIELD_NUMBER: _ClassVar[int]
     CHANNEL_ID_FIELD_NUMBER: _ClassVar[int]
     NODE_FIELD_NUMBER: _ClassVar[int]
     OUTPUT_FIELD_NUMBER: _ClassVar[int]
     IS_LIVE_FIELD_NUMBER: _ClassVar[int]
+    LAST_VALUE_FIELD_NUMBER: _ClassVar[int]
+    LAST_VALUE_TEXT_FIELD_NUMBER: _ClassVar[int]
     name: str
     channel_id: int
     node: str
     output: int
     is_live: bool
-    def __init__(self, name: _Optional[str] = ..., channel_id: _Optional[int] = ..., node: _Optional[str] = ..., output: _Optional[int] = ..., is_live: _Optional[bool] = ...) -> None: ...
+    last_value: float
+    last_value_text: str
+    def __init__(self, name: _Optional[str] = ..., channel_id: _Optional[int] = ..., node: _Optional[str] = ..., output: _Optional[int] = ..., is_live: _Optional[bool] = ..., last_value: _Optional[float] = ..., last_value_text: _Optional[str] = ...) -> None: ...
 
 class ModelList(_message.Message):
     __slots__ = ("models", "unavailable_reason")

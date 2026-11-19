@@ -2460,6 +2460,11 @@ message ProbeView {
   uint32 output = 4;
   // False while the node it records is not live: a gap in its samples.
   bool is_live = 5;
+  // The last value it recorded, while srv's log still holds one; unset
+  // before its first sample.
+  optional double last_value = 6;
+  // last_value as it is shown beside the probe: "2.31"; empty while unset.
+  string last_value_text = 7;
 }
 
 message ModelList {
