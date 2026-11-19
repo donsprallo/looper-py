@@ -2,8 +2,8 @@
 
 Where `SignalGraph` is what a test asks for, this is what it got: the trace
 channel each probe records on, the level each input pin is held at and how
-exact its edges are, and what each comparator, linked generator, select and
-sample and hold block shows. Every text is
+exact its edges are, and what each comparator, linked generator, select,
+sample and hold block, limit and slew rate shows. Every text is
 the server's; a test compares with it or prints it.
 """
 
@@ -77,24 +77,29 @@ class GraphNodeState:
     """One node of the applied graph whose block shows more than its symbol.
 
     A comparator, a generator with a linked field (or one the runtime
-    stopped), a select or a sample and hold node.
+    stopped), a select, a sample and hold node, a limit or a slew rate.
 
     Attributes:
         node: The key the graph gave it.
         summary_text: Its settings in a line, such as ``rises above 0 · hysteresis 0.1``,
-            ``sine · FM`` or ``on rising trigger``.
+            ``sine · FM``, ``on rising trigger``, ``limit 0 … 3.3 V`` or
+            ``slew ↑2 V/ms ↓1 V/ms``.
         value_text: ``high`` or ``low`` for a comparator that drives a pin,
-            what a select passes or a sample and hold node holds (``3.21``);
-            empty where the simulation does not report its value.
+            what a select passes, a sample and hold node holds or a limit or
+            a slew rate gives (``3.21``); empty where the simulation does not
+            report its value.
         hover_lines: Further facts, one a line: ``when 1 passes``,
             ``holds 3.21, sampled at 1.250000 s``.
         passing_port: A select: the input that passes now, ``when 1`` or
             ``when 0``; empty for every other node.
-        value: A select or a sample and hold node: what it gives now; None
-            for every other node.
+        value: A select, a sample and hold node, a limit or a slew rate:
+            what it gives now; None for every other node.
         samples: A sample and hold node: how many samples it took since the
             graph was applied.
         sampled_us: The microsecond of its last sample; 0 before the first.
+        fault_text: Why it does not do what it is drawn to, as the runtime
+            finds it now: ``The low limit 2 is above the high limit 1: it
+            gives the low limit.``; empty while it does.
     """
 
     node: str
@@ -105,6 +110,7 @@ class GraphNodeState:
     value: float | None = None
     samples: int = 0
     sampled_us: int = 0
+    fault_text: str = ""
 
 
 @dataclass(frozen=True)
@@ -114,8 +120,9 @@ class SignalGraphState:
     Attributes:
         probes: Its probes, with their trace channels.
         pin_targets: The input pins it drives, in the order the graph named them.
-        nodes: Its comparators, linked generators, selects and sample and
-            hold nodes; Abs, Min and Max show nothing beyond their symbol.
+        nodes: Its comparators, linked generators, selects, sample and
+            hold nodes, limits and slew rates; Abs, Min and Max show nothing
+            beyond their symbol.
         node_states: Every block that does not run now, with why.
         labels: Every label, as it stands now.
         capacity: How full the runtime's graph is.

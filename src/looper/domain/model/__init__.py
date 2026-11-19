@@ -81,6 +81,7 @@ from looper.domain.model.signal_labels import SignalLabel
 from looper.domain.model.signal_models import ModelParameter, SignalModel
 from looper.domain.model.signal_parts import (
     CompareSettings,
+    LimitSettings,
     NodeOutput,
     SampleMode,
     SampleSettings,
@@ -89,6 +90,7 @@ from looper.domain.model.signal_parts import (
     SignalPinTarget,
     SignalProbe,
     SignalTarget,
+    SlewSettings,
 )
 from looper.domain.model.signal_starters import Starter, StarterNeeds, Starters
 from looper.domain.model.signal_waves import TableFile
@@ -200,6 +202,8 @@ __all__ = [
     "PinDelay",
     "SampleMode",
     "SampleSettings",
+    "LimitSettings",
+    "SlewSettings",
     "Starter",
     "StarterNeeds",
     "Starters",

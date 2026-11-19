@@ -80,7 +80,7 @@ def models_of(message: contract.ModelList) -> tuple[SignalModel, ...]:
 
 
 def _node_request_of(node: SignalNode) -> contract.SignalNodeRequest:
-    """One node; a generator carries its signal, a comparator or a sample and hold its settings."""
+    """One node; a generator carries its signal, the blocks with settings carry theirs."""
     request = _plain_node_request_of(node)
     if node.kind is SignalNodeKind.GENERATOR:
         request.signal.CopyFrom(signal_view_of(node.signal))
@@ -89,7 +89,24 @@ def _node_request_of(node: SignalNode) -> contract.SignalNodeRequest:
     if node.kind is SignalNodeKind.SAMPLE_HOLD:
         sample = node.sample
         request.sample.CopyFrom(contract.SampleSettings(mode=sample.mode, initial=sample.initial))
+    _add_limit_settings(request, node)
     return request
+
+
+def _add_limit_settings(request: contract.SignalNodeRequest, node: SignalNode) -> None:
+    """A limit's limits or a slew rate's rates; every other node leaves both unset."""
+    if node.kind is SignalNodeKind.LIMIT:
+        limit = node.limit
+        request.limit.CopyFrom(
+            contract.LimitSettings(
+                low=limit.low,
+                high=limit.high,
+                low_linked=limit.low_linked,
+                high_linked=limit.high_linked,
+            )
+        )
+    if node.kind is SignalNodeKind.SLEW_RATE:
+        request.slew.CopyFrom(contract.SlewSettings(rise=node.slew.rise, fall=node.slew.fall))
 
 
 def _plain_node_request_of(node: SignalNode) -> contract.SignalNodeRequest:

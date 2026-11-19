@@ -33,6 +33,7 @@ from looper.domain.model.chain_blocks import ChainGroup, EventBlock, EventLink
 from looper.domain.model.chain_building import ChainBuilding
 from looper.domain.model.requests import Signal
 from looper.domain.model.signal_labels import LabelBuilding, SignalLabel
+from looper.domain.model.signal_limits import LimitBuilding, LimitSpec
 from looper.domain.model.signal_models import ModelParameter, SignalModel
 from looper.domain.model.signal_operations import OperationBuilding
 from looper.domain.model.signal_parts import (
@@ -40,6 +41,7 @@ from looper.domain.model.signal_parts import (
     OPERATIONS,
     CompareSettings,
     InputSpec,
+    LimitSettings,
     NodeOutput,
     SampleMode,
     SampleSettings,
@@ -48,6 +50,7 @@ from looper.domain.model.signal_parts import (
     SignalPinTarget,
     SignalProbe,
     SignalTarget,
+    SlewSettings,
     outputs_of,
 )
 
@@ -55,6 +58,8 @@ __all__ = [
     "OPERATIONS",
     "CompareSettings",
     "InputSpec",
+    "LimitSettings",
+    "LimitSpec",
     "ModelParameter",
     "NodeOutput",
     "SampleMode",
@@ -67,16 +72,18 @@ __all__ = [
     "SignalPinTarget",
     "SignalProbe",
     "SignalTarget",
+    "SlewSettings",
 ]
 
 
 @dataclass(frozen=True)
-class SignalGraph(OperationBuilding, LabelBuilding, ChainBuilding):
+class SignalGraph(OperationBuilding, LimitBuilding, LabelBuilding, ChainBuilding):
     """The nodes, what they drive and the probes on them, its labels, groups and chains.
 
     Each method returns a new graph with one more part, so that a graph is
     written as one chain of calls and a half-built one can be reused. The
-    operations are `signal_operations`, the labels `signal_labels`; the
+    operations are `signal_operations`, limits and slew rates
+    `signal_limits`, the labels `signal_labels`; the
     event blocks, links and groups are the graph's chains (`chain_blocks`).
     A group holds signal blocks too: every node step takes ``group=``.
     """

@@ -102,6 +102,7 @@ def _node_of(message: contract.SignalNodeView) -> GraphNodeState:
         value=message.value if message.HasField("value") else None,
         samples=message.samples,
         sampled_us=message.sampled_us,
+        fault_text=message.fault_text,
     )
 
 

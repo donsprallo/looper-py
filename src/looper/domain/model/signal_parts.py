@@ -23,8 +23,9 @@ class SignalNodeKind(StrEnum):
     ``SAMPLE_HOLD`` one whose runtime selects and samples (capability
     ``signal_logic``), ``SUM``, ``SET_SIGNAL``, ``READ_SIGNAL`` and an
     operation of more than two inputs one whose runtime switches groups
-    (capability ``graph_groups``); an older one refuses them with a sentence
-    that says so.
+    (capability ``graph_groups``), ``LIMIT`` and ``SLEW_RATE`` one whose
+    runtime limits signals (capability ``signal_limits``); an older one
+    refuses them with a sentence that says so.
     """
 
     GENERATOR = "generator"
@@ -46,6 +47,8 @@ class SignalNodeKind(StrEnum):
     SUM = "sum"
     SET_SIGNAL = "set_signal"
     READ_SIGNAL = "read_signal"
+    LIMIT = "limit"
+    SLEW_RATE = "slew_rate"
 
 
 class SampleMode(StrEnum):
@@ -152,6 +155,41 @@ class SampleSettings:
 
 
 @dataclass(frozen=True)
+class LimitSettings:
+    """Where a limit holds its input: ``min(max(in, low), high)``.
+
+    Each limit is a number or, linked, the signal at the limit's next input
+    -- the low one first -- as a comparator's threshold is. A low limit
+    above the high one is no refusal: the limit gives the low one, and the
+    server warns of it.
+
+    Attributes:
+        low: The low limit, in the unit of the input; unused while `low_linked`.
+        high: The high limit; unused while `high_linked`.
+        low_linked: The low limit is the input after ``in``.
+        high_linked: The high limit is the input after ``in`` and a linked low limit.
+    """
+
+    low: float = 0.0
+    high: float = 0.0
+    low_linked: bool = False
+    high_linked: bool = False
+
+
+@dataclass(frozen=True)
+class SlewSettings:
+    """How fast a slew rate may follow its input, in units of the input per second.
+
+    Attributes:
+        rise: The fastest it rises; above zero, else the server refuses it.
+        fall: The fastest it falls; zero falls as fast as it rises.
+    """
+
+    rise: float = 0.0
+    fall: float = 0.0
+
+
+@dataclass(frozen=True)
 class SignalNode:
     """One node of the graph.
 
@@ -163,7 +201,8 @@ class SignalNode:
         inputs: What the node reads, in order: the operands of an
             operation, the inputs of a model, a comparator's input and its
             linked threshold, a select's three, a sample and hold node's
-            input and trigger, the signals of a generator's linked fields.
+            input and trigger, a limit's input and its linked limits, the
+            signals of a generator's linked fields.
         model: The model a model node stands for, as `SignalModel.name` names it.
         parameters: The values its parameters are given, by name; one left
             out keeps the model's default.
@@ -191,6 +230,8 @@ class SignalNode:
             alone (``Sensor A is off``).
         negated_inputs: A sum: per input, whether it is subtracted; empty
             adds every input.
+        limit: Where a limit holds its input.
+        slew: How fast a slew rate follows its input.
     """
 
     key: str
@@ -212,6 +253,8 @@ class SignalNode:
     switched_off: bool = False
     title: str = ""
     negated_inputs: tuple[bool, ...] = ()
+    limit: LimitSettings = LimitSettings()
+    slew: SlewSettings = SlewSettings()
 
 
 @dataclass(frozen=True)
