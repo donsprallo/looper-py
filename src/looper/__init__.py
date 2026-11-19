@@ -153,6 +153,18 @@ from looper.domain.model import (
     Width,
     step_port,
 )
+from looper.domain.model.board import (
+    Board,
+    BoardBus,
+    BoardEdge,
+    BoardEdgeKind,
+    BoardGraphRef,
+    BoardNode,
+    BoardNodeKind,
+    BoardNote,
+    BoardTap,
+)
+from looper.domain.model.board_state import BoardNodeState, BoardState, BoardTapState
 from looper.domain.model.pwm import PinMeasurement, PwmMeasurement, PwmOutput, PwmOutputs
 from looper.domain.model.servers import AnnouncedServer
 from looper.infrastructure.looper_cli import LooperCliError, ServerStartError
@@ -166,6 +178,18 @@ except PackageNotFoundError:
     __version__ = "0+unknown"
 
 __all__ = [
+    "Board",
+    "BoardBus",
+    "BoardEdge",
+    "BoardEdgeKind",
+    "BoardGraphRef",
+    "BoardNode",
+    "BoardNodeKind",
+    "BoardNote",
+    "BoardTap",
+    "BoardNodeState",
+    "BoardState",
+    "BoardTapState",
     "SignalLabel",
     "GroupDo",
     "SwitchGroup",

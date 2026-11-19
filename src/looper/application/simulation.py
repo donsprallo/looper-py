@@ -13,6 +13,7 @@ from collections.abc import Callable, Iterator, Mapping
 from types import TracebackType
 
 from looper.application import pulses
+from looper.application.board_reading import BoardReading
 from looper.application.bootloader import Otp
 from looper.application.chain_runs import run_until_chain
 from looper.application.event_stream import EventStream
@@ -62,7 +63,7 @@ from looper.domain.model.interrupts import Interrupts
 from looper.domain.model.pwm import PwmOutput, PwmOutputs
 
 
-class Simulation(SignalLibrary, GraphSwitching):
+class Simulation(SignalLibrary, GraphSwitching, BoardReading):
     """One running simulation, as a test sees it.
 
     Use it as a context manager, or call `close` when done: closing lets go

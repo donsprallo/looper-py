@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from dataclasses import replace
 
+from board_doubles import ScriptedBoard
 from chain_doubles import ScriptedChains
 from interrupt_doubles import ScriptedInterrupts
 from life_doubles import ScriptedLives
@@ -49,7 +50,13 @@ PAGE_SIZE = 2
 
 
 class ScriptedInspector(
-    ScriptedLives, ScriptedInterrupts, ScriptedChains, ScriptedRestarts, ScriptedPwms, Inspector
+    ScriptedLives,
+    ScriptedInterrupts,
+    ScriptedChains,
+    ScriptedRestarts,
+    ScriptedPwms,
+    ScriptedBoard,
+    Inspector,
 ):
     """Answers from fixed state and writes down every request."""
 
@@ -59,6 +66,7 @@ class ScriptedInspector(
         ScriptedChains.__init__(self)
         ScriptedRestarts.__init__(self)
         ScriptedPwms.__init__(self)
+        ScriptedBoard.__init__(self)
         self.description = Description(
             contract_version=3, firmware_name="blinky", capabilities=("pwm", "pin_measure")
         )

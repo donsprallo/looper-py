@@ -56,6 +56,7 @@ from looper.infrastructure import (
 from looper.infrastructure.client_identity import describe_request
 from looper.infrastructure.contract import looper_inspector_pb2 as contract
 from looper.infrastructure.contract import looper_inspector_pb2_grpc as service
+from looper.infrastructure.grpc_board import GrpcBoardCalls
 from looper.infrastructure.grpc_boot import GrpcBootCalls
 from looper.infrastructure.grpc_chains import GrpcChainCalls
 from looper.infrastructure.grpc_graph import GrpcGraphCalls
@@ -101,6 +102,7 @@ class GrpcInspector(
     GrpcRestartCalls,
     GrpcPwmCalls,
     GrpcGraphCalls,
+    GrpcBoardCalls,
     Inspector,
 ):
     """The inspector contract, spoken to a server at one address."""

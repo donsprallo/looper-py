@@ -16,6 +16,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 
+from looper.application.board_port import BoardInspector
 from looper.application.boot_port import BootInspector
 from looper.application.chain_port import ChainInspector
 from looper.application.graph_port import GraphInspector
@@ -74,6 +75,7 @@ class Inspector(
     RestartInspector,
     PwmInspector,
     GraphInspector,
+    BoardInspector,
     ABC,
 ):
     """Everything this library asks of a running simulation."""
