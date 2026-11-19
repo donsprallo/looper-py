@@ -81,7 +81,8 @@ EMPTY = contract.Empty()
 RUNNING_IMAGE = contract.ImageScope()
 
 #: The kinds of event a test looks at; the stream also carries pin changes,
-#: calls, applied commands and more. A PWM's changes say when it got to a duty.
+#: calls, applied commands and more. A PWM's changes say when it got to a duty,
+#: a switch of the graph when a group or a block went on or off.
 EVENT_KINDS = [
     contract.EVENT_KIND_SAMPLE,
     contract.EVENT_KIND_EXCHANGE,
@@ -89,6 +90,7 @@ EVENT_KINDS = [
     contract.EVENT_KIND_FLASH,
     contract.EVENT_KIND_INTERRUPT,
     contract.EVENT_KIND_PWM,
+    contract.EVENT_KIND_GRAPH_SWITCH,
 ]
 
 

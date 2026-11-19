@@ -3,7 +3,9 @@
 Apart from the rest of the port so that both stay readable; `Inspector`
 inherits it. The probes' trace channels, the levels of the pins the graph
 drives and every text about them are the server's, and so are the table
-files read for a generator and the starters a graph can begin with.
+files read for a generator and the starters a graph can begin with. A
+switch of groups and blocks goes out here too, since it changes what of the
+applied graph runs.
 """
 
 from __future__ import annotations
@@ -11,6 +13,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 
 from looper.domain.model.graph_state import SignalGraphState
+from looper.domain.model.graph_switches import GraphPartSwitch, SwitchTime
 from looper.domain.model.signal_starters import Starters
 from looper.domain.model.signal_waves import TableFile
 
@@ -37,3 +40,14 @@ class GraphInspector(ABC):
     @abstractmethod
     def list_starters(self) -> Starters:
         """The starters a graph can begin with, and whether this firmware has what each needs."""
+
+    @abstractmethod
+    def switch_graph_parts(self, parts: tuple[GraphPartSwitch, ...], when: SwitchTime) -> None:
+        """Switch groups and single blocks of the applied graph, all in one step.
+
+        Raises:
+            SimulationRefusedError: As a whole, for a key the applied graph does
+                not have, two writers of one label on afterwards, or chains
+                that do not fit; the message is the server's sentence.
+            ProFeatureLockedError: For a part of looper Pro the licence does not unlock.
+        """

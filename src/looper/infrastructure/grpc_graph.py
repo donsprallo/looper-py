@@ -12,6 +12,7 @@ from typing import Any
 
 from looper.application.graph_port import GraphInspector
 from looper.domain.model import SignalGraphState
+from looper.domain.model.graph_switches import GraphPartSwitch, SwitchTime
 from looper.domain.model.signal_starters import Starters
 from looper.domain.model.signal_waves import TableFile
 from looper.infrastructure.contract import looper_inspector_pb2 as contract
@@ -29,6 +30,10 @@ class GrpcGraphCalls(GraphInspector):
 
     @staticmethod
     def _call(method: Callable[[Any], Any], request: Any) -> Any:
+        raise NotImplementedError
+
+    @staticmethod
+    def _taken(ack: contract.Ack) -> None:
         raise NotImplementedError
 
     def read_signal_graph(self) -> SignalGraphState:
@@ -51,3 +56,19 @@ class GrpcGraphCalls(GraphInspector):
     def list_starters(self) -> Starters:
         """The starters, with what each needs."""
         return starters_of(self._call(self._stub.ListStarters, EMPTY))
+
+    def switch_graph_parts(self, parts: tuple[GraphPartSwitch, ...], when: SwitchTime) -> None:
+        """Groups and single blocks switched in one request."""
+        request = contract.GraphPartsSwitch(parts=[_part_of(one) for one in parts])
+        if when.at_us is not None:
+            request.when.at_us = when.at_us
+        if when.after_us is not None:
+            request.when.after_us = when.after_us
+        self._taken(self._call(self._stub.SwitchGraphParts, request))
+
+
+def _part_of(part: GraphPartSwitch) -> contract.GraphPartSwitch:
+    """One part, named by its group or, without one, by its block."""
+    if part.group_key:
+        return contract.GraphPartSwitch(group_key=part.group_key, enabled=part.enabled)
+    return contract.GraphPartSwitch(node_key=part.node_key, enabled=part.enabled)

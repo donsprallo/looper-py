@@ -21,7 +21,10 @@ class SignalNodeKind(StrEnum):
     ``COMPARE``, ``ABS``, ``MIN`` and ``MAX`` need a server whose runtime
     plans the graph's edges (capability ``graph_edges``), ``SELECT`` and
     ``SAMPLE_HOLD`` one whose runtime selects and samples (capability
-    ``signal_logic``); an older one refuses them with a sentence that says so.
+    ``signal_logic``), ``SUM``, ``SET_SIGNAL``, ``READ_SIGNAL`` and an
+    operation of more than two inputs one whose runtime switches groups
+    (capability ``graph_groups``); an older one refuses them with a sentence
+    that says so.
     """
 
     GENERATOR = "generator"
@@ -40,6 +43,9 @@ class SignalNodeKind(StrEnum):
     MAX = "max"
     SELECT = "select"
     SAMPLE_HOLD = "sample_hold"
+    SUM = "sum"
+    SET_SIGNAL = "set_signal"
+    READ_SIGNAL = "read_signal"
 
 
 class SampleMode(StrEnum):
@@ -64,17 +70,23 @@ LINKABLE_FIELDS = {
 }
 
 
-#: The kinds that combine two inputs into one value.
-OPERATIONS = frozenset(
+#: The kinds that combine two inputs or more -- up to the server's limit of
+#: 8 -- into one value; a sum adds or subtracts each by its sign.
+MANY_INPUT_OPERATIONS = frozenset(
     {
         SignalNodeKind.ADD,
-        SignalNodeKind.SUBTRACT,
         SignalNodeKind.MULTIPLY,
-        SignalNodeKind.DIVIDE,
         SignalNodeKind.MIN,
         SignalNodeKind.MAX,
+        SignalNodeKind.SUM,
     }
 )
+
+#: The kinds that combine exactly two inputs: a subtract is a sum ``+ -``.
+TWO_INPUT_OPERATIONS = frozenset({SignalNodeKind.SUBTRACT, SignalNodeKind.DIVIDE})
+
+#: The kinds that combine two inputs or more into one value.
+OPERATIONS = MANY_INPUT_OPERATIONS | TWO_INPUT_OPERATIONS
 
 #: The kinds that make one value out of one input.
 ONE_INPUT_OPERATIONS = frozenset({SignalNodeKind.ABS})
@@ -170,6 +182,15 @@ class SignalNode:
         hold_pulses: A pin source that a model reads as 1 at its step when
             the pin was high at any instant since the step before, so that a
             pulse shorter than the step is not missed.
+        group: The key of the group it is in, empty for none. While the
+            group is off the block is left out, and so is what it feeds
+            over plain links; groups do not nest.
+        label: The label a set signal writes or a read signal reads.
+        switched_off: The block alone is saved as switched off.
+        title: What the person calls the block, for the server's sentences
+            alone (``Sensor A is off``).
+        negated_inputs: A sum: per input, whether it is subtracted; empty
+            adds every input.
     """
 
     key: str
@@ -186,6 +207,11 @@ class SignalNode:
     linked_fields: tuple[str, ...] = ()
     sample: SampleSettings = SampleSettings()
     hold_pulses: bool = False
+    group: str = ""
+    label: str = ""
+    switched_off: bool = False
+    title: str = ""
+    negated_inputs: tuple[bool, ...] = ()
 
 
 @dataclass(frozen=True)

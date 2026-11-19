@@ -9,6 +9,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 
 from looper.domain.model.chain_blocks import ChainBlockState
+from looper.domain.model.chain_groups import ChainGroupState
 from looper.domain.model.chain_runs import ChainExport, SequenceState
 from looper.domain.model.dbc import DbcFile
 
@@ -19,6 +20,10 @@ class ChainInspector(ABC):
     @abstractmethod
     def read_chains(self) -> tuple[ChainBlockState, ...]:
         """Every event block of the graph and of the Logic triggers, in the server's words."""
+
+    @abstractmethod
+    def read_chain_groups(self) -> tuple[ChainGroupState, ...]:
+        """Every group of the graph and of the Logic triggers, in the server's words."""
 
     @abstractmethod
     def switch_chain(self, group: str, enabled: bool) -> None:  # noqa: FBT001

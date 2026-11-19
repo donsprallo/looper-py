@@ -27,9 +27,11 @@ from looper.domain.model.chain_blocks import (
 )
 from looper.domain.model.chain_scenarios import (
     Fault,
+    GroupDo,
     RaiseInterrupt,
     ResetFirmware,
     Sequence,
+    SwitchGroup,
     SwitchSignal,
 )
 from looper.domain.model.event_conditions import Interrupt, ResetSeen
@@ -149,6 +151,20 @@ class ChainBuilding:
     ) -> Self:
         """Add a Switch signal: a generator or value node of the graph, or an input held."""
         return self._with_block(EventBlock(key, "switch_signal", switch, group), after)
+
+    def switch_group(
+        self, key: str, group_key: str, do: str = "off", after: str = "", group: str = ""
+    ) -> Self:
+        """Add a Switch group: `group_key` ``off``, ``on`` or ``toggle`` at the event's µs.
+
+        It switches the group's signal blocks and chain blocks together, as
+        `Simulation.switch_group` would; a chain may switch its own group off.
+
+        Raises:
+            ValueError: If `do` is none of ``off``, ``on`` and ``toggle``.
+        """
+        switch = SwitchGroup(group_key, GroupDo(do))
+        return self._with_block(EventBlock(key, "switch_group", switch, group), after)
 
     def inject_fault(self, key: str, fault: Fault, after: str = "", group: str = "") -> Self:
         """Add an Inject fault (looper Pro): a sensor, CAN messages, or the power."""

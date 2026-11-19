@@ -113,6 +113,11 @@ def event_page_of(message: contract.EventBatch) -> EventPage:
         ),
         interrupt_marks=interrupt_translation.marks_of(message),
         pwm_changes=pwm_translation.changes_of(message),
+        graph_switches=tuple(
+            mark_translation.graph_switch_of(one)
+            for one in message.events
+            if one.HasField("graph_switch")
+        ),
     )
 
 

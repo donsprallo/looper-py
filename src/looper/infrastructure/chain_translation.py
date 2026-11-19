@@ -17,11 +17,13 @@ from looper.domain.model.chain_blocks import (
     SetPin,
     Threshold,
 )
+from looper.domain.model.chain_groups import ChainGroupState
 from looper.domain.model.chain_scenarios import (
     Fault,
     RaiseInterrupt,
     ResetFirmware,
     Sequence,
+    SwitchGroup,
     SwitchSignal,
 )
 from looper.domain.model.triggers import Polarity
@@ -35,7 +37,7 @@ def block_request_of(block: EventBlock) -> contract.SignalNodeRequest:
     request = contract.SignalNodeRequest(key=block.key, kind=block.kind, group_key=block.group)
     request.block.min_gap_us = block.min_gap_us
     settings = block.settings
-    if isinstance(settings, SwitchSignal | Fault | RaiseInterrupt | ResetFirmware):
+    if isinstance(settings, SwitchSignal | SwitchGroup | Fault | RaiseInterrupt | ResetFirmware):
         request.block.action.CopyFrom(scenario_action_of(settings))
     elif isinstance(settings, Sequence):
         request.block.logic.CopyFrom(sequence_of(settings))
@@ -162,4 +164,24 @@ def block_states_of(listing: contract.ChainList) -> tuple[ChainBlockState, ...]:
             problem=node.refusal_text,
         )
         for node in listing.nodes
+    )
+
+
+def group_states_of(listing: contract.ChainList) -> tuple[ChainGroupState, ...]:
+    """Every group the server reports, in its words."""
+    return tuple(
+        ChainGroupState(
+            key=group.group_key,
+            name=group.name,
+            enabled=group.enabled,
+            state_text=group.state_text,
+            event_blocks=group.event_blocks,
+            signal_blocks=group.signal_blocks,
+            needs_pro=group.needs_pro,
+            problem_text=group.problem_text,
+            switched_by_text=group.switched_by_text,
+            switched_at_us=group.switched_at_us,
+            off_text=group.off_text,
+        )
+        for group in listing.groups
     )

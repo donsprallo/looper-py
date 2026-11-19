@@ -1,8 +1,9 @@
-"""Resets and flash operations in the stream, from the contract's messages."""
+"""Resets, flash operations and switches of the graph in the stream, from the contract."""
 
 from __future__ import annotations
 
 from looper.domain.model import FlashMark, ResetMark
+from looper.domain.model.graph_switches import GraphSwitchMark
 from looper.infrastructure.contract import looper_inspector_pb2 as contract
 
 #: The contract's flash operations, in the words a test uses.
@@ -29,4 +30,17 @@ def flash_mark_of(event: contract.Event) -> FlashMark:
         length=mark.length,
         partition=mark.partition,
         by_client=mark.source == contract.CHANGE_SOURCE_CLIENT,
+    )
+
+
+def graph_switch_of(event: contract.Event) -> GraphSwitchMark:
+    """A group or a block of the graph switched, under the number of the record before it."""
+    switch = event.graph_switch
+    return GraphSwitchMark(
+        sim_us=event.sim_us,
+        event_seq=event.event_seq,
+        group_key=switch.group_key,
+        node_key=switch.node_key,
+        enabled=switch.enabled,
+        by_text=switch.by_text,
     )

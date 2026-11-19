@@ -32,10 +32,11 @@ from dataclasses import dataclass, replace
 from looper.domain.model.chain_blocks import ChainGroup, EventBlock, EventLink
 from looper.domain.model.chain_building import ChainBuilding
 from looper.domain.model.requests import Signal
+from looper.domain.model.signal_labels import LabelBuilding, SignalLabel
 from looper.domain.model.signal_models import ModelParameter, SignalModel
+from looper.domain.model.signal_operations import OperationBuilding
 from looper.domain.model.signal_parts import (
     LINKABLE_FIELDS,
-    ONE_INPUT_OPERATIONS,
     OPERATIONS,
     CompareSettings,
     InputSpec,
@@ -59,6 +60,7 @@ __all__ = [
     "SampleMode",
     "SampleSettings",
     "SignalGraph",
+    "SignalLabel",
     "SignalModel",
     "SignalNode",
     "SignalNodeKind",
@@ -69,12 +71,14 @@ __all__ = [
 
 
 @dataclass(frozen=True)
-class SignalGraph(ChainBuilding):
-    """The nodes, what they drive and the probes on them, and its chains.
+class SignalGraph(OperationBuilding, LabelBuilding, ChainBuilding):
+    """The nodes, what they drive and the probes on them, its labels, groups and chains.
 
     Each method returns a new graph with one more part, so that a graph is
     written as one chain of calls and a half-built one can be reused. The
+    operations are `signal_operations`, the labels `signal_labels`; the
     event blocks, links and groups are the graph's chains (`chain_blocks`).
+    A group holds signal blocks too: every node step takes ``group=``.
     """
 
     nodes: tuple[SignalNode, ...] = ()
@@ -84,6 +88,7 @@ class SignalGraph(ChainBuilding):
     event_links: tuple[EventLink, ...] = ()
     groups: tuple[ChainGroup, ...] = ()
     pin_targets: tuple[SignalPinTarget, ...] = ()
+    labels: tuple[SignalLabel, ...] = ()
 
     def generator(
         self,
@@ -93,6 +98,7 @@ class SignalGraph(ChainBuilding):
         amplitude: InputSpec | None = None,
         frequency: InputSpec | None = None,
         duty: InputSpec | None = None,
+        group: str = "",
     ) -> SignalGraph:
         """Add a node that produces a generated waveform, some of its fields from other nodes.
 
@@ -109,14 +115,15 @@ class SignalGraph(ChainBuilding):
             signal=signal,
             inputs=outputs_of(links.values()),
             linked_fields=tuple(links),
+            group=group,
         )
         return self._with(node)
 
-    def channel(self, key: str, channel_id: int) -> SignalGraph:
+    def channel(self, key: str, channel_id: int, group: str = "") -> SignalGraph:
         """Add a node that reads an analog channel -- an output closes a loop."""
-        return self._with(SignalNode(key, SignalNodeKind.CHANNEL, source=channel_id))
+        return self._with(SignalNode(key, SignalNodeKind.CHANNEL, source=channel_id, group=group))
 
-    def pin(self, key: str, pin_id: int, hold_pulses: bool = False) -> SignalGraph:
+    def pin(self, key: str, pin_id: int, hold_pulses: bool = False, group: str = "") -> SignalGraph:
         """Add a node that reads a pin as zero or one.
 
         With `hold_pulses`, a model reads it as 1 at its step when the pin was
@@ -124,91 +131,18 @@ class SignalGraph(ChainBuilding):
         shorter than the step still reaches it; a comparator, an input pin
         or a probe read the level as it is.
         """
-        node = SignalNode(key, SignalNodeKind.PIN, source=pin_id, hold_pulses=hold_pulses)
+        node = SignalNode(
+            key, SignalNodeKind.PIN, source=pin_id, hold_pulses=hold_pulses, group=group
+        )
         return self._with(node)
 
-    def watch(self, key: str, channel_id: int) -> SignalGraph:
+    def watch(self, key: str, channel_id: int, group: str = "") -> SignalGraph:
         """Add a node that reads a watched variable, by its watch channel."""
-        return self._with(SignalNode(key, SignalNodeKind.WATCH, source=channel_id))
+        return self._with(SignalNode(key, SignalNodeKind.WATCH, source=channel_id, group=group))
 
-    def value(self, key: str, value: float) -> SignalGraph:
+    def value(self, key: str, value: float, group: str = "") -> SignalGraph:
         """Add a node that gives a value a test sets, to an input or a model's parameter."""
-        return self._with(SignalNode(key, SignalNodeKind.VALUE, value=value))
-
-    def operation(
-        self, key: str, kind: SignalNodeKind, first: InputSpec, second: InputSpec | None = None
-    ) -> SignalGraph:
-        """Add a node that combines two others, or takes the size of one.
-
-        ``ADD``, ``SUBTRACT``, ``MULTIPLY``, ``DIVIDE``, ``MIN`` and ``MAX``
-        read `first` and `second`; ``ABS`` reads `first` alone.
-
-        Raises:
-            ValueError: If `kind` is no operation, or the inputs do not fit it.
-        """
-        if kind in ONE_INPUT_OPERATIONS:
-            if second is not None:
-                raise ValueError(f"{kind} reads one input; leave out the second")
-            return self._with(SignalNode(key, kind, inputs=outputs_of((first,))))
-        if kind not in OPERATIONS:
-            known = sorted(OPERATIONS | ONE_INPUT_OPERATIONS)
-            raise ValueError(f"{kind} is not an operation; use one of {known}")
-        if second is None:
-            raise ValueError(f"{kind} reads two inputs; name the second")
-        return self._with(SignalNode(key, kind, inputs=outputs_of((first, second))))
-
-    def compare(
-        self,
-        key: str,
-        reads: InputSpec,
-        level: float = 0.0,
-        hysteresis: float = 0.0,
-        below: bool = False,
-        threshold: InputSpec | None = None,
-        check_us: int = 0,
-    ) -> SignalGraph:
-        """Add a comparator: one while `reads` is above the threshold (or `below` it), else zero.
-
-        It goes back only when the input has gone `hysteresis` past the
-        threshold the other way. `threshold` names a node to compare with
-        instead of the constant `level`. Its edges are planned to the
-        microsecond where the runtime can; where it cannot -- noise or a
-        divide upstream -- it is checked every `check_us` (0: the server's
-        Auto). A negative hysteresis is the server's to refuse.
-        """
-        settings = CompareSettings(level, hysteresis, below, threshold is not None, check_us)
-        reading = (reads,) if threshold is None else (reads, threshold)
-        node = SignalNode(key, SignalNodeKind.COMPARE, inputs=outputs_of(reading), compare=settings)
-        return self._with(node)
-
-    def select(
-        self, key: str, select: InputSpec, when_1: InputSpec, when_0: InputSpec
-    ) -> SignalGraph:
-        """Add a select: `when_1` while `select` gives 0.5 or more, else `when_0`.
-
-        It switches at the microsecond `select` crosses 0.5, without hysteresis.
-        """
-        reading = outputs_of((select, when_1, when_0))
-        return self._with(SignalNode(key, SignalNodeKind.SELECT, inputs=reading))
-
-    def sample_hold(
-        self,
-        key: str,
-        reads: InputSpec,
-        trigger: InputSpec,
-        mode: SampleMode = SampleMode.RISING,
-        initial: float = 0.0,
-    ) -> SignalGraph:
-        """Add a sample and hold node: `reads` as it was when `trigger` rose (or fell).
-
-        With ``SampleMode.TRACK`` it follows `reads` while the trigger is
-        high and holds it from the falling edge on. It gives `initial` until
-        its first sample.
-        """
-        settings = SampleSettings(SampleMode(mode), initial)
-        reading = outputs_of((reads, trigger))
-        node = SignalNode(key, SignalNodeKind.SAMPLE_HOLD, inputs=reading, sample=settings)
-        return self._with(node)
+        return self._with(SignalNode(key, SignalNodeKind.VALUE, value=value, group=group))
 
     def model(
         self,
@@ -218,6 +152,7 @@ class SignalGraph(ChainBuilding):
         parameters: Mapping[str, float] | None = None,
         interpreted: bool = False,
         parameter_sources: Mapping[str, str] | None = None,
+        group: str = "",
     ) -> SignalGraph:
         """Add a model the simulation steps, fed from `inputs` in the model's order.
 
@@ -232,6 +167,7 @@ class SignalGraph(ChainBuilding):
             parameters=tuple(sorted((parameters or {}).items())),
             interpreted=interpreted,
             parameter_sources=tuple(sorted((parameter_sources or {}).items())),
+            group=group,
         )
         return self._with(node)
 
@@ -259,6 +195,3 @@ class SignalGraph(ChainBuilding):
         """
         probe = SignalProbe(name, node, output, sample_us)
         return replace(self, probes=(*self.probes, probe))
-
-    def _with(self, node: SignalNode) -> SignalGraph:
-        return replace(self, nodes=(*self.nodes, node))

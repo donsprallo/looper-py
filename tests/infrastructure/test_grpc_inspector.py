@@ -264,6 +264,7 @@ def test_events_are_asked_for_by_epoch_position_and_kind(
         contract.EVENT_KIND_FLASH,
         contract.EVENT_KIND_INTERRUPT,
         contract.EVENT_KIND_PWM,
+        contract.EVENT_KIND_GRAPH_SWITCH,
     ]
     assert servicer.asked == [f"events epoch 2 from 7 kinds {kinds}"]
     assert (page.samples[0].value, page.samples[0].sim_us, page.samples[0].event_seq) == (

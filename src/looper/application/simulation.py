@@ -18,6 +18,7 @@ from looper.application.chain_runs import run_until_chain
 from looper.application.event_stream import EventStream
 from looper.application.expectations import MICROSECONDS_PER_SECOND, Expectations
 from looper.application.findings_reading import complete_findings
+from looper.application.graph_switching import GraphSwitching
 from looper.application.memories import Flash, Retained
 from looper.application.ports import Inspector, SimulationRefusedError
 from looper.application.race import Race
@@ -61,7 +62,7 @@ from looper.domain.model.interrupts import Interrupts
 from looper.domain.model.pwm import PwmOutput, PwmOutputs
 
 
-class Simulation(SignalLibrary):
+class Simulation(SignalLibrary, GraphSwitching):
     """One running simulation, as a test sees it.
 
     Use it as a context manager, or call `close` when done: closing lets go

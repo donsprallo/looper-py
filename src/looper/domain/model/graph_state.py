@@ -11,6 +11,13 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from looper.domain.model.graph_liveness import (
+    BlockState,
+    GraphCapacity,
+    GraphValueState,
+    LabelState,
+)
+
 
 @dataclass(frozen=True)
 class GraphProbe:
@@ -22,12 +29,14 @@ class GraphProbe:
             channel takes it like any other, ``check.channel(probe.channel_id, probe.name)``.
         node: The key of the node it records.
         output: Which of the node's outputs.
+        is_live: False while the node it records is not live: a gap in its samples.
     """
 
     name: str
     channel_id: int
     node: str = ""
     output: int = 0
+    is_live: bool = True
 
 
 @dataclass(frozen=True)
@@ -107,11 +116,22 @@ class SignalGraphState:
         pin_targets: The input pins it drives, in the order the graph named them.
         nodes: Its comparators, linked generators, selects and sample and
             hold nodes; Abs, Min and Max show nothing beyond their symbol.
+        node_states: Every block that does not run now, with why.
+        labels: Every label, as it stands now.
+        capacity: How full the runtime's graph is.
+        values: Its value nodes, with what each gives now.
+        liveness_fault: Where the server's reckoning of what runs differs
+            from the runtime's -- an internal fault; empty while they agree.
     """
 
     probes: tuple[GraphProbe, ...] = ()
     pin_targets: tuple[PinTargetState, ...] = ()
     nodes: tuple[GraphNodeState, ...] = ()
+    node_states: tuple[BlockState, ...] = ()
+    labels: tuple[LabelState, ...] = ()
+    capacity: GraphCapacity = GraphCapacity()
+    values: tuple[GraphValueState, ...] = ()
+    liveness_fault: str = ""
 
     def pin_target(self, pin_id: int) -> PinTargetState:
         """The pin target that drives a pin.
@@ -134,3 +154,32 @@ class SignalGraphState:
             if one.node == key:
                 return one
         raise KeyError(f"the applied graph reports no node {key!r}")
+
+    def node_state(self, key: str) -> BlockState:
+        """Whether the block of that key runs; one the server does not list runs."""
+        for one in self.node_states:
+            if one.node == key:
+                return one
+        return BlockState(key)
+
+    def label(self, name: str) -> LabelState:
+        """The label of that name, as it stands now.
+
+        Raises:
+            KeyError: If the applied graph has no such label.
+        """
+        for one in self.labels:
+            if one.name == name:
+                return one
+        raise KeyError(f"the applied graph has no label {name!r}")
+
+    def value(self, key: str) -> GraphValueState:
+        """The value node of that key, with what it gives now.
+
+        Raises:
+            KeyError: If the applied graph has no such value node.
+        """
+        for one in self.values:
+            if one.node == key:
+                return one
+        raise KeyError(f"the applied graph has no value node {key!r}")

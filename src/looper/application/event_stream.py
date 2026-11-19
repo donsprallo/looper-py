@@ -16,7 +16,7 @@ from __future__ import annotations
 from collections.abc import Iterator
 
 from looper.application.ports import Inspector, SimulationRefusedError
-from looper.domain.model import EventPage, Exchange
+from looper.domain.model import EventPage, Exchange, GraphSwitchMark
 
 
 class EventStream:
@@ -47,11 +47,25 @@ class EventStream:
         Raises:
             SimulationRefusedError: If another client cleared the recording.
         """
+        for page in self._pages(since):
+            yield from page.exchanges
+
+    def graph_switches(self, since: int = 0) -> Iterator[GraphSwitchMark]:
+        """Every recorded switch of a group or a block of the graph from event number `since` on.
+
+        Raises:
+            SimulationRefusedError: If another client cleared the recording.
+        """
+        for page in self._pages(since):
+            yield from page.graph_switches
+
+    def _pages(self, since: int) -> Iterator[EventPage]:
+        """Page after page, until the stream has been read to its present end."""
         epoch = self._inspector.run_state().epoch
         reached = since
         while True:
             page = self._page(epoch, reached)
-            yield from page.exchanges
+            yield page
             if page.next_event_seq <= reached:
                 return
             reached = page.next_event_seq

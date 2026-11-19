@@ -1,11 +1,17 @@
-"""The chain half of the scripted inspector: fixed block states, switches written down."""
+"""The chain half of the scripted inspector: fixed block and group states, switches written down.
+
+A switch of the graph's parts is written down here too, since it switches
+groups; a refusal set beforehand is raised with its sentence instead.
+"""
 
 from __future__ import annotations
 
 from looper.application.chain_port import ChainInspector
-from looper.domain.model import ChainBlockState
+from looper.application.ports import SimulationRefusedError
+from looper.domain.model import ChainBlockState, ChainGroupState, GraphPartSwitch
 from looper.domain.model.chain_runs import ChainExport, SequenceState
 from looper.domain.model.dbc import DbcFile
+from looper.domain.model.graph_switches import SwitchTime
 
 
 class ScriptedChains(ChainInspector):
@@ -16,12 +22,23 @@ class ScriptedChains(ChainInspector):
         self.switched: list[tuple[str, bool]] = []
         self.sequence_states: list[tuple[SequenceState, ...]] = []
         self.exported: list[tuple[str, int]] = []
+        self.group_states: tuple[ChainGroupState, ...] = ()
+        self.part_switches: list[tuple[tuple[GraphPartSwitch, ...], SwitchTime]] = []
+        self.switch_refusal: str | None = None
 
     def read_chains(self) -> tuple[ChainBlockState, ...]:
         return self.chain_states
 
+    def read_chain_groups(self) -> tuple[ChainGroupState, ...]:
+        return self.group_states
+
     def switch_chain(self, group: str, enabled: bool) -> None:  # noqa: FBT001
         self.switched.append((group, enabled))
+
+    def switch_graph_parts(self, parts: tuple[GraphPartSwitch, ...], when: SwitchTime) -> None:
+        if self.switch_refusal is not None:
+            raise SimulationRefusedError(self.switch_refusal)
+        self.part_switches.append((parts, when))
 
     def read_sequences(self) -> tuple[SequenceState, ...]:
         """The next of the states given, the last one again once they run out."""

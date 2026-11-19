@@ -13,6 +13,7 @@ from dataclasses import dataclass, field
 from enum import StrEnum
 
 from looper.domain.model.event_loss import EventLoss
+from looper.domain.model.graph_switches import GraphSwitchMark
 from looper.domain.model.interrupt_facts import InterruptMark
 from looper.domain.model.marks import FlashMark, ResetMark
 from looper.domain.model.pwm import PwmChange
@@ -129,6 +130,7 @@ class EventPage:
         flash_marks: The flash operations on the page.
         interrupt_marks: The interrupt events on the page.
         pwm_changes: The changes of the PWM outputs on the page.
+        graph_switches: The groups and blocks of the graph switched on the page.
     """
 
     samples: tuple[Sample, ...] = ()
@@ -141,6 +143,7 @@ class EventPage:
     flash_marks: tuple[FlashMark, ...] = ()
     interrupt_marks: tuple[InterruptMark, ...] = ()
     pwm_changes: tuple[PwmChange, ...] = ()
+    graph_switches: tuple[GraphSwitchMark, ...] = ()
 
 
 @dataclass(frozen=True)

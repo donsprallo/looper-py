@@ -7,6 +7,7 @@ from typing import Any
 
 from looper.application.chain_port import ChainInspector
 from looper.domain.model.chain_blocks import ChainBlockState
+from looper.domain.model.chain_groups import ChainGroupState
 from looper.domain.model.chain_runs import ChainExport, SequenceState
 from looper.domain.model.dbc import DbcFile, DbcMessage, DbcSignal
 from looper.infrastructure import chain_translation
@@ -33,6 +34,10 @@ class GrpcChainCalls(ChainInspector):
     def read_chains(self) -> tuple[ChainBlockState, ...]:
         """Every event block, in the server's words."""
         return chain_translation.block_states_of(self._call(self._stub.ObserveChains, EMPTY))
+
+    def read_chain_groups(self) -> tuple[ChainGroupState, ...]:
+        """Every group, in the server's words."""
+        return chain_translation.group_states_of(self._call(self._stub.ObserveChains, EMPTY))
 
     def switch_chain(self, group: str, enabled: bool) -> None:  # noqa: FBT001
         """Switch one group on or off."""

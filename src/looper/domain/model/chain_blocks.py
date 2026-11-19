@@ -27,6 +27,7 @@ from looper.domain.model.chain_scenarios import (
     RaiseInterrupt,
     ResetFirmware,
     Sequence,
+    SwitchGroup,
     SwitchSignal,
 )
 from looper.domain.model.triggers import Polarity, TriggerCondition
@@ -174,6 +175,7 @@ ChainAction = (
     | Mark
     | Hold
     | SwitchSignal
+    | SwitchGroup
     | Fault
     | RaiseInterrupt
     | ResetFirmware

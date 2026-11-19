@@ -10,6 +10,13 @@ begin with come the same way.
 from __future__ import annotations
 
 from looper.domain.model import GraphNodeState, GraphProbe, PinTargetState, SignalGraphState
+from looper.domain.model.graph_liveness import (
+    BlockLiveness,
+    BlockState,
+    GraphCapacity,
+    GraphValueState,
+    LabelState,
+)
 from looper.domain.model.signal_starters import Starter, StarterNeeds, Starters
 from looper.infrastructure.contract import looper_inspector_pb2 as contract
 
@@ -18,10 +25,69 @@ def graph_state_of(message: contract.SignalGraphView) -> SignalGraphState:
     """What the applied graph records and drives now."""
     return SignalGraphState(
         probes=tuple(
-            GraphProbe(one.name, one.channel_id, one.node, one.output) for one in message.probes
+            GraphProbe(one.name, one.channel_id, one.node, one.output, one.is_live)
+            for one in message.probes
         ),
         pin_targets=tuple(_pin_target_of(one) for one in message.pin_targets),
         nodes=tuple(_node_of(one) for one in message.nodes),
+        node_states=tuple(_block_state_of(one) for one in message.node_states),
+        labels=tuple(_label_of(one) for one in message.labels),
+        capacity=_capacity_of(message.capacity),
+        values=tuple(_value_of(one) for one in message.values),
+        liveness_fault=message.liveness_fault,
+    )
+
+
+#: Whether a block runs, by the contract's numbers.
+LIVENESS = {
+    contract.SignalNodeStateView.LIVE: BlockLiveness.LIVE,
+    contract.SignalNodeStateView.SWITCHED_OFF: BlockLiveness.SWITCHED_OFF,
+    contract.SignalNodeStateView.LEFT_OUT: BlockLiveness.LEFT_OUT,
+}
+
+
+def _block_state_of(message: contract.SignalNodeStateView) -> BlockState:
+    return BlockState(message.node, LIVENESS[message.state], message.state_text)
+
+
+def _label_of(message: contract.SignalLabelView) -> LabelState:
+    """One label; its value and fallback only where the server gives them."""
+    return LabelState(
+        name=message.name,
+        writer_node=message.writer_node,
+        on_fallback=message.on_fallback,
+        is_live=message.is_live,
+        value=message.value if message.HasField("value") else None,
+        unit=message.unit,
+        writer_nodes=tuple(message.writer_nodes),
+        reader_nodes=tuple(message.reader_nodes),
+        state_text=message.state_text,
+        fallback=message.fallback if message.HasField("fallback") else None,
+    )
+
+
+def _capacity_of(message: contract.SignalCapacityView) -> GraphCapacity:
+    return GraphCapacity(
+        nodes_used=message.nodes_used,
+        nodes_max=message.nodes_max,
+        models_used=message.models_used,
+        models_max=message.models_max,
+        linear_used=message.linear_used,
+        linear_max=message.linear_max,
+        probes_used=message.probes_used,
+        probes_max=message.probes_max,
+        text=message.text,
+    )
+
+
+def _value_of(message: contract.GraphValueView) -> GraphValueState:
+    return GraphValueState(
+        node=message.node,
+        value=message.value,
+        unit=message.unit,
+        feeds_text=message.feeds_text,
+        last_writer_text=message.last_writer_text,
+        state_text=message.state_text,
     )
 
 

@@ -16,13 +16,14 @@ are ``start`` (input 0), ``done`` and ``failed`` (outputs 0 and 1); each
         .link("go", "test")
     )
 
-Switch signal is free; Inject fault, like the Sequence, is looper Pro.
+Switch signal and Switch group are free; Inject fault, like the Sequence,
+is looper Pro.
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass
-from enum import IntEnum
+from enum import IntEnum, StrEnum
 
 
 class StepKind(IntEnum):
@@ -103,6 +104,25 @@ class SwitchSignal:
     do: SignalDo = SignalDo.SET
     to: float = 0.0
     over_us: int = 1_000_000
+
+
+class GroupDo(StrEnum):
+    """What a Switch group does to its group, by the word the pytest export writes."""
+
+    OFF = "off"
+    ON = "on"
+    TOGGLE = "toggle"
+
+
+@dataclass(frozen=True)
+class SwitchGroup:
+    """Switch a group of the graph -- its signal blocks and chain blocks -- at the event's µs.
+
+    A chain may switch its own group off.
+    """
+
+    group_key: str
+    do: GroupDo = GroupDo.OFF
 
 
 class FaultKind(IntEnum):

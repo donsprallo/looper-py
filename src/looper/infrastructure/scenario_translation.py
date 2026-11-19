@@ -5,18 +5,27 @@ from __future__ import annotations
 from looper.domain.model.chain_runs import SequenceProgress, SequenceState
 from looper.domain.model.chain_scenarios import (
     Fault,
+    GroupDo,
     RaiseInterrupt,
     ResetFirmware,
     Sequence,
+    SwitchGroup,
     SwitchSignal,
 )
 from looper.infrastructure.contract import looper_inspector_pb2 as contract
 
-ScenarioAction = SwitchSignal | Fault | RaiseInterrupt | ResetFirmware
+ScenarioAction = SwitchSignal | SwitchGroup | Fault | RaiseInterrupt | ResetFirmware
+
+#: What a Switch group does, by the contract's numbers.
+GROUP_DOES = {
+    GroupDo.OFF: contract.GroupSwitchAction.OFF,
+    GroupDo.ON: contract.GroupSwitchAction.ON,
+    GroupDo.TOGGLE: contract.GroupSwitchAction.TOGGLE,
+}
 
 
 def scenario_action_of(action: ScenarioAction) -> contract.ChainAction:
-    """A Switch signal, an Inject fault, a Raise interrupt or a Reset as the contract's action."""
+    """A Switch signal or group, an Inject fault, a Raise interrupt or a Reset as the contract's."""
     match action:
         case SwitchSignal(node, channel_id, do, to, over_us):
             switch = contract.SignalSwitchAction(
@@ -27,6 +36,9 @@ def scenario_action_of(action: ScenarioAction) -> contract.ChainAction:
                 over_us=over_us,
             )
             return contract.ChainAction(signal=switch)
+        case SwitchGroup(group_key, do):
+            group = contract.GroupSwitchAction(group_key=group_key, action=GROUP_DOES[do])
+            return contract.ChainAction(group=group)
         case Fault():
             return contract.ChainAction(fault=_fault_of(action))
         case RaiseInterrupt(source_id):
