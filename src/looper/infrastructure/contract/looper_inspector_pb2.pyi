@@ -7662,7 +7662,7 @@ class BenchState(_message.Message):
     def __init__(self, revision: _Optional[int] = ..., revision_text: _Optional[str] = ..., phase: _Optional[_Union[BenchPhase, str]] = ..., name: _Optional[str] = ..., title: _Optional[str] = ..., devices: _Optional[_Iterable[_Union[BenchDevice, _Mapping]]] = ..., buses: _Optional[_Iterable[_Union[JoinedBus, _Mapping]]] = ..., waiting_for_text: _Optional[str] = ..., waiting_share_text: _Optional[str] = ..., failed_text: _Optional[str] = ..., step_text: _Optional[str] = ..., restart_text: _Optional[str] = ..., marks: _Optional[_Iterable[_Union[BenchMark, _Mapping]]] = ..., file_path: _Optional[str] = ...) -> None: ...
 
 class BenchDevice(_message.Message):
-    __slots__ = ("name", "mcu", "where_text", "state_text", "now_us", "now_text", "leader", "this_device", "address", "index", "fault", "hover_text")
+    __slots__ = ("name", "mcu", "where_text", "state_text", "now_us", "now_text", "leader", "this_device", "address", "index", "fault", "hover_text", "windows")
     NAME_FIELD_NUMBER: _ClassVar[int]
     MCU_FIELD_NUMBER: _ClassVar[int]
     WHERE_TEXT_FIELD_NUMBER: _ClassVar[int]
@@ -7675,6 +7675,7 @@ class BenchDevice(_message.Message):
     INDEX_FIELD_NUMBER: _ClassVar[int]
     FAULT_FIELD_NUMBER: _ClassVar[int]
     HOVER_TEXT_FIELD_NUMBER: _ClassVar[int]
+    WINDOWS_FIELD_NUMBER: _ClassVar[int]
     name: str
     mcu: str
     where_text: str
@@ -7687,7 +7688,8 @@ class BenchDevice(_message.Message):
     index: int
     fault: bool
     hover_text: str
-    def __init__(self, name: _Optional[str] = ..., mcu: _Optional[str] = ..., where_text: _Optional[str] = ..., state_text: _Optional[str] = ..., now_us: _Optional[int] = ..., now_text: _Optional[str] = ..., leader: _Optional[bool] = ..., this_device: _Optional[bool] = ..., address: _Optional[str] = ..., index: _Optional[int] = ..., fault: _Optional[bool] = ..., hover_text: _Optional[str] = ...) -> None: ...
+    windows: int
+    def __init__(self, name: _Optional[str] = ..., mcu: _Optional[str] = ..., where_text: _Optional[str] = ..., state_text: _Optional[str] = ..., now_us: _Optional[int] = ..., now_text: _Optional[str] = ..., leader: _Optional[bool] = ..., this_device: _Optional[bool] = ..., address: _Optional[str] = ..., index: _Optional[int] = ..., fault: _Optional[bool] = ..., hover_text: _Optional[str] = ..., windows: _Optional[int] = ...) -> None: ...
 
 class JoinedBus(_message.Message):
     __slots__ = ("bus_id", "label", "join", "peers_text", "bitrate", "frames", "text")

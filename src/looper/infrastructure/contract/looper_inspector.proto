@@ -5933,7 +5933,10 @@ message BenchState {
 message BenchDevice {
   string name = 1;            // its name on the bench
   string mcu = 2;             // "STM32G474"; empty when its project names none
-  string where_text = 3;      // "this window", "own window", "this PC"
+  // "own window" for another device whose server has a window attached
+  // (windows > 0), "this PC" otherwise and for this device; a client decides
+  // by `windows`, not by this text.
+  string where_text = 3;
   // "runs", "held", "held · at a breakpoint", "stopped · HardFault",
   // "reset · life 2", "not answering"
   string state_text = 4;
@@ -5949,6 +5952,11 @@ message BenchDevice {
   // "gateway · STM32G474 on this PC · CAN1 at 500 kbit/s · 312 frames, 0
   // unacknowledged"
   string hover_text = 12;
+  // How many windows are attached to that device's server now (clients that
+  // said in Describe that they are a window and asked more than Describe):
+  // "own window ↗" while above 0, "Open a window on it" at 0. For this device
+  // the windows attached to this server, the asking one among them.
+  uint32 windows = 13;
 }
 
 message JoinedBus {
