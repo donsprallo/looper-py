@@ -37,6 +37,10 @@ looper.SignalLabel, looper.LabelState, looper.BlockState, looper.GraphCapacity  
 looper.SwitchGroup, looper.GroupDo, looper.ChainGroupState, looper.GraphSwitchMark  # switching groups
 looper.TimeModel, looper.TimeModelParameter, looper.ActiveTimeModel  # time models
 looper.PwmOutput, looper.PwmOutputs               # the PWM outputs of contract.toml
+looper.run_bench, looper.Bench                    # devices with joined buses on one clock (Pro)
+looper.BenchState, looper.BenchDevice, looper.BenchPhase, looper.JoinedBus, looper.BenchMark
+looper.JoinCandidates, looper.JoinCandidate, looper.JoinBusChoice  # joining from a running simulation
+looper.BenchProLockedError                        # a bench refused for want of a licence
 ```
 
 ## Reaching a simulation
@@ -260,6 +264,97 @@ simulation -- they raise `SimulationRefusedError` with the server's sentence.
 .. autoclass:: looper.BoardNodeState
 
 .. autoclass:: looper.BoardTapState
+```
+
+## A bench (Pro)
+
+A bench is two to eight devices on this PC whose CAN buses are joined, each
+with a server of its own, on one clock: looper-srv builds each device as a
+library and a bench host runs them in lockstep and plays the bus between them
+(looper-srv `docs/bench.md`). `looper.run_bench("bench.toml")` starts
+`looper-srv run --bench bench.toml` and attaches to every device's server:
+
+```toml
+[bench]
+name = "lab"
+
+[[members]]
+name = "thermostat"                 # the first member leads
+project = "thermostat/looper.toml"  # beside bench.toml
+
+[[members]]
+name = "gateway"
+project = "gateway/looper.toml"
+
+[[joins]]
+bus = "CAN1"
+members = { thermostat = "CAN1", gateway = "CAN1" }
+```
+
+```python
+with looper.run_bench("bench.toml") as bench:
+    gateway = bench.member("gateway")          # a Simulation, through its own server
+    bench.advance(0.25)                        # the whole bench, on held clocks
+    status = gateway.bus_records("CAN1", sender="thermostat")
+    assert status[0].acknowledged_by_text == "acknowledged by gateway"
+    bench.hold()                               # returns once every device is held
+    print(bench.state().device("gateway").state_text)
+```
+
+Every device runs on a held virtual clock. Run control from any device acts on
+the whole bench; `bench.advance`, `bench.hold` and `bench.pace` go through the
+leader, and `hold` and `pace` wait until every device followed.
+`bench.state()` is the bench as the leader's server sees it: its devices, the
+joined buses, the other devices' resets as `marks`. Those come from the other
+servers within a fraction of a second, so a test that reset one device reads
+the mark a moment later.
+
+`simulation.bus_records(bus, sender=..., since=...)` reads the recorded frames
+until the recording reached the clock, so a reading right after `advance`
+sees the last frames too. On a bench a frame another device sent names it:
+`sender_device` (what `sender="gateway"` matches; `sender="peer"` takes any
+other device), `sender_text`, `acknowledged_by_text` and `refused_text`.
+`RunStatus` carries the bench's texts, `bench_text`, `peer_stop_text`,
+`bench_chip_text` and `bench_chip_hover_text`; the board a `PEER` node.
+
+From two simulations that already run, `simulation.join_candidates("CAN1")`
+lists the other servers on this PC, and `simulation.join_bus("CAN1",
+candidate)` joins them: both servers build their devices as libraries and
+restart into one host, this one leading; it returns once the bench formed.
+`other.wait_for_bench()` waits for the other device, whose connection drops and
+comes back as well. `simulation.leave_bench()` restarts every device alone.
+
+A bench is Pro. Without a licence `run_bench` raises `BenchProLockedError`, a
+`ServerStartError` and a `ProFeatureLockedError` at once, with the server's
+sentence; the bench calls raise `ProFeatureLockedError`. A bench file that
+does not fit, or a join the firmware has no bus for, raises `ServerStartError`
+with the server's sentence; a join that did not go through raises
+`SimulationRefusedError` with it.
+
+```{eval-rst}
+.. autofunction:: looper.run_bench
+
+.. autoclass:: looper.Bench
+   :members: member, member_names, leader, state, advance, advance_microseconds, hold, pace, close
+
+.. autoclass:: looper.BenchState
+   :members: device, device_names, this_device, leader
+
+.. autoclass:: looper.BenchDevice
+
+.. autoclass:: looper.BenchPhase
+
+.. autoclass:: looper.JoinedBus
+
+.. autoclass:: looper.BenchMark
+
+.. autoclass:: looper.JoinCandidates
+   :members: running
+
+.. autoclass:: looper.JoinCandidate
+   :members: preselected_bus
+
+.. autoclass:: looper.JoinBusChoice
 ```
 
 ## Interrupts and DMA
@@ -570,6 +665,8 @@ Needs the optional dependency `hypothesis` (`looper-py[hypothesis]`).
 .. autoexception:: looper.SimulationUnreachableError
 
 .. autoexception:: looper.ServerStartError
+
+.. autoexception:: looper.BenchProLockedError
 
 .. autoexception:: looper.ContractMismatchError
 ```

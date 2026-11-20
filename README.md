@@ -49,6 +49,7 @@ of [`looper-gui`](../looper-gui) look at one simulation together.
 | --- | --- |
 | `looper.run(definition, virtual=..., build=..., server=...)` | starts `looper-srv run` for a build definition and attaches to it; closing stops it |
 | `looper.connect(address)` | attaches to a `looper-srv run` that is already serving |
+| `looper.run_bench("bench.toml", build=..., server=...)` | starts `looper-srv run --bench` for devices whose CAN buses are joined (Pro) and attaches to each device's server; `bench.member("gateway")` is a `Simulation`, `bench.advance(s)`, `bench.hold()` and `bench.state()` act on the whole bench |
 
 The command that runs the server is looked up in this order: the argument
 `server=`, the `LOOPER_SRV` environment variable, and then `looper-srv` on the
@@ -71,6 +72,8 @@ which remains as a deprecated alias).
 | `apply_signal_graph(looper.SignalGraph()...)`, `signal_graph()` | a graph of generators, operations, comparators, limits (`.limit(key, in, low=..., high=...)`, each limit a number or a node it links) and slew rates (`.slew_rate(key, in, rise=..., fall=...)`, in units per second) on inputs and pins, and what each block gives now, a limit's `fault_text` among it |
 | `send_bus_message(looper.BusMessage(...))` | one message onto a bus |
 | `exchanges(since)`, `read_events(since)` | reading the recorded traffic back, exchange by exchange or page by page |
+| `bus_records(bus, sender=..., since=...)` | a bus's recorded frames once the recording caught up with the clock; on a bench each names its sender (`sender_device`, `sender_text`) and who acknowledged it (`acknowledged_by_text`) |
+| `bench_state()`, `join_candidates(bus)`, `join_bus(bus, candidate)`, `wait_for_bench()`, `leave_bench()` | the bench this device is on, and joining another running simulation's bus or leaving (Pro) |
 | `clear_recordings()`, `clear_measurements()` | throwing away what was recorded and counted, between two phases of a test |
 | `run_state()`, `timings()`, `memory()` | the run, the call counts and the heap and stack as they stand |
 | `expect()` | begin declaring what should be true |
