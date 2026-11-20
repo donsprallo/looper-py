@@ -304,10 +304,14 @@ with looper.run_bench("bench.toml") as bench:
 Every device runs on a held virtual clock. Run control from any device acts on
 the whole bench; `bench.advance`, `bench.hold` and `bench.pace` go through the
 leader, and `hold` and `pace` wait until every device followed.
-`bench.state()` is the bench as the leader's server sees it: its devices, the
-joined buses, the other devices' resets as `marks`. Those come from the other
-servers within a fraction of a second, so a test that reset one device reads
-the mark a moment later.
+`bench.state()` is the bench as the leader's server sees it: its devices --
+each with its state, its time, where its server listens (`address`) and how
+many windows are attached to that server (`windows`; decide by it, not by
+`where_text`) -- the joined buses, and the other devices' resets as `marks`.
+A reset on a bench is done when `reset` returns: `lives()` already lists the
+next life. The mark comes from the other server within a fraction of a
+second, so a test reads it a moment later. Join and leave are told in
+`revision_text`.
 
 `simulation.bus_records(bus, sender=..., since=...)` reads the recorded frames
 until the recording reached the clock, so a reading right after `advance`
