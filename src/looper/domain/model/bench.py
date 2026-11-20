@@ -32,7 +32,9 @@ class BenchDevice:
     Attributes:
         name: Its name on the bench, ``gateway``.
         mcu: ``STM32G474``; empty when its project names none.
-        where_text: ``this window``, ``own window``, ``this PC``.
+        where_text: ``own window`` for another device whose server has a
+            window attached, ``this PC`` otherwise; decide by `windows`, not
+            by this text.
         state_text: ``runs``, ``held``, ``held · at a breakpoint``,
             ``stopped · HardFault``, ``reset · life 2``, ``not answering``.
         now_us: Its simulated time; every device of a bench stands at the
@@ -44,6 +46,8 @@ class BenchDevice:
         index: Its index on the bench, the ``source_id`` of its frames.
         fault: Whether it stopped or does not answer.
         hover_text: The device in one line with its bus and frames.
+        windows: How many windows are attached to that device's server now;
+            for this device, those attached to the answering server.
     """
 
     name: str
@@ -58,6 +62,7 @@ class BenchDevice:
     index: int = 0
     fault: bool = False
     hover_text: str = ""
+    windows: int = 0
 
 
 @dataclass(frozen=True)

@@ -37,7 +37,9 @@ class BenchServicer(service.InspectorServicer):  # type: ignore[misc]
         self._refuse_if_told(context)
         devices = [
             contract.BenchDevice(name="thermostat", leader=True, this_device=True),
-            contract.BenchDevice(name="gateway", index=1, state_text="held", now_text="0.250 s"),
+            contract.BenchDevice(
+                name="gateway", index=1, state_text="held", now_text="0.250 s", windows=1
+            ),
         ]
         bus = contract.JoinedBus(bus_id=1, label="CAN1", join="CAN1", bitrate=500_000, frames=4)
         mark = contract.BenchMark(sim_us=300_000, device="gateway", life=2, text="gateway reset")
@@ -112,6 +114,7 @@ def test_the_bench_comes_with_its_devices_buses_and_marks(inspector: GrpcInspect
     )
     assert state.leader == state.this_device
     assert state.device("gateway").now_text == "0.250 s"
+    assert state.device("gateway").windows == 1
     assert (state.buses[0].label, state.buses[0].frames) == ("CAN1", 4)
     assert (state.marks[0].device, state.marks[0].life) == ("gateway", 2)
 

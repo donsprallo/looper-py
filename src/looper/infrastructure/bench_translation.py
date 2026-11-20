@@ -55,6 +55,7 @@ def device_of(device: contract.BenchDevice) -> BenchDevice:
         index=device.index,
         fault=device.fault,
         hover_text=device.hover_text,
+        windows=device.windows,
     )
 
 
