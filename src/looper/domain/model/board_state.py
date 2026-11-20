@@ -29,6 +29,9 @@ class BoardNodeState:
             and for a channel without data.
         exchanges: A bus's exchanges so far.
         last_us: When a bus's last exchange ended; 0 before the first.
+        frames_text: A peer of the bench: the frames it put on the joined
+            bus, ``312 frames · last 4 ms ago``; its ``state_text`` is its
+            state as a word, ``runs``, ``held``, ``not answering``.
     """
 
     key: str
@@ -41,6 +44,7 @@ class BoardNodeState:
     value: float | None = None
     exchanges: int = 0
     last_us: int = 0
+    frames_text: str = ""
 
 
 @dataclass(frozen=True)

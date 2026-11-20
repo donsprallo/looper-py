@@ -24,6 +24,7 @@ from __future__ import annotations
 from importlib.metadata import PackageNotFoundError
 from importlib.metadata import version as _distribution_version
 
+from looper.application.bench import Bench
 from looper.application.bootloader import Otp, sweep_power_cuts
 from looper.application.expectations import Expectations
 from looper.application.memories import Flash, FlashPartition, Retained
@@ -155,6 +156,16 @@ from looper.domain.model import (
     Width,
     step_port,
 )
+from looper.domain.model.bench import (
+    BenchDevice,
+    BenchMark,
+    BenchPhase,
+    BenchState,
+    JoinBusChoice,
+    JoinCandidate,
+    JoinCandidates,
+    JoinedBus,
+)
 from looper.domain.model.board import (
     Board,
     BoardBus,
@@ -169,8 +180,9 @@ from looper.domain.model.board import (
 from looper.domain.model.board_state import BoardNodeState, BoardState, BoardTapState
 from looper.domain.model.pwm import PinMeasurement, PwmMeasurement, PwmOutput, PwmOutputs
 from looper.domain.model.servers import AnnouncedServer
+from looper.infrastructure.bench_run import BenchProLockedError
 from looper.infrastructure.looper_cli import LooperCliError, ServerStartError
-from looper.starting import ContractMismatchError, connect, run, servers
+from looper.starting import ContractMismatchError, connect, run, run_bench, servers
 
 #: The installed version, which the build takes from the Git tag (hatch-vcs).
 #: A checkout that is not installed, as in some test runs, reports "0+unknown".
@@ -180,6 +192,17 @@ except PackageNotFoundError:
     __version__ = "0+unknown"
 
 __all__ = [
+    "Bench",
+    "BenchDevice",
+    "BenchMark",
+    "BenchPhase",
+    "BenchProLockedError",
+    "BenchState",
+    "JoinBusChoice",
+    "JoinCandidate",
+    "JoinCandidates",
+    "JoinedBus",
+    "run_bench",
     "Board",
     "BoardBus",
     "BoardEdge",

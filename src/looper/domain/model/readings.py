@@ -93,6 +93,14 @@ class Exchange:
         length: How many bytes the server counted in it.
         accepted: Whether something on the bus took it.
         event_seq: Its place in the event stream.
+        sender_device: On a bus joined on a bench: the name of the device
+            that sent the frame, ``gateway``, for a frame another device
+            sent; empty for this device's own frames and on every other bus.
+        sender_text: What the server shows as its sender, ``gateway``.
+        acknowledged_by_text: Who took part in the acknowledge,
+            ``acknowledged by thermostat``; empty when nobody did.
+        refused_text: Why nobody acknowledged it, naming the other device's
+            state; empty when somebody did.
     """
 
     bus_id: int
@@ -105,11 +113,20 @@ class Exchange:
     length: int
     accepted: bool
     event_seq: int
+    sender_device: str = ""
+    sender_text: str = ""
+    acknowledged_by_text: str = ""
+    refused_text: str = ""
 
     @property
     def was_refused(self) -> bool:
         """Whether nothing on the bus took it."""
         return not self.accepted
+
+    @property
+    def from_peer(self) -> bool:
+        """Whether another device of the bench sent it."""
+        return bool(self.sender_device)
 
 
 @dataclass(frozen=True)
@@ -171,6 +188,13 @@ class RunStatus:
             it is.
         time_model: The time model the simulation runs on; None from a
             server that predates time models.
+        bench_text: On a bench, the end of the clock's text: ``bench``,
+            ``waiting for gateway``, ``gateway stopped``; empty otherwise.
+        peer_stop_text: Why the bench cannot go on because of another
+            device, ``gateway stopped at 4.214 s: … The bench is held.``;
+            empty while every device runs.
+        bench_chip_text: The header's chip, ``⇄ gateway``; empty off a bench.
+        bench_chip_hover_text: The chip's hover.
     """
 
     now_us: int
@@ -184,6 +208,10 @@ class RunStatus:
     behind_us: int = 0
     slipped_us: int = 0
     time_model: ActiveTimeModel | None = None
+    bench_text: str = ""
+    peer_stop_text: str = ""
+    bench_chip_text: str = ""
+    bench_chip_hover_text: str = ""
 
 
 @dataclass(frozen=True)

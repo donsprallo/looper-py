@@ -29,6 +29,8 @@ class BoardNodeKind(StrEnum):
     SOURCE = "source"
     DMA = "dma"
     PWM = "pwm"
+    #: Another device of the bench on a joined bus, drawn at the end of its rail.
+    PEER = "peer"
 
 
 class BoardEdgeKind(StrEnum):
@@ -92,6 +94,10 @@ class BoardNode:
         second_driver_text: Why a second driver is not made from here.
         empty_text: What the rail of a bus without a device says instead of
             taps, ``no devices on CAN1``; empty for every other node.
+        joined_text: A bus joined on a bench: the rail's caption after its
+            name, ``joined with gateway``; empty for every other node.
+        join_hint_text: A CAN bus that could be joined, on its empty rail's
+            second line; empty for every other node.
     """
 
     key: str
@@ -119,6 +125,8 @@ class BoardNode:
     endpoint_node_keys: tuple[str, ...] = ()
     second_driver_text: str = ""
     empty_text: str = ""
+    joined_text: str = ""
+    join_hint_text: str = ""
 
     @property
     def is_port(self) -> bool:

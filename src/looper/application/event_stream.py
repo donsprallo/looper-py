@@ -13,9 +13,11 @@ events, not recordings.
 
 from __future__ import annotations
 
+import time
 from collections.abc import Iterator
 
-from looper.application.ports import Inspector, SimulationRefusedError
+from looper.application.event_window import DEADLINE_SECONDS, POLL_SECONDS
+from looper.application.ports import Inspector, SimulationRefusedError, SimulationUnreachableError
 from looper.domain.model import EventPage, Exchange, GraphSwitchMark
 
 
@@ -50,6 +52,32 @@ class EventStream:
         for page in self._pages(since):
             yield from page.exchanges
 
+    def exchanges_until(self, since: int, now_us: int) -> Iterator[Exchange]:
+        """Every recorded exchange from event number `since` on, once the log reached `now_us`.
+
+        The server empties the simulation's rings into its log a moment
+        after a run returned -- on a bench, each server from its own device
+        -- so a reading right after `advance` may find the log behind the
+        clock. This one reads on until the log stands at `now_us`, the time
+        the clock stood at when it was asked.
+
+        Raises:
+            SimulationRefusedError: If another client cleared the recording.
+            SimulationUnreachableError: If the log does not get there in time.
+        """
+        give_up_at = time.monotonic() + DEADLINE_SECONDS
+        epoch = self._inspector.run_state().epoch
+        reached = since
+        while True:
+            page = self._page(epoch, reached)
+            yield from page.exchanges
+            if page.next_event_seq > reached:
+                reached = page.next_event_seq
+                continue
+            if page.sim_now_us >= now_us:
+                return
+            _wait_for_the_log(give_up_at)
+
     def graph_switches(self, since: int = 0) -> Iterator[GraphSwitchMark]:
         """Every recorded switch of a group or a block of the graph from event number `since` on.
 
@@ -79,3 +107,10 @@ class EventStream:
                 "read again to start from the new recording"
             )
         return page
+
+
+def _wait_for_the_log(give_up_at: float) -> None:
+    """Pause before asking again, or give up when the log is stuck."""
+    if time.monotonic() > give_up_at:
+        raise SimulationUnreachableError("the server's event log did not catch up with its clock")
+    time.sleep(POLL_SECONDS)

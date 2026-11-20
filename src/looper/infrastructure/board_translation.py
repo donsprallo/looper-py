@@ -56,6 +56,8 @@ def node_of(node: contract.BoardNode) -> BoardNode:
         endpoint_node_keys=tuple(node.endpoint_node_keys),
         second_driver_text=node.second_driver_text,
         empty_text=node.empty_text,
+        joined_text=node.joined_text,
+        join_hint_text=node.join_hint_text,
     )
 
 
@@ -99,6 +101,7 @@ def node_state_of(node: contract.BoardNodeState) -> BoardNodeState:
         value=node.value if node.HasField("value") else None,
         exchanges=node.exchanges,
         last_us=node.last_us,
+        frames_text=node.frames_text,
     )
 
 

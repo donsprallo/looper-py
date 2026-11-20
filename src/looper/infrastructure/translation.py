@@ -93,6 +93,10 @@ def run_status_of(message: contract.RunState) -> RunStatus:
         behind_us=message.behind_us,
         slipped_us=message.slipped_us,
         time_model=time_model_translation.active_time_model_of(message),
+        bench_text=message.bench_text,
+        peer_stop_text=message.peer_stop_text,
+        bench_chip_text=message.bench_chip_text,
+        bench_chip_hover_text=message.bench_chip_hover_text,
     )
 
 
@@ -274,6 +278,10 @@ def _exchange_of(event: contract.Event) -> Exchange:
         length=exchange.payload_length,
         accepted=exchange.accepted,
         event_seq=event.event_seq,
+        sender_device=exchange.sender_device,
+        sender_text=exchange.sender_text,
+        acknowledged_by_text=exchange.acknowledged_by_text,
+        refused_text=exchange.refused_text,
     )
 
 

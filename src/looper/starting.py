@@ -13,12 +13,19 @@ import warnings
 from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path
 
+from looper.application.bench import Bench
 from looper.application.ports import ContractNotServedError
 from looper.application.server_list import running_servers
 from looper.application.simulation import Simulation
 from looper.domain.model.servers import AnnouncedServer
+from looper.infrastructure.bench_run import BenchCommand, BenchRun
 from looper.infrastructure.grpc_inspector import CONTRACT_VERSION, GrpcInspector
-from looper.infrastructure.looper_cli import LooperCliRun, RunCommand, program_of
+from looper.infrastructure.looper_cli import (
+    LooperCliRun,
+    RunCommand,
+    instrumentation_switches,
+    program_of,
+)
 from looper.infrastructure.process_table import OsProcessTable
 from looper.infrastructure.registry_dir import RegistryDir
 
@@ -143,6 +150,74 @@ def run(
     except BaseException:
         process.stop()
         raise
+
+
+def run_bench(
+    bench_file: str | Path,
+    *,
+    build: bool = True,
+    server: str | Sequence[str] | None = None,
+    record_calls: bool | None = None,
+    profile: bool | None = None,
+    track_allocations: bool | None = None,
+    optimize: str | None = None,
+) -> Bench:
+    """Build every device of a bench, start the bench, and attach to each device's server.
+
+    Starts ``looper-srv run --bench bench_file``. Every device runs on a
+    held virtual clock with a server of its own; ``bench.member("gateway")``
+    is that device's `Simulation`. A bench is part of looper Pro.
+
+    Args:
+        bench_file: The ``bench.toml``: its ``[[members]]``, the first
+            leading, and its ``[[joins]]``.
+        build: Build the members first, or start what was built last.
+        server: The command that runs the server, as for `run`.
+        record_calls: As for `run`, for every member.
+        profile: As for `run`, for every member.
+        track_allocations: As for `run`, for every member.
+        optimize: As for `run`, for every member.
+
+    Raises:
+        BenchProLockedError: If the licence does not unlock a bench; the
+            message is the server's sentence. It is a `ServerStartError` and
+            a `ProFeatureLockedError`.
+        ServerStartError: If the bench could not be built or started; the
+            message is the server's sentence.
+        ContractMismatchError: If a server speaks another contract version.
+    """
+    options = instrumentation_switches(record_calls, profile, track_allocations, optimize)
+    command = BenchCommand(
+        program=program_of(server or _server_from_environment()),
+        bench_file=Path(bench_file),
+        build=build,
+        options=tuple(options),
+    )
+    process = BenchRun.start(command)
+    members: dict[str, Simulation] = {}
+    try:
+        return _bench_of(process, members)
+    except BaseException:
+        for simulation in members.values():
+            simulation.close()
+        process.stop()
+        raise
+
+
+def _bench_of(process: BenchRun, members: dict[str, Simulation]) -> Bench:
+    """The bench of every member's server; `members` fills as each is attached to."""
+    leader = _attached(GrpcInspector(process.leader_address), on_close=None)
+    leader_name = _own_name(leader)
+    members[leader_name] = leader
+    for name, address in process.member_addresses.items():
+        members[name] = _attached(GrpcInspector(address), on_close=None)
+    return Bench(members, leader_name, on_close=_discarding(process.stop))
+
+
+def _own_name(simulation: Simulation) -> str:
+    """The name the bench gives the device of this server, as its server says."""
+    device = simulation.bench_state().this_device
+    return device.name if device is not None else simulation.firmware_name
 
 
 def _attached(inspector: GrpcInspector, on_close: Callable[[], object] | None) -> Simulation:

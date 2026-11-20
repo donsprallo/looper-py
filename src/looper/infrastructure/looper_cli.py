@@ -99,21 +99,33 @@ class RunCommand:
 
     def _instrumentation(self) -> list[str]:
         """The switches for what differs from looper.toml; the server builds such a run apart."""
-        switches = [
-            _switch(name, chosen)
-            for name, chosen in (
-                ("record-calls", self.record_calls),
-                ("profile", self.profile),
-                ("track-allocations", self.track_allocations),
-            )
-            if chosen is not None
-        ]
-        if self.optimize is not None:
-            switches.append(f"--optimize={self.optimize}")
-        return switches
+        return instrumentation_switches(
+            self.record_calls, self.profile, self.track_allocations, self.optimize
+        )
 
 
-def _switch(name: str, on: bool) -> str:
+def instrumentation_switches(
+    record_calls: bool | None,  # noqa: FBT001
+    profile: bool | None,  # noqa: FBT001
+    track_allocations: bool | None,  # noqa: FBT001
+    optimize: str | None,
+) -> list[str]:
+    """``--no-profile``, ``--optimize=O2`` and the like, for each choice that was made."""
+    switches = [
+        _switch(name, chosen)
+        for name, chosen in (
+            ("record-calls", record_calls),
+            ("profile", profile),
+            ("track-allocations", track_allocations),
+        )
+        if chosen is not None
+    ]
+    if optimize is not None:
+        switches.append(f"--optimize={optimize}")
+    return switches
+
+
+def _switch(name: str, on: bool) -> str:  # noqa: FBT001
     """``--profile`` or ``--no-profile``."""
     return f"--{name}" if on else f"--no-{name}"
 
