@@ -118,6 +118,9 @@ def test_both_devices_see_one_bench_the_thermostat_leading(bench: looper.Bench) 
     assert state.leader is not None
     assert state.leader.name == "thermostat"
     assert bench.member("gateway").bench_state().device("gateway").this_device
+    addresses = [device.address for device in state.devices]
+    assert all(addresses) and len(set(addresses)) == 2, addresses
+    assert [device.windows for device in state.devices] == [0, 0]
 
 
 def test_the_gateway_hears_the_thermostat_s_status(bench: looper.Bench) -> None:
@@ -164,18 +167,25 @@ def test_an_obd_request_is_answered(bench: looper.Bench) -> None:
 
 
 def test_a_reset_of_the_gateway_is_a_mark_on_the_thermostat_s_bench(bench: looper.Bench) -> None:
-    bench.member("gateway").reset("pin")
-    bench.advance(0.05)
+    gateway = bench.member("gateway")
+    reset_at_us = gateway.run_state().now_us
 
+    gateway.reset("pin")
+    lives = gateway.lives()
     marks = _marks_within(bench, FOLLOW_SECONDS)
 
+    assert lives[-1].number == 2, "the reset is done when it returns"
+    assert lives[-1].started_at_us >= reset_at_us
     assert [(mark.device, mark.life) for mark in marks] == [("gateway", 2)]
     assert marks[0].text == "gateway reset · pin · life 2"
 
 
-def test_a_held_bench_stands(bench: looper.Bench) -> None:
+def test_a_paced_bench_runs_and_a_held_one_stands(bench: looper.Bench) -> None:
     thermostat, gateway = bench.member("thermostat"), bench.member("gateway")
+    paced_from = gateway.run_state().now_us
     bench.pace(1.0)
+    time.sleep(0.5)
+    assert gateway.run_state().now_us > paced_from, "a paced bench moves"
 
     bench.hold()
     before = (thermostat.run_state().now_us, gateway.run_state().now_us)
