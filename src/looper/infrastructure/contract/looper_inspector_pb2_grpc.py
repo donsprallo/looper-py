@@ -489,6 +489,26 @@ class InspectorStub:
                 request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ImageScope.SerializeToString,
                 response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.BoardState.FromString,
                 _registered_method=True)
+        self.DescribeJoinCandidates = channel.unary_unary(
+                '/looper.inspector.v3.Inspector/DescribeJoinCandidates',
+                request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.JoinCandidatesRequest.SerializeToString,
+                response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.JoinCandidates.FromString,
+                _registered_method=True)
+        self.JoinBus = channel.unary_unary(
+                '/looper.inspector.v3.Inspector/JoinBus',
+                request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.JoinRequest.SerializeToString,
+                response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.BenchState.FromString,
+                _registered_method=True)
+        self.LeaveBench = channel.unary_unary(
+                '/looper.inspector.v3.Inspector/LeaveBench',
+                request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
+                response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.BenchState.FromString,
+                _registered_method=True)
+        self.ObserveBench = channel.unary_unary(
+                '/looper.inspector.v3.Inspector/ObserveBench',
+                request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
+                response_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.BenchState.FromString,
+                _registered_method=True)
         self.ObserveFunctionMetrics = channel.unary_unary(
                 '/looper.inspector.v3.Inspector/ObserveFunctionMetrics',
                 request_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ArchitectureRequest.SerializeToString,
@@ -1322,6 +1342,59 @@ class InspectorServicer:
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def DescribeJoinCandidates(self, request, context):
+        """---- A bench: devices on this PC with joined buses (CAPABILITY_BENCH; Pro) ----
+        Two or more simulations on this PC whose CAN buses are joined form a
+        bench: one bench host runs them in lockstep and plays the bus between
+        them, and each keeps its own server and window. Answered in a
+        simulation; a project's code without one and a board at a probe are
+        refused with FAILED_PRECONDITION and a sentence, the free download with
+        PERMISSION_DENIED and its sentence. Run control from any device's server
+        acts on the whole bench: Hold, Run and Speed hold or move every device
+        (the other servers follow within a quarter of a second), Step runs to
+        this device's next pass and the others to the same moment, Restart
+        starts every device anew at 0 s. A firmware reset stays with its device.
+
+        For the Join dialog: every other server on this PC the registry lists,
+        whether it can be joined with this device's bus and why not, its buses
+        of the same kind, and what joining does, all in the server's words.
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def JoinBus(self, request, context):
+        """Join this device's bus with another server's: the server writes the
+        bench (`.looper/bench/<name>.toml` beside this project), builds both
+        devices as libraries and restarts both into one bench host; this device
+        leads. It answers at once with phase JOINING; ObserveBench follows it
+        until ON_BENCH, or back to ALONE with failed_text. A request that cannot
+        be carried out (another kind of bus, a server on a bench already) is
+        refused with FAILED_PRECONDITION and the sentence. Both connections drop
+        and come back, as at a restart.
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def LeaveBench(self, request, context):
+        """Leave the bench: every device restarts alone (with two devices the
+        bench is no more). Answers at once with phase LEAVING; refused with a
+        sentence on a server that is on no bench.
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def ObserveBench(self, request, context):
+        """The bench as this server sees it: its devices with their state and
+        simulated time, the joined buses with their frames, the resets of the
+        other devices as marks, and a revision with what changed.
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
     def ObserveFunctionMetrics(self, request, context):
         """---- Architecture (CAPABILITY_ARCHITECTURE) ----
         Read from the project's code index, which the server builds in the
@@ -1965,6 +2038,26 @@ def add_InspectorServicer_to_server(servicer, server):
                     servicer.ObserveBoard,
                     request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ImageScope.FromString,
                     response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.BoardState.SerializeToString,
+            ),
+            'DescribeJoinCandidates': grpc.unary_unary_rpc_method_handler(
+                    servicer.DescribeJoinCandidates,
+                    request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.JoinCandidatesRequest.FromString,
+                    response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.JoinCandidates.SerializeToString,
+            ),
+            'JoinBus': grpc.unary_unary_rpc_method_handler(
+                    servicer.JoinBus,
+                    request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.JoinRequest.FromString,
+                    response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.BenchState.SerializeToString,
+            ),
+            'LeaveBench': grpc.unary_unary_rpc_method_handler(
+                    servicer.LeaveBench,
+                    request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.FromString,
+                    response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.BenchState.SerializeToString,
+            ),
+            'ObserveBench': grpc.unary_unary_rpc_method_handler(
+                    servicer.ObserveBench,
+                    request_deserializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.FromString,
+                    response_serializer=looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.BenchState.SerializeToString,
             ),
             'ObserveFunctionMetrics': grpc.unary_unary_rpc_method_handler(
                     servicer.ObserveFunctionMetrics,
@@ -4534,6 +4627,114 @@ class Inspector:
             '/looper.inspector.v3.Inspector/ObserveBoard',
             looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.ImageScope.SerializeToString,
             looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.BoardState.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def DescribeJoinCandidates(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/looper.inspector.v3.Inspector/DescribeJoinCandidates',
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.JoinCandidatesRequest.SerializeToString,
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.JoinCandidates.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def JoinBus(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/looper.inspector.v3.Inspector/JoinBus',
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.JoinRequest.SerializeToString,
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.BenchState.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def LeaveBench(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/looper.inspector.v3.Inspector/LeaveBench',
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.BenchState.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def ObserveBench(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/looper.inspector.v3.Inspector/ObserveBench',
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.Empty.SerializeToString,
+            looper_dot_infrastructure_dot_contract_dot_looper__inspector__pb2.BenchState.FromString,
             options,
             channel_credentials,
             insecure,

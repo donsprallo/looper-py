@@ -336,6 +336,10 @@ enum ProFeature {
   // A board at a debug probe: flashing, reset, halt, resume and its globals
   // (looper-srv's hardware session). looper-core never answers it.
   PRO_FEATURE_HARDWARE = 5;
+  // Devices on one bench, of any size: JoinBus, a bench.toml started with
+  // `looper-srv run --bench`, and everything that serves a member of one
+  // (CAPABILITY_BENCH). The free download refuses it with its sentence.
+  PRO_FEATURE_BENCH = 6;
 }
 
 message LicenseView {
@@ -419,6 +423,13 @@ enum Capability {
   // ListSignalBlocks lists Limit and Slew rate unlocked. Without it they are
   // refused with a sentence that says to update looper-rt.
   CAPABILITY_SIGNAL_LIMITS = 33;
+  // A bench: this simulation's CAN buses joined with another simulation's
+  // on this PC (DescribeJoinCandidates, JoinBus, LeaveBench, ObserveBench),
+  // one clock for every device on it, RunState's bench texts, a PEER node on
+  // the Device page and the sender of a frame (Exchange.sender_device). In
+  // every simulation; Pro (PRO_FEATURE_BENCH), so the free download answers
+  // the calls with PERMISSION_DENIED and its sentence.
+  CAPABILITY_BENCH = 34;
 }
 
 enum ServerMode {
@@ -501,6 +512,21 @@ message RunState {
   // The time model the simulation runs with. Unset from a server that
   // predates time models, and on a board.
   TimeModelState time_model = 18;
+  // On a bench (CAPABILITY_BENCH), all in the server's words; empty
+  // otherwise. bench_text ends the CLOCK text: "bench", "waiting for
+  // gateway" (the bench has been behind its pace for 300 ms), "gateway at a
+  // breakpoint", "gateway stopped", "gateway not answering".
+  string bench_text = 19;
+  // Why the bench cannot go on because of another device, for the banner
+  // that names it: "gateway stopped at 4.214 s: HardFault at 0x08001F2C.
+  // The bench is held." or "Lost gateway at 4.214 s. The bench is held; it
+  // goes on when gateway answers." Empty while every device runs.
+  string peer_stop_text = 20;
+  // The header's chip, "⇄ gateway" with one other device, "BENCH · 3"
+  // with more, and its hover: "On a bench with gateway: one clock, CAN1
+  // joined. Click for the bench."
+  string bench_chip_text = 21;
+  string bench_chip_hover_text = 22;
 }
 
 // The watchdog of the running life, as the runtime last noted it. Every
@@ -797,6 +823,10 @@ enum LifeEndReason {
   LIFE_END_REASON_RESET = 1;
   LIFE_END_REASON_JUMP = 2;
   LIFE_END_REASON_POWER_CUT = 3;
+  // A member of a bench faulted and the bench host caught it (an access
+  // violation, an illegal instruction, a division by zero); the Fault event
+  // with source "crash" says what and where. The next life is a power-on.
+  LIFE_END_REASON_FAULT = 4;
 }
 
 enum EnteredBy {
@@ -877,6 +907,20 @@ message Exchange {
     I2cDetail i2c = 22;
     SpiDetail spi = 23;
   }
+  // On a bus joined on a bench (CAPABILITY_BENCH), in the server's words;
+  // empty on every other bus. A frame another device sent (SOURCE_LINK):
+  // sender_text is what the Src column shows, "gateway", and sender_device
+  // the device's name on the bench, which a client's query `from=gateway`
+  // matches (`from=peer`: any sender_device). acknowledged_by_text says who
+  // took part in the acknowledge: "acknowledged by thermostat"; empty when
+  // nobody did. refused_text says why nobody did, naming the other device's
+  // state: "No node acknowledged it: gateway's CAN1 is not started (it is in
+  // init mode)." or "No node acknowledged it: gateway is resetting (life
+  // 2)."
+  string sender_text = 24;
+  string sender_device = 25;
+  string acknowledged_by_text = 26;
+  string refused_text = 27;
 }
 
 enum Direction { DIRECTION_UNSPECIFIED = 0; DIRECTION_OUTBOUND = 1; DIRECTION_INBOUND = 2; }
@@ -889,6 +933,10 @@ enum Source {
   SOURCE_COMPONENT = 4;
   SOURCE_CHAIN = 5;      // an action of a chain: a frame, a pin level, an interrupt
   SOURCE_GRAPH = 6;      // a pin target of the signal graph (CAPABILITY_GRAPH_EDGES): a pin level
+  // A frame another device of the bench sent onto a joined bus
+  // (CAPABILITY_BENCH); source_id is that device's index on the bench,
+  // Exchange.sender_device its name.
+  SOURCE_LINK = 7;
 }
 
 message CanDetail { bool extended = 1; bool remote = 2; uint32 dlc = 3; bool fd = 4; bool brs = 5; bool esi = 6; bool error_frame = 7; }
@@ -1474,6 +1522,40 @@ service Inspector {
   // tap and per rail, a chip's last value, and the ports whose driver is
   // off. `revision` differing from the BoardView's: describe it again.
   rpc ObserveBoard(ImageScope) returns (BoardState);
+
+  // ---- A bench: devices on this PC with joined buses (CAPABILITY_BENCH; Pro) ----
+  // Two or more simulations on this PC whose CAN buses are joined form a
+  // bench: one bench host runs them in lockstep and plays the bus between
+  // them, and each keeps its own server and window. Answered in a
+  // simulation; a project's code without one and a board at a probe are
+  // refused with FAILED_PRECONDITION and a sentence, the free download with
+  // PERMISSION_DENIED and its sentence. Run control from any device's server
+  // acts on the whole bench: Hold, Run and Speed hold or move every device
+  // (the other servers follow within a quarter of a second), Step runs to
+  // this device's next pass and the others to the same moment, Restart
+  // starts every device anew at 0 s. A firmware reset stays with its device.
+  //
+  // For the Join dialog: every other server on this PC the registry lists,
+  // whether it can be joined with this device's bus and why not, its buses
+  // of the same kind, and what joining does, all in the server's words.
+  rpc DescribeJoinCandidates(JoinCandidatesRequest) returns (JoinCandidates);
+  // Join this device's bus with another server's: the server writes the
+  // bench (`.looper/bench/<name>.toml` beside this project), builds both
+  // devices as libraries and restarts both into one bench host; this device
+  // leads. It answers at once with phase JOINING; ObserveBench follows it
+  // until ON_BENCH, or back to ALONE with failed_text. A request that cannot
+  // be carried out (another kind of bus, a server on a bench already) is
+  // refused with FAILED_PRECONDITION and the sentence. Both connections drop
+  // and come back, as at a restart.
+  rpc JoinBus(JoinRequest) returns (BenchState);
+  // Leave the bench: every device restarts alone (with two devices the
+  // bench is no more). Answers at once with phase LEAVING; refused with a
+  // sentence on a server that is on no bench.
+  rpc LeaveBench(Empty) returns (BenchState);
+  // The bench as this server sees it: its devices with their state and
+  // simulated time, the joined buses with their frames, the resets of the
+  // other devices as marks, and a revision with what changed.
+  rpc ObserveBench(Empty) returns (BenchState);
 
   // ---- Architecture (CAPABILITY_ARCHITECTURE) ----
   // Read from the project's code index, which the server builds in the
@@ -5572,6 +5654,13 @@ message BoardNode {
     SOURCE = 6;
     DMA = 7;
     PWM = 8;
+    // Another device of the bench on a joined bus (CAPABILITY_BENCH), drawn
+    // as a dashed card at the end of the rail: key "peer:gateway",
+    // parent_key the bus's key, title "gateway · STM32G474", subtitle
+    // "this PC", hover_text "gateway · STM32G474 on this PC · CAN1 at 500
+    // kbit/s". Its tap is a BoardEdge ON_BUS with the text "⇄ gateway"; its
+    // state word and frames are in BoardNodeState.
+    PEER = 9;
   }
   Kind kind = 2;
   // What it lies on: "mcu" for its pins, channels, buses, sources and DMA
@@ -5634,6 +5723,12 @@ message BoardNode {
   // A bus without a device on it: what its rail says instead of taps,
   // "no devices on CAN1". Empty for every other node.
   string empty_text = 25;
+  // A bus joined on a bench: the rail's caption after its name, "joined with
+  // gateway"; the rail is drawn double. Empty for every other node.
+  string joined_text = 26;
+  // A CAN bus that could be joined, on its empty rail's second line: "Join
+  // CAN1 with another device to let them talk." Empty for every other node.
+  string join_hint_text = 27;
 }
 
 // A block or probe of the applied signal graph.
@@ -5714,6 +5809,11 @@ message BoardNodeState {
   // first.
   uint64 exchanges = 9;
   uint64 last_us = 10;
+  // A PEER node: the frames it put on the joined bus, "312 frames · last 4
+  // ms ago", "no frames yet". Its state_text is its state as a word:
+  // "runs", "held", "held · at a breakpoint", "stopped · HardFault",
+  // "reset · life 2", "not answering"; fault is set for the last two.
+  string frames_text = 11;
 }
 
 // The state of a tap: a device on its bus (BoardEdge.Kind.ON_BUS).
@@ -5733,4 +5833,141 @@ message BoardEdgeState {
   uint64 exchanges = 8;
   uint64 unanswered = 9;
   uint64 last_us = 10;
+}
+
+// ---- A bench (CAPABILITY_BENCH) ----
+
+message JoinCandidatesRequest {
+  // This device's bus to join, by its runtime bus_id.
+  uint32 bus_id = 1;
+}
+
+// What the Join dialog shows: the server decides, the window shows.
+message JoinCandidates {
+  // "Join CAN1 of thermostat with another device"
+  string title = 1;
+  // Every other server on this PC the registry lists, simulations first,
+  // joinable or not.
+  repeated JoinCandidate candidates = 2;
+}
+
+message JoinCandidate {
+  // The registry entry's (proto/server_registry.md): JoinRequest names it.
+  string instance_id = 1;
+  string address = 2;
+  string firmware_name = 3;
+  string definition_path = 4;
+  bool joinable = 5;
+  // Why not, under the row: "has no CAN bus", "is on a bench with dimmer
+  // already", "is a board at a probe – a bench is for simulations",
+  // "speaks contract 4; this server speaks 3". Empty when it can be joined.
+  string reason_text = 6;
+  // Its buses of this bus's kind, the one that fits first.
+  repeated JoinBusChoice buses = 7;
+  // What joining does, before the click: "The two devices share one clock
+  // from then on: holding one holds both. thermostat leads the bench."
+  string joining_text = 8;
+}
+
+message JoinBusChoice {
+  uint32 bus_id = 1;
+  string label = 2;          // "CAN1"
+  string text = 3;           // "CAN1 · 500 kbit/s"
+  uint32 bitrate = 4;        // 0 while the firmware has set none
+  // The one that fits: the same label, else the same bit rate.
+  bool preselected = 5;
+  // A bit-rate mismatch, said in amber; it does not block: "gateway's CAN1
+  // runs at 250 kbit/s, thermostat's at 500 kbit/s. Neither will understand
+  // the other."
+  string mismatch_text = 6;
+}
+
+message JoinRequest {
+  uint32 bus_id = 1;              // this device's bus
+  string peer_instance_id = 2;    // a JoinCandidate's instance_id
+  uint32 peer_bus_id = 3;         // one of its JoinBusChoice
+}
+
+enum BenchPhase {
+  BENCH_PHASE_ALONE = 0;          // on no bench
+  BENCH_PHASE_JOINING = 1;        // building both devices, then restarting them together
+  BENCH_PHASE_ON_BENCH = 2;
+  BENCH_PHASE_LEAVING = 3;        // restarting alone
+}
+
+message BenchState {
+  // Starts at 1, one more whenever a device comes or goes, changes its
+  // state, or the phase changes; revision_text says what changed: "CAN1
+  // joined with gateway · CAN1 at 0 s. The bench runs held.", "gateway
+  // reset · watchdog · life 2", "gateway left the bench at 4.020 s."
+  uint64 revision = 1;
+  string revision_text = 2;
+  BenchPhase phase = 3;
+  // The bench's name, part of its pipes' names; empty when alone.
+  string name = 4;
+  // The popover's head: "BENCH · one clock · thermostat leads".
+  string title = 5;
+  // Every device, the leader first; this one among them.
+  repeated BenchDevice devices = 6;
+  repeated JoinedBus buses = 7;
+  // CLOCK while the bench waits for another device: "waiting for gateway";
+  // and the traffic line's hover: "thermostat waited for gateway 38 % of
+  // the last 10 s of real time." Empty while it does not wait, and the share
+  // until the bench host reports what each device costs.
+  string waiting_for_text = 8;
+  string waiting_share_text = 9;
+  // Why the last JoinBus or LeaveBench did not go through; empty otherwise.
+  string failed_text = 10;
+  // The tooltips of Step and Restart: "One pass of thermostat (500 µs).
+  // gateway runs to the same moment.", "Restart the bench (thermostat and
+  // gateway) at 0 s."
+  string step_text = 11;
+  string restart_text = 12;
+  // The other devices' resets, which a Buses page shows as marker rows no
+  // filter hides, oldest first.
+  repeated BenchMark marks = 13;
+  // The bench file the devices run from.
+  string file_path = 14;
+}
+
+message BenchDevice {
+  string name = 1;            // its name on the bench
+  string mcu = 2;             // "STM32G474"; empty when its project names none
+  string where_text = 3;      // "this window", "own window", "this PC"
+  // "runs", "held", "held · at a breakpoint", "stopped · HardFault",
+  // "reset · life 2", "not answering"
+  string state_text = 4;
+  // Simulated time: every device of a bench stands at the same moment.
+  uint64 now_us = 5;
+  string now_text = 6;        // "4.214 s"
+  bool leader = 7;
+  bool this_device = 8;       // the server that answers
+  string address = 9;         // where its server listens; empty while unknown
+  uint32 index = 10;          // its index on the bench: Exchange.source_id of its frames
+  // "stopped" or "not answering": the status colour.
+  bool fault = 11;
+  // "gateway · STM32G474 on this PC · CAN1 at 500 kbit/s · 312 frames, 0
+  // unacknowledged"
+  string hover_text = 12;
+}
+
+message JoinedBus {
+  uint32 bus_id = 1;          // this device's bus
+  string label = 2;           // "CAN1"
+  string join = 3;            // the join's name in the bench file
+  // The other ends: "gateway · CAN1"
+  string peers_text = 4;
+  uint32 bitrate = 5;
+  // Every frame on the wire this device recorded, its own and the others'.
+  uint64 frames = 6;
+  // "CAN1 ⇄ gateway · CAN1 · 500 kbit/s · 1 240 frames"
+  string text = 7;
+}
+
+// Another device's reset, at its simulated time.
+message BenchMark {
+  uint64 sim_us = 1;
+  string device = 2;
+  uint32 life = 3;            // the life that began
+  string text = 4;            // "gateway reset · watchdog · life 2"
 }

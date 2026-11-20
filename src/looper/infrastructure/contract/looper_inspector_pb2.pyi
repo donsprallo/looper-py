@@ -64,6 +64,7 @@ class ProFeature(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     PRO_FEATURE_RUN_FINDINGS: _ClassVar[ProFeature]
     PRO_FEATURE_SCENARIOS: _ClassVar[ProFeature]
     PRO_FEATURE_HARDWARE: _ClassVar[ProFeature]
+    PRO_FEATURE_BENCH: _ClassVar[ProFeature]
 
 class Capability(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     __slots__ = ()
@@ -99,6 +100,7 @@ class Capability(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     CAPABILITY_GRAPH_GROUPS: _ClassVar[Capability]
     CAPABILITY_BOARD: _ClassVar[Capability]
     CAPABILITY_SIGNAL_LIMITS: _ClassVar[Capability]
+    CAPABILITY_BENCH: _ClassVar[Capability]
 
 class ServerMode(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     __slots__ = ()
@@ -200,6 +202,7 @@ class LifeEndReason(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     LIFE_END_REASON_RESET: _ClassVar[LifeEndReason]
     LIFE_END_REASON_JUMP: _ClassVar[LifeEndReason]
     LIFE_END_REASON_POWER_CUT: _ClassVar[LifeEndReason]
+    LIFE_END_REASON_FAULT: _ClassVar[LifeEndReason]
 
 class EnteredBy(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     __slots__ = ()
@@ -230,6 +233,7 @@ class Source(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     SOURCE_COMPONENT: _ClassVar[Source]
     SOURCE_CHAIN: _ClassVar[Source]
     SOURCE_GRAPH: _ClassVar[Source]
+    SOURCE_LINK: _ClassVar[Source]
 
 class TriggerMode(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     __slots__ = ()
@@ -511,6 +515,13 @@ class PwmPolarity(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     __slots__ = ()
     PWM_POLARITY_ACTIVE_HIGH: _ClassVar[PwmPolarity]
     PWM_POLARITY_ACTIVE_LOW: _ClassVar[PwmPolarity]
+
+class BenchPhase(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+    __slots__ = ()
+    BENCH_PHASE_ALONE: _ClassVar[BenchPhase]
+    BENCH_PHASE_JOINING: _ClassVar[BenchPhase]
+    BENCH_PHASE_ON_BENCH: _ClassVar[BenchPhase]
+    BENCH_PHASE_LEAVING: _ClassVar[BenchPhase]
 CONTRACT_VERSION_UNSPECIFIED: ContractVersion
 CONTRACT_VERSION_CURRENT: ContractVersion
 REFUSAL_NONE: Refusal
@@ -545,6 +556,7 @@ PRO_FEATURE_BOOTLOADER: ProFeature
 PRO_FEATURE_RUN_FINDINGS: ProFeature
 PRO_FEATURE_SCENARIOS: ProFeature
 PRO_FEATURE_HARDWARE: ProFeature
+PRO_FEATURE_BENCH: ProFeature
 CAPABILITY_UNSPECIFIED: Capability
 CAPABILITY_PACED: Capability
 CAPABILITY_JOBS: Capability
@@ -577,6 +589,7 @@ CAPABILITY_PIN_DELAY: Capability
 CAPABILITY_GRAPH_GROUPS: Capability
 CAPABILITY_BOARD: Capability
 CAPABILITY_SIGNAL_LIMITS: Capability
+CAPABILITY_BENCH: Capability
 SERVER_MODE_SIMULATION: ServerMode
 SERVER_MODE_STATIC: ServerMode
 SERVER_MODE_HARDWARE: ServerMode
@@ -645,6 +658,7 @@ LIFE_END_REASON_UNSPECIFIED: LifeEndReason
 LIFE_END_REASON_RESET: LifeEndReason
 LIFE_END_REASON_JUMP: LifeEndReason
 LIFE_END_REASON_POWER_CUT: LifeEndReason
+LIFE_END_REASON_FAULT: LifeEndReason
 ENTERED_BY_UNSPECIFIED: EnteredBy
 ENTERED_BY_RESET: EnteredBy
 ENTERED_BY_JUMP: EnteredBy
@@ -663,6 +677,7 @@ SOURCE_RULE: Source
 SOURCE_COMPONENT: Source
 SOURCE_CHAIN: Source
 SOURCE_GRAPH: Source
+SOURCE_LINK: Source
 TRIGGER_MODE_SINGLE: TriggerMode
 TRIGGER_MODE_NORMAL: TriggerMode
 EDGE_RISE: EdgePolarity
@@ -833,6 +848,10 @@ PWM_ALIGNMENT_EDGE: PwmAlignment
 PWM_ALIGNMENT_CENTER: PwmAlignment
 PWM_POLARITY_ACTIVE_HIGH: PwmPolarity
 PWM_POLARITY_ACTIVE_LOW: PwmPolarity
+BENCH_PHASE_ALONE: BenchPhase
+BENCH_PHASE_JOINING: BenchPhase
+BENCH_PHASE_ON_BENCH: BenchPhase
+BENCH_PHASE_LEAVING: BenchPhase
 
 class Empty(_message.Message):
     __slots__ = ()
@@ -1132,7 +1151,7 @@ class RunReply(_message.Message):
     def __init__(self, ack: _Optional[_Union[Ack, _Mapping]] = ..., state: _Optional[_Union[RunState, _Mapping]] = ...) -> None: ...
 
 class RunState(_message.Message):
-    __slots__ = ("now_us", "mode", "pace_ratio", "behind_us", "slipped_us", "epoch", "next_event_seq", "pass_cost_us", "target_us", "queued_commands", "hold_reason", "life", "resets", "life_text", "watchdog", "reset_loop_text", "power_cut_text", "time_model")
+    __slots__ = ("now_us", "mode", "pace_ratio", "behind_us", "slipped_us", "epoch", "next_event_seq", "pass_cost_us", "target_us", "queued_commands", "hold_reason", "life", "resets", "life_text", "watchdog", "reset_loop_text", "power_cut_text", "time_model", "bench_text", "peer_stop_text", "bench_chip_text", "bench_chip_hover_text")
     NOW_US_FIELD_NUMBER: _ClassVar[int]
     MODE_FIELD_NUMBER: _ClassVar[int]
     PACE_RATIO_FIELD_NUMBER: _ClassVar[int]
@@ -1151,6 +1170,10 @@ class RunState(_message.Message):
     RESET_LOOP_TEXT_FIELD_NUMBER: _ClassVar[int]
     POWER_CUT_TEXT_FIELD_NUMBER: _ClassVar[int]
     TIME_MODEL_FIELD_NUMBER: _ClassVar[int]
+    BENCH_TEXT_FIELD_NUMBER: _ClassVar[int]
+    PEER_STOP_TEXT_FIELD_NUMBER: _ClassVar[int]
+    BENCH_CHIP_TEXT_FIELD_NUMBER: _ClassVar[int]
+    BENCH_CHIP_HOVER_TEXT_FIELD_NUMBER: _ClassVar[int]
     now_us: int
     mode: ClockMode
     pace_ratio: float
@@ -1169,7 +1192,11 @@ class RunState(_message.Message):
     reset_loop_text: str
     power_cut_text: str
     time_model: TimeModelState
-    def __init__(self, now_us: _Optional[int] = ..., mode: _Optional[_Union[ClockMode, str]] = ..., pace_ratio: _Optional[float] = ..., behind_us: _Optional[int] = ..., slipped_us: _Optional[int] = ..., epoch: _Optional[int] = ..., next_event_seq: _Optional[int] = ..., pass_cost_us: _Optional[int] = ..., target_us: _Optional[int] = ..., queued_commands: _Optional[int] = ..., hold_reason: _Optional[str] = ..., life: _Optional[int] = ..., resets: _Optional[int] = ..., life_text: _Optional[str] = ..., watchdog: _Optional[_Union[WatchdogState, _Mapping]] = ..., reset_loop_text: _Optional[str] = ..., power_cut_text: _Optional[str] = ..., time_model: _Optional[_Union[TimeModelState, _Mapping]] = ...) -> None: ...
+    bench_text: str
+    peer_stop_text: str
+    bench_chip_text: str
+    bench_chip_hover_text: str
+    def __init__(self, now_us: _Optional[int] = ..., mode: _Optional[_Union[ClockMode, str]] = ..., pace_ratio: _Optional[float] = ..., behind_us: _Optional[int] = ..., slipped_us: _Optional[int] = ..., epoch: _Optional[int] = ..., next_event_seq: _Optional[int] = ..., pass_cost_us: _Optional[int] = ..., target_us: _Optional[int] = ..., queued_commands: _Optional[int] = ..., hold_reason: _Optional[str] = ..., life: _Optional[int] = ..., resets: _Optional[int] = ..., life_text: _Optional[str] = ..., watchdog: _Optional[_Union[WatchdogState, _Mapping]] = ..., reset_loop_text: _Optional[str] = ..., power_cut_text: _Optional[str] = ..., time_model: _Optional[_Union[TimeModelState, _Mapping]] = ..., bench_text: _Optional[str] = ..., peer_stop_text: _Optional[str] = ..., bench_chip_text: _Optional[str] = ..., bench_chip_hover_text: _Optional[str] = ...) -> None: ...
 
 class WatchdogState(_message.Message):
     __slots__ = ("running", "timeout_us", "last_kick_us", "deadline_us", "remaining_us", "kicks", "is_close", "remaining_text", "last_kick_text", "text")
@@ -1506,7 +1533,7 @@ class Call(_message.Message):
     def __init__(self, function: _Optional[str] = ..., peripheral: _Optional[str] = ...) -> None: ...
 
 class Exchange(_message.Message):
-    __slots__ = ("bus_id", "start_us", "end_us", "direction", "address_value", "payload", "response", "payload_length", "response_length", "accepted", "refusal", "source", "source_name", "source_id", "requested_at_us", "command_seq", "can", "uart", "i2c", "spi")
+    __slots__ = ("bus_id", "start_us", "end_us", "direction", "address_value", "payload", "response", "payload_length", "response_length", "accepted", "refusal", "source", "source_name", "source_id", "requested_at_us", "command_seq", "can", "uart", "i2c", "spi", "sender_text", "sender_device", "acknowledged_by_text", "refused_text")
     BUS_ID_FIELD_NUMBER: _ClassVar[int]
     START_US_FIELD_NUMBER: _ClassVar[int]
     END_US_FIELD_NUMBER: _ClassVar[int]
@@ -1527,6 +1554,10 @@ class Exchange(_message.Message):
     UART_FIELD_NUMBER: _ClassVar[int]
     I2C_FIELD_NUMBER: _ClassVar[int]
     SPI_FIELD_NUMBER: _ClassVar[int]
+    SENDER_TEXT_FIELD_NUMBER: _ClassVar[int]
+    SENDER_DEVICE_FIELD_NUMBER: _ClassVar[int]
+    ACKNOWLEDGED_BY_TEXT_FIELD_NUMBER: _ClassVar[int]
+    REFUSED_TEXT_FIELD_NUMBER: _ClassVar[int]
     bus_id: int
     start_us: int
     end_us: int
@@ -1547,7 +1578,11 @@ class Exchange(_message.Message):
     uart: UartDetail
     i2c: I2cDetail
     spi: SpiDetail
-    def __init__(self, bus_id: _Optional[int] = ..., start_us: _Optional[int] = ..., end_us: _Optional[int] = ..., direction: _Optional[_Union[Direction, str]] = ..., address_value: _Optional[int] = ..., payload: _Optional[bytes] = ..., response: _Optional[bytes] = ..., payload_length: _Optional[int] = ..., response_length: _Optional[int] = ..., accepted: _Optional[bool] = ..., refusal: _Optional[_Union[Refusal, str]] = ..., source: _Optional[_Union[Source, str]] = ..., source_name: _Optional[str] = ..., source_id: _Optional[int] = ..., requested_at_us: _Optional[int] = ..., command_seq: _Optional[int] = ..., can: _Optional[_Union[CanDetail, _Mapping]] = ..., uart: _Optional[_Union[UartDetail, _Mapping]] = ..., i2c: _Optional[_Union[I2cDetail, _Mapping]] = ..., spi: _Optional[_Union[SpiDetail, _Mapping]] = ...) -> None: ...
+    sender_text: str
+    sender_device: str
+    acknowledged_by_text: str
+    refused_text: str
+    def __init__(self, bus_id: _Optional[int] = ..., start_us: _Optional[int] = ..., end_us: _Optional[int] = ..., direction: _Optional[_Union[Direction, str]] = ..., address_value: _Optional[int] = ..., payload: _Optional[bytes] = ..., response: _Optional[bytes] = ..., payload_length: _Optional[int] = ..., response_length: _Optional[int] = ..., accepted: _Optional[bool] = ..., refusal: _Optional[_Union[Refusal, str]] = ..., source: _Optional[_Union[Source, str]] = ..., source_name: _Optional[str] = ..., source_id: _Optional[int] = ..., requested_at_us: _Optional[int] = ..., command_seq: _Optional[int] = ..., can: _Optional[_Union[CanDetail, _Mapping]] = ..., uart: _Optional[_Union[UartDetail, _Mapping]] = ..., i2c: _Optional[_Union[I2cDetail, _Mapping]] = ..., spi: _Optional[_Union[SpiDetail, _Mapping]] = ..., sender_text: _Optional[str] = ..., sender_device: _Optional[str] = ..., acknowledged_by_text: _Optional[str] = ..., refused_text: _Optional[str] = ...) -> None: ...
 
 class CanDetail(_message.Message):
     __slots__ = ("extended", "remote", "dlc", "fd", "brs", "esi", "error_frame")
@@ -7345,7 +7380,7 @@ class BoardNote(_message.Message):
     def __init__(self, text: _Optional[str] = ..., node_key: _Optional[str] = ...) -> None: ...
 
 class BoardNode(_message.Message):
-    __slots__ = ("key", "kind", "parent_key", "title", "subtitle", "bus_kind", "runtime_id", "registered", "unregistered_text", "hand_wired", "hand_wired_text", "is_input", "graph_can_drive", "graph_can_read", "drive_text", "hover_text", "driven_by_text", "driven_by_node_key", "read_by", "read_by_text", "reference_text", "reference_node_key", "endpoint_node_keys", "second_driver_text", "empty_text")
+    __slots__ = ("key", "kind", "parent_key", "title", "subtitle", "bus_kind", "runtime_id", "registered", "unregistered_text", "hand_wired", "hand_wired_text", "is_input", "graph_can_drive", "graph_can_read", "drive_text", "hover_text", "driven_by_text", "driven_by_node_key", "read_by", "read_by_text", "reference_text", "reference_node_key", "endpoint_node_keys", "second_driver_text", "empty_text", "joined_text", "join_hint_text")
     class Kind(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
         __slots__ = ()
         MCU: _ClassVar[BoardNode.Kind]
@@ -7357,6 +7392,7 @@ class BoardNode(_message.Message):
         SOURCE: _ClassVar[BoardNode.Kind]
         DMA: _ClassVar[BoardNode.Kind]
         PWM: _ClassVar[BoardNode.Kind]
+        PEER: _ClassVar[BoardNode.Kind]
     MCU: BoardNode.Kind
     PERIPHERAL: BoardNode.Kind
     BUS: BoardNode.Kind
@@ -7366,6 +7402,7 @@ class BoardNode(_message.Message):
     SOURCE: BoardNode.Kind
     DMA: BoardNode.Kind
     PWM: BoardNode.Kind
+    PEER: BoardNode.Kind
     KEY_FIELD_NUMBER: _ClassVar[int]
     KIND_FIELD_NUMBER: _ClassVar[int]
     PARENT_KEY_FIELD_NUMBER: _ClassVar[int]
@@ -7391,6 +7428,8 @@ class BoardNode(_message.Message):
     ENDPOINT_NODE_KEYS_FIELD_NUMBER: _ClassVar[int]
     SECOND_DRIVER_TEXT_FIELD_NUMBER: _ClassVar[int]
     EMPTY_TEXT_FIELD_NUMBER: _ClassVar[int]
+    JOINED_TEXT_FIELD_NUMBER: _ClassVar[int]
+    JOIN_HINT_TEXT_FIELD_NUMBER: _ClassVar[int]
     key: str
     kind: BoardNode.Kind
     parent_key: str
@@ -7416,7 +7455,9 @@ class BoardNode(_message.Message):
     endpoint_node_keys: _containers.RepeatedScalarFieldContainer[str]
     second_driver_text: str
     empty_text: str
-    def __init__(self, key: _Optional[str] = ..., kind: _Optional[_Union[BoardNode.Kind, str]] = ..., parent_key: _Optional[str] = ..., title: _Optional[str] = ..., subtitle: _Optional[str] = ..., bus_kind: _Optional[str] = ..., runtime_id: _Optional[int] = ..., registered: _Optional[bool] = ..., unregistered_text: _Optional[str] = ..., hand_wired: _Optional[bool] = ..., hand_wired_text: _Optional[str] = ..., is_input: _Optional[bool] = ..., graph_can_drive: _Optional[bool] = ..., graph_can_read: _Optional[bool] = ..., drive_text: _Optional[str] = ..., hover_text: _Optional[str] = ..., driven_by_text: _Optional[str] = ..., driven_by_node_key: _Optional[str] = ..., read_by: _Optional[_Iterable[_Union[BoardGraphRef, _Mapping]]] = ..., read_by_text: _Optional[str] = ..., reference_text: _Optional[str] = ..., reference_node_key: _Optional[str] = ..., endpoint_node_keys: _Optional[_Iterable[str]] = ..., second_driver_text: _Optional[str] = ..., empty_text: _Optional[str] = ...) -> None: ...
+    joined_text: str
+    join_hint_text: str
+    def __init__(self, key: _Optional[str] = ..., kind: _Optional[_Union[BoardNode.Kind, str]] = ..., parent_key: _Optional[str] = ..., title: _Optional[str] = ..., subtitle: _Optional[str] = ..., bus_kind: _Optional[str] = ..., runtime_id: _Optional[int] = ..., registered: _Optional[bool] = ..., unregistered_text: _Optional[str] = ..., hand_wired: _Optional[bool] = ..., hand_wired_text: _Optional[str] = ..., is_input: _Optional[bool] = ..., graph_can_drive: _Optional[bool] = ..., graph_can_read: _Optional[bool] = ..., drive_text: _Optional[str] = ..., hover_text: _Optional[str] = ..., driven_by_text: _Optional[str] = ..., driven_by_node_key: _Optional[str] = ..., read_by: _Optional[_Iterable[_Union[BoardGraphRef, _Mapping]]] = ..., read_by_text: _Optional[str] = ..., reference_text: _Optional[str] = ..., reference_node_key: _Optional[str] = ..., endpoint_node_keys: _Optional[_Iterable[str]] = ..., second_driver_text: _Optional[str] = ..., empty_text: _Optional[str] = ..., joined_text: _Optional[str] = ..., join_hint_text: _Optional[str] = ...) -> None: ...
 
 class BoardGraphRef(_message.Message):
     __slots__ = ("text", "node_key", "probe")
@@ -7479,7 +7520,7 @@ class BoardState(_message.Message):
     def __init__(self, revision: _Optional[int] = ..., sim_us: _Optional[int] = ..., nodes: _Optional[_Iterable[_Union[BoardNodeState, _Mapping]]] = ..., edges: _Optional[_Iterable[_Union[BoardEdgeState, _Mapping]]] = ...) -> None: ...
 
 class BoardNodeState(_message.Message):
-    __slots__ = ("key", "state_text", "active", "fault", "fault_text", "driver_off", "reference_state_text", "value", "exchanges", "last_us")
+    __slots__ = ("key", "state_text", "active", "fault", "fault_text", "driver_off", "reference_state_text", "value", "exchanges", "last_us", "frames_text")
     KEY_FIELD_NUMBER: _ClassVar[int]
     STATE_TEXT_FIELD_NUMBER: _ClassVar[int]
     ACTIVE_FIELD_NUMBER: _ClassVar[int]
@@ -7490,6 +7531,7 @@ class BoardNodeState(_message.Message):
     VALUE_FIELD_NUMBER: _ClassVar[int]
     EXCHANGES_FIELD_NUMBER: _ClassVar[int]
     LAST_US_FIELD_NUMBER: _ClassVar[int]
+    FRAMES_TEXT_FIELD_NUMBER: _ClassVar[int]
     key: str
     state_text: str
     active: bool
@@ -7500,7 +7542,8 @@ class BoardNodeState(_message.Message):
     value: float
     exchanges: int
     last_us: int
-    def __init__(self, key: _Optional[str] = ..., state_text: _Optional[str] = ..., active: _Optional[bool] = ..., fault: _Optional[bool] = ..., fault_text: _Optional[str] = ..., driver_off: _Optional[bool] = ..., reference_state_text: _Optional[str] = ..., value: _Optional[float] = ..., exchanges: _Optional[int] = ..., last_us: _Optional[int] = ...) -> None: ...
+    frames_text: str
+    def __init__(self, key: _Optional[str] = ..., state_text: _Optional[str] = ..., active: _Optional[bool] = ..., fault: _Optional[bool] = ..., fault_text: _Optional[str] = ..., driver_off: _Optional[bool] = ..., reference_state_text: _Optional[str] = ..., value: _Optional[float] = ..., exchanges: _Optional[int] = ..., last_us: _Optional[int] = ..., frames_text: _Optional[str] = ...) -> None: ...
 
 class BoardEdgeState(_message.Message):
     __slots__ = ("from_key", "to_key", "state_text", "active", "fault", "fault_text", "hover_text", "exchanges", "unanswered", "last_us")
@@ -7525,3 +7568,153 @@ class BoardEdgeState(_message.Message):
     unanswered: int
     last_us: int
     def __init__(self, from_key: _Optional[str] = ..., to_key: _Optional[str] = ..., state_text: _Optional[str] = ..., active: _Optional[bool] = ..., fault: _Optional[bool] = ..., fault_text: _Optional[str] = ..., hover_text: _Optional[str] = ..., exchanges: _Optional[int] = ..., unanswered: _Optional[int] = ..., last_us: _Optional[int] = ...) -> None: ...
+
+class JoinCandidatesRequest(_message.Message):
+    __slots__ = ("bus_id",)
+    BUS_ID_FIELD_NUMBER: _ClassVar[int]
+    bus_id: int
+    def __init__(self, bus_id: _Optional[int] = ...) -> None: ...
+
+class JoinCandidates(_message.Message):
+    __slots__ = ("title", "candidates")
+    TITLE_FIELD_NUMBER: _ClassVar[int]
+    CANDIDATES_FIELD_NUMBER: _ClassVar[int]
+    title: str
+    candidates: _containers.RepeatedCompositeFieldContainer[JoinCandidate]
+    def __init__(self, title: _Optional[str] = ..., candidates: _Optional[_Iterable[_Union[JoinCandidate, _Mapping]]] = ...) -> None: ...
+
+class JoinCandidate(_message.Message):
+    __slots__ = ("instance_id", "address", "firmware_name", "definition_path", "joinable", "reason_text", "buses", "joining_text")
+    INSTANCE_ID_FIELD_NUMBER: _ClassVar[int]
+    ADDRESS_FIELD_NUMBER: _ClassVar[int]
+    FIRMWARE_NAME_FIELD_NUMBER: _ClassVar[int]
+    DEFINITION_PATH_FIELD_NUMBER: _ClassVar[int]
+    JOINABLE_FIELD_NUMBER: _ClassVar[int]
+    REASON_TEXT_FIELD_NUMBER: _ClassVar[int]
+    BUSES_FIELD_NUMBER: _ClassVar[int]
+    JOINING_TEXT_FIELD_NUMBER: _ClassVar[int]
+    instance_id: str
+    address: str
+    firmware_name: str
+    definition_path: str
+    joinable: bool
+    reason_text: str
+    buses: _containers.RepeatedCompositeFieldContainer[JoinBusChoice]
+    joining_text: str
+    def __init__(self, instance_id: _Optional[str] = ..., address: _Optional[str] = ..., firmware_name: _Optional[str] = ..., definition_path: _Optional[str] = ..., joinable: _Optional[bool] = ..., reason_text: _Optional[str] = ..., buses: _Optional[_Iterable[_Union[JoinBusChoice, _Mapping]]] = ..., joining_text: _Optional[str] = ...) -> None: ...
+
+class JoinBusChoice(_message.Message):
+    __slots__ = ("bus_id", "label", "text", "bitrate", "preselected", "mismatch_text")
+    BUS_ID_FIELD_NUMBER: _ClassVar[int]
+    LABEL_FIELD_NUMBER: _ClassVar[int]
+    TEXT_FIELD_NUMBER: _ClassVar[int]
+    BITRATE_FIELD_NUMBER: _ClassVar[int]
+    PRESELECTED_FIELD_NUMBER: _ClassVar[int]
+    MISMATCH_TEXT_FIELD_NUMBER: _ClassVar[int]
+    bus_id: int
+    label: str
+    text: str
+    bitrate: int
+    preselected: bool
+    mismatch_text: str
+    def __init__(self, bus_id: _Optional[int] = ..., label: _Optional[str] = ..., text: _Optional[str] = ..., bitrate: _Optional[int] = ..., preselected: _Optional[bool] = ..., mismatch_text: _Optional[str] = ...) -> None: ...
+
+class JoinRequest(_message.Message):
+    __slots__ = ("bus_id", "peer_instance_id", "peer_bus_id")
+    BUS_ID_FIELD_NUMBER: _ClassVar[int]
+    PEER_INSTANCE_ID_FIELD_NUMBER: _ClassVar[int]
+    PEER_BUS_ID_FIELD_NUMBER: _ClassVar[int]
+    bus_id: int
+    peer_instance_id: str
+    peer_bus_id: int
+    def __init__(self, bus_id: _Optional[int] = ..., peer_instance_id: _Optional[str] = ..., peer_bus_id: _Optional[int] = ...) -> None: ...
+
+class BenchState(_message.Message):
+    __slots__ = ("revision", "revision_text", "phase", "name", "title", "devices", "buses", "waiting_for_text", "waiting_share_text", "failed_text", "step_text", "restart_text", "marks", "file_path")
+    REVISION_FIELD_NUMBER: _ClassVar[int]
+    REVISION_TEXT_FIELD_NUMBER: _ClassVar[int]
+    PHASE_FIELD_NUMBER: _ClassVar[int]
+    NAME_FIELD_NUMBER: _ClassVar[int]
+    TITLE_FIELD_NUMBER: _ClassVar[int]
+    DEVICES_FIELD_NUMBER: _ClassVar[int]
+    BUSES_FIELD_NUMBER: _ClassVar[int]
+    WAITING_FOR_TEXT_FIELD_NUMBER: _ClassVar[int]
+    WAITING_SHARE_TEXT_FIELD_NUMBER: _ClassVar[int]
+    FAILED_TEXT_FIELD_NUMBER: _ClassVar[int]
+    STEP_TEXT_FIELD_NUMBER: _ClassVar[int]
+    RESTART_TEXT_FIELD_NUMBER: _ClassVar[int]
+    MARKS_FIELD_NUMBER: _ClassVar[int]
+    FILE_PATH_FIELD_NUMBER: _ClassVar[int]
+    revision: int
+    revision_text: str
+    phase: BenchPhase
+    name: str
+    title: str
+    devices: _containers.RepeatedCompositeFieldContainer[BenchDevice]
+    buses: _containers.RepeatedCompositeFieldContainer[JoinedBus]
+    waiting_for_text: str
+    waiting_share_text: str
+    failed_text: str
+    step_text: str
+    restart_text: str
+    marks: _containers.RepeatedCompositeFieldContainer[BenchMark]
+    file_path: str
+    def __init__(self, revision: _Optional[int] = ..., revision_text: _Optional[str] = ..., phase: _Optional[_Union[BenchPhase, str]] = ..., name: _Optional[str] = ..., title: _Optional[str] = ..., devices: _Optional[_Iterable[_Union[BenchDevice, _Mapping]]] = ..., buses: _Optional[_Iterable[_Union[JoinedBus, _Mapping]]] = ..., waiting_for_text: _Optional[str] = ..., waiting_share_text: _Optional[str] = ..., failed_text: _Optional[str] = ..., step_text: _Optional[str] = ..., restart_text: _Optional[str] = ..., marks: _Optional[_Iterable[_Union[BenchMark, _Mapping]]] = ..., file_path: _Optional[str] = ...) -> None: ...
+
+class BenchDevice(_message.Message):
+    __slots__ = ("name", "mcu", "where_text", "state_text", "now_us", "now_text", "leader", "this_device", "address", "index", "fault", "hover_text")
+    NAME_FIELD_NUMBER: _ClassVar[int]
+    MCU_FIELD_NUMBER: _ClassVar[int]
+    WHERE_TEXT_FIELD_NUMBER: _ClassVar[int]
+    STATE_TEXT_FIELD_NUMBER: _ClassVar[int]
+    NOW_US_FIELD_NUMBER: _ClassVar[int]
+    NOW_TEXT_FIELD_NUMBER: _ClassVar[int]
+    LEADER_FIELD_NUMBER: _ClassVar[int]
+    THIS_DEVICE_FIELD_NUMBER: _ClassVar[int]
+    ADDRESS_FIELD_NUMBER: _ClassVar[int]
+    INDEX_FIELD_NUMBER: _ClassVar[int]
+    FAULT_FIELD_NUMBER: _ClassVar[int]
+    HOVER_TEXT_FIELD_NUMBER: _ClassVar[int]
+    name: str
+    mcu: str
+    where_text: str
+    state_text: str
+    now_us: int
+    now_text: str
+    leader: bool
+    this_device: bool
+    address: str
+    index: int
+    fault: bool
+    hover_text: str
+    def __init__(self, name: _Optional[str] = ..., mcu: _Optional[str] = ..., where_text: _Optional[str] = ..., state_text: _Optional[str] = ..., now_us: _Optional[int] = ..., now_text: _Optional[str] = ..., leader: _Optional[bool] = ..., this_device: _Optional[bool] = ..., address: _Optional[str] = ..., index: _Optional[int] = ..., fault: _Optional[bool] = ..., hover_text: _Optional[str] = ...) -> None: ...
+
+class JoinedBus(_message.Message):
+    __slots__ = ("bus_id", "label", "join", "peers_text", "bitrate", "frames", "text")
+    BUS_ID_FIELD_NUMBER: _ClassVar[int]
+    LABEL_FIELD_NUMBER: _ClassVar[int]
+    JOIN_FIELD_NUMBER: _ClassVar[int]
+    PEERS_TEXT_FIELD_NUMBER: _ClassVar[int]
+    BITRATE_FIELD_NUMBER: _ClassVar[int]
+    FRAMES_FIELD_NUMBER: _ClassVar[int]
+    TEXT_FIELD_NUMBER: _ClassVar[int]
+    bus_id: int
+    label: str
+    join: str
+    peers_text: str
+    bitrate: int
+    frames: int
+    text: str
+    def __init__(self, bus_id: _Optional[int] = ..., label: _Optional[str] = ..., join: _Optional[str] = ..., peers_text: _Optional[str] = ..., bitrate: _Optional[int] = ..., frames: _Optional[int] = ..., text: _Optional[str] = ...) -> None: ...
+
+class BenchMark(_message.Message):
+    __slots__ = ("sim_us", "device", "life", "text")
+    SIM_US_FIELD_NUMBER: _ClassVar[int]
+    DEVICE_FIELD_NUMBER: _ClassVar[int]
+    LIFE_FIELD_NUMBER: _ClassVar[int]
+    TEXT_FIELD_NUMBER: _ClassVar[int]
+    sim_us: int
+    device: str
+    life: int
+    text: str
+    def __init__(self, sim_us: _Optional[int] = ..., device: _Optional[str] = ..., life: _Optional[int] = ..., text: _Optional[str] = ...) -> None: ...
